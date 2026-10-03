@@ -568,14 +568,23 @@ def attach_governed_knowledge_learning_and_audit(
     *,
     core: Dict[str, Any],
     questionnaire_state: Dict[str, Any],
+    audit_limit: int | None = None,
 ) -> Dict[str, Any]:
     _t0 = time.perf_counter()
     context = load_governed_decision_context()
     _t1 = time.perf_counter()
     decision_intelligence = core.setdefault("decision_intelligence", {})
     decision_intelligence["governed_knowledge_learning"] = context
+    # Persist a bounded audit without dropping candidates from final comparison.
+    persistence_core = core
+    if audit_limit is not None:
+        persistence_core = {**core, "results": list(core.get("results") or [])[:audit_limit]}
+        trace = core.get("recommendation_audit_trace") or {}
+        persistence_core["recommendation_audit_trace"] = {
+            **trace, "recommendations": list(trace.get("recommendations") or [])[:audit_limit],
+        }
     persistence = persist_recommendation_verification_audits(
-        core=core,
+        core=persistence_core,
         questionnaire_state=questionnaire_state,
         governance_context=context,
     )

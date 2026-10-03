@@ -43,6 +43,7 @@ on:
       - 'backend/tests/test_decision_quality_market_and_regulatory.py'
       - 'backend/tests/test_decision_quality_strategy_families.py'
       - 'backend/tests/test_decision_quality_topn_causality.py'
+      - 'backend/tests/test_full_universe_preference_contract.py'
       - 'backend/tests/test_decision_quality_topn_gates.py'
       - 'backend/tests/test_golden_topn_decision_quality.py'
       - 'data/nevada/verified/independent_living_primary_evidence.json'
@@ -98,6 +99,7 @@ jobs:
             tests/test_decision_quality_market_and_regulatory.py \
             tests/test_decision_quality_strategy_families.py \
             tests/test_decision_quality_topn_causality.py \
+            tests/test_full_universe_preference_contract.py \
             tests/test_decision_quality_topn_gates.py \
             tests/test_golden_topn_decision_quality.py
       - name: Verify unified AI interview, Guardian, Valley and READY contracts

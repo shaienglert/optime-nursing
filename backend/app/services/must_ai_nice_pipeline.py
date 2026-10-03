@@ -6,26 +6,12 @@ from __future__ import annotations
 2. Deterministic governed evidence ranks MUST_ELIGIBLE rows; AI has no ranking authority.
 3. Dynamic preference verification is evidence-closed-world: MATCH/MISMATCH requires
    governed claims; missing evidence stays UNKNOWN.
-4. Legacy structured NICE signals are audit-only and cannot drive the authoritative
-   ranking or NICE_COMPLETE result.
-5. A MUST criterion with no evidence yet is a research item, not a rejection: a
-   PENDING candidate is ranked alongside MUST_ELIGIBLE ones on whatever evidence
-   already exists, and shown with an explicit note of what is still unverified.
-   Missing evidence is scored as neutral, never as a negative -- so confirming it
-   later can only hold or improve the candidate's rank, never worsen it. Only an
-   explicit MUST_FAIL (governed evidence contradicts a requirement) is excluded.
-6. Provider verification can add governed claims and trigger an AI rerank later.
-7. An unavailable AI ranking never erases the deterministic MUST-qualified set. The
-   verified eligible rows remain visible as a degraded, explicitly unranked result.
-8. AI-blended judgment is skipped -- not attempted and not failed -- when a candidate
-   pool has no real evidence for it to differentiate on: no NICE preferences to
-   verify, and no candidate has any known rating, review count, regulatory grade, or
-   disciplinary record. Forcing an AI score in that situation would produce a
-   plausible-looking number with nothing real behind it. The client-specified order
-   for this case -- MUST already applied, then NICE, then regulatory grade, then
-   reviews -- is exactly what the deterministic governed key (intent_rank_key)
-   computes, so it is used directly and shown as the actual recommendation, not
-   quarantined as a failure-mode diagnostic.
+4. Structured preference evidence participates in governed deterministic ranking;
+   unresolved structured or dynamic preferences keep the result provisional.
+5. Pending MUST candidates remain in a research queue; only verified eligible
+   candidates enter the recommendation pool. UNKNOWN is never a mismatch.
+6. Compare the complete eligible universe before bounded verification and display.
+   Provider evidence can update a future deterministic comparison; AI cannot rank.
 """
 
 from copy import deepcopy
@@ -557,7 +543,7 @@ def apply_must_ai_nice_pipeline(
         "order": [
             "DETERMINISTIC_MUST_GATE",
             "SEMANTIC_AI_DYNAMIC_PREFERENCE_MODEL",
-            "SEMANTIC_AI_RANK_INTERACTIVE_SHORTLIST",
+            "DETERMINISTIC_FULL_UNIVERSE_COMPARISON",
             "EVIDENCE_RESEARCH_CONTINUES_AFTER_LIVE_RESPONSE",
             "PROVIDER_FACT_VERIFICATION",
             "AI_RERANK_AFTER_NEW_EVIDENCE",
@@ -567,7 +553,7 @@ def apply_must_ai_nice_pipeline(
         "must_rejected_count": len(rejected),
         "interactive_shortlist_limit": interactive_shortlist_limit,
         "full_rankable_candidate_count": len(rankable),
-        "ranking_scope": "LIVE_SHORTLIST_ONLY_FULL_UNIVERSE_RESEARCH_CONTINUES",
+        "ranking_scope": "FULL_ELIGIBLE_UNIVERSE_DETERMINISTIC_ORDER",
         "candidate_dispositions": [
             {
                 "canonical_facility_id": row.get("canonical_facility_id"),
@@ -585,6 +571,11 @@ def apply_must_ai_nice_pipeline(
         "ai_ranking_degraded": ai_ranking_degraded,
         "dynamic_preferences": dynamic_summary,
         "legacy_structured_nice_audit": structured_nice_summary,
+        "selected_structured_preferences": {
+            "candidate_count": len(selected),
+            "unresolved_candidate_count": sum(bool((row.get("structured_nice_to_have_coverage") or {}).get("unresolved")) for row in selected),
+            "unresolved_candidate_ids": [row.get("canonical_facility_id") for row in selected if (row.get("structured_nice_to_have_coverage") or {}).get("unresolved")],
+        },
         "legacy_structured_nice_authoritative": False,
         "governed_structured_nice_authoritative": True,
         "top_nice_complete_count": len(complete_selected),

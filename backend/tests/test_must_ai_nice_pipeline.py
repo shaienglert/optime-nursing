@@ -187,7 +187,7 @@ class MustAiNicePipelineTests(unittest.TestCase):
         pipeline = out["decision_intelligence"]["facility_selection_pipeline"]
         self.assertEqual(pipeline["full_rankable_candidate_count"], 15)
         self.assertEqual(pipeline["interactive_shortlist_limit"], 10)
-        self.assertEqual(pipeline["ranking_scope"], "LIVE_SHORTLIST_ONLY_FULL_UNIVERSE_RESEARCH_CONTINUES")
+        self.assertEqual(pipeline["ranking_scope"], "FULL_ELIGIBLE_UNIVERSE_DETERMINISTIC_ORDER")
 
     def test_rank_group_key_groups_by_ai_global_score_when_present(self):
         # ai_ranking.global_score (set by the batched-scoring path -- see

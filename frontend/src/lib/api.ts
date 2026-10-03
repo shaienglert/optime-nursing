@@ -320,6 +320,8 @@ export type DecisionEngineRecommendation = {
   second_resident_monthly_fee?: number | null;
   single_resident_starting_monthly_price?: number | null;
   entrance_fee?: number | null;
+  nice_to_have_coverage?: { unresolved?: string[] };
+  structured_nice_to_have_coverage?: { unresolved?: string[] };
   combined_care_solution?: {
     delivery_model?: string;
     care_component?: { delivery_model?: string };

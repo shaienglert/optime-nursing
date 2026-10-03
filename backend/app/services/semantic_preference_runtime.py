@@ -49,20 +49,37 @@ def _semantic_result(human_context: Dict[str, Any]) -> Dict[str, Any]:
 def build_dynamic_preference_model(human_context: Dict[str, Any]) -> Dict[str, Any]:
     """Create an open-ended preference model from Semantic AI output.
 
-    No keyword list is used. Any NICE statement or explicit semantic preference can
-    become a preference dimension. The original client meaning is preserved.
+    Preserve open-ended facility preferences. Questionnaire control fields, resident
+    context and explicit absence of preference remain in the original statement audit.
     """
     result = _semantic_result(human_context)
     raw: List[Tuple[str, str, str]] = []
-
-    for value in result.get("preferences") or []:
-        text = str(value or "").strip()
-        if text:
-            raw.append((text, text, "semantic_ai.preferences"))
-
+    excluded_expressions: set[str] = set()
+    relevant_statements = []
+    neutral_answers = {"none", "no preference", "not important", "not required", "not needed"}
+    context_fields = {"relationship", "gender", "ageGroup", "moveTiming", "budget", "medicaidStatus", "humanIntelligenceV2.transitionRiskProfile.attitudeTowardMove"}
     for statement in result.get("statements") or []:
         if not isinstance(statement, dict):
             continue
+        paths = [str(path) for path in statement.get("mapped_parameters") or []]
+        original = str(statement.get("raw_text") or "").strip()
+        excluded = (
+            str(statement.get("status") or "").upper() == "NOT_DECISION_RELEVANT"
+            or (bool(paths) and original.casefold() in neutral_answers)
+            or (paths == ["parkingRequirement"] and original.casefold() == "no")
+            or (bool(paths) and all(path in context_fields or path.endswith(("RequirementLevel", "Importance")) for path in paths))
+        )
+        if excluded:
+            excluded_expressions.update(str(statement.get(key) or "").strip().casefold() for key in ("raw_text", "meaning"))
+        else:
+            relevant_statements.append(statement)
+
+    for value in result.get("preferences") or []:
+        text = str(value or "").strip()
+        if text and text.casefold() not in excluded_expressions and text.casefold() not in neutral_answers:
+            raw.append((text, text, "semantic_ai.preferences"))
+
+    for statement in relevant_statements:
         if str(statement.get("importance") or "").upper() != "NICE":
             continue
         if str(statement.get("knowledge_state") or "").upper() not in {"KNOWN", "AMBIGUOUS"}:

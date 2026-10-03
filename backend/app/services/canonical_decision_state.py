@@ -246,6 +246,9 @@ def _preference_state(decision: Dict[str, Any]) -> PreferenceState:
     dynamic = pipeline.get("dynamic_preferences")
     if not isinstance(dynamic, dict):
         return PreferenceState.NOT_STARTED
+    structured = pipeline.get("selected_structured_preferences") or {}
+    if structured.get("unresolved_candidate_count", 0):
+        return PreferenceState.PARTIAL
     preference_count = int(dynamic.get("preference_count") or 0)
     if preference_count == 0:
         return PreferenceState.COMPLETE

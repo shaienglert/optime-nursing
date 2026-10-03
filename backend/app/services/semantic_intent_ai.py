@@ -23,6 +23,7 @@ from app.services.canonical_gap_policy import normalize_gap_key
 from app.services.semantic_packet_wire import normalize_wire, parse_wire_json, provider_schema
 
 SEMANTIC_AI_SYSTEM_RULES = [
+    'Only facility-testable desired properties belong in preferences or NICE traces. Explicit absence of preference, importance/requirement-level controls, resident biography and attitude toward moving are CONTEXT, retained in statement accounting without provider verification obligations. Preserve actual preferred activities as NICE even when separately reported as context. Do not infer a facility preference from a control value. Genuine negative preferences such as a smoke-free environment remain preferences.',
     "Supervision around the clock is not Nursing supervision or Skilled nursing care. Medication reminders are not Complex medication management. Rehabilitation alone does not establish speech therapy. Preserve only explicitly established clinical facts.",
     "Understand the client before recommending anything.",
     "Account for every meaningful client statement.",
@@ -251,6 +252,7 @@ def _resolve_temperature() -> Optional[float]:
 
 
 TRANSPORT_SYSTEM_PROMPT = (
+    'Only facility-testable desired properties belong in preferences or NICE traces. Explicit absence of preference, importance/requirement-level controls, resident biography and attitude toward moving are CONTEXT, retained in statement accounting without provider verification obligations. Preserve actual preferred activities as NICE even when separately reported as context. Do not infer a facility preference from a control value. Genuine negative preferences such as a smoke-free environment remain preferences. '
     "You are the governed semantic reasoning layer for a senior-living decision engine. "
     "Return compact JSON only. Follow required_output nesting exactly. "
     "Every new questionnaire_patch leaf, including context fields, must have its full dotted path "
