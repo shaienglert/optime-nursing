@@ -24,6 +24,7 @@ def test_pipeline_passes_one_prepared_profile_to_matching():
     builder.assert_called_once()
     runner.assert_called_once()
     assert runner.call_args.kwargs["prepared_profile"] is profile
+    assert runner.call_args.kwargs["return_full_universe"] is True
 
 
 def test_matching_does_not_reinterpret_prepared_client_context():

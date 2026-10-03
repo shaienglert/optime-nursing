@@ -187,7 +187,11 @@ class GoldenMother90FullLifecycleTests(unittest.TestCase):
         # is its own, the finality is degraded rather than provisional, and the payload
         # states results_are_ordered false.
         self.assertFalse(decision["canonical_decision_state"]["is_degraded_result"])
-        self.assertEqual(decision["recommendation_visibility"], "FINAL_RECOMMENDATION_VISIBLE")
+        # The full universe now retains undisplayed MUST research candidates.
+        # Selected matches are visible; unresolved candidates cannot justify finality.
+        self.assertGreater(result["must_pending_verification_count"], 0)
+        self.assertEqual(decision["canonical_decision_state"]["preferences"], "COMPLETE")
+        self.assertEqual(decision["recommendation_visibility"], "PROVISIONAL_RANKING_VISIBLE")
         self.assertNotIn("degraded_result_notice", result)
         for row in result["results"]:
             self.assertEqual("MUST_ELIGIBLE", row.get("must_eligibility"))

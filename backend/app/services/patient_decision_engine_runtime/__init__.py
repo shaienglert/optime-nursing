@@ -339,7 +339,7 @@ def _attach_facility_care_partner_access(rows: List[Dict[str, Any]], care_partne
         }
 
 
-def _run_prepared_decision(questionnaire_state: Dict[str, Any], natural_language_query: str = "", limit: int = 50, *, prepared_profile: Dict[str, Any]) -> Dict[str, Any]:
+def _run_prepared_decision(questionnaire_state: Dict[str, Any], natural_language_query: str = "", limit: int = 50, *, prepared_profile: Dict[str, Any], return_full_universe: bool = False) -> Dict[str, Any]:
     from app.services.canonical_intake_state import canonicalize_intake_state
     questionnaire_state = canonicalize_intake_state(questionnaire_state)
     _stage_started = time.perf_counter()
@@ -415,7 +415,8 @@ def _run_prepared_decision(questionnaire_state: Dict[str, Any], natural_language
     _attach_facility_care_partner_access(ranked_survivors, care_partner_layer)
     _stage_started = _mark("care_partner_layer_ms", _stage_started)
     logger.info("runtime_run_patient_decision_engine_breakdown_ms %s total_ms=%s", _stage_timings, round(sum(_stage_timings.values()), 1))
-    selected = ranked_survivors[: max(0, int(limit or 0))]
+    # This private stage limits research, not the candidate comparison universe.
+    selected = ranked_survivors if return_full_universe else ranked_survivors[:max(0, int(limit or 0))]
     core["results"] = selected
     core["result_count"] = len(selected)
     core["must_gate_rejected_count"] = len(rejected)
@@ -510,7 +511,10 @@ def _run_prepared_decision(questionnaire_state: Dict[str, Any], natural_language
         "core_results_before_governance_call id=%s core_results_count=%s",
         id(core), len(core.get("results") or []),
     )
-    return attach_governed_knowledge_learning_and_audit(core=core, questionnaire_state=questionnaire_state)
+    # The orchestrated path persists only after its final selection.
+    if return_full_universe:
+        return core
+    return attach_governed_knowledge_learning_and_audit(core=core, questionnaire_state=questionnaire_state, audit_limit=max(0, int(limit or 0)))
 
 
 __all__ = ["_regulatory_index", "build_patient_needs_profile", "build_patient_comparison_context", "run_patient_decision_engine"]

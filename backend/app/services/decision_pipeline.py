@@ -120,19 +120,26 @@ def _ranking_basis(row: dict[str, Any]) -> dict[str, Any]:
 def _attach_room_pricing_truth(rows: list[dict[str, Any]]) -> None:
     """Attach room-level governed price truth before budget policy runs."""
     from app.database import SessionLocal
-    from app.services.facility_room_service import list_room_types
+    from app.models.facility_room_offering import FacilityRoomType
     db=SessionLocal()
     try:
+        identifiers = {str(row.get("canonical_facility_id")) for row in rows if row.get("canonical_facility_id")}
+        if not identifiers:
+            return
+        try:
+            rooms = db.query(FacilityRoomType).filter(FacilityRoomType.canonical_facility_id.in_(identifiers)).order_by(FacilityRoomType.id).all()
+        except Exception as exc:
+            if "facility_room_types" in str(exc) and ("no such table" in str(exc).lower() or "does not exist" in str(exc).lower()):
+                db.rollback()
+                return
+            raise
+        rooms_by_id = {}
+        for room in rooms:
+            rooms_by_id.setdefault(room.canonical_facility_id, []).append(room)
         for row in rows:
             cid=str(row.get("canonical_facility_id") or "")
             if not cid: continue
-            try:
-                rooms=list_room_types(db,cid)
-            except Exception as exc:
-                if "facility_room_types" in str(exc) and ("no such table" in str(exc).lower() or "does not exist" in str(exc).lower()):
-                    db.rollback()
-                    continue
-                raise
+            rooms=rooms_by_id.get(cid, [])
             priced=[]
             for room in rooms:
                 if room.monthly_price_cents is None: continue
@@ -183,7 +190,8 @@ def _apply_combined_care_layer(result: dict[str, Any], questionnaire_state: dict
         row["tied_with"] = [rows[i].get("facility_name") for i in tied_indexes]
         row["ranking_basis"] = _ranking_basis(row)
         row.setdefault("explanation", {})["combined_care_solution"] = row.get("combined_care_solution") or {}
-    selected = rows[: max(0, int(limit or 0))]
+    # Final selection owns the display limit; late care reconciliation must see all rows.
+    selected = rows
     result["results"] = selected
     result["result_count"] = len(selected)
     result["combined_care_solution_policy"] = summary
@@ -385,6 +393,22 @@ def _reconcile_budget_notice(result: dict[str, Any], decision_questionnaire: dic
     result["market_coverage_notice"] = notice or None
 
 
+def _persist_selected_decision_audit(result: dict[str, Any], questionnaire_state: dict[str, Any], limit: int) -> dict[str, Any]:
+    from app.services.decision_governance_runtime import attach_governed_knowledge_learning_and_audit
+
+    selected = {row.get("canonical_facility_id"): row for row in result.get("results") or []}
+    trace = result.get("recommendation_audit_trace") or {}
+    trace["recommendations"] = [
+        {**audit, "rank_position": selected[audit.get("canonical_facility_id")].get("rank_position")}
+        for audit in trace.get("recommendations") or []
+        if audit.get("canonical_facility_id") in selected
+    ]
+    result["recommendation_audit_trace"] = trace
+    return attach_governed_knowledge_learning_and_audit(
+        core=result, questionnaire_state=questionnaire_state, audit_limit=max(0, int(limit or 0)),
+    )
+
+
 def _attach_pipeline_trace(result: dict[str, Any]) -> dict[str, Any]:
     from app.services.decision_pipeline_trace import attach_decision_pipeline_trace
     return attach_decision_pipeline_trace(result)
@@ -433,7 +457,7 @@ def run_decision_pipeline(questionnaire_state: dict[str, Any], natural_language_
         decision_questionnaire = materialize_questionnaire(decision_profile)
         if isinstance(questionnaire_state.get("questionnaireCompletion"), dict):
             decision_questionnaire["questionnaireCompletion"] = questionnaire_state["questionnaireCompletion"]
-    result = runner(questionnaire_state=decision_questionnaire, natural_language_query="", limit=internal_limit, prepared_profile=profile)
+    result = runner(questionnaire_state=decision_questionnaire, natural_language_query="", limit=internal_limit, prepared_profile=profile, return_full_universe=True)
     stage_started = _mark("run_patient_decision_engine_deterministic_ms", stage_started)
     if not isinstance(result, dict):
         return result
@@ -475,6 +499,8 @@ def run_decision_pipeline(questionnaire_state: dict[str, Any], natural_language_
     stage_started = _mark("attach_ai_process_owner_guarded_ms", stage_started)
     result = apply_canonical_decision_state_authority(result)
     result = _suppress_unverified_recommendations(result)
+    result = _persist_selected_decision_audit(result, decision_questionnaire, limit)
+    stage_started = _mark("persist_final_selection_audit_ms", stage_started)
     ledger = _attach_decision_funnel(result, decision_questionnaire)
     _reconcile_budget_notice(result, decision_questionnaire)
     from app.services.oomniker_optimizer import analyze_oomniker

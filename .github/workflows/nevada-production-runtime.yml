@@ -43,6 +43,7 @@ on:
       - 'backend/tests/test_decision_quality_market_and_regulatory.py'
       - 'backend/tests/test_decision_quality_strategy_families.py'
       - 'backend/tests/test_decision_quality_topn_causality.py'
+      - 'backend/tests/test_full_universe_preference_contract.py'
       - 'backend/tests/test_decision_quality_topn_gates.py'
       - 'backend/tests/test_golden_topn_decision_quality.py'
       - 'data/nevada/verified/independent_living_primary_evidence.json'
@@ -98,6 +99,7 @@ jobs:
             tests/test_decision_quality_market_and_regulatory.py \
             tests/test_decision_quality_strategy_families.py \
             tests/test_decision_quality_topn_causality.py \
+            tests/test_full_universe_preference_contract.py \
             tests/test_decision_quality_topn_gates.py \
             tests/test_golden_topn_decision_quality.py
       - name: Verify unified AI interview, Guardian, Valley and READY contracts
@@ -217,7 +219,10 @@ jobs:
           # preserves and ranks the MUST-qualified set.
           assert nonblocking['result_count'] == 5 and len(nonblocking['results']) == 5
           assert nonblocking['decision_intelligence']['recommendation_execution_allowed'] is True
-          assert nonblocking['decision_intelligence']['canonical_decision_state']['phase'] == 'FINAL_RECOMMENDATION'
+          # Full-universe research gaps preserve visibility without claiming finality.
+          assert nonblocking['must_pending_verification_count'] > 0
+          assert nonblocking['decision_intelligence']['canonical_decision_state']['phase'] == 'PROVISIONAL_RECOMMENDATION'
+          assert all(row['must_eligibility'] == 'MUST_ELIGIBLE' for row in nonblocking['results'])
 
           hi_runtime.interpret_client_intent_with_ai = lambda **kwargs: with_facts({
               'decision_readiness': 'READY', 'next_question': None, 'statements': [],
