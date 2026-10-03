@@ -88,7 +88,7 @@ test('production independent woman anywhere Las Vegas $6500', async ({ page }, t
      await page.getByRole('button',{name:'Continue',exact:true}).click();
    }
    await expect(page).toHaveURL(/\\/results/,{timeout:60000});
-   await expect(page.locator('main')).not.toContainText('Finding options',{timeout:90000});
+   await expect(page.getByText('OOmnik results',{exact:true})).toBeVisible({timeout:120000});
    await Promise.allSettled(responseTasks);
    console.log('FINAL_RESULTS',await page.locator('main').innerText());
  } finally {
