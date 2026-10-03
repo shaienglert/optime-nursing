@@ -5,6 +5,7 @@ import re
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict
+from app.services.research_coverage_contract import EXCLUDED_DOMAINS
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -56,6 +57,10 @@ def get_public_reputation(row: Dict[str, Any]) -> Dict[str, Any]:
     Reputation is enrichment only. It cannot establish identity, care capability,
     licensing, or MUST eligibility. Missing evidence remains UNKNOWN.
     """
+    policy = _snapshot().get("policy") or {}
+    source_name = _norm(policy.get("source"))
+    if any(_norm(domain.split(".")[0]) in source_name for domain in EXCLUDED_DOMAINS):
+        return {"rating": "UNKNOWN", "review_count": "UNKNOWN", "source": "EXCLUDED_REFERRAL_SOURCE", "identity_verified": False}
     row_names = _row_identity_names(row)
     address = _norm_addr(row.get("address") or row.get("facility_address"))
     city = _norm(row.get("city"))

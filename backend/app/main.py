@@ -2797,6 +2797,50 @@ def _cms_regulatory_history(facility: Dict[str, Any]) -> Optional[Dict[str, Any]
     }
 
 
+@app.get("/admin/research-institute/coverage")
+def get_research_institute_coverage(_: None = Depends(require_admin_token)):
+    from app.services.institutional_research import research_coverage_report
+    return research_coverage_report(get_canonical_facility_index())
+
+
+@app.post("/admin/research-institute/refresh")
+def refresh_research_institute(_: None = Depends(require_admin_token)):
+    from app.services.research_institute_scheduler import queue_daily_facility_refresh
+    return queue_daily_facility_refresh()
+
+
+@app.post("/admin/research-institute/daily-reports")
+def capture_research_daily_report(report_date: Optional[str] = None, db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
+    from datetime import date, timezone
+    from app.services.research_daily_reports import archive_daily_report
+    try:
+        day = date.fromisoformat(report_date) if report_date else datetime.now(timezone.utc).date()
+        return archive_daily_report(db, day)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@app.get("/admin/research-institute/daily-reports")
+def list_research_daily_reports(limit: int = Query(30, ge=1, le=90), db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
+    from app.services.research_daily_reports import daily_report_history
+    return {"reports": daily_report_history(db, limit)}
+
+
+@app.post("/admin/research-institute/process")
+def process_research_institute(limit: int = Query(10, ge=1, le=50), _: None = Depends(require_admin_token)):
+    from app.services.decision_research_worker import process_pending_decision_research
+    return process_pending_decision_research(limit=limit)
+
+
+@app.get("/canonical-facilities/{canonical_id}/research")
+def get_canonical_facility_research(canonical_id: str):
+    from app.services.institutional_research import facility_research_report
+    facility = get_canonical_facility_index().get(canonical_id)
+    if not facility:
+        raise HTTPException(status_code=404, detail="Canonical facility not found")
+    return facility_research_report(canonical_id, facility)
+
+
 @app.get("/canonical-facilities/{canonical_id}/regulatory-history")
 async def get_canonical_facility_regulatory_history(canonical_id: str):
     canonical_index = get_canonical_facility_index()

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { FacilityResearchPanel } from "@/components/facility/facility-research-panel";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
@@ -314,6 +315,7 @@ export function FacilityProfileClient({ facilityId, backHref, backLabel }: Facil
               </div>
             </section>
 
+            <FacilityResearchPanel canonicalFacilityId={canonicalFacilityId} />
             <section className="rounded-3xl border border-[#e8ddcc] bg-white p-5 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.45)]">
               <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#5f7f6b]">Location, quality, and evidence</p>
                             <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#5f7f6b]">Location, quality, and evidence</p>

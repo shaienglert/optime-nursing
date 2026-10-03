@@ -686,25 +686,14 @@ def _score_indexes(facility: Facility, signals: List[Dict[str, str]]) -> Dict[st
 
 
 def _build_narrative(indexes: Dict[str, float], positive_signals: List[str], negative_signals: List[str], missing_information: List[str]) -> str:
-    family_phrase = "strong family satisfaction" if indexes["family_satisfaction_index"] >= 65 else "mixed family satisfaction"
-    social_phrase = "unusually high social engagement" if indexes["social_energy_index"] >= 65 else "moderate social engagement"
-
-    if indexes["staff_stability_index"] < 45:
-        staffing_phrase = "employee turnover appears elevated compared with peers"
-    else:
-        staffing_phrase = "staff stability appears acceptable compared with peers"
-
-    regulatory_phrase = "two or more regulatory deficiencies were identified" if indexes["regulatory_risk_index"] >= 60 else "no major new regulatory risk pattern was detected"
-
-    positive_note = f" Key positives: {', '.join(positive_signals[:2])}." if positive_signals else ""
-    negative_note = f" Key concerns: {', '.join(negative_signals[:2])}." if negative_signals else ""
-
-    missing_note = f" Missing information: {', '.join(missing_information[:2])}." if missing_information else ""
-
-    return (
-        "During the last 12 months this community demonstrated "
-        f"{family_phrase} and {social_phrase}. However, {staffing_phrase} and {regulatory_phrase}.{positive_note}{negative_note}{missing_note}"
-    )
+    parts = ["This profile summarizes connected evidence; it does not establish a complete 12-month complaint history."]
+    if positive_signals:
+        parts.append(f"Recorded positives: {'; '.join(positive_signals[:2])}.")
+    if negative_signals:
+        parts.append(f"Recorded concerns: {'; '.join(negative_signals[:2])}.")
+    if missing_information:
+        parts.append(f"Missing information: {'; '.join(missing_information)}")
+    return " ".join(parts)
 
 
 def _upsert_profile(
@@ -788,11 +777,9 @@ def _upsert_profile(
 def build_facility_intelligence_profile(db: Session, facility: Facility) -> FacilityIntelligenceProfile:
     all_signals = []
     all_signals.extend(_collect_regulatory_signals(db, facility))
-    all_signals.extend(_collect_review_signals(db, facility))
-    all_signals.extend(_collect_social_signals(facility))
-    all_signals.extend(_collect_news_signals(facility))
-    all_signals.extend(_collect_legal_signals(facility))
-    all_signals.extend(_collect_activation_wave3_signals(facility))
+    # Legacy review rows have no original URL or verified collection provenance.
+    # Name-based social/news/legal guesses and hash-generated Google/Yelp signals
+    # are not research. They must never become family-facing evidence.
 
     deduped = _deduplicate_signals(all_signals)
 
@@ -804,6 +791,8 @@ def build_facility_intelligence_profile(db: Session, facility: Facility) -> Faci
     negative_signals = [signal["summary"] for signal in deduped if signal["polarity"] == "negative"]
 
     missing_information = []
+    missing_information.append("Official complaints in the last 12 months require the institutional research report; absence of findings is not absence of complaints.")
+    missing_information.append("Consumer ratings and independent awards require a permitted, identity-verified source connection.")
     if not any(signal["category"] == "legal" for signal in deduped):
         missing_information.append("No current public legal case snapshot is connected.")
     if not any(signal["category"] == "news" for signal in deduped):

@@ -1,0 +1,66 @@
+name: Research Institute — delivery and freshness
+
+on:
+  schedule:
+    - cron: '25 4 * * *'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'backend/app/services/*research*.py'
+      - 'backend/app/services/intelligence_agent.py'
+      - 'backend/app/services/research_coverage_contract.py'
+      - 'backend/app/services/decision_engine_evidence.py'
+      - 'backend/app/services/personal_decision_report_builder.py'
+      - 'backend/tests/test_institutional_research.py'
+      - 'backend/tests/test_research_daily_reports.py'
+      - 'frontend/src/components/facility/*research*'
+      - 'scripts/run_research_institute_monitor.py'
+      - '.github/workflows/research-institute.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: research-institute-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r backend/requirements.txt pytest
+      - run: python -m pytest backend/tests/test_institutional_research.py backend/tests/test_research_daily_reports.py backend/tests/test_research_institute_scheduler.py backend/tests/test_research_event_refresh.py backend/tests/test_research_source_change_detection.py backend/tests/test_room_pricing_research_ingestion.py -q
+        env:
+          PYTHONPATH: backend
+  production-delivery:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install requests
+      - name: Refresh real facilities and verify source coverage
+        run: python scripts/run_research_institute_monitor.py
+        env:
+          OOMNIK_RESEARCH_BACKEND_URL: ${{ vars.OOMNIK_RESEARCH_BACKEND_URL }}
+          OOMNIK_RESEARCH_ADMIN_TOKEN: ${{ secrets.OOMNIK_RESEARCH_ADMIN_TOKEN }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: research-institute-coverage
+          path: research-institute-coverage.json
+          if-no-files-found: warn
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: research-daily-reports
+          path: research-daily-reports/
+          retention-days: 90
+          if-no-files-found: warn

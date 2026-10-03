@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { FacilityResearchPanel } from "@/components/facility/facility-research-panel";
 import { useEffect, useMemo, useState } from "react";
 
 import { FacilityParameterTable, FacilityRooms, fetchFacilityParameterTable, fetchFacilityRooms, requestFacilityOutreach } from "@/lib/api";
@@ -247,6 +248,7 @@ export function CanonicalFacilityProfileClient({ canonicalFacilityId, backHref, 
             </div>
           </div>
 
+          <FacilityResearchPanel canonicalFacilityId={canonicalFacilityId} />
           <div className="rounded-3xl border border-[#e8ddcc] bg-white p-5">
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#5f7f6b]">Nevada regulatory history</p>
             {history ? (
