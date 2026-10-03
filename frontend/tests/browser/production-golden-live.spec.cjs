@@ -103,9 +103,10 @@ async function answerInterview(page, scenario, maxSteps = 120) {
   throw new Error('Intake did not reach the summary within the step budget');
 }
 
+test.use({ screenshot: 'only-on-failure', trace: 'retain-on-failure' });
+
 test.describe('deployed production golden customer journeys', () => {
   test.setTimeout(600_000);
-  test.use({ screenshot: 'only-on-failure', trace: 'retain-on-failure' });
   test.afterEach(async ({ page }, info) => {
     fs.writeFileSync(info.outputPath('final-screen.txt'), await page.locator('main').innerText().catch(() => 'No main content'));
     await page.screenshot({path: info.outputPath('final-screen.png'), fullPage:true}).catch(() => {});
