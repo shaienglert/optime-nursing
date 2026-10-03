@@ -28,6 +28,7 @@ assert(canonical.dataset_mode === 'SYNTHETIC_PILOT', 'canonical data must be lab
 assert(canonical.records.length === expectedCount, `pilot must contain exactly ${expectedCount} facilities`);
 const facilityIds = new Set(canonical.records.map((row) => row.canonical_id));
 assert(facilityIds.size === expectedCount, 'pilot IDs must be unique');
+assert(new Set(canonical.records.map((row) => row.facility_name)).size === expectedCount, 'every pilot community must have a unique name: two different communities with one name are indistinguishable in results');
 assert(canonical.records.every((row) => row.synthetic_pilot === true && row.truth_label.includes('FICTIONAL')), 'every facility must be visibly fictional');
 assert(canonical.records.every((row) => row.license_status === 'SYNTHETIC_PILOT_ACTIVE'
   && row.expiration_date === '12/31/2030'

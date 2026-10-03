@@ -285,6 +285,7 @@ def build() -> tuple[list[dict], list[dict], list[dict], list[dict], list[dict]]
     portal_capabilities: list[dict] = []
     now = datetime.now(timezone.utc).isoformat()
 
+    used_names: set[str] = set()
     for offset in range(PILOT_FACILITY_COUNT):
         index = offset + 1
         archetype_id, care_label, low, high = ARCHETYPES[offset % len(ARCHETYPES)]
@@ -292,6 +293,18 @@ def build() -> tuple[list[dict], list[dict], list[dict], list[dict], list[dict]]
         city, zip_code, base_lat, base_lon = CITIES[offset % len(CITIES)]
         canonical_id = f"PILOT-NV-{index:03d}"
         name = f"{PREFIXES[_name_component_index(offset, 'prefix', len(PREFIXES))]} {SUFFIXES[_name_component_index(offset, 'suffix', len(SUFFIXES))]} {care_label}"
+        # 10 prefixes x 5 suffixes x 8 care labels cannot name 500 communities uniquely, and two
+        # different communities with one name are indistinguishable in results. A repeated name is
+        # disambiguated by the community's own city, then by an ordinal, so every name is unique.
+        if name in used_names:
+            name = f"{name} of {city.title()}"
+        ordinal = 2
+        unique_name = name
+        while unique_name in used_names:
+            unique_name = f"{name} {ordinal}"
+            ordinal += 1
+        name = unique_name
+        used_names.add(name)
         address = f"{1100 + index * 37} Pilot Mesa Avenue"
         capacity_low, capacity_high = CAPACITY_RANGES[archetype_id]
         capacity = capacity_low + ((index * 17) % (capacity_high - capacity_low + 1))
