@@ -2,6 +2,7 @@ const { test, expect } = require('@playwright/test');
 const fs = require('node:fs');
 const path = require('node:path');
 const zlib = require('node:zlib');
+test.use({ screenshot: 'only-on-failure', trace: 'retain-on-failure' });
 
 // Independent fixture oracle: every case below explicitly needs ADL and medication
 // support. A ceiling below every such facility's price MUST produce no matches.
@@ -103,7 +104,6 @@ async function answerInterview(page, scenario, maxSteps = 120) {
 
 test.describe('deployed production golden customer journeys', () => {
   test.setTimeout(600_000);
-  test.use({ screenshot: 'only-on-failure', trace: 'retain-on-failure' });
   test.afterEach(async ({ page }, info) => {
     fs.writeFileSync(info.outputPath('final-screen.txt'), await page.locator('main').innerText().catch(() => 'No main content'));
     await page.screenshot({path: info.outputPath('final-screen.png'), fullPage:true}).catch(() => {});
