@@ -94,6 +94,8 @@ from app.services.provider_identity import (
     run_annual_reverification,
     start_email_verification,
     validate_license_ownership,
+    verify_provider_access_token,
+    provider_session_user_id,
 )
 from app.services.facility_profile_portal import (
     add_photo,
@@ -742,8 +744,8 @@ class ParameterRegistryOut(BaseModel):
 
 class PatientDecisionEngineRequestIn(BaseModel):
     questionnaire_state: Dict[str, Any]
-    natural_language_query: Optional[str] = ""
-    limit: int = 50
+    natural_language_query: Optional[str] = Field(default="", max_length=12000)
+    limit: int = Field(default=50, ge=1, le=200)
     intake_profile_id: Optional[str] = None
 
 
@@ -752,8 +754,8 @@ class PersonalDecisionReportRequestIn(BaseModel):
     # report for a case created by an earlier call -- the stored inputs are used and
     # the pipeline is re-run fresh against current facility data.
     questionnaire_state: Dict[str, Any] = Field(default_factory=dict)
-    natural_language_query: Optional[str] = ""
-    limit: int = 50
+    natural_language_query: Optional[str] = Field(default="", max_length=12000)
+    limit: int = Field(default=50, ge=1, le=200)
     # Returned by /decision-engine/recommendations. Reused only for identical inputs.
     decision_id: Optional[str] = None
     # Deprecated and ignored: a report is never built from a client-supplied decision.
@@ -764,7 +766,7 @@ class PersonalDecisionReportRequestIn(BaseModel):
 
 class PatientNeedsProfileRequestIn(BaseModel):
     questionnaire_state: Dict[str, Any]
-    natural_language_query: Optional[str] = ""
+    natural_language_query: Optional[str] = Field(default="", max_length=12000)
 
 
 class PatientComparisonContextRequestIn(BaseModel):
@@ -1009,6 +1011,8 @@ class IdentityVerificationCompleteOut(BaseModel):
     user_id: int
     verification_completed_at: str
     verification_method: str
+    access_token: str
+    access_token_expires_in_seconds: int
 
 
 class LicenseValidationIn(BaseModel):
@@ -1034,7 +1038,7 @@ class DeferredReportIn(BaseModel):
     questionnaire: Dict[str, Any] = Field(default_factory=dict)
     query_text: str
     market: Optional[str] = None
-    limit: int = 5
+    limit: int = Field(default=5, ge=1, le=25)
     degraded_reason: Optional[str] = None
     eligible_at_request: Optional[int] = None
 
@@ -3043,7 +3047,7 @@ async def run_intelligence(facility_id: Optional[int] = Query(default=None), db:
 
 
 @app.get("/intelligence/facilities/{id}", response_model=FacilityIntelligenceProfileOut)
-async def get_facility_intelligence_profile(id: int, db: Session = Depends(get_db)):
+async def get_facility_intelligence_profile(id: int, db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
     profile = db.query(FacilityIntelligenceProfile).filter(FacilityIntelligenceProfile.facility_id == id).first()
     if not profile:
         facility = db.query(Facility).filter(Facility.id == id).first()
@@ -3135,12 +3139,12 @@ async def supervisor_run_cycle(db: Session = Depends(get_db), _: None = Depends(
 
 
 @app.get("/supervisor/incidents")
-async def supervisor_incidents(limit: int = Query(default=200, ge=1, le=1000), db: Session = Depends(get_db)):
+async def supervisor_incidents(limit: int = Query(default=200, ge=1, le=1000), db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
     return {"incidents": recent_incidents(db, limit=limit)}
 
 
 @app.get("/supervisor/stale-usage")
-async def supervisor_stale_usage(hours: int = Query(default=24, ge=1, le=24 * 30), db: Session = Depends(get_db)):
+async def supervisor_stale_usage(hours: int = Query(default=24, ge=1, le=24 * 30), db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
     return stale_usage_summary(db, hours=hours)
 
 
@@ -3163,7 +3167,7 @@ async def recommendation_knowledge_guard(payload: RecommendationGuardCheckIn, db
 
 
 @app.post("/human-intelligence", response_model=HumanIntelligenceOut)
-async def create_human_intelligence(payload: HumanIntelligenceIn, db: Session = Depends(get_db)):
+async def create_human_intelligence(payload: HumanIntelligenceIn, db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
     def clip_optional(value: Optional[float]) -> Optional[float]:
         if value is None:
             return None
@@ -3199,7 +3203,7 @@ async def create_human_intelligence(payload: HumanIntelligenceIn, db: Session = 
 
 
 @app.post("/human-intelligence/adaptive-response", response_model=AdaptiveQuestionResponseOut)
-def create_adaptive_response(payload: AdaptiveQuestionResponseIn, db: Session = Depends(get_db)):
+def create_adaptive_response(payload: AdaptiveQuestionResponseIn, db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
     record = AdaptiveQuestionResponse(
         resident_key=payload.resident_key,
         question_key=payload.question_key,
@@ -3217,7 +3221,7 @@ def create_adaptive_response(payload: AdaptiveQuestionResponseIn, db: Session = 
 
 
 @app.post("/resident-outcomes", response_model=ResidentOutcomeOut)
-async def create_resident_outcome(payload: ResidentOutcomeIn, db: Session = Depends(get_db)):
+async def create_resident_outcome(payload: ResidentOutcomeIn, db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
     if payload.human_intelligence_score_id is not None:
         score_record = db.query(HumanIntelligenceScore).filter(HumanIntelligenceScore.id == payload.human_intelligence_score_id).first()
         if not score_record:
@@ -3299,7 +3303,12 @@ async def import_facility_activities(
     facility_id: int,
     payload: ActivityImportIn,
     db: Session = Depends(get_db),
+    x_provider_token: Optional[str] = Header(default=None),
 ):
+    try:
+        verify_provider_access_token(x_provider_token or "", facility_id, payload.updated_by_user_id)
+    except PermissionError as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
     facility = db.query(Facility).filter(Facility.id == facility_id).first()
     if not facility:
         raise HTTPException(status_code=404, detail="Facility not found")
@@ -3354,7 +3363,12 @@ async def persist_provider_verification_answers(
     facility_id: int,
     payload: ProviderPersistIn,
     db: Session = Depends(get_db),
+    x_provider_token: Optional[str] = Header(default=None),
 ):
+    try:
+        verify_provider_access_token(x_provider_token or "", facility_id, payload.verified_by_user_id)
+    except PermissionError as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
     facility = db.query(Facility).filter(Facility.id == facility_id).first()
     if not facility:
         raise HTTPException(status_code=404, detail="Facility not found")
@@ -3388,7 +3402,12 @@ async def persist_provider_verification_answers(
 async def get_facility_memory(
     facility_id: int,
     db: Session = Depends(get_db),
+    x_provider_token: Optional[str] = Header(default=None),
 ):
+    try:
+        provider_session_user_id(x_provider_token or "", facility_id)
+    except PermissionError as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
     facility = db.query(Facility).filter(Facility.id == facility_id).first()
     if not facility:
         raise HTTPException(status_code=404, detail="Facility not found")
@@ -3446,7 +3465,12 @@ async def provider_identity_license_validate(
     facility_id: int,
     payload: LicenseValidationIn,
     db: Session = Depends(get_db),
+    x_provider_token: Optional[str] = Header(default=None),
 ):
+    try:
+        provider_session_user_id(x_provider_token or "", facility_id)
+    except PermissionError as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
     try:
         result = validate_license_ownership(
             db=db,
@@ -3474,8 +3498,10 @@ async def provider_identity_field_update(
     facility_id: int,
     payload: FieldUpdateIn,
     db: Session = Depends(get_db),
+    x_provider_token: Optional[str] = Header(default=None),
 ):
     try:
+        verify_provider_access_token(x_provider_token or "", facility_id, payload.user_id)
         result = apply_facility_field_update(
             db=db,
             facility_id=facility_id,
@@ -3499,8 +3525,10 @@ async def provider_identity_revert_audit(
     audit_id: int,
     payload: RevertAuditIn,
     db: Session = Depends(get_db),
+    x_provider_token: Optional[str] = Header(default=None),
 ):
     try:
+        verify_provider_access_token(x_provider_token or "", facility_id, payload.reverted_by_user_id)
         result = revert_audit_change(
             db=db,
             facility_id=facility_id,
@@ -3521,8 +3549,10 @@ async def provider_identity_staff_invite(
     facility_id: int,
     payload: StaffInviteIn,
     db: Session = Depends(get_db),
+    x_provider_token: Optional[str] = Header(default=None),
 ):
     try:
+        verify_provider_access_token(x_provider_token or "", facility_id, payload.inviter_user_id)
         result = invite_staff_member(
             db=db,
             facility_id=facility_id,
@@ -3545,8 +3575,10 @@ async def provider_identity_role_change(
     facility_id: int,
     payload: RoleChangeIn,
     db: Session = Depends(get_db),
+    x_provider_token: Optional[str] = Header(default=None),
 ):
     try:
+        verify_provider_access_token(x_provider_token or "", facility_id, payload.actor_user_id)
         result = request_role_change(
             db=db,
             facility_id=facility_id,
@@ -3574,7 +3606,7 @@ async def provider_facility_search(
 
 
 @app.post("/provider/demo/opticare")
-async def provider_portal_opticare_demo(db: Session = Depends(get_db)):
+async def provider_portal_opticare_demo(db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
     """Create or return the one isolated, non-production portal test record."""
     return ensure_opticare_demo(db)
 
@@ -3592,8 +3624,10 @@ async def provider_facility_save_capabilities(
     facility_id: int,
     payload: CapabilitySaveIn,
     db: Session = Depends(get_db),
+    x_provider_token: Optional[str] = Header(default=None),
 ):
     try:
+        verify_provider_access_token(x_provider_token or "", facility_id, payload.user_id)
         result = save_capabilities(
             db=db,
             facility_id=facility_id,
@@ -3613,8 +3647,10 @@ async def provider_facility_add_photo(
     facility_id: int,
     payload: PhotoAddIn,
     db: Session = Depends(get_db),
+    x_provider_token: Optional[str] = Header(default=None),
 ):
     try:
+        verify_provider_access_token(x_provider_token or "", facility_id, payload.user_id)
         return add_photo(
             db=db,
             facility_id=facility_id,
@@ -3636,8 +3672,10 @@ async def provider_facility_remove_photo(
     photo_id: int,
     payload: PhotoRemoveIn,
     db: Session = Depends(get_db),
+    x_provider_token: Optional[str] = Header(default=None),
 ):
     try:
+        verify_provider_access_token(x_provider_token or "", facility_id, payload.user_id)
         return deactivate_photo(
             db=db,
             facility_id=facility_id,
@@ -3652,7 +3690,15 @@ async def provider_facility_remove_photo(
 
 
 @app.get("/provider/facilities/{facility_id}/completeness")
-async def provider_facility_completeness(facility_id: int, db: Session = Depends(get_db)):
+async def provider_facility_completeness(
+    facility_id: int,
+    db: Session = Depends(get_db),
+    x_provider_token: Optional[str] = Header(default=None),
+):
+    try:
+        provider_session_user_id(x_provider_token or "", facility_id)
+    except PermissionError as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
     return recompute_completeness(db, facility_id)
 
 
