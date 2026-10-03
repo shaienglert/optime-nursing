@@ -81,3 +81,12 @@ including read-only fields, with its exact source path. This read authority does
 expand the AI write surface. Empty source evidence permits zero source traces.
 Classification A/B; PR-001, PR-002, PR-005, PR-009; no principle, ranking, oracle or
 architectural authority change; no owner approval required.
+
+Full live output also exposed one selected activity duplicated through its two canonical
+storage fields, and literal importance controls treated as provider properties. Strict
+preference identity uses canonical source path/value (folding the existing activity
+field alias), independent of model wording; unmapped narrative preserves distinct
+interpretations of the same multi-property sentence. Typed literal preference and
+importance controls remain audit context. Questions retain both AI meaning and exact
+client selection, so frequency answers do not become unexplained single-word requests.
+Classification A/B; existing source and unknown principles unchanged.

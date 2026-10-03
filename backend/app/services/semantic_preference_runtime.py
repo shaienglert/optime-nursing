@@ -47,6 +47,13 @@ def _semantic_result(human_context: Dict[str, Any]) -> Dict[str, Any]:
     return result
 
 
+def preference_verification_question(preference: Dict[str, Any], model: Dict[str, Any]) -> str:
+    meaning = str(preference.get("semantic_meaning") or "")
+    if model.get("preference_authority") == "QUOTED_STATEMENT_TRACES":
+        meaning += f" (client selection: {preference.get('client_expression')})"
+    return f"Please verify whether this community satisfies: {meaning}"
+
+
 def build_dynamic_preference_model(human_context: Dict[str, Any]) -> Dict[str, Any]:
     """Create an open-ended preference model from Semantic AI output.
 
@@ -54,7 +61,9 @@ def build_dynamic_preference_model(human_context: Dict[str, Any]) -> Dict[str, A
     context and explicit absence of preference remain in the original statement audit.
     """
     result = _semantic_result(human_context)
-    raw: List[Tuple[str, str, str]] = []
+    raw: List[Tuple[str, str, str, tuple[str, ...]]] = []
+    wire = result.get("wire_contract") if isinstance(result.get("wire_contract"), dict) else {}
+    traced_authority = wire.get("schema_constrained") is True
     excluded_expressions: set[str] = set()
     relevant_statements = []
     neutral_answers = {"none", "no preference", "not important", "not required", "not needed"}
@@ -71,14 +80,14 @@ def build_dynamic_preference_model(human_context: Dict[str, Any]) -> Dict[str, A
             or (paths == ["parkingRequirement"] and original.casefold() == "no")
             or (bool(paths) and all(path in context_fields for path in paths))
             or (bool(paths) and original.casefold() in control_values and all(path.endswith(("RequirementLevel", "Importance", "NeedScope")) for path in paths))
+            or (traced_authority and bool(paths) and original.casefold() in (control_values | {"nice to have", "must have"})
+                and all(path.endswith(("RequirementLevel", "Importance", "NeedScope", "Preference", "Requirement")) for path in paths))
         )
         if excluded:
             excluded_expressions.update(str(statement.get(key) or "").strip().casefold() for key in ("raw_text", "meaning"))
         else:
             relevant_statements.append(statement)
 
-    wire = result.get("wire_contract") if isinstance(result.get("wire_contract"), dict) else {}
-    traced_authority = wire.get("schema_constrained") is True
     # Strict production packets already provide quoted statement accounting. Their
     # unquoted summary must not recreate a preference excluded by its source role.
     # Keep legacy unversioned callers compatible; production never takes this path.
@@ -86,7 +95,7 @@ def build_dynamic_preference_model(human_context: Dict[str, Any]) -> Dict[str, A
         for value in result.get("preferences") or []:
             text = str(value or "").strip()
             if text and text.casefold() not in excluded_expressions and text.casefold() not in neutral_answers:
-                raw.append((text, text, "semantic_ai.preferences"))
+                raw.append((text, text, "semantic_ai.preferences", ()))
 
     for statement in relevant_statements:
         if str(statement.get("importance") or "").upper() != "NICE":
@@ -96,15 +105,22 @@ def build_dynamic_preference_model(human_context: Dict[str, Any]) -> Dict[str, A
         original = str(statement.get("raw_text") or "").strip()
         meaning = str(statement.get("meaning") or original).strip()
         if original or meaning:
-            raw.append((original or meaning, meaning or original, "semantic_ai.statements"))
+            raw.append((original or meaning, meaning or original, "semantic_ai.statements",
+                        tuple(str(path) for path in statement.get("mapped_parameters") or [])))
 
     seen: set[str] = set()
     preferences: List[Dict[str, Any]] = []
-    for original, meaning, source in raw:
+    from app.services.canonical_structured_profile import in_schema
+    # These canonical fields store the same selected activity list.
+    source_aliases = {"humanIntelligenceV2.socialProfile.hobbyParticipation": "happinessPreferences"}
+    for original, meaning, source, paths in raw:
         canonical_text = meaning.strip()
         # A generic model gloss can describe several distinct selected values.
         # Keep their source identities separate; never erase a quoted choice.
-        identity_text = json.dumps([canonical_text, original], ensure_ascii=False) if traced_authority else canonical_text
+        source_paths = sorted({source_aliases.get(path, path) for path in paths if in_schema(path)})
+        # A field/value is one obligation despite different model wording.
+        # Unmapped narrative can express distinct meanings in one source sentence.
+        identity_text = json.dumps([original, source_paths or canonical_text], ensure_ascii=False) if traced_authority else canonical_text
         dedupe_key = identity_text.casefold()
         if not canonical_text or dedupe_key in seen:
             continue
@@ -297,7 +313,7 @@ def verify_dynamic_preferences(rows: List[Dict[str, Any]], model: Dict[str, Any]
                     "status": "UNKNOWN",
                     "supporting_claim_ids": [],
                     "reason": "No validated semantic preference verification was available.",
-                    "provider_question_if_unknown": f"Please verify whether this community satisfies: {pref.get('client_expression') if model.get('preference_authority') == 'QUOTED_STATEMENT_TRACES' else pref.get('semantic_meaning')}",
+                    "provider_question_if_unknown": preference_verification_question(pref, model),
                 }
                 for pref in preferences
             ]
