@@ -105,7 +105,7 @@ def test_prepared_runtime_returns_all_survivors_but_keeps_research_budget():
         result = runtime._run_prepared_decision({}, '', 60, prepared_profile=profile, return_full_universe=True)
     assert len(result['results']) == 200
     assert len(research.call_args.args[0]) <= 60
-    assert audit.call_args.kwargs['audit_limit'] == 60
+    audit.assert_not_called()  # Final selection, not the preliminary order, owns writes.
 
 
 def test_structured_budget_audit_uses_late_governed_price_proof_only():
@@ -120,3 +120,15 @@ def test_structured_budget_audit_uses_late_governed_price_proof_only():
     assert 'BUDGET_FIT' in coverage['Verified-price']['verified_match']
     assert 'SOCIAL' in coverage['Verified-price']['unresolved']
     assert 'BUDGET_FIT' in coverage['Unproven-price']['unresolved']
+
+
+def test_late_winner_is_persisted_with_final_rank_and_no_preliminary_fanout():
+    from app.services.decision_pipeline import _persist_selected_decision_audit
+    rows = [{'canonical_facility_id': str(i), 'rank_position': i + 1} for i in range(500)]
+    winner = {**rows[-1], 'rank_position': 1}
+    result = {'results': [winner], 'recommendation_audit_trace': {'recommendations': rows}}
+    with patch('app.services.decision_governance_runtime.attach_governed_knowledge_learning_and_audit', side_effect=lambda **kw: kw['core']) as persist:
+        _persist_selected_decision_audit(result, {}, 10)
+    assert persist.call_args.kwargs['core']['results'] == [winner]
+    assert persist.call_args.kwargs['core']['recommendation_audit_trace']['recommendations'] == [winner]
+    assert persist.call_args.kwargs['audit_limit'] == 10

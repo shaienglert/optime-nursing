@@ -31,3 +31,7 @@ remain visible. Lifecycle/serialization tests assert that honest state and compl
 selected preference accounting; frozen ranking and care oracles stay unchanged.
 A late, governed numeric budget PASS closes duplicate structured budget uncertainty
 using the same funding-pathway cost, never a published-rate flag alone.
+
+Orchestrated audit persistence runs after final selection, so a late winner is
+recorded with its final rank. Preliminary research remains bounded, and no
+preliminary full-universe persistence is performed.

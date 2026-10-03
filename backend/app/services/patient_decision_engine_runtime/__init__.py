@@ -511,6 +511,9 @@ def _run_prepared_decision(questionnaire_state: Dict[str, Any], natural_language
         "core_results_before_governance_call id=%s core_results_count=%s",
         id(core), len(core.get("results") or []),
     )
+    # The orchestrated path persists only after its final selection.
+    if return_full_universe:
+        return core
     return attach_governed_knowledge_learning_and_audit(core=core, questionnaire_state=questionnaire_state, audit_limit=max(0, int(limit or 0)))
 
 

@@ -393,6 +393,22 @@ def _reconcile_budget_notice(result: dict[str, Any], decision_questionnaire: dic
     result["market_coverage_notice"] = notice or None
 
 
+def _persist_selected_decision_audit(result: dict[str, Any], questionnaire_state: dict[str, Any], limit: int) -> dict[str, Any]:
+    from app.services.decision_governance_runtime import attach_governed_knowledge_learning_and_audit
+
+    selected = {row.get("canonical_facility_id"): row for row in result.get("results") or []}
+    trace = result.get("recommendation_audit_trace") or {}
+    trace["recommendations"] = [
+        {**audit, "rank_position": selected[audit.get("canonical_facility_id")].get("rank_position")}
+        for audit in trace.get("recommendations") or []
+        if audit.get("canonical_facility_id") in selected
+    ]
+    result["recommendation_audit_trace"] = trace
+    return attach_governed_knowledge_learning_and_audit(
+        core=result, questionnaire_state=questionnaire_state, audit_limit=max(0, int(limit or 0)),
+    )
+
+
 def _attach_pipeline_trace(result: dict[str, Any]) -> dict[str, Any]:
     from app.services.decision_pipeline_trace import attach_decision_pipeline_trace
     return attach_decision_pipeline_trace(result)
@@ -483,6 +499,8 @@ def run_decision_pipeline(questionnaire_state: dict[str, Any], natural_language_
     stage_started = _mark("attach_ai_process_owner_guarded_ms", stage_started)
     result = apply_canonical_decision_state_authority(result)
     result = _suppress_unverified_recommendations(result)
+    result = _persist_selected_decision_audit(result, decision_questionnaire, limit)
+    stage_started = _mark("persist_final_selection_audit_ms", stage_started)
     ledger = _attach_decision_funnel(result, decision_questionnaire)
     _reconcile_budget_notice(result, decision_questionnaire)
     from app.services.oomniker_optimizer import analyze_oomniker
