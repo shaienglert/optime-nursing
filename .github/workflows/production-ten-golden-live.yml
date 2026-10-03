@@ -1,0 +1,39 @@
+name: Production ten golden live journeys
+on:
+  push:
+    branches: [diagnostics/production-ten-golden-500]
+    paths:
+      - '.github/workflows/production-ten-golden-live.yml'
+      - 'frontend/tests/browser/production-golden-live.spec.cjs'
+permissions:
+  contents: read
+jobs:
+  deployed-site-journeys:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: frontend
+    env:
+      OOMNIK_SCENARIO_COUNT: '10'
+      OOMNIK_EXPECTED_COHORT: '500'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install
+      - run: npm install --no-save @playwright/test@1.55.0
+      - run: npx playwright install --with-deps chromium
+      - name: Ten cases on current public production website
+        run: npx playwright test tests/browser/production-golden-live.spec.cjs --reporter=line,json --workers=2
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_NAME: test-results/results.json
+      - name: Preserve decisions and final screens
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-ten-golden-500
+          path: |
+            frontend/test-results
+            frontend/pilot-results
