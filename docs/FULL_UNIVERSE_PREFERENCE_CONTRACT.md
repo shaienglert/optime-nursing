@@ -71,3 +71,9 @@ questions name the actual client expression, so a generic gloss cannot hide spec
 Classification A; PR-001, PR-002, PR-005, PR-009. No principle, ranking-policy or oracle
 change; no owner approval required. This repairs the observed production loss of Classes
 in 004/008 without naming any activity in the implementation.
+The live branch gate also reproduced a preference quote paraphrased after the
+bounded repair. Provider grammar now separates NICE traces and constrains their
+raw source expression to original narrative spans or existing canonical button
+values. AI still authors meaning and relevance; runtime validation remains intact.
+This is A/B completion of the existing explicit-source contract, not a new
+interpretation or ranking authority. Empty source evidence permits no NICE trace.

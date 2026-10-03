@@ -75,7 +75,7 @@ class DefaultTransportTemperatureTests(unittest.TestCase):
         self.assertNotIn("field_trace_example", payload)
         self.assertNotIn("clarification_trace_example", payload)
         self.assertEqual(request["response_format"]["json_schema"]["schema"],
-            provider_schema(_required_output_schema(), family_text=payload["user_text"]))
+            provider_schema(_required_output_schema(), family_text=payload["user_text"], questionnaire_state=payload["questionnaire_state"]))
 
     def test_chat_completions_request_includes_temperature_zero_by_default(self) -> None:
         with patch.dict(os.environ, _BASE_ENV, clear=False):

@@ -6,6 +6,7 @@ existing packet keys; it does not infer facts, invent questions or decide finali
 from __future__ import annotations
 
 import json
+import copy
 import re
 from typing import Any, Literal, Union
 
@@ -86,7 +87,7 @@ def _key(required_output):
     return json.dumps(required_output["questionnaire_patch"], sort_keys=True)
 
 
-def provider_schema(required_output, *, family_text: str | None = None):
+def provider_schema(required_output, *, family_text: str | None = None, questionnaire_state: dict | None = None):
     schema = _model(_key(required_output)).model_json_schema()
 
     # Without narrative there is no legal exact source quote for a new field.
@@ -111,6 +112,7 @@ def provider_schema(required_output, *, family_text: str | None = None):
         properties = definition.get("properties", {})
         if "quote" in properties and contracts[properties["path"]["enum"][0]].positive:
             properties["value"]["minimum"] = 1
+    quotes = []
     if family_text and family_text.strip():
         # Grammar chooses source spans; it does not interpret their meaning.
         # The complete narrative remains available when a fact spans sentences.
@@ -133,6 +135,26 @@ def provider_schema(required_output, *, family_text: str | None = None):
             properties["quote"] = {"type": "string", "enum": eligible} if contract.unit else {"$ref": "#/$defs/SourceQuote"}
         alternatives = schema["properties"]["questionnaire_patch_fields"]["items"]["anyOf"]
         alternatives[:] = [item for item in alternatives if item.get("$ref") not in excluded]
+    if family_text is not None:
+        from app.services.canonical_structured_profile import build_structured_profile, in_schema
+        fields = build_structured_profile(questionnaire_state or {})["fields"]
+        selected = []
+        for path, field in fields.items():
+            if not in_schema(path):
+                continue
+            value = field.get("value")
+            selected.extend(value if isinstance(value, list) else [value])
+        preference_quotes = list(dict.fromkeys([*quotes, *[
+            value for value in selected if isinstance(value, str) and value.strip()]]))
+        ordinary_trace = schema["$defs"]["Trace"]
+        nice_trace = copy.deepcopy(ordinary_trace)
+        ordinary_trace["properties"]["importance"]["enum"].remove("NICE")
+        if preference_quotes:
+            nice_trace["properties"]["importance"]["enum"] = ["NICE"]
+            nice_trace["properties"]["raw_text"] = {"type": "string", "enum": preference_quotes}
+            schema["$defs"]["GroundedNiceTrace"] = nice_trace
+            schema["properties"]["statements"]["items"] = {"anyOf": [
+                {"$ref": "#/$defs/Trace"}, {"$ref": "#/$defs/GroundedNiceTrace"}]}
     return schema
 
 

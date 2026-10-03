@@ -326,7 +326,7 @@ def _default_transport(payload: Dict[str, Any]) -> Dict[str, Any]:
         headers["Authorization"] = f"Bearer {api_key}"
     uses_responses_api = "/responses" in url.lower()
     required_output = _required_output_schema()
-    schema = provider_schema(required_output, family_text=str(payload.get("user_text") or ""))
+    schema = provider_schema(required_output, family_text=str(payload.get("user_text") or ""), questionnaire_state=payload.get("questionnaire_state") or {})
     payload = copy.deepcopy(payload)
     # The record belongs to the caller, never to a previous model packet.
     # Rebuild this view for every request and repair using the same predicates
