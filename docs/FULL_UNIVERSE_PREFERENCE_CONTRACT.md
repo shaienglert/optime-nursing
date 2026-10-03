@@ -43,3 +43,9 @@ facility preference must be preserved as a NICE source trace by the interpreter.
 Legacy unversioned test/compatibility packets retain their existing behavior.
 Classification A/B; PR-001, PR-002, PR-005, PR-009; no principle change or new
 approval required. No candidate ranking or unknown-evidence policy is changed.
+
+Rejected schema-constrained packets must reach the existing single AI repair as
+rejected evidence, rather than an empty prior packet. The repair preserves both
+partners' facts, source quotes and original client inputs. Duplicate fields remain
+fatal unless the complete corrected packet passes the unchanged wire and clinical
+contracts; there is no last-value-wins normalization or additional retry loop.

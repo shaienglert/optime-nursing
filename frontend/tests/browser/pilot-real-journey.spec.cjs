@@ -186,9 +186,11 @@ test.describe('real synthetic-pilot customer journey', () => {
     const response = await recommendationResponse;
     expect(response.status()).toBe(200);
     const payload = await response.json();
+    fs.mkdirSync(path.join(process.cwd(), 'pilot-results'), { recursive: true });
+    fs.writeFileSync(path.join(process.cwd(), 'pilot-results', `${scenario.id}-decision.json`), `${JSON.stringify(payload, null, 2)}\n`);
     const results = payload.results || [];
     const dynamicModel = payload.decision_intelligence.dynamic_preference_model;
-    expect(dynamicModel.preference_authority).toBe('QUOTED_STATEMENT_TRACES');
+    expect(dynamicModel.preference_authority, JSON.stringify(payload.decision_intelligence.human_intelligence.semantic_ai)).toBe('QUOTED_STATEMENT_TRACES');
     expect(dynamicModel.preferences.every(pref => pref.source === 'semantic_ai.statements')).toBe(true);
     if (scenario.answers.activityImportance === 'Preference') {
       for (const activity of scenario.answers.activities || []) {

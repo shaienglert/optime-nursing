@@ -23,6 +23,7 @@ from app.services.canonical_gap_policy import normalize_gap_key
 from app.services.semantic_packet_wire import normalize_wire, parse_wire_json, provider_schema
 
 SEMANTIC_AI_SYSTEM_RULES = [
+    "Existing questionnaire selections are client evidence, separate from new narrative extraction. For each selected facility property, a statement may quote its exact existing questionnaire value and map its existing canonical path; do not emit questionnaire_patch_fields for unchanged selections. Only new/corrected fields need a user_text quote. When user_text is empty, emit no new patch fields. Preserve requested values as MUST/NICE traces using their separate requirement control.",
     "When requested property values have a separate Requirement/Preference control, enumerate each actual requested value in its own quoted MUST/NICE statement according to that control. This applies to arbitrary selected activities and other property lists. The control value itself is CONTEXT; absence-of-preference choices are CONTEXT. Do not leave requested values only in an advisory summary or transition context.",
     "The preferences string array is advisory metadata, never an independent decision source. Preserve every actual desired facility property, including arbitrary open-ended activities, in a quoted NICE statement trace. Do not leave a genuine facility preference only in preferences or classify its trace CONTEXT. Absence of preference and control values stay CONTEXT. Repairs must preserve these source traces.",
     'Only facility-testable desired properties belong in preferences or NICE traces. Explicit absence of preference, importance/requirement-level controls, resident biography and attitude toward moving are CONTEXT, retained in statement accounting without provider verification obligations. Preserve actual preferred activities as NICE even when separately reported as context. Do not infer a facility preference from a control value. Genuine negative preferences such as a smoke-free environment remain preferences.',
@@ -254,6 +255,7 @@ def _resolve_temperature() -> Optional[float]:
 
 
 TRANSPORT_SYSTEM_PROMPT = (
+    "Existing questionnaire selections are client evidence, separate from new narrative extraction. For each selected facility property, a statement may quote its exact existing questionnaire value and map its existing canonical path; do not emit questionnaire_patch_fields for unchanged selections. Only new/corrected fields need a user_text quote. When user_text is empty, emit no new patch fields. Preserve requested values as MUST/NICE traces using their separate requirement control. "
     "When requested property values have a separate Requirement/Preference control, enumerate each actual requested value in its own quoted MUST/NICE statement according to that control. This applies to arbitrary selected activities and other property lists. The control value itself is CONTEXT; absence-of-preference choices are CONTEXT. Do not leave requested values only in an advisory summary or transition context. "
     "The preferences string array is advisory metadata, never an independent decision source. Preserve every actual desired facility property, including arbitrary open-ended activities, in a quoted NICE statement trace. Do not leave a genuine facility preference only in preferences or classify its trace CONTEXT. Absence of preference and control values stay CONTEXT. Repairs must preserve these source traces. "
     'Only facility-testable desired properties belong in preferences or NICE traces. Explicit absence of preference, importance/requirement-level controls, resident biography and attitude toward moving are CONTEXT, retained in statement accounting without provider verification obligations. Preserve actual preferred activities as NICE even when separately reported as context. Do not infer a facility preference from a control value. Genuine negative preferences such as a smoke-free environment remain preferences. '
@@ -340,14 +342,23 @@ def _default_transport(payload: Dict[str, Any]) -> Dict[str, Any]:
         raise RuntimeError(f"SEMANTIC_AI_HTTP_{response.status_code}:{response.text[:500]}")
     body = response.json()
     if uses_responses_api:
-        return normalize_wire(_extract_responses_output(body), required_output, family_text=str(payload.get("user_text") or ""))
-    if isinstance(body, dict) and "choices" in body:
-        return normalize_wire(parse_wire_json(body["choices"][0]["message"]["content"]), required_output, family_text=str(payload.get("user_text") or ""))
-    if isinstance(body, dict) and "output" in body and isinstance(body["output"], dict):
-        return normalize_wire(body["output"], required_output, family_text=str(payload.get("user_text") or ""))
-    if isinstance(body, dict):
-        return normalize_wire(body, required_output, family_text=str(payload.get("user_text") or ""))
-    raise RuntimeError("SEMANTIC_AI_INVALID_RESPONSE")
+        wire_packet = _extract_responses_output(body)
+    elif isinstance(body, dict) and "choices" in body:
+        wire_packet = parse_wire_json(body["choices"][0]["message"]["content"])
+    elif isinstance(body, dict) and "output" in body and isinstance(body["output"], dict):
+        wire_packet = body["output"]
+    elif isinstance(body, dict):
+        wire_packet = body
+    else:
+        raise RuntimeError("SEMANTIC_AI_INVALID_RESPONSE")
+    try:
+        return normalize_wire(wire_packet, required_output, family_text=str(payload.get("user_text") or ""))
+    except RuntimeError as error:
+        # A rejected wire packet has not reached prior_packet. Give the bounded
+        # AI repair the complete rejected evidence, without accepting any field.
+        error.wire_diagnostic = copy.deepcopy(wire_packet)
+        error.patch_diagnostic = {"rejected_wire_packet": error.wire_diagnostic}
+        raise
 
 
 def _ground_clinical_patch(result: Dict[str, Any], user_text: str, state: Dict[str, Any]) -> Dict[str, Any]:
@@ -818,6 +829,7 @@ def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Opti
                     "unsupported_mapping": "Remove the unsupported path from mapped_parameters, retaining the original source quote and meaning. An empty mapped_parameters array is valid. Never manufacture a field value or substitute another unrelated canonical path to preserve a trace.",
                 },
                 "issue_actions": {
+                    "DUPLICATE_FIELD": "Return exactly one extraction entry per canonical path. Preserve all explicit selections in that field's supported array. For different people, retain each person's distinct needs and quotes in statements and coupleAssistance; never overwrite one partner with the other or combine contradictory facts as one person's answer. If the source is genuinely conflicting for the same person and time, ask a clarification rather than selecting a value.",
                     "NO_EXACT_FIELD_QUOTE": "Supply the field's own genuine source quote, or omit the unsupported field. Questionnaire defaults are not quotes from user_text.",
                     "KNOWN_FIELD_NOT_MATERIALIZED": "If the exact field value is explicit, include one {path,value,quote} entry in questionnaire_patch_fields. If the path was only loosely related or inferred, remove that path from mapped_parameters instead of inventing its value; retain the original meaningful statement and its actual supported fields.",
                     "UNSATISFIED_DEPENDENCY": "Supply the explicitly established parent field named in the contract error with its genuine source quote, or remove an unsupported detail. Never infer a parent fact or drop an explicit need.",
@@ -835,6 +847,7 @@ def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Opti
                     "preserve": "Keep known facts, each partner's distinct needs and exact source quotes. Never fill an unknown to avoid a question.",
                 },
                 "prior_packet": {key: value for key, value in prior_packet.items() if key not in {"governance", "learning_center"}},
+                "rejected_wire_packet": getattr(error, "wire_diagnostic", None),
                 "instruction": "Return the complete corrected packet using required_output exactly, including decision_readiness, questionnaire_patch and questionnaire_patch_sources. Preserve explicit client facts and unknowns. Every KNOWN/USED statement mapped to a client profile field must have that field in questionnaire_patch unless already supplied in questionnaire_state. Known medical detail requires its parent medicalCareProfile.needs selection: oxygenUse -> Oxygen, dialysisFrequency/dialysisCenter -> Dialysis, woundCareFrequency -> Wound care. Include the parent selection with its own exact quote; never drop an explicit clinical need to pass validation. Use only allowed enum values and exact nested schema paths. For every new/changed patch leaf, put its full dotted path in questionnaire_patch_sources with a quote copied exactly from original user_text; also account for the fact in statements. Reuse a genuine quote for related fields; never invent quotes, paraphrase them, move fields to the top level, or discard an explicit requirement to pass validation. Omit unsupported inferred fields and duplicate questionnaire defaults. gender must not be inferred from kinship/pronouns; coupleAssistance must be a string. If a material client question remains, include one ASKED MUST/UNKNOWN statement and its identical next_question. Otherwise return READY with statement accounting.",
             }
             repaired_packet = active_transport(repair_payload)
