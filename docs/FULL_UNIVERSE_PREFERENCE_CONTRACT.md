@@ -71,9 +71,13 @@ questions name the actual client expression, so a generic gloss cannot hide spec
 Classification A; PR-001, PR-002, PR-005, PR-009. No principle, ranking-policy or oracle
 change; no owner approval required. This repairs the observed production loss of Classes
 in 004/008 without naming any activity in the implementation.
-The live branch gate also reproduced a preference quote paraphrased after the
-bounded repair. Provider grammar now separates NICE traces and constrains their
-raw source expression to original narrative spans or existing canonical button
-values. AI still authors meaning and relevance; runtime validation remains intact.
-This is A/B completion of the existing explicit-source contract, not a new
-interpretation or ranking authority. Empty source evidence permits no NICE trace.
+Live gates reproduced paraphrased quotes, omitted selected properties and a read-only
+questionnaire answer mapped to a related writable field. Provider grammar now gives
+all relevance roles the same original narrative/button source expressions. Relevance
+cannot be chosen merely to enter a differently constrained syntax branch. AI still
+authors meaning and relevance; runtime validation and bounded repair remain intact.
+The existing-answer index includes every resolved canonical questionnaire field,
+including read-only fields, with its exact source path. This read authority does not
+expand the AI write surface. Empty source evidence permits zero source traces.
+Classification A/B; PR-001, PR-002, PR-005, PR-009; no principle, ranking, oracle or
+architectural authority change; no owner approval required.

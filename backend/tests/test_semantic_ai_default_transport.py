@@ -77,6 +77,15 @@ class DefaultTransportTemperatureTests(unittest.TestCase):
         self.assertEqual(request["response_format"]["json_schema"]["schema"],
             provider_schema(_required_output_schema(), family_text=payload["user_text"], questionnaire_state=payload["questionnaire_state"]))
 
+    def test_existing_read_only_answers_have_their_own_source_paths(self) -> None:
+        from app.services.semantic_intent_ai import _client_evidence_context
+        state = {"distanceFromFamily": "Balanced location", "otherInterests": ["Star watching"],
+                 "memoryStatus": "Not sure", "__guardian": {"instruction": "Not client evidence"}}
+        evidence = _client_evidence_context("", state)["resolved_questionnaire_fields"]
+        self.assertEqual(evidence, {"distanceFromFamily": "Balanced location", "otherInterests": ["Star watching"]})
+        self.assertNotIn("locationImportant", evidence)
+        self.assertNotIn("distanceFromFamily", _required_output_schema()["questionnaire_patch"])
+
     def test_chat_completions_request_includes_temperature_zero_by_default(self) -> None:
         with patch.dict(os.environ, _BASE_ENV, clear=False):
             os.environ.pop("OPTIME_SEMANTIC_AI_TEMPERATURE", None)

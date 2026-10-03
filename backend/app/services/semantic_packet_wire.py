@@ -6,7 +6,6 @@ existing packet keys; it does not infer facts, invent questions or decide finali
 from __future__ import annotations
 
 import json
-import copy
 import re
 from typing import Any, Literal, Union
 
@@ -146,15 +145,14 @@ def provider_schema(required_output, *, family_text: str | None = None, question
             selected.extend(value if isinstance(value, list) else [value])
         preference_quotes = list(dict.fromkeys([*quotes, *[
             value for value in selected if isinstance(value, str) and value.strip()]]))
-        ordinary_trace = schema["$defs"]["Trace"]
-        nice_trace = copy.deepcopy(ordinary_trace)
-        ordinary_trace["properties"]["importance"]["enum"].remove("NICE")
+        # One trace grammar for every relevance role. Splitting NICE into a
+        # separate quoted branch lets the decoder choose a role to satisfy
+        # syntax instead of the client's actual requirement.
         if preference_quotes:
-            nice_trace["properties"]["importance"]["enum"] = ["NICE"]
-            nice_trace["properties"]["raw_text"] = {"type": "string", "enum": preference_quotes}
-            schema["$defs"]["GroundedNiceTrace"] = nice_trace
-            schema["properties"]["statements"]["items"] = {"anyOf": [
-                {"$ref": "#/$defs/Trace"}, {"$ref": "#/$defs/GroundedNiceTrace"}]}
+            schema["$defs"]["Trace"]["properties"]["raw_text"] = {
+                "type": "string", "enum": preference_quotes}
+        else:
+            schema["properties"]["statements"]["maxItems"] = 0
     return schema
 
 

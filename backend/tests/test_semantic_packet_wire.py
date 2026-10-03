@@ -314,20 +314,18 @@ def test_empty_narrative_grammar_allows_no_new_fields_but_preserves_button_trace
     assert result["statements"][0]["raw_text"] == selected["happinessPreferences"][0]
 
 
-def test_nice_generation_grammar_has_only_genuine_sources_and_no_control_descriptions():
+def test_all_trace_roles_share_genuine_source_grammar():
     text = 'She wants a smoke-free courtyard.'
     state = {'happinessPreferences': ['Lunar astronomy club', 'Glacier microscopy seminars'],
              'humanIntelligenceV2': {'socialProfile': {'activityRequirementLevel': 'Preference'}},
              '__optime_guardian_context': {'instruction': 'Not a client quote'}}
     schema = provider_schema(_required_output_schema(), family_text=text, questionnaire_state=state)
-    nice = schema['$defs']['GroundedNiceTrace']['properties']
-    assert nice['importance']['enum'] == ['NICE']
-    assert set(nice['raw_text']['enum']) == {text, 'Lunar astronomy club', 'Glacier microscopy seminars', 'Preference'}
-    assert 'Their happiness profile includes Lunar astronomy club.' not in nice['raw_text']['enum']
-    assert 'NICE' not in schema['$defs']['Trace']['properties']['importance']['enum']
-    assert schema['properties']['statements']['items']['anyOf'] == [
-        {'$ref': '#/$defs/Trace'}, {'$ref': '#/$defs/GroundedNiceTrace'}]
+    trace_properties = schema['$defs']['Trace']['properties']
+    assert trace_properties['importance']['enum'] == ['MUST', 'NICE', 'CONTEXT', 'UNKNOWN']
+    assert set(trace_properties['raw_text']['enum']) == {text, 'Lunar astronomy club', 'Glacier microscopy seminars', 'Preference'}
+    assert 'Their happiness profile includes Lunar astronomy club.' not in trace_properties['raw_text']['enum']
+    assert 'GroundedNiceTrace' not in schema['$defs']
+    assert schema['properties']['statements']['items'] == {'$ref': '#/$defs/Trace'}
     empty = provider_schema(_required_output_schema(), family_text='', questionnaire_state={})
-    assert 'GroundedNiceTrace' not in empty['$defs']
-    assert 'NICE' not in empty['$defs']['Trace']['properties']['importance']['enum']
-    assert 'NICE' in provider_schema(_required_output_schema())['$defs']['Trace']['properties']['importance']['enum']
+    assert empty['properties']['statements']['maxItems'] == 0
+    assert 'enum' not in provider_schema(_required_output_schema())['$defs']['Trace']['properties']['raw_text']
