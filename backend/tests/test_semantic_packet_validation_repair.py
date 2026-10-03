@@ -239,3 +239,41 @@ def test_rejected_wire_repair_sees_both_partner_values_and_remains_bounded(corre
         repair = json.loads(post.call_args.kwargs["json"]["messages"][1]["content"])["packet_validation_repair"]
         assert repair["rejected_wire_packet"] == bad
         assert "DUPLICATE_FIELD" in repair["issue_actions"]
+
+
+@pytest.mark.parametrize("failure", ["missing", "paraphrased", "wrong_importance"])
+def test_selected_open_ended_properties_have_grounded_traces_without_losing_care(failure):
+    values = ["Glacier microscopy seminars", "Lunar astronomy club"]
+    state = {"budget": 6500, "referenceLocationValue": "Las Vegas",
+             "happinessPreferences": values,
+             "humanIntelligenceV2": {"socialProfile": {"activityRequirementLevel": "Preference", "hobbyParticipation": values}}}
+    good = packet()
+    good["wire_contract"] = {"schema_constrained": True}
+    for value in values:
+        good["statements"].append({"raw_text": value, "meaning": "The community should offer " + value,
+            "importance": "NICE", "knowledge_state": "KNOWN", "status": "USED", "mapped_parameters": ["happinessPreferences"]})
+    bad = deepcopy(good)
+    if failure == "missing":
+        bad["statements"].pop()
+    elif failure == "paraphrased":
+        bad["statements"][-1]["raw_text"] = "Their happiness profile includes " + values[-1]
+    else:
+        bad["statements"][-1]["importance"] = "CONTEXT"
+    with patch("app.services.semantic_intent_ai._default_transport", side_effect=[bad, good]) as transport:
+        result = interpret_client_intent_with_ai(user_text=TEXT, questionnaire_state=state)
+    assert transport.call_count == 2
+    repair = transport.call_args.args[0]["packet_validation_repair"]
+    assert "MISSING_SELECTED_PROPERTY_TRACE" in repair["validation_error"]
+    assert len(transport.call_args.args[0]["selected_facility_property_traces"]) == 2
+    assert result["questionnaire_patch"]["medicalCareProfile"]["needs"] == ["Dialysis"]
+    assert [t["raw_text"] for t in result["statements"] if t["importance"] == "NICE"] == values
+
+
+def test_repeated_missing_selected_preference_cannot_claim_validated_packet():
+    bad = packet()
+    bad["wire_contract"] = {"schema_constrained": True}
+    state = {"budget": 6500, "referenceLocationValue": "Las Vegas", "nearbyPlaces": ["Specialty art museum"], "nearbyPlacesImportance": "Nice to have"}
+    with patch("app.services.semantic_intent_ai._default_transport", side_effect=[deepcopy(bad), deepcopy(bad)]) as transport:
+        with pytest.raises(RuntimeError, match="MISSING_SELECTED_PROPERTY_TRACE"):
+            interpret_client_intent_with_ai(user_text=TEXT, questionnaire_state=state)
+    assert transport.call_count == 2

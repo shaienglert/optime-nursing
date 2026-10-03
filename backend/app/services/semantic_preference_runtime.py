@@ -58,7 +58,7 @@ def build_dynamic_preference_model(human_context: Dict[str, Any]) -> Dict[str, A
     relevant_statements = []
     neutral_answers = {"none", "no preference", "not important", "not required", "not needed"}
     control_values = {"yes", "no", "preference", "preferred", "requirement", "required", "important", "not important", "very important", "critical", "essential"}
-    context_fields = {"relationship", "gender", "ageGroup", "moveTiming", "budget", "medicaidStatus", "humanIntelligenceV2.transitionRiskProfile.attitudeTowardMove"}
+    context_fields = {"relationship", "gender", "ageGroup", "moveTiming", "budget", "medicaidStatus", "careSearchApproach", "humanIntelligenceV2.transitionRiskProfile.attitudeTowardMove"}
     for statement in result.get("statements") or []:
         if not isinstance(statement, dict):
             continue
@@ -69,7 +69,7 @@ def build_dynamic_preference_model(human_context: Dict[str, Any]) -> Dict[str, A
             or (bool(paths) and original.casefold() in neutral_answers)
             or (paths == ["parkingRequirement"] and original.casefold() == "no")
             or (bool(paths) and all(path in context_fields for path in paths))
-            or (bool(paths) and original.casefold() in control_values and all(path.endswith(("RequirementLevel", "Importance")) for path in paths))
+            or (bool(paths) and original.casefold() in control_values and all(path.endswith(("RequirementLevel", "Importance", "NeedScope")) for path in paths))
         )
         if excluded:
             excluded_expressions.update(str(statement.get(key) or "").strip().casefold() for key in ("raw_text", "meaning"))

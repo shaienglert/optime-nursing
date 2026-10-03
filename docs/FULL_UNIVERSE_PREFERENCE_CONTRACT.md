@@ -53,3 +53,12 @@ When narrative is empty, provider grammar permits zero new extraction entries:
 there is no legal narrative source quote. Existing button values remain client
 evidence and may have their own exact-value statement traces without rewriting
 the canonical profile. This completes the existing explicit-source boundary.
+
+Live browser artifacts showed that prompt-only retention was insufficient: selected
+activities sometimes disappeared from otherwise valid packets. A declarative
+field/control contract now enumerates the actual selected values (including arbitrary
+values), validates their individual MUST/NICE traces and requests the existing bounded
+AI repair on omission or wrong role. No fixed hobby catalog or ranking shortcut exists.
+NICE source expressions must be genuine narrative spans or exact existing selections;
+model-generated field descriptions cannot serve as quotes. Missing materialized-field
+repair receives an explicit path/source work list without supplying inferred values.

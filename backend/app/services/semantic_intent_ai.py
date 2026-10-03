@@ -133,6 +133,37 @@ def _required_output_schema() -> Dict[str, Any]:
     }
 
 
+def _selected_facility_property_traces(state: Dict[str, Any]) -> list[dict[str, str]]:
+    """Declare field/control relationships, never a catalog of property values."""
+    def get(path):
+        value = state
+        for part in path.split("."):
+            value = value.get(part) if isinstance(value, dict) else None
+        return value
+    declarations = (
+        ("happinessPreferences", "humanIntelligenceV2.socialProfile.activityRequirementLevel"),
+        ("humanIntelligenceV2.socialProfile.hobbyParticipation", "humanIntelligenceV2.socialProfile.activityRequirementLevel"),
+        ("nearbyPlaces", "nearbyPlacesImportance"),
+    )
+    requirements = {"Requirement", "Required", "Must have"}
+    preferences = {"Preference", "Preferred", "Nice to have"}
+    result, seen = [], set()
+    for path, control in declarations:
+        level = get(control)
+        if not isinstance(level, str):
+            continue
+        importance = "MUST" if level in requirements else "NICE" if level in preferences else None
+        values = get(path)
+        if not importance or not isinstance(values, list):
+            continue
+        for value in values:
+            if not isinstance(value, str) or not value.strip() or (importance, value) in seen:
+                continue
+            seen.add((importance, value))
+            result.append({"path": path, "quote": value, "importance": importance})
+    return result
+
+
 def _build_prompt(user_text: str, questionnaire_state: Dict[str, Any], learning_advice: Dict[str, Any]) -> Dict[str, Any]:
     from app.services.semantic_field_contract import describe_fields
     return {
@@ -164,6 +195,7 @@ def _build_prompt(user_text: str, questionnaire_state: Dict[str, Any], learning_
             },
         },
         "questionnaire_state": questionnaire_state,
+        "selected_facility_property_traces": _selected_facility_property_traces(questionnaire_state),
         "client_evidence": _client_evidence_context(user_text, questionnaire_state),
         "user_text": user_text,
         "learning_center_advice": learning_advice,
@@ -255,6 +287,7 @@ def _resolve_temperature() -> Optional[float]:
 
 
 TRANSPORT_SYSTEM_PROMPT = (
+    "Emit each selected_facility_property_traces item as a separate KNOWN/USED statement with exactly its quote, path and importance. These are existing questionnaire answers, never new extraction fields. Every NICE raw_text must be an exact narrative substring or an exact existing questionnaire value, not a generated description of the field. Put interpretation in meaning. Controls and absence of preference are CONTEXT. This contract applies to repairs too. "
     "Existing questionnaire selections are client evidence, separate from new narrative extraction. For each selected facility property, a statement may quote its exact existing questionnaire value and map its existing canonical path; do not emit questionnaire_patch_fields for unchanged selections. Only new/corrected fields need a user_text quote. When user_text is empty, emit no new patch fields. Preserve requested values as MUST/NICE traces using their separate requirement control. "
     "When requested property values have a separate Requirement/Preference control, enumerate each actual requested value in its own quoted MUST/NICE statement according to that control. This applies to arbitrary selected activities and other property lists. The control value itself is CONTEXT; absence-of-preference choices are CONTEXT. Do not leave requested values only in an advisory summary or transition context. "
     "The preferences string array is advisory metadata, never an independent decision source. Preserve every actual desired facility property, including arbitrary open-ended activities, in a quoted NICE statement trace. Do not leave a genuine facility preference only in preferences or classify its trace CONTEXT. Absence of preference and control values stay CONTEXT. Repairs must preserve these source traces. "
@@ -300,6 +333,7 @@ def _default_transport(payload: Dict[str, Any]) -> Dict[str, Any]:
     # used by the server's no-reask and minimum-dimension checks.
     payload["client_evidence"] = _client_evidence_context(
         str(payload.get("user_text") or ""), payload.get("questionnaire_state") or {})
+    payload["selected_facility_property_traces"] = _selected_facility_property_traces(payload.get("questionnaire_state") or {})
     # Strict grammar already supplies the response structure. Sending a second,
     # legacy packet shape and examples invites the model to mix the two formats.
     payload.pop("required_output", None)
@@ -753,6 +787,27 @@ def _validate_patch_contract(packet: Dict[str, Any], user_text: str, state: Dict
         if path in contracts:
             contracts[path].normalize(value, path)
     issues.extend(profile_issues(profile, contracts))
+    wire = packet.get("wire_contract") or {}
+    if wire.get("schema_constrained") is True:
+        def source_values(value):
+            if isinstance(value, dict):
+                for key, child in value.items():
+                    if not str(key).startswith("__"):
+                        yield from source_values(child)
+            elif isinstance(value, list):
+                for child in value:
+                    yield from source_values(child)
+            elif isinstance(value, str) and value.strip():
+                yield value
+        selected_values = set(source_values(state))
+        traces = packet.get("statements") or []
+        for trace in traces:
+            quote = str(trace.get("raw_text") or "")
+            if trace.get("importance") == "NICE" and trace.get("knowledge_state") in {"KNOWN", "AMBIGUOUS"} and not (quote and (quote in user_text or quote in selected_values)):
+                issues.append("UNGROUNDED_PREFERENCE_TRACE")
+        for expected in _selected_facility_property_traces(state):
+            if not any(trace.get("importance") == expected["importance"] and trace.get("knowledge_state") == "KNOWN" and trace.get("status") == "USED" and trace.get("raw_text") == expected["quote"] for trace in traces):
+                issues.append("MISSING_SELECTED_PROPERTY_TRACE:" + expected["path"] + ":" + expected["quote"])
     # Accounting is bidirectional: a known client fact cannot be marked USED
     # while its declared canonical field is absent from the decision profile.
     # Facility parameter IDs are deliberately outside this check; research
@@ -822,13 +877,25 @@ def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Opti
             if not repairable:
                 raise
             repair_payload = dict(payload)
+            missing_paths = [item.split("KNOWN_FIELD_NOT_MATERIALIZED:", 1)[1]
+                             for item in str(error).partition(":")[2].split(",")
+                             if item.startswith("KNOWN_FIELD_NOT_MATERIALIZED:")]
             repair_payload["packet_validation_repair"] = {
                 "validation_error": str(error),
+                "missing_materialized_fields": [{
+                    "path": path,
+                    "existing_questionnaire_value": False,
+                    "source_quotes": [s.get("raw_text") for s in prior_packet.get("statements") or []
+                                      if path in (s.get("mapped_parameters") or []) and s.get("raw_text") in user_text],
+                    "action": "This field is NOT already supplied by the caller. If its actual value is explicit in the source, emit one questionnaire_patch_fields entry with this exact path, the actual supported value, and its genuine quote. Otherwise remove the inferred mapping while preserving the original statement. A true minimum-dimension summary does not materialize a field.",
+                } for path in missing_paths],
                 "mapping_contract": {
                     "supported_canonical_mapping": "Each KNOWN/USED canonical path must have its actual explicit field value in questionnaire_patch_fields or already in questionnaire_state.",
                     "unsupported_mapping": "Remove the unsupported path from mapped_parameters, retaining the original source quote and meaning. An empty mapped_parameters array is valid. Never manufacture a field value or substitute another unrelated canonical path to preserve a trace.",
                 },
                 "issue_actions": {
+                    "UNGROUNDED_PREFERENCE_TRACE": "For each NICE trace use a literal selected questionnaire value or an exact original narrative substring in raw_text. Put your interpretation only in meaning; never invent a source description. Control values and absence of preference are CONTEXT, not facility obligations.",
+                    "MISSING_SELECTED_PROPERTY_TRACE": "Emit every selected_facility_property_traces item separately with exactly its quote, importance, KNOWN/USED and existing path. These button values are already materialized, so do not emit new extraction fields for them or omit their traces during clinical/clarification repair.",
                     "DUPLICATE_FIELD": "Return exactly one extraction entry per canonical path. Preserve all explicit selections in that field's supported array. For different people, retain each person's distinct needs and quotes in statements and coupleAssistance; never overwrite one partner with the other or combine contradictory facts as one person's answer. If the source is genuinely conflicting for the same person and time, ask a clarification rather than selecting a value.",
                     "NO_EXACT_FIELD_QUOTE": "Supply the field's own genuine source quote, or omit the unsupported field. Questionnaire defaults are not quotes from user_text.",
                     "KNOWN_FIELD_NOT_MATERIALIZED": "If the exact field value is explicit, include one {path,value,quote} entry in questionnaire_patch_fields. If the path was only loosely related or inferred, remove that path from mapped_parameters instead of inventing its value; retain the original meaningful statement and its actual supported fields.",
