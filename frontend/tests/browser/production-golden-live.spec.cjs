@@ -234,8 +234,17 @@ test.describe('deployed production golden customer journeys', () => {
       await expect(page.getByText(/Care compatibility does not confirm readiness to move/i).first()).toBeVisible();
     }
     const dynamicModel = payload.decision_intelligence.dynamic_preference_model;
+    expect(dynamicModel.preference_authority).toBe('QUOTED_STATEMENT_TRACES');
+    expect(dynamicModel.preferences.every(pref => pref.source === 'semantic_ai.statements')).toBe(true);
+    if (scenario.answers.activityImportance === 'Preference') {
+      for (const activity of scenario.answers.activities || []) {
+        expect(dynamicModel.preferences.some(pref => pref.client_expression.toLowerCase().includes(activity.toLowerCase())),
+          scenario.id + ': actual activity preference must remain source-traced: ' + activity).toBe(true);
+      }
+    }
+
     const traces = payload.decision_intelligence.human_intelligence.semantic_ai.result.statements || [];
-    const contextOnly = new Set(traces.filter(trace => trace.status === 'NOT_DECISION_RELEVANT' || (trace.mapped_parameters || []).some(path => path === 'humanIntelligenceV2.transitionRiskProfile.attitudeTowardMove' || path.endsWith('RequirementLevel'))).map(trace => trace.meaning));
+    const contextOnly = new Set(traces.filter(trace => trace.status === 'NOT_DECISION_RELEVANT' || trace.importance === 'CONTEXT').map(trace => trace.meaning));
     expect((dynamicModel.preferences || []).every(pref => !contextOnly.has(pref.semantic_meaning))).toBe(true);
 
     expect(audit.eligible_candidate_order.slice(0, results.length)).toEqual(results.map(item => item.canonical_facility_id));
