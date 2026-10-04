@@ -96,3 +96,104 @@ and visibly pending until clarified (recommended for ambiguous answers).
 Approval required under AGENTS.md: “Owner approval required before semantic
 implementation: C, D, E”. The inventory contains every original option, so no
 new option can be silently assigned a role after approval of this proposal.
+
+## Review of the attached 4 October mapping document
+
+The attached DOCX reports 217 labels against a single persona-10 baseline on an
+unspecified #439 head with semantic AI disabled. Its original harness, raw
+outputs and exact commit were not supplied. Do not treat its counts as independently
+reproduced runs. The actual question inventory at the tested follow-up tree has
+61 questions, 46 closed-option questions, 237 options and 237 distinct question/
+option pairs. No duplicate-pair explanation accounts for the 20-option difference.
+The missing options remain unidentified until the original run manifest is provided.
+
+### Independently verified mutation semantics
+
+Eleven added regression cases distinguish addition from replacement and actual
+MUST evaluation from ordering. Added bathing, dressing, toileting, daytime
+supervision or 24/7 assistance preserves an existing medication need and MUST.
+Replacing a medication answer with one of those selections removes medication
+support and retains ADL. This is expected withdrawal behavior, not lost input.
+Two candidates both proven to support ADL remain tied on that criterion while
+both pass ADL_SUPPORT_AVAILABLE; removing facility evidence produces must_unknown.
+Unchanged order is not evidence that the family answer was unused.
+All 21 assistance/shared-authority tests passed. These are deterministic local
+checks, not persona-10 end-to-end reproduction or live production journeys.
+
+### Corrected policy classification and decision requests
+
+P1: preserving UNKNOWN without treating it as positive or negative evidence is
+implementation of existing principles (B). The separate unresolved clinical
+placement policy belongs to P5. UNKNOWN must not be reported as confirmed safe.
+
+P2: normalizing a numeric budget string is A. Proposed funding policy (C): check
+recurring monthly obligations against a monthly budget and a one-time entrance
+fee against explicitly available capital, including payment timing. Do not add
+the fee to monthly rent or assume missing capital is zero. Ask for available
+capital only when a relevant otherwise-suitable option requires it. Impact: such
+options remain funding-pending until capital is known. Risk: a premature fail
+would exclude an affordable option; a premature pass would conceal an entrance
+obligation. Alternative: omit entrance-fee options entirely, which is not
+recommended. Owner approval requested for this separate-capital funding policy.
+
+P3: the ADL propagation inconsistency is A and already repaired using unchanged
+mappings. Proposed clarification policy (C): Light assistance, Daytime supervision,
+24/7 support and Skilled nursing must not silently establish transfer assistance,
+medication management or specialist nursing beyond what was explicitly stated.
+Ask about a materially needed support method when still unknown; retain all
+separately selected requirements. 24/7 support alone is not 24/7 skilled nursing.
+Impact: remove only unsupported inferred needs after explicit mapping approval;
+concrete selected support requirements remain. Risk: removing a real but unstated
+need without clarification; avoid by asking before a safety-relevant decision.
+Alternative: continue broad inferred requirements; not recommended.
+
+P4: explicit One person/Two people/Mechanical lift is a requirement for that
+exact transfer method; a fall count is context for focused clarification. Neither
+establishes PT/OT or continuous nursing. New exact-method service mapping is D
+until approved; propagation of an existing proven transfer requirement is B.
+Approval requested: enforce the selected method and clarify missing supporting
+facts, without deriving other services. Impact: providers without method proof
+remain pending, not a verified negative. Risk: a generic transfer YES cannot
+prove two-person/lift staffing. Alternative: generic transfer matching, weaker
+than the stated need and not recommended.
+
+P5: proposed memory policy (C): No, Occasionally forgetful and Not sure never
+constitute consent to a memory-only/locked placement. Mild or Significant memory
+labels require evaluation of actual assistance/supervision needs. A secured unit
+becomes MUST from an explicit security requirement or a confirmed applicable
+wandering/safety need, not severity wording alone. Assess the offered unit and
+pathway, not the presence of an optional memory service at the community.
+Unresolved safety needs trigger clarification; no confirmed-safe claim is made.
+Impact: remove unsupported type-based inference only after approval; preserve
+explicit secured-unit MUSTs. Risk: missing a material safety requirement; mitigate
+with clarification before recommendation. Alternative: blanket locked-unit
+requirement from severity labels; not recommended. Owner decision requested.
+
+P6: separate Approved, Application pending, May qualify and Not sure in the
+funding explanation (B). Proposed eligibility handling (C): only verified applicable
+approval establishes coverage; pending/possible/unknown remain distinct funding
+states and are clarified or researched when funding determines affordability.
+They are not equivalent to approval or ineligibility. Impact: funding-pending
+options are transparently distinguished. Risk: mistaken blanket exclusion or
+implied benefit guarantee. Alternative: treating all non-negative responses as
+one Medicaid need; not recommended. Owner decision requested for gate changes.
+
+P7: show unverified preferences as UNKNOWN without score is B. Quiet/social
+frequency as new case-relevant NICE criteria requires approved mappings (D).
+Proposed policy: evaluate the stated frequency/environment only from relevant
+provider evidence; do not assume larger/more social is universally better.
+No evidence means visibly unverified preference, not negative fit.
+
+P8: LIMITED requires capability-specific scope/limits. A limited capability may
+pass only when governed evidence proves it meets the exact requirement. Otherwise
+it remains pending clarification/research. Never globally convert LIMITED to YES
+or NO. This is B when enforcing existing requirement semantics; interpreting
+specific previously undefined limitation thresholds is C and must be presented
+with its concrete evidence and requirement before approval.
+
+P9: add a backend matching benchmark is B. Retain frontend tests for UI behavior.
+Replacing deployed architecture or removing frontend safety coverage would be a
+separate E proposal; this patch proposes neither.
+
+No new policy above is activated. These are concrete decision proposals;
+implementation fixes, inventory and source-integrity checks remain independent.
