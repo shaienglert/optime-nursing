@@ -24,7 +24,7 @@ function toggle(values: string[], value: string): string[] {
 
 function Choice({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
   return (
-    <button type="button" aria-pressed={active} onClick={onClick} className={`rounded-full border px-4 py-2 text-left text-sm font-semibold transition ${active ? "border-[#397a69] bg-[#e8f4ef] text-[#245b4d]" : "border-[#ddd4c7] bg-white text-[#5e554b] hover:border-[#8eaa9f]"}`}>
+    <button type="button" aria-pressed={active} onClick={onClick} className={`rounded-full border px-4 py-2 text-left text-sm font-semibold transition ${active ? "border-[#675088] bg-[#f6edf4] text-[#675088]" : "border-[#ddd4c7] bg-white text-[#5e554b] hover:border-[#816d96]"}`}>
       {active ? "✓ " : ""}{label}
     </button>
   );
@@ -59,11 +59,11 @@ function AnswerControl({ question, value, onAnswer, priceFloor }: { question: In
     const current = Number(value) > 0 ? Number(value) : min;
     return <div className="mt-4">
       <input aria-label="Monthly budget slider" type="range" min={min} max={max} step="1" value={Math.min(max, Math.max(min, current))} onChange={(event) => onAnswer(Number(event.target.value), false)} className="w-full" />
-      <div className="mt-2 flex justify-between text-sm text-[#606a64]"><span>From ${min.toLocaleString()}</span><strong>${current.toLocaleString()} / month</strong><span>${max.toLocaleString()}+</span></div>
+      <div className="mt-2 flex justify-between text-sm text-[#675088]"><span>From ${min.toLocaleString()}</span><strong>${current.toLocaleString()} / month</strong><span>${max.toLocaleString()}+</span></div>
       <label className="mt-3 block text-sm">Monthly budget in dollars<input aria-label="Monthly budget in dollars" type="number" min={min} step="1" value={Number(value) > 0 ? Number(value) : ""} onChange={event => onAnswer(Number(event.target.value), false)} className="ml-3 rounded-xl border p-2" /></label>
       {knownFloor ? <p className="mt-3 text-sm">{priceFloor?.synthetic_pilot ? "Synthetic pilot: " : ""}The lowest known starting monthly price in your selected area for the care answers given so far is ${knownFloor.toLocaleString()}.</p> : <p className="mt-3 text-sm">The minimum price for this search has not been verified. Your budget will be kept as stated; affordability still needs evidence.</p>}
       {priceFloor?.funding_pathway === "MEDICAID_COST_REQUIRES_VERIFICATION" ? <p className="mt-2 text-sm">That is a private-pay price, not your Medicaid household cost. Enter what the household can pay; Medicaid coverage and out-of-pocket cost still need verification.</p> : null}
-      <p className="mt-2 text-xs text-[#68766f]">This is a starting monthly cost, not proof of total affordability. Mandatory fees, one-time entrance fees and any outside care must be checked separately.</p>
+      <p className="mt-2 text-xs text-[#675088]">This is a starting monthly cost, not proof of total affordability. Mandatory fees, one-time entrance fees and any outside care must be checked separately.</p>
     </div>;
   }
   if (question.kind === "number") {
@@ -76,7 +76,7 @@ function AnswerControl({ question, value, onAnswer, priceFloor }: { question: In
         placeholder={question.placeholder}
         value={Number(value) > 0 ? String(value) : ""}
         onChange={(event) => onAnswer(Number(event.target.value), false)}
-        className="mt-4 block w-full rounded-xl border border-[#ddd4c7] bg-white px-4 py-3 text-base outline-none focus:border-[#5a8c7d]"
+        className="mt-4 block w-full rounded-xl border border-[#ddd4c7] bg-white px-4 py-3 text-base outline-none focus:border-[#816d96]"
       />
     );
   }
@@ -87,7 +87,7 @@ function AnswerControl({ question, value, onAnswer, priceFloor }: { question: In
       placeholder={question.placeholder}
       value={typeof value === "string" ? value : ""}
       onChange={(event) => onAnswer(event.target.value, false)}
-      className="mt-4 block w-full rounded-xl border border-[#ddd4c7] bg-white px-4 py-3 text-base outline-none focus:border-[#5a8c7d]"
+      className="mt-4 block w-full rounded-xl border border-[#ddd4c7] bg-white px-4 py-3 text-base outline-none focus:border-[#816d96]"
     />
   );
 }
@@ -232,19 +232,19 @@ export function StructuredIntake() {
   const progress = Math.round((answeredCount / Math.max(1, questions.length)) * 100);
 
   return (
-    <main className="min-h-screen bg-[#f6f3ed] px-4 py-8 text-[#26352f] sm:px-8">
+    <main className="min-h-screen bg-[#f6f3ed] px-4 py-8 text-[#302940] sm:px-8">
       <div className="mx-auto max-w-5xl">
-        <p className="text-sm font-semibold uppercase tracking-[0.15em] text-[#397a69]">Your conversation with Oomnik</p>
+        <p className="text-sm font-semibold uppercase tracking-[0.15em] text-[#675088]">Your conversation with Oomnik</p>
 
-        <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-[#e3ece8]">
-          <div className="h-full rounded-full bg-[#397a69] transition-[width] duration-300" style={{ width: `${phase === "summary" ? 100 : progress}%` }} />
+        <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-[#f6edf4]">
+          <div className="h-full rounded-full bg-[#675088] transition-[width] duration-300" style={{ width: `${phase === "summary" ? 100 : progress}%` }} />
         </div>
 
         {phase === "questions" && question ? (
           <section className="mt-8">
-            <p className="text-sm font-semibold uppercase tracking-[0.12em] text-[#7d8b84]">{question.section}</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.12em] text-[#816d96]">{question.section}</p>
             <div className="mt-5">
-              <h1 data-question-id={question?.id} data-question-kind={question?.kind} className="text-4xl font-normal leading-tight tracking-[-0.025em] text-[#315f53] sm:text-5xl">{displayPrompt}</h1>
+              <h1 data-question-id={question?.id} data-question-kind={question?.kind} className="text-4xl font-normal leading-tight tracking-[-0.025em] text-[#675088] sm:text-5xl">{displayPrompt}</h1>
             </div>
 
             <div className="mt-7">
@@ -252,7 +252,7 @@ export function StructuredIntake() {
               {onBudget && priceFloorLoading ? <p role="status">Checking starting prices in your selected area for the care answers given so far…</p> : <AnswerControl question={question} value={question.get(context)} onAnswer={answer} priceFloor={priceFloor} />}
               {onBudget && priceFloorError ? <p className="mt-3 text-sm">Price lookup is unavailable. <button type="button" onClick={() => setPriceFloorRetry(value => value + 1)} className="underline">Try price lookup again</button></p> : null}
               {belowKnownFloor ? <p role="alert" className="mt-3 text-sm text-[#a4501f]">Your stated budget is below the known private-pay starting price. I have kept your amount. Choose a budget you can fund, or go back to change the area or funding answer before continuing.</p> : null}
-              {question.kind === "multi" ? <p className="mt-3 text-sm text-[#7d8b84]">Choose anything that applies, then continue.</p> : null}
+              {question.kind === "multi" ? <p className="mt-3 text-sm text-[#816d96]">Choose anything that applies, then continue.</p> : null}
               {showError ? <p className="mt-3 text-sm font-semibold text-[#a4501f]">Please answer this before we continue.</p> : null}
             </div>
 
@@ -260,8 +260,8 @@ export function StructuredIntake() {
               <button type="button" onClick={() => goToIndex(index - 1)} disabled={index === 0} className="rounded-full border border-[#ddd4c7] px-5 py-2.5 text-sm font-semibold text-[#5e554b] disabled:opacity-40">
                 ← Back
               </button>
-              <p className="text-sm text-[#7d8b84]">Question {index + 1} of {questions.length}</p>
-              <button type="button" onClick={next} disabled={onBudget && (priceFloorLoading || belowKnownFloor)} className="rounded-full bg-[#397a69] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#2f6759] disabled:opacity-40">
+              <p className="text-sm text-[#816d96]">Question {index + 1} of {questions.length}</p>
+              <button type="button" onClick={next} disabled={onBudget && (priceFloorLoading || belowKnownFloor)} className="rounded-full bg-[#675088] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#675088] disabled:opacity-40">
                 {question.required && !isAnswered(question, context) ? "Next →" : index + 1 === questions.length ? "See the summary →" : "Next →"}
               </button>
             </div>
@@ -277,7 +277,7 @@ export function StructuredIntake() {
               </div>
             </div>
 
-            <div className="ml-12 mt-5 grid gap-3 rounded-2xl bg-[#eef5f2] p-5 text-sm leading-6 sm:grid-cols-2">
+            <div className="ml-12 mt-5 grid gap-3 rounded-2xl bg-[#f6edf4] p-5 text-sm leading-6 sm:grid-cols-2">
               <p><strong>Person:</strong> {draft.relationship || "Missing"}, {draft.ageGroup || "age missing"}</p>
               <p><strong>Daily support:</strong> {extras.assistance.join(", ") || "Missing"}</p>
               <p><strong>Memory:</strong> {draft.memoryStatus || "Missing"}</p>
@@ -299,9 +299,9 @@ export function StructuredIntake() {
                 </button>
               </div>
             ) : (
-              <label className="ml-12 mt-4 flex cursor-pointer items-start gap-3 rounded-2xl border border-[#cddbd5] bg-white p-4">
-                <input type="checkbox" checked={confirmed} onChange={(event) => { setConfirmed(event.target.checked); setShowError(false); }} className="mt-1 size-5 accent-[#397a69]" />
-                <span><strong>Yes — this reflects what I told Oomnik.</strong><span className="mt-1 block text-sm text-[#606a64]">You can still change anything before we continue.</span></span>
+              <label className="ml-12 mt-4 flex cursor-pointer items-start gap-3 rounded-2xl border border-[#e4d8e8] bg-white p-4">
+                <input type="checkbox" checked={confirmed} onChange={(event) => { setConfirmed(event.target.checked); setShowError(false); }} className="mt-1 size-5 accent-[#675088]" />
+                <span><strong>Yes — this reflects what I told Oomnik.</strong><span className="mt-1 block text-sm text-[#675088]">You can still change anything before we continue.</span></span>
               </label>
             )}
 
@@ -311,7 +311,7 @@ export function StructuredIntake() {
               <button type="button" onClick={() => { setPhase("questions"); setStepId(questions[questions.length - 1].id); }} className="rounded-full border border-[#ddd4c7] px-5 py-2.5 text-sm font-semibold text-[#5e554b]">
                 ← Change an answer
               </button>
-              <button type="button" onClick={continueToInterview} className="inline-flex items-center justify-center gap-2 rounded-full bg-[#397a69] px-7 py-3 text-base font-semibold text-white hover:bg-[#2f6759]">
+              <button type="button" onClick={continueToInterview} className="inline-flex items-center justify-center gap-2 rounded-full bg-[#675088] px-7 py-3 text-base font-semibold text-white hover:bg-[#675088]">
                 <OomnikMark size={18} /> Continue our conversation
               </button>
             </div>

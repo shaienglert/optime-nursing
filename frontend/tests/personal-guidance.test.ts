@@ -9,12 +9,13 @@ describe("personal guidance boundaries", () => {
     expect(personalSummary(state).join(" ")).toContain(state.notes);
     expect(resultsIntroduction(state, 2).join(" ")).toContain("still needs evidence");
   });
-  it("places substantive support before language and budget without deleting facts", () => {
+  it("explains substantive support without substituting language or price for personal fit", () => {
     const item = { explanation: { why_matches: ["English is available.", "Help with medication is provided.", "The price is within budget."] }, tie_break_explanation_vs_next: { why_ranked_above: "These communities are tied." } } as DecisionEngineResponse["results"][number];
     const before = structuredClone(item);
     const text = facilityExplanation(item).join(" ");
-    expect(text.indexOf("medication")).toBeLessThan(text.indexOf("English"));
-    expect(text).toContain("within budget");
+    expect(text).toContain("medication");
+    expect(text).not.toContain("English");
+    expect(text).not.toContain("within budget");
     expect(text).toContain("are tied");
     expect(item).toEqual(before);
   });

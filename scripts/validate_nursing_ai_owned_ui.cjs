@@ -38,7 +38,7 @@ for (const token of ['data-testid="intake-personal-summary-heading"', 'clientSum
 }
 
 if (!resultsPage.includes('SimpleResultsPageClient')) throw new Error('Senior-readable results summary must be the default results surface.');
-for (const token of ['Verified care capabilities', 'What we’ll check for you next', 'Important considerations', 'PersonalNarrative', 'CommunityNextStep', 'See detailed comparison', 'Other promising places we are still checking']) {
+for (const token of ['verify.length', 'concerns.filter', 'ServiceBudgetPlan', 'preferenceAdvice(response)', 'PersonalNarrative', 'CommunityNextStep', 'See detailed comparison', 'Other promising places we are still checking']) {
   if (!simpleResults.includes(token)) throw new Error(`Senior-readable result contract missing: ${token}`);
 }
 const eligibility = fs.readFileSync('frontend/src/lib/recommendation-eligibility.ts', 'utf8');

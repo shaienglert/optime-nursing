@@ -440,6 +440,17 @@ export type LocationScope = {
 };
 
 export type DecisionEngineResponse = {
+  oomniker?: {
+    input_universe?: string;
+    suggestions?: Array<{
+      parameter: string;
+      authority: string;
+      action: string;
+      basis?: string;
+      additional_options_if_relaxed?: number;
+      may_auto_change?: boolean;
+    }>;
+  };
   care_partner_options?: CarePartnerOption[];
   pending_evidence_summary?: {
     candidate_count: number;

@@ -1,5 +1,5 @@
 import type { QuestionnaireState } from "@/context/questionnaire-context";
-import type { DecisionEngineResponse } from "./api";
+import type { DecisionEngineResponse, PatientNeed } from "./api";
 import { isFinalRecommendation } from "./recommendation-eligibility";
 
 export function personalSummary(state: QuestionnaireState): string[] {
@@ -14,19 +14,23 @@ export function personalSummary(state: QuestionnaireState): string[] {
   ].filter(Boolean);
 }
 
-export function facilityExplanation(item: DecisionEngineResponse["results"][number]): string[] {
+export function facilityExplanation(item: DecisionEngineResponse["results"][number], needs: PatientNeed[] = []): string[] {
   const reasons = item.explanation?.why_matches || [];
   // Preserve the authoritative facts, but place substantive care/lifestyle before basics.
   const substantive = reasons.filter(text => !/\benglish\b|budget|price|language/i.test(text));
-  const basics = reasons.filter(text => !substantive.includes(text));
-  const explanation = [...substantive, ...basics].filter(Boolean).join(" ");
-  return [explanation || "This option passed the essential checks for your confirmed needs. A detailed explanation of its personal fit is not available yet.",
+  // Language/starting-price facts remain in expandable matching notes. They
+  // should not substitute for a meaningful explanation of personal fit.
+  const explanation = substantive.filter(Boolean).join(" ");
+  const requested = needs.filter(need => ["REQUIRED", "HIGH"].includes(need.requirement_level) && need.need_text).map(need => need.need_text).slice(0, 3);
+  const context = requested.length ? `You asked me to keep ${requested.join(", ")} in mind. ` : "";
+  return [explanation ? `${context}Here is what brought ${item.facility_name || "this community"} into your search. ${explanation}` : `${context}This community meets the essential checks for the needs you confirmed. I still need more evidence to explain what everyday life here would mean for you.`,
     item.tie_break_explanation_vs_next?.why_ranked_above || ""].filter(Boolean);
 }
 
 export function resultsIntroduction(state: QuestionnaireState, count: number): string[] {
-  return [count ? `We have ${count} option${count === 1 ? "" : "s"} for you to explore. We compared your confirmed care needs and personal priorities with the evidence available for each community. The order below reflects that comparison; each option explains its fit and any open questions.` : "We do not yet have a recommendation that passes the essential checks. Let’s review the open questions and decide how to move forward.",
-    state.notes?.trim() ? `Your additional comments remain part of the search: “${state.notes.trim()}”. Each community still needs evidence before we can say it meets those requests.` : ""] .filter(Boolean);
+  const person = ({ Mom: "your mother", Dad: "your father", Myself: "you", Couple: "both of you", Spouse: "your spouse" } as Record<string, string>)[state.relationship] || "your loved one";
+  return [count ? `Thank you for telling me what matters to ${person}. I’ve found ${count} ${count === 1 ? "place" : "places"} to explore together, using the needs you confirmed and the information we have about each community. Let’s start with why each one is here, then talk through what you would want to know before taking the next step. You can take your time.` : "We do not yet have a recommendation that meets the essential checks. Your answers are saved. Let’s talk through what is still missing and where we can go from here, keeping the support you need in view.",
+    state.notes?.trim() ? `I’m also keeping your own words in view: “${state.notes.trim()}”. Each community still needs evidence before I can say it meets those requests.` : ""] .filter(Boolean);
 }
 
 export function recommendationFromDecision(decision: DecisionEngineResponse | null, id: string) {
