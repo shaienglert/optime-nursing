@@ -65,7 +65,7 @@ export default function RootLayout({
           {process.env.VERCEL_ENV === "production" && <UserIncidentMonitor />}
           <ProcessContinuityBridge>
             <SiteHeader />
-            <div className="flex-1">{children}</div>
+            <div id="main-content" tabIndex={-1} className="flex-1">{children}</div>
           </ProcessContinuityBridge>
         </AppQuestionnaireProvider>
       </body>

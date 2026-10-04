@@ -277,43 +277,43 @@ export default function AdaptiveInterviewPage() {
   const options = question?.answer_options || [];
 
   return (
-    <main className="min-h-screen bg-[#f8f5ef] px-5 py-10 text-[#22332d] sm:px-8">
+    <main className="min-h-screen bg-canvas px-5 py-10 text-ink sm:px-8">
       <section className="mx-auto max-w-3xl p-3 sm:p-6">
-        <p className="text-base font-semibold text-[#168fe0]">Oomnik</p>
+        <p className="text-base font-semibold text-muted">Oomnik</p>
         <h1 className="mt-3 text-3xl font-medium leading-tight sm:text-4xl">Let’s keep going.</h1>
-        <p className="mt-3 text-lg leading-8 text-[#5b6863]">I’ll use everything you’ve already told me, so I won’t make you repeat yourself.</p>
+        <p className="mt-3 text-lg leading-8 text-muted">I’ll use everything you’ve already told me, so I won’t make you repeat yourself.</p>
 
         {error ? (
           <div className="mt-8 rounded-2xl border border-rose-200 bg-rose-50 p-6 text-xl leading-8 text-rose-800">
             <p>{error}</p>
-            <button type="button" onClick={() => void continueDecision(cloneState(state), nextUrl.current)} className="mt-5 rounded-2xl bg-[#315f53] px-6 py-4 text-xl font-semibold text-white">Try again</button>
+            <button type="button" onClick={() => void continueDecision(cloneState(state), nextUrl.current)} className="mt-5 rounded-2xl bg-forest px-6 py-4 text-xl font-semibold text-white">Try again</button>
           </div>
         ) : null}
 
         {question ? (
           <div className="mt-8">
-            <div className="rounded-2xl bg-[#eef7f2] p-6">
+            <div className="rounded-2xl bg-sand p-6">
               <p className="text-2xl font-semibold leading-9 sm:text-3xl">{question.question}</p>
             </div>
 
             {options.length > 0 ? (
               <div className="ml-12 mt-5 flex flex-wrap gap-3">
                 {options.map((option) => (
-                  <button key={option} type="button" disabled={busy} onClick={() => void submitAnswer(option)} className="rounded-full border border-[#bcd9e7] bg-white px-5 py-3 text-left text-lg font-medium text-[#234f63] shadow-sm hover:border-[#079ff2] hover:bg-[#f2fbff] disabled:opacity-50">{option}</button>
+                  <button key={option} type="button" disabled={busy} onClick={() => void submitAnswer(option)} className="rounded-full border border-line bg-white px-5 py-3 text-left text-lg font-medium text-muted shadow-sm hover:border-line hover:bg-sand disabled:opacity-50">{option}</button>
                 ))}
               </div>
             ) : (
               <form className="ml-12 mt-5" onSubmit={(event) => { event.preventDefault(); void submitAnswer(answer); }}>
                 <label htmlFor="decision-answer" className="sr-only">Your answer</label>
-                <textarea id="decision-answer" value={answer} onChange={(event) => setAnswer(event.target.value)} disabled={busy} rows={3} placeholder="Tell me in your own words…" className="w-full rounded-[1.5rem] border border-[#bcd9e7] bg-white px-5 py-4 text-lg leading-8 outline-none focus:border-[#079ff2]" />
-                <button type="submit" disabled={busy || !answer.trim()} className="mt-4 inline-flex items-center gap-2 rounded-2xl bg-[#315f53] px-7 py-4 text-xl font-semibold text-white disabled:opacity-50">{!busy && <OomnikMark size={18} />}{busy ? "Using your answer…" : "Continue"}</button>
+                <textarea id="decision-answer" value={answer} onChange={(event) => setAnswer(event.target.value)} disabled={busy} rows={3} placeholder="Tell me in your own words…" className="w-full rounded-[1.5rem] border border-line bg-white px-5 py-4 text-lg leading-8 outline-none focus:border-line" />
+                <button type="submit" disabled={busy || !answer.trim()} className="mt-4 inline-flex items-center gap-2 rounded-2xl bg-forest px-7 py-4 text-xl font-semibold text-white disabled:opacity-50">{!busy && <OomnikMark />}{busy ? "Using your answer…" : "Continue"}</button>
               </form>
             )}
           </div>
         ) : null}
 
         {busy ? (
-          <div className="mt-8 text-lg leading-8 text-[#5d5548]">Thinking about what you’ve already told me…</div>
+          <div className="mt-8 text-lg leading-8 text-muted">Thinking about what you’ve already told me…</div>
         ) : null}
       </section>
     </main>

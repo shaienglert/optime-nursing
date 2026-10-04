@@ -1,36 +1,29 @@
 import Link from "next/link";
-
 import { FontSizeControl } from "@/components/brand/font-size-control";
+import { OptimeStaticLogo } from "@/components/brand/optime-static-logo";
+import { OomnikMark } from "@/components/brand/oomnik-mark";
 
-const NAV_LINKS = [
-  { href: "/", label: "Home" },
-  { href: "/results", label: "Results" },
-  { href: "/facilities", label: "Facilities" },
-  { href: "/las-vegas-senior-living", label: "Las Vegas data" },
-  { href: "/guides", label: "Guides" },
-  { href: "/compare", label: "Compare" },
-  { href: "/workspace", label: "Saved Cases" },
-  { href: "/admin", label: "Admin" },
+const SECONDARY_LINKS = [
+  { href: "/results", label: "Your results" }, { href: "/facilities", label: "Explore communities" },
+  { href: "/compare", label: "Compare saved places" }, { href: "/las-vegas-senior-living", label: "Las Vegas evidence" },
+  { href: "/guides", label: "Family guides" }, { href: "/admin", label: "Admin" },
 ];
 
 export function SiteHeader() {
-  return (
-    <header className="sticky top-0 z-50 border-b border-[#d8e7e1] bg-white/92 backdrop-blur">
-      <div className="mx-auto flex min-h-20 w-full max-w-[1800px] items-center gap-3 overflow-x-auto px-3 sm:min-h-24 sm:gap-8 sm:px-10 lg:px-14">
-        <nav aria-label="Primary" className="flex min-w-max flex-1 items-center gap-1 sm:gap-3 md:justify-between md:gap-6">
-          {NAV_LINKS.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              prefetch={item.href.startsWith("/admin") ? false : undefined}
-              className="rounded-full px-2 py-3 text-sm font-medium whitespace-nowrap text-[#31554a] transition hover:bg-[#eef7f3] hover:text-[#1e4339] sm:text-base md:text-[1.3rem]"
-            >
-              {item.label}
-            </Link>
-          ))}
+  return <>
+    <a href="#main-content" className="sr-only z-[60] rounded-xl bg-white p-4 text-lg text-forest focus:not-sr-only focus:fixed focus:left-4 focus:top-4">Skip to content</a>
+    <header className="sticky top-0 z-50 border-b border-line bg-canvas/95 backdrop-blur">
+      <div className="mx-auto grid max-w-6xl grid-cols-[1fr_auto] items-center gap-x-4 gap-y-3 px-5 py-4 sm:px-8 xl:flex xl:gap-6">
+        <OptimeStaticLogo height={36} />
+        <nav aria-label="Primary" className="hidden flex-1 items-center justify-center gap-6 text-lg font-medium xl:flex">
+          <Link href="/#how-it-works" className="inline-flex min-h-12 items-center hover:text-forest">How it works</Link>
+          <Link href="/workspace" className="inline-flex min-h-12 items-center hover:text-forest">Saved conversations</Link>
+          <details className="relative"><summary className="flex min-h-12 cursor-pointer items-center hover:text-forest">Explore</summary><nav aria-label="More pages" className="absolute right-0 top-full mt-3 w-72 rounded-xl border border-line bg-white p-3 shadow-lg">{SECONDARY_LINKS.map(item => <Link key={item.href} href={item.href} prefetch={item.href === "/admin" ? false : undefined} className="flex min-h-12 items-center rounded-lg px-3 hover:bg-sand">{item.label}</Link>)}</nav></details>
         </nav>
         <FontSizeControl />
+        <details className="relative xl:hidden"><summary className="flex min-h-12 cursor-pointer items-center text-lg font-medium">Menu</summary><nav aria-label="Mobile navigation" className="absolute left-0 top-full mt-2 max-h-[65vh] w-[min(19rem,85vw)] overflow-y-auto rounded-xl border border-line bg-white p-3 text-lg shadow-lg"><Link href="/#how-it-works" className="flex min-h-12 items-center rounded-lg px-3 hover:bg-sand">How it works</Link><Link href="/workspace" className="flex min-h-12 items-center rounded-lg px-3 hover:bg-sand">Saved conversations</Link>{SECONDARY_LINKS.map(item => <Link key={item.href} href={item.href} prefetch={item.href === "/admin" ? false : undefined} className="flex min-h-12 items-center rounded-lg px-3 hover:bg-sand">{item.label}</Link>)}</nav></details>
+        <Link href="/#start-search" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-forest px-4 py-3 text-lg font-semibold text-white transition hover:bg-forest-hover"><OomnikMark />Start here</Link>
       </div>
     </header>
-  );
+  </>;
 }

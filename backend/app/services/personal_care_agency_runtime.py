@@ -207,6 +207,7 @@ def build_verified_care_partner_context(requirements: Dict[str, Any], *, limit: 
             "agency_name": row.get("agency_name") or UNKNOWN,
             "license_number": row.get("license_number") or UNKNOWN,
             "license_status": row.get("license_status") or UNKNOWN,
+            "license_snapshot_date": str(snapshot.get("retrieved_date") or UNKNOWN),
             "address": row.get("address") or UNKNOWN,
             "city": row.get("city") or UNKNOWN,
             "zip": row.get("zip") or UNKNOWN,

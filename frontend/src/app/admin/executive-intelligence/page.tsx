@@ -192,59 +192,59 @@ export default function ExecutiveIntelligenceAdminPage() {
   }, {});
 
   return (
-    <main className="min-h-screen bg-slate-950 px-6 py-8 text-slate-100 sm:px-10 lg:px-16">
+    <main className="min-h-screen bg-canvas px-6 py-8 text-ink sm:px-10 lg:px-16">
       <section className="mx-auto max-w-7xl space-y-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-emerald-300">Admin</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-forest">Admin</p>
             <h1 className="mt-2 text-3xl font-semibold">OPTIME Daily Executive Intelligence</h1>
-            <p className="mt-2 max-w-3xl text-sm text-slate-300">
+            <p className="mt-2 max-w-3xl text-sm text-muted">
               One control-tower view for agent activity, authority progress, daily deltas, and issues requiring attention.
             </p>
           </div>
           <div className="flex gap-3">
-            <Link href="/admin/platform-operations" className="rounded-full border border-slate-700 px-4 py-2 text-sm text-slate-200 hover:border-slate-500">
+            <Link href="/admin/platform-operations" className="rounded-full border border-line px-4 py-2 text-sm text-ink hover:border-line">
               Platform Operations
             </Link>
-            <Link href="/" className="rounded-full border border-slate-700 px-4 py-2 text-sm text-slate-200 hover:border-slate-500">
+            <Link href="/" className="rounded-full border border-line px-4 py-2 text-sm text-ink hover:border-line">
               Home
             </Link>
-            <Link href="/facilities" className="rounded-full bg-emerald-400 px-4 py-2 text-sm font-medium text-slate-950 hover:bg-emerald-300">
+            <Link href="/facilities" className="rounded-full bg-forest px-4 py-2 text-sm font-medium text-white hover:bg-forest-hover">
               Facilities
             </Link>
           </div>
         </div>
 
         <div className="grid gap-4 lg:grid-cols-[1.6fr_1fr]">
-          <div className="rounded-3xl border border-slate-800 bg-slate-900/80 p-6">
-            <p className="text-xs uppercase tracking-[0.25em] text-slate-400">System Status</p>
+          <div className="rounded-3xl border border-line bg-surface/80 p-6">
+            <p className="text-xs uppercase tracking-[0.25em] text-muted">System Status</p>
             <h2 className="mt-3 text-2xl font-semibold">{String(authority.overall_status || "UNKNOWN")}</h2>
-            <p className="mt-3 text-sm text-slate-300">{String(authority.answer || "No executive authority assessment available.")}</p>
+            <p className="mt-3 text-sm text-muted">{String(authority.answer || "No executive authority assessment available.")}</p>
             <div className="mt-5 grid gap-3 sm:grid-cols-3">
-              <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Date</p>
+              <div className="rounded-2xl border border-line bg-surface p-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-muted">Date</p>
                 <p className="mt-2 text-lg font-medium">{payload?.record.report_date || "UNKNOWN"}</p>
               </div>
-              <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Generated</p>
+              <div className="rounded-2xl border border-line bg-surface p-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-muted">Generated</p>
                 <p className="mt-2 text-lg font-medium">{payload?.record.generated_at_utc || "UNKNOWN"}</p>
               </div>
-              <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Organic / AI</p>
+              <div className="rounded-2xl border border-line bg-surface p-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-muted">Organic / AI</p>
                 <p className="mt-2 text-lg font-medium">{String(organic.current_status || "UNKNOWN")}</p>
               </div>
             </div>
           </div>
 
-          <div className="rounded-3xl border border-slate-800 bg-slate-900/80 p-6">
-            <label htmlFor="report-history" className="text-xs uppercase tracking-[0.25em] text-slate-400">
+          <div className="rounded-3xl border border-line bg-surface/80 p-6">
+            <label htmlFor="report-history" className="text-xs uppercase tracking-[0.25em] text-muted">
               Daily Report History
             </label>
             <select
               id="report-history"
               value={selectedReportId}
               onChange={(event) => void handleSelect(event.target.value)}
-              className="mt-3 w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-slate-100"
+              className="mt-3 w-full rounded-2xl border border-line bg-surface px-4 py-3 text-sm text-ink"
             >
               {history.map((row) => (
                 <option key={row.report_id} value={row.report_id}>
@@ -252,7 +252,7 @@ export default function ExecutiveIntelligenceAdminPage() {
                 </option>
               ))}
             </select>
-            <div className="mt-4 space-y-2 text-sm text-slate-300">
+            <div className="mt-4 space-y-2 text-sm text-muted">
               <p>Canonical latest report: {payload?.record.json_path || "UNKNOWN"}</p>
               <p>Email sent: {String(payload?.record.sent ?? "UNKNOWN")}</p>
               <p>Loading selected report: {isLoadingReport ? "YES" : "NO"}</p>
@@ -260,44 +260,44 @@ export default function ExecutiveIntelligenceAdminPage() {
           </div>
         </div>
 
-        {isLoading ? <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6">Loading executive intelligence...</div> : null}
-        {error ? <div className="rounded-3xl border border-rose-500/40 bg-rose-950/30 p-6 text-rose-200">{error}</div> : null}
+        {isLoading ? <div className="rounded-3xl border border-line bg-surface p-6">Loading executive intelligence...</div> : null}
+        {error ? <div className="rounded-3xl border border-rose-500/40 bg-rose-50 p-6 text-rose-800">{error}</div> : null}
 
         {!isLoading && !error ? (
           <>
             <section className="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
               {summaryCards.map((card) => (
-                <div key={card.label} className="rounded-3xl border border-slate-800 bg-slate-900/80 p-5">
-                  <p className="text-xs uppercase tracking-[0.22em] text-slate-500">{card.label}</p>
+                <div key={card.label} className="rounded-3xl border border-line bg-surface/80 p-5">
+                  <p className="text-xs uppercase tracking-[0.22em] text-muted">{card.label}</p>
                   <p className="mt-3 text-3xl font-semibold">{card.value}</p>
                 </div>
               ))}
             </section>
 
-            <section className="rounded-3xl border border-slate-800 bg-slate-900/80 p-6">
-              <p className="text-xs uppercase tracking-[0.25em] text-slate-400">What OPTIME Achieved In Last 24 Hours</p>
+            <section className="rounded-3xl border border-line bg-surface/80 p-6">
+              <p className="text-xs uppercase tracking-[0.25em] text-muted">What OPTIME Achieved In Last 24 Hours</p>
               <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 {Object.entries(achievements).map(([key, value]) => (
-                  <div key={key} className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
-                    <p className="text-xs uppercase tracking-[0.18em] text-slate-500">{key.replaceAll("_", " ")}</p>
+                  <div key={key} className="rounded-2xl border border-line bg-surface p-4">
+                    <p className="text-xs uppercase tracking-[0.18em] text-muted">{key.replaceAll("_", " ")}</p>
                     <p className="mt-2 text-lg font-medium">{String(value)}</p>
                   </div>
                 ))}
               </div>
             </section>
 
-            <section className="rounded-3xl border border-slate-800 bg-slate-900/80 p-6">
+            <section className="rounded-3xl border border-line bg-surface/80 p-6">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.25em] text-slate-400">Agent Activity</p>
+                  <p className="text-xs uppercase tracking-[0.25em] text-muted">Agent Activity</p>
                   <h2 className="mt-2 text-2xl font-semibold">Last 24 Hours</h2>
                 </div>
-                <p className="text-sm text-slate-400">Every known agent appears, including manual-only and unknown surfaces.</p>
+                <p className="text-sm text-muted">Every known agent appears, including manual-only and unknown surfaces.</p>
               </div>
               <div className="mt-5 overflow-x-auto">
                 <table className="min-w-full text-left text-sm">
                   <thead>
-                    <tr className="border-b border-slate-800 text-slate-400">
+                    <tr className="border-b border-line text-muted">
                       <th className="px-3 py-2">Agent</th>
                       <th className="px-3 py-2">Status</th>
                       <th className="px-3 py-2">Worked?</th>
@@ -308,13 +308,13 @@ export default function ExecutiveIntelligenceAdminPage() {
                   </thead>
                   <tbody>
                     {agents.map((row) => (
-                      <tr key={row.agent_id} className="border-b border-slate-900 align-top">
-                        <td className="px-3 py-3 font-medium text-slate-100">{row.name}</td>
-                        <td className="px-3 py-3 text-slate-300">{row.current_status}</td>
-                        <td className="px-3 py-3 text-slate-300">{row.worked}</td>
-                        <td className="px-3 py-3 text-slate-300">{row.what_it_did}</td>
-                        <td className="px-3 py-3 text-slate-300">{row.new_value_created}</td>
-                        <td className="px-3 py-3 text-slate-400">{row.evidence.join(", ")}</td>
+                      <tr key={row.agent_id} className="border-b border-line align-top">
+                        <td className="px-3 py-3 font-medium text-ink">{row.name}</td>
+                        <td className="px-3 py-3 text-muted">{row.current_status}</td>
+                        <td className="px-3 py-3 text-muted">{row.worked}</td>
+                        <td className="px-3 py-3 text-muted">{row.what_it_did}</td>
+                        <td className="px-3 py-3 text-muted">{row.new_value_created}</td>
+                        <td className="px-3 py-3 text-muted">{row.evidence.join(", ")}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -322,24 +322,24 @@ export default function ExecutiveIntelligenceAdminPage() {
               </div>
             </section>
 
-            <section className="rounded-3xl border border-cyan-500/25 bg-slate-900/80 p-6">
+            <section className="rounded-3xl border border-forest/25 bg-surface/80 p-6">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.25em] text-cyan-300">Live Intelligence Agent</p>
+                  <p className="text-xs uppercase tracking-[0.25em] text-forest">Live Intelligence Agent</p>
                   <h2 className="mt-2 text-2xl font-semibold">Competitors and Market Supply</h2>
-                  <p className="mt-2 max-w-3xl text-sm text-slate-300">
+                  <p className="mt-2 max-w-3xl text-sm text-muted">
                     Direct observations collected by the agent. Competitor signals are public-page observations; market items link to the original source and are not facility availability claims.
                   </p>
                 </div>
                 <div className="flex gap-3 text-sm">
-                  <span className="rounded-full border border-cyan-500/30 px-3 py-1.5 text-cyan-200">{competitiveSignals.length} competitor signals</span>
-                  <span className="rounded-full border border-cyan-500/30 px-3 py-1.5 text-cyan-200">{marketSignals.length} market items</span>
+                  <span className="rounded-full border border-forest/30 px-3 py-1.5 text-forest">{competitiveSignals.length} competitor signals</span>
+                  <span className="rounded-full border border-forest/30 px-3 py-1.5 text-forest">{marketSignals.length} market items</span>
                 </div>
               </div>
 
               {!adminToken ? (
-                <div className="mt-5 rounded-2xl border border-slate-700 bg-slate-950 p-4">
-                  <p className="text-sm text-slate-300">Enter the existing Admin token once to unlock the live agent report in this browser session.</p>
+                <div className="mt-5 rounded-2xl border border-line bg-surface p-4">
+                  <p className="text-sm text-muted">Enter the existing Admin token once to unlock the live agent report in this browser session.</p>
                   <div className="mt-3 flex flex-col gap-2 sm:flex-row">
                     <input
                       type="password"
@@ -347,36 +347,36 @@ export default function ExecutiveIntelligenceAdminPage() {
                       onChange={(event) => setTokenInput(event.target.value)}
                       onKeyDown={(event) => event.key === "Enter" && handleUnlockIntelligence()}
                       placeholder="Admin token"
-                      className="min-w-0 flex-1 rounded-xl border border-slate-700 bg-slate-900 px-4 py-2.5 text-sm text-slate-100"
+                      className="min-w-0 flex-1 rounded-xl border border-line bg-surface px-4 py-2.5 text-sm text-ink"
                     />
-                    <button type="button" onClick={handleUnlockIntelligence} className="rounded-xl bg-cyan-400 px-4 py-2.5 text-sm font-semibold text-slate-950 hover:bg-cyan-300">
+                    <button type="button" onClick={handleUnlockIntelligence} className="rounded-xl bg-forest px-4 py-2.5 text-sm font-semibold text-white hover:bg-forest-hover">
                       Show live report
                     </button>
                   </div>
                 </div>
               ) : null}
 
-              {isLoadingIntelligence ? <p className="mt-5 text-sm text-slate-400">Loading live agent output...</p> : null}
-              {intelligenceError ? <p className="mt-5 rounded-2xl border border-rose-500/40 bg-rose-950/30 p-4 text-sm text-rose-200">{intelligenceError}</p> : null}
+              {isLoadingIntelligence ? <p className="mt-5 text-sm text-muted">Loading live agent output...</p> : null}
+              {intelligenceError ? <p className="mt-5 rounded-2xl border border-rose-500/40 bg-rose-50 p-4 text-sm text-rose-800">{intelligenceError}</p> : null}
 
               {adminToken && !isLoadingIntelligence && !intelligenceError ? (
                 <>
-                  <div className="mt-5 rounded-2xl border border-slate-800 bg-slate-950 p-4">
+                  <div className="mt-5 rounded-2xl border border-line bg-surface p-4">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div>
                         <h3 className="text-lg font-medium">Nevada and U.S. market scorecard</h3>
-                        <p className="mt-1 text-sm text-slate-400">Each number keeps its geography, source and scope. Missing means no source-backed observation exists — never zero or estimated.</p>
+                        <p className="mt-1 text-sm text-muted">Each number keeps its geography, source and scope. Missing means no source-backed observation exists — never zero or estimated.</p>
                       </div>
                       <div className="flex flex-wrap items-center gap-2">
-                        <button type="button" onClick={handleCollectOfficialMetrics} disabled={isCollectingOfficialMetrics} className="rounded-xl border border-cyan-400/60 px-3 py-2 text-xs font-semibold text-cyan-200 hover:bg-cyan-400/10 disabled:cursor-wait disabled:opacity-60">
+                        <button type="button" onClick={handleCollectOfficialMetrics} disabled={isCollectingOfficialMetrics} className="rounded-xl border border-line/60 px-3 py-2 text-xs font-semibold text-forest hover:bg-forest-hover/10 disabled:cursor-wait disabled:opacity-60">
                           {isCollectingOfficialMetrics ? "Collecting official CMS data…" : "Refresh official CMS data"}
                         </button>
-                        <span className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300">Not used in recommendation ranking</span>
+                        <span className="rounded-full border border-line px-3 py-1 text-xs text-muted">Not used in recommendation ranking</span>
                       </div>
                     </div>
                     <div className="mt-4 overflow-x-auto">
                       <table className="min-w-full text-left text-sm">
-                        <thead className="border-b border-slate-800 text-slate-400">
+                        <thead className="border-b border-line text-muted">
                           <tr>
                             <th className="px-3 py-2">Metric</th>
                             <th className="px-3 py-2">Status</th>
@@ -386,20 +386,20 @@ export default function ExecutiveIntelligenceAdminPage() {
                         </thead>
                         <tbody>
                           {(marketReport?.metrics || []).map((metric) => (
-                            <tr key={metric.metric_key} className="border-b border-slate-900 align-top">
-                              <td className="px-3 py-3 font-medium text-slate-100"><p>{metric.label}</p><p className="mt-1 text-xs text-slate-500">{metric.scope}</p></td>
-                              <td className="px-3 py-3"><span className={metric.status === "AVAILABLE" ? "text-emerald-300" : "text-amber-300"}>{metric.status}</span></td>
-                              <td className="px-3 py-3 text-slate-300">
-                                {metric.observations.length > 0 ? metric.observations.map((observation) => <p key={`${observation.segment}-${observation.value}`}><span className="text-slate-500">{observation.segment}:</span> {observation.value} {metric.unit} <span className="text-xs text-slate-500">({observation.observed_period})</span></p>) : <span className="text-amber-200">{metric.reason || "No sourced observation collected."}</span>}
+                            <tr key={metric.metric_key} className="border-b border-line align-top">
+                              <td className="px-3 py-3 font-medium text-ink"><p>{metric.label}</p><p className="mt-1 text-xs text-muted">{metric.scope}</p></td>
+                              <td className="px-3 py-3"><span className={metric.status === "AVAILABLE" ? "text-forest" : "text-amber-800"}>{metric.status}</span></td>
+                              <td className="px-3 py-3 text-muted">
+                                {metric.observations.length > 0 ? metric.observations.map((observation) => <p key={`${observation.segment}-${observation.value}`}><span className="text-muted">{observation.segment}:</span> {observation.value} {metric.unit} <span className="text-xs text-muted">({observation.observed_period})</span></p>) : <span className="text-amber-800">{metric.reason || "No sourced observation collected."}</span>}
                               </td>
-                              <td className="px-3 py-3 text-slate-400">
-                                {metric.observations.map((observation) => <p key={`${observation.source_name}-${observation.segment}`}><a className="text-cyan-300 underline hover:text-cyan-200" href={observation.source_url} target="_blank" rel="noreferrer">{observation.source_name}</a><span className="ml-1 text-xs">· {observation.evidence_status}</span></p>)}
+                              <td className="px-3 py-3 text-muted">
+                                {metric.observations.map((observation) => <p key={`${observation.source_name}-${observation.segment}`}><a className="text-forest underline hover:text-forest" href={observation.source_url} target="_blank" rel="noreferrer">{observation.source_name}</a><span className="ml-1 text-xs">· {observation.evidence_status}</span></p>)}
                               </td>
                             </tr>
                           ))}
                         </tbody>
                       </table>
-                      {!marketReport ? <p className="p-4 text-sm text-amber-200">The market-report endpoint has not been deployed yet.</p> : null}
+                      {!marketReport ? <p className="p-4 text-sm text-amber-800">The market-report endpoint has not been deployed yet.</p> : null}
                     </div>
                   </div>
 
@@ -407,25 +407,25 @@ export default function ExecutiveIntelligenceAdminPage() {
                     <div className="space-y-3">
                       <h3 className="text-lg font-medium">Competitor observations</h3>
                       {Object.entries(competitorGroups).map(([competitor, signals]) => (
-                        <article key={competitor} className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
-                          <h4 className="font-medium text-slate-100">{competitor}</h4>
-                          <ul className="mt-3 space-y-2 text-sm text-slate-300">
+                        <article key={competitor} className="rounded-3xl border border-line bg-surface p-4">
+                          <h4 className="font-medium text-ink">{competitor}</h4>
+                          <ul className="mt-3 space-y-2 text-sm text-muted">
                             {signals.map((signal) => (
                               <li key={`${signal.competitor_key}-${signal.signal_type}`}>
-                                <span className="mr-2 text-xs uppercase tracking-wide text-cyan-300">{signal.signal_type.replaceAll("_", " ")}</span>
+                                <span className="mr-2 text-xs uppercase tracking-wide text-forest">{signal.signal_type.replaceAll("_", " ")}</span>
                                 {signal.detail_text}
                               </li>
                             ))}
                           </ul>
                         </article>
                       ))}
-                      {competitiveSignals.length === 0 ? <p className="text-sm text-slate-400">No competitor signals have been stored yet.</p> : null}
+                      {competitiveSignals.length === 0 ? <p className="text-sm text-muted">No competitor signals have been stored yet.</p> : null}
                     </div>
                     <div>
                       <h3 className="text-lg font-medium">Senior-living supply signals</h3>
-                      <div className="mt-3 max-h-[38rem] overflow-auto rounded-2xl border border-slate-800 bg-slate-950">
+                      <div className="mt-3 max-h-[38rem] overflow-auto rounded-2xl border border-line bg-surface">
                         <table className="min-w-full text-left text-sm">
-                          <thead className="sticky top-0 bg-slate-900 text-slate-400">
+                          <thead className="sticky top-0 bg-surface text-muted">
                             <tr>
                               <th className="px-3 py-3">Type</th>
                               <th className="px-3 py-3">Place</th>
@@ -434,19 +434,19 @@ export default function ExecutiveIntelligenceAdminPage() {
                           </thead>
                           <tbody>
                             {marketSignals.map((signal) => (
-                              <tr key={signal.source_url} className="border-t border-slate-900 align-top">
-                                <td className="px-3 py-3 text-xs text-cyan-300">{signal.category.replaceAll("_", " ")}</td>
+                              <tr key={signal.source_url} className="border-t border-line align-top">
+                                <td className="px-3 py-3 text-xs text-forest">{signal.category.replaceAll("_", " ")}</td>
                                 <td className="px-3 py-3">
-                                  <p className="font-medium text-slate-100">{signal.headline}</p>
-                                  <p className="mt-1 text-slate-400">{signal.city_state || "Location not verified in article"}</p>
-                                  <p className="mt-1 text-slate-300">{signal.snippet}</p>
+                                  <p className="font-medium text-ink">{signal.headline}</p>
+                                  <p className="mt-1 text-muted">{signal.city_state || "Location not verified in article"}</p>
+                                  <p className="mt-1 text-muted">{signal.snippet}</p>
                                 </td>
-                                <td className="px-3 py-3"><a className="text-cyan-300 underline hover:text-cyan-200" href={signal.source_url} target="_blank" rel="noreferrer">{signal.source_domain}</a></td>
+                                <td className="px-3 py-3"><a className="text-forest underline hover:text-forest" href={signal.source_url} target="_blank" rel="noreferrer">{signal.source_domain}</a></td>
                               </tr>
                             ))}
                           </tbody>
                         </table>
-                        {marketSignals.length === 0 ? <p className="p-4 text-sm text-slate-400">No market-supply signals have been stored yet.</p> : null}
+                        {marketSignals.length === 0 ? <p className="p-4 text-sm text-muted">No market-supply signals have been stored yet.</p> : null}
                       </div>
                     </div>
                   </div>
@@ -455,41 +455,41 @@ export default function ExecutiveIntelligenceAdminPage() {
             </section>
 
             <section className="grid gap-4 lg:grid-cols-2">
-              <div className="rounded-3xl border border-slate-800 bg-slate-900/80 p-6">
-                <p className="text-xs uppercase tracking-[0.25em] text-slate-400">Authority Progress</p>
+              <div className="rounded-3xl border border-line bg-surface/80 p-6">
+                <p className="text-xs uppercase tracking-[0.25em] text-muted">Authority Progress</p>
                 <div className="mt-4 space-y-3">
                   {Object.entries(authorityStages).map(([stage, raw]) => {
                     const value = asRecord(raw);
                     return (
-                      <div key={stage} className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
+                      <div key={stage} className="rounded-2xl border border-line bg-surface p-4">
                         <div className="flex items-center justify-between gap-3">
                           <h3 className="text-lg font-medium">{stage}</h3>
-                          <span className="text-sm text-emerald-300">{String(value.status || "UNKNOWN")}</span>
+                          <span className="text-sm text-forest">{String(value.status || "UNKNOWN")}</span>
                         </div>
-                        <p className="mt-2 text-xs text-slate-500">Last verified: {String(value.last_verified_utc || "UNKNOWN")}</p>
-                        <p className="mt-3 text-sm text-slate-300">Next action: {String(value.next_action || "UNKNOWN")}</p>
+                        <p className="mt-2 text-xs text-muted">Last verified: {String(value.last_verified_utc || "UNKNOWN")}</p>
+                        <p className="mt-3 text-sm text-muted">Next action: {String(value.next_action || "UNKNOWN")}</p>
                       </div>
                     );
                   })}
                 </div>
               </div>
 
-              <div className="rounded-3xl border border-slate-800 bg-slate-900/80 p-6">
-                <p className="text-xs uppercase tracking-[0.25em] text-slate-400">Agents Requiring Attention</p>
+              <div className="rounded-3xl border border-line bg-surface/80 p-6">
+                <p className="text-xs uppercase tracking-[0.25em] text-muted">Agents Requiring Attention</p>
                 <div className="mt-4 space-y-3">
                   {attention.length > 0 ? attention.map((item, index) => (
-                    <div key={`${String(item.agent)}-${index}`} className="rounded-2xl border border-amber-500/30 bg-amber-950/20 p-4">
-                      <p className="font-medium text-amber-100">{String(item.agent)}</p>
-                      <p className="mt-1 text-sm text-amber-200">Why: {String(item.why)}</p>
-                      <p className="mt-1 text-sm text-amber-200">Impact: {String(item.impact)}</p>
-                      <p className="mt-1 text-sm text-amber-200">Next action: {String(item.next_action)}</p>
+                    <div key={`${String(item.agent)}-${index}`} className="rounded-2xl border border-amber-500/30 bg-amber-50 p-4">
+                      <p className="font-medium text-amber-800">{String(item.agent)}</p>
+                      <p className="mt-1 text-sm text-amber-800">Why: {String(item.why)}</p>
+                      <p className="mt-1 text-sm text-amber-800">Impact: {String(item.impact)}</p>
+                      <p className="mt-1 text-sm text-amber-800">Next action: {String(item.next_action)}</p>
                     </div>
-                  )) : <p className="text-sm text-slate-300">No attention items recorded.</p>}
+                  )) : <p className="text-sm text-muted">No attention items recorded.</p>}
                 </div>
 
-                <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-950 p-4">
-                  <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Top 5 Priorities Today</p>
-                  <ol className="mt-3 space-y-2 text-sm text-slate-200">
+                <div className="mt-6 rounded-2xl border border-line bg-surface p-4">
+                  <p className="text-xs uppercase tracking-[0.2em] text-muted">Top 5 Priorities Today</p>
+                  <ol className="mt-3 space-y-2 text-sm text-ink">
                     {topPriorities.map((item, index) => (
                       <li key={`${item}-${index}`}>{index + 1}. {item}</li>
                     ))}

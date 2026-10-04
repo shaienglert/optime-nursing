@@ -161,10 +161,11 @@ test('server-owned intake asks only the missing question and preserves explicit 
 
   await page.getByRole('button', { name: 'More active' }).click();
   await expect(page).toHaveURL(/\/intake-confirmation\?next=/);
-  await expect(page.getByRole('heading', { name: /Please confirm what Oomnik understood/i })).toBeVisible();
+  await expect(page.getByTestId('intake-personal-summary-heading')).toBeVisible();
+  await page.getByText('Review the needs guiding your search', { exact: true }).click();
   await expect(page.getByText('Bathing assistance', { exact: true })).toBeVisible();
   const recommendations = page.waitForRequest(request => request.url().includes('/decision-engine/recommendations'));
-  await page.getByRole('button', { name: /I confirm—show recommendations/i }).click();
+  await page.getByTestId('confirm-understanding').click();
   await expect(page).toHaveURL(/\/results/);
   expect(new URL(page.url()).search).toBe('');
   expect((await recommendations).postDataJSON().intake_profile_id).toBe('test-server-profile');
@@ -180,11 +181,12 @@ test('results default view is readable and does not expose internal evidence jar
   }, confirmed);
   await page.goto('http://127.0.0.1:3000/results');
 
-  await expect(page.getByRole('heading', { name: /Care-compatible options to review for Mom/i })).toBeVisible();
-  await expect(page.getByText('Verified Community')).toBeVisible();
-  await expect(page.getByText('Community Still Under Review')).toBeVisible();
-  await expect(page.getByText('Verified care capabilities', { exact: true })).toBeVisible();
-  await expect(page.getByText('Bathing and dressing support is verified.')).toBeVisible();
+  await expect(page.getByTestId('personal-results-heading')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Verified Community', exact: true })).toBeVisible();
+  await expect(page.getByText('Community Still Under Review', { exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Why this place fits your search', exact: true })).toBeVisible();
+  await page.getByText('The matching facts behind this explanation', { exact: true }).click();
+  await expect(page.getByText('Bathing and dressing support is verified.', { exact: true })).toBeVisible();
   await expect(page.getByText('Medication support is not verified.')).toHaveCount(0);
   await expect(page.getByText('ADL support is not verified.')).toHaveCount(0);
   await expect(page.getByRole('link', { name: 'See detailed comparison' })).toBeVisible();

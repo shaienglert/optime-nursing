@@ -496,9 +496,9 @@ export function ComparePageClient() {
 
   if (error) {
     return (
-      <main className="min-h-screen bg-[#fffdf8] px-6 py-12">
+      <main className="min-h-screen bg-canvas px-6 py-12">
         <p className="text-[#8b3d2e]">{error}</p>
-        <button type="button" onClick={addAnotherFacility} className="mt-4 rounded-full border border-[#d9cfbf] bg-white px-4 py-2 text-sm font-semibold text-[#5b5245]">
+        <button type="button" onClick={addAnotherFacility} className="mt-4 rounded-full border border-line bg-white px-4 py-2 text-sm font-semibold text-muted">
           Back to results
         </button>
       </main>
@@ -507,13 +507,13 @@ export function ComparePageClient() {
 
   if (selectedFacilityIds.length < 2) {
     return (
-      <main className="min-h-screen bg-[linear-gradient(180deg,#fffdf8_0%,#f8f5ec_22%,#ffffff_45%)] px-4 py-6 sm:px-8 lg:px-12">
-        <section className="mx-auto max-w-5xl rounded-3xl border border-[#e8ddcc] bg-white p-6">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#5f7f6b]">Compare</p>
-          <h1 className="mt-2 text-3xl font-semibold text-[#2f2a24]">{compareTitle} for {relationship}</h1>
-          <p className="mt-3 text-sm text-[#5c5347]">Select at least 2 facilities on the results page to build a comparison.</p>
+      <main className="min-h-screen bg-canvas px-4 py-6 sm:px-8 lg:px-12">
+        <section className="mx-auto max-w-5xl rounded-3xl border border-line bg-white p-6 oomnik-panel">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-forest">Compare</p>
+          <h1 className="mt-2 text-3xl font-semibold text-ink">{compareTitle} for {relationship}</h1>
+          <p className="mt-3 text-sm text-muted">Select at least 2 facilities on the results page to build a comparison.</p>
           <div className="mt-4 flex flex-wrap gap-3">
-            <Link href={compareBackHref} className="rounded-full bg-[#5f7f6b] px-4 py-2 text-sm font-semibold text-white">Back to results</Link>
+            <Link href={compareBackHref} className="rounded-full bg-forest px-4 py-2 text-sm font-semibold text-white">Back to results</Link>
           </div>
         </section>
       </main>
@@ -522,28 +522,28 @@ export function ComparePageClient() {
 
   if ((isLoading || !comparisonContext || !comparisonTable) && selectedFacilityIds.length >= 2) {
     return (
-      <main className="min-h-screen bg-[linear-gradient(180deg,#fffdf8_0%,#f8f5ec_22%,#ffffff_45%)] px-4 py-6 sm:px-8 lg:px-12">
+      <main className="min-h-screen bg-canvas px-4 py-6 sm:px-8 lg:px-12">
         <section className="mx-auto max-w-7xl space-y-6">
-          <header className="rounded-3xl border border-[#e9dfce] bg-white/90 p-6 shadow-[0_22px_80px_-42px_rgba(82,65,42,0.4)]">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#5f7f6b]">Compare</p>
-            <h1 className="mt-3 text-3xl font-semibold text-[#2f2a24] sm:text-4xl">{compareTitle} for {relationship}</h1>
-            <p className="mt-2 text-[#6b645a]">{compareSubtitle}</p>
+          <header className="rounded-3xl border border-line bg-white/90 p-6 shadow-[0_22px_80px_-42px_rgba(82,65,42,0.4)] oomnik-panel">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-forest">Compare</p>
+            <h1 className="mt-3 text-3xl font-semibold text-ink sm:text-4xl">{compareTitle} for {relationship}</h1>
+            <p className="mt-2 text-muted">{compareSubtitle}</p>
             <div className="mt-4 flex flex-wrap items-center gap-3">
-              <button type="button" onClick={addAnotherFacility} className="rounded-full border border-[#d9cfbf] bg-[#f6f2ea] px-4 py-2 text-sm font-semibold text-[#534a3d] hover:bg-[#efe8db]">Add another facility</button>
-              <Link href={compareBackHref} className="rounded-full border border-[#d9cfbf] bg-white px-4 py-2 text-sm font-semibold text-[#5b5245] hover:bg-[#f5eee2]">Back to results</Link>
+              <button type="button" onClick={addAnotherFacility} className="rounded-full border border-line bg-sand px-4 py-2 text-sm font-semibold text-muted hover:bg-sand">Add another facility</button>
+              <Link href={compareBackHref} className="rounded-full border border-line bg-white px-4 py-2 text-sm font-semibold text-muted hover:bg-sand">Back to results</Link>
             </div>
           </header>
 
-          <section className="rounded-3xl border border-[#d9e3ec] bg-[#f6fbff] p-5">
+          <section className="rounded-3xl border border-line bg-sand p-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#24425e]">Selected facilities</p>
-                <p className="mt-1 text-sm text-[#4a6076]">Loading patient-specific comparison details...</p>
+                <p className="text-sm font-semibold uppercase tracking-[0.14em] text-muted">Selected facilities</p>
+                <p className="mt-1 text-sm text-muted">Loading patient-specific comparison details...</p>
               </div>
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
               {selectedFacilityIds.map((facilityId, index) => (
-                <span key={facilityId} className="inline-flex items-center gap-2 rounded-full border border-[#cddce5] bg-white px-3 py-1.5 text-sm text-[#24425e]">
+                <span key={facilityId} className="inline-flex items-center gap-2 rounded-full border border-line bg-white px-3 py-1.5 text-sm text-muted">
                   <span>Selected facility #{index + 1}</span>
                 </span>
               ))}
@@ -555,28 +555,28 @@ export function ComparePageClient() {
   }
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,#fffdf8_0%,#f8f5ec_22%,#ffffff_45%)] px-4 py-6 sm:px-8 lg:px-12">
+    <main className="min-h-screen bg-canvas px-4 py-6 sm:px-8 lg:px-12">
       <section className="mx-auto max-w-7xl space-y-6">
-        <header className="rounded-3xl border border-[#e9dfce] bg-white/90 p-6 shadow-[0_22px_80px_-42px_rgba(82,65,42,0.4)]">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#5f7f6b]">Compare</p>
-          <h1 className="mt-3 text-3xl font-semibold text-[#2f2a24] sm:text-4xl">{compareTitle} for {relationship}</h1>
-          <p className="mt-2 text-[#6b645a]">{compareSubtitle}</p>
+        <header className="rounded-3xl border border-line bg-white/90 p-6 shadow-[0_22px_80px_-42px_rgba(82,65,42,0.4)] oomnik-panel">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-forest">Compare</p>
+          <h1 className="mt-3 text-3xl font-semibold text-ink sm:text-4xl">{compareTitle} for {relationship}</h1>
+          <p className="mt-2 text-muted">{compareSubtitle}</p>
           <div className="mt-4 flex flex-wrap items-center gap-3">
-            <button type="button" onClick={addAnotherFacility} className="rounded-full border border-[#d9cfbf] bg-[#f6f2ea] px-4 py-2 text-sm font-semibold text-[#534a3d] hover:bg-[#efe8db]">Add another facility</button>
-            <Link href={compareBackHref} className="rounded-full border border-[#d9cfbf] bg-white px-4 py-2 text-sm font-semibold text-[#5b5245] hover:bg-[#f5eee2]">Back to results</Link>
+            <button type="button" onClick={addAnotherFacility} className="rounded-full border border-line bg-sand px-4 py-2 text-sm font-semibold text-muted hover:bg-sand">Add another facility</button>
+            <Link href={compareBackHref} className="rounded-full border border-line bg-white px-4 py-2 text-sm font-semibold text-muted hover:bg-sand">Back to results</Link>
           </div>
         </header>
 
-        <section className="rounded-3xl border border-[#d9e3ec] bg-[#f6fbff] p-5">
+        <section className="rounded-3xl border border-line bg-sand p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#24425e]">Selected facilities</p>
-              <p className="mt-1 text-sm text-[#4a6076]">Remove or add facilities, then compare again. Favorites stay in session while you move between pages.</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.14em] text-muted">Selected facilities</p>
+              <p className="mt-1 text-sm text-muted">Remove or add facilities, then compare again. Favorites stay in session while you move between pages.</p>
             </div>
             <button
               type="button"
               onClick={() => setShowAllParameters((current) => !current)}
-              className="rounded-full border border-[#cddce5] bg-white px-4 py-2 text-sm font-semibold text-[#24425e] hover:bg-[#edf6fb]"
+              className="rounded-full border border-line bg-white px-4 py-2 text-sm font-semibold text-muted hover:bg-sand"
             >
               {showAllParameters ? "Show patient-relevant parameters" : `View all ${fullParameterIds.length || 59} parameters`}
             </button>
@@ -588,7 +588,7 @@ export function ComparePageClient() {
                 key={facility.facilityId}
                 type="button"
                 onClick={() => removeFacility(facility.facilityId)}
-                className="inline-flex items-center gap-2 rounded-full border border-[#cddce5] bg-white px-3 py-1.5 text-sm text-[#24425e] hover:bg-[#edf6fb]"
+                className="inline-flex items-center gap-2 rounded-full border border-line bg-white px-3 py-1.5 text-sm text-muted hover:bg-sand"
               >
                 <span>{facility.facilityName}</span>
                 <span aria-hidden="true">x</span>
@@ -601,17 +601,17 @@ export function ComparePageClient() {
           {selectedFacilities.map(({ facilityId, facilityName, recommendation }) => {
             const summary = summarizeRecommendation(recommendation);
             return (
-              <article key={facilityId} className="rounded-3xl border border-[#e8ddcc] bg-white p-5 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.25)]">
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#5f7f6b]">Comparison overview</p>
-                <h2 className="mt-2 text-xl font-semibold text-[#2f2a24]">{facilityName}</h2>
-                <p className="mt-1 text-sm text-[#6d655b]">{recommendation?.city || "City unknown"}, {recommendation?.state || "NV"}</p>
-                <div className="mt-4 space-y-2 text-sm text-[#4f473d]">
-                  <p><span className="font-semibold text-[#2f2a24]">Patient Match:</span> {summary.patientMatch}</p>
-                  <p><span className="font-semibold text-[#2f2a24]">Quality & Safety:</span> {summary.qualitySafety}</p>
-                  <p><span className="font-semibold text-[#2f2a24]">Evidence Confidence:</span> {summary.evidenceConfidence}</p>
+              <article key={facilityId} className="rounded-3xl border border-line bg-white p-5 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.25)] oomnik-panel">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-forest">Comparison overview</p>
+                <h2 className="mt-2 text-xl font-semibold text-ink">{facilityName}</h2>
+                <p className="mt-1 text-sm text-muted">{recommendation?.city || "City unknown"}, {recommendation?.state || "NV"}</p>
+                <div className="mt-4 space-y-2 text-sm text-muted">
+                  <p><span className="font-semibold text-ink">Patient Match:</span> {summary.patientMatch}</p>
+                  <p><span className="font-semibold text-ink">Quality & Safety:</span> {summary.qualitySafety}</p>
+                  <p><span className="font-semibold text-ink">Evidence Confidence:</span> {summary.evidenceConfidence}</p>
                 </div>
-                <div className="mt-4 rounded-2xl border border-[#d9cfbf] bg-[#fffdf9] p-4 text-sm text-[#5c5347]">
-                  <p className="font-semibold text-[#2f2a24]">What to verify before choosing</p>
+                <div className="mt-4 rounded-2xl border border-line bg-sand p-4 text-sm text-muted">
+                  <p className="font-semibold text-ink">What to verify before choosing</p>
                   <ul className="mt-2 space-y-1">
                     {(whatToVerify.length > 0 ? whatToVerify : ["No additional verification questions surfaced"]).map((item) => (
                       <li key={`${facilityId}-${item}`}>{item}</li>
@@ -620,16 +620,16 @@ export function ComparePageClient() {
                 </div>
                 <div className="mt-4 flex flex-wrap gap-2">
                   {facilityId ? (
-                    <Link href={`/facility/canonical?canonical=${encodeURIComponent(facilityId)}&back=${encodeURIComponent(currentComparePath)}`} className="rounded-full bg-[#6f9a86] px-4 py-2 text-sm font-semibold text-white hover:bg-[#618a77]">
+                    <Link href={`/facility/canonical?canonical=${encodeURIComponent(facilityId)}&back=${encodeURIComponent(currentComparePath)}`} className="rounded-full bg-forest px-4 py-2 text-sm font-semibold text-white hover:bg-forest-hover">
                       Open facility
                     </Link>
                   ) : null}
                   {currentOptimeRecommendation && currentOptimeRecommendation.canonical_facility_id !== facilityId ? (
-                    <Link href={buildFavoriteVsOptimeHref(facilityId)} className="rounded-full border border-[#cddce5] bg-white px-4 py-2 text-sm font-semibold text-[#24425e] hover:bg-[#edf6fb]">
+                    <Link href={buildFavoriteVsOptimeHref(facilityId)} className="rounded-full border border-line bg-white px-4 py-2 text-sm font-semibold text-muted hover:bg-sand">
                       Compare with OPTIME recommendation
                     </Link>
                   ) : null}
-                  <button type="button" onClick={() => removeFacility(facilityId)} className="rounded-full border border-[#d9cfbf] bg-white px-4 py-2 text-sm font-semibold text-[#5b5245] hover:bg-[#f5eee2]">
+                  <button type="button" onClick={() => removeFacility(facilityId)} className="rounded-full border border-line bg-white px-4 py-2 text-sm font-semibold text-muted hover:bg-sand">
                     Remove
                   </button>
                 </div>
@@ -639,17 +639,17 @@ export function ComparePageClient() {
         </section>
 
         {isFocusedComparison && focusedNarrative.length > 0 ? (
-          <section className="rounded-3xl border border-[#d9e3ec] bg-[#f8fcff] p-5 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.25)]">
-            <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#24425e]">What you should know</p>
-            <h2 className="mt-2 text-lg font-semibold text-[#2f2a24]">
+          <section className="rounded-3xl border border-line bg-sand p-5 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.25)]">
+            <p className="text-sm font-semibold uppercase tracking-[0.14em] text-muted">What you should know</p>
+            <h2 className="mt-2 text-lg font-semibold text-ink">
               Your choice: {selectedFacilities.find((facility) => facility.facilityId === favoriteFacilityId)?.facilityName || "Selected facility"}
               {" "}vs{" "}
               OPTIME recommendation {decisionResponse?.results.find((item) => item.canonical_facility_id === optimeReferenceId)?.rank_display || "#1"}: {selectedFacilities.find((facility) => facility.facilityId === optimeReferenceId)?.facilityName || "Current best applicable recommendation"}
             </h2>
-            <p className="mt-2 text-sm text-[#4a6076]">
+            <p className="mt-2 text-sm text-muted">
               Current OPTIME reference: {selectedFacilities.find((facility) => facility.facilityId === optimeReferenceId)?.facilityName || "current highest applicable recommendation"}.
             </p>
-            <div className="mt-4 space-y-3 text-sm text-[#355270]">
+            <div className="mt-4 space-y-3 text-sm text-muted">
               {focusedNarrative.map((line) => (
                 <p key={line}>{line}</p>
               ))}
@@ -657,24 +657,24 @@ export function ComparePageClient() {
           </section>
         ) : null}
 
-        <section className="rounded-3xl border border-[#d9e3ec] bg-white p-5 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.25)]">
+        <section className="rounded-3xl border border-line bg-white p-5 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.25)] oomnik-panel">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#24425e]">Patient-relevant comparison</p>
-              <p className="mt-2 text-sm text-[#4a6076]">Selected patient needs and OPTIME-recommended relevant parameters appear first. UNKNOWN remains neutral and never becomes NO.</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.14em] text-muted">Patient-relevant comparison</p>
+              <p className="mt-2 text-sm text-muted">Selected patient needs and OPTIME-recommended relevant parameters appear first. UNKNOWN remains neutral and never becomes NO.</p>
             </div>
-            <p className="text-xs text-[#4a6076]">Required and high-priority needs stay visible even when facilities are tied.</p>
+            <p className="text-xs text-muted">Required and high-priority needs stay visible even when facilities are tied.</p>
           </div>
 
           <div className="mt-4 space-y-3 md:hidden">
-            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#24425e]">Focused mobile comparison</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">Focused mobile comparison</p>
             <div className="flex flex-wrap gap-2">
               {selectedFacilities.map((facility) => (
                 <button
                   key={`mobile-focus-${facility.facilityId}`}
                   type="button"
                   onClick={() => setMobileFocusedFacilityId(facility.facilityId)}
-                  className={`rounded-full border px-3 py-1 text-xs font-semibold ${effectiveMobileFocusedFacilityId === facility.facilityId ? "border-[#24425e] bg-[#24425e] text-white" : "border-[#cddce5] bg-white text-[#24425e]"}`}
+                  className={`rounded-full border px-3 py-1 text-xs font-semibold ${effectiveMobileFocusedFacilityId === facility.facilityId ? "border-line bg-forest text-white" : "border-line bg-white text-muted"}`}
                 >
                   {facility.facilityName}
                 </button>
@@ -685,12 +685,12 @@ export function ComparePageClient() {
               const cell = row.cells[focusedIndex];
               if (!cell) return null;
               return (
-                <article key={`mobile-focused-row-${row.parameterId}`} className="rounded-xl border border-[#e6edf3] bg-[#fbfdff] px-3 py-2 text-sm">
-                  <p className="font-semibold text-[#2f2a24]">{row.parameterName}</p>
-                  <p className="mt-1 text-[#4f473d]">{cell.displayValue}</p>
-                  <p className="text-[11px] text-[#6b6257]">{cell.scopeLabel}</p>
+                <article key={`mobile-focused-row-${row.parameterId}`} className="rounded-xl border border-line bg-sand px-3 py-2 text-sm">
+                  <p className="font-semibold text-ink">{row.parameterName}</p>
+                  <p className="mt-1 text-muted">{cell.displayValue}</p>
+                  <p className="text-[11px] text-muted">{cell.scopeLabel}</p>
                   {cell.clickableLabel && cell.payload ? (
-                    <button type="button" onClick={() => setActiveEvidencePayload(cell.payload)} className="mt-1 text-xs font-medium text-[#1f5f94] hover:underline">
+                    <button type="button" onClick={() => setActiveEvidencePayload(cell.payload)} className="mt-1 text-xs font-medium text-forest hover:underline">
                       {cell.clickableLabel}
                     </button>
                   ) : null}
@@ -703,35 +703,35 @@ export function ComparePageClient() {
             <table className="min-w-full border-collapse text-xs sm:text-sm">
               <thead>
                 <tr>
-                  <th className="sticky left-0 z-10 border border-[#d9e3ec] bg-white px-3 py-2 text-left">Parameter</th>
+                  <th className="sticky left-0 z-10 border border-line bg-white px-3 py-2 text-left">Parameter</th>
                   {selectedFacilities.map((facility) => (
-                    <th key={`relevant-${facility.facilityId}`} className="border border-[#d9e3ec] bg-white px-3 py-2 text-left">{facility.facilityName}</th>
+                    <th key={`relevant-${facility.facilityId}`} className="border border-line bg-white px-3 py-2 text-left">{facility.facilityName}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                <tr className="bg-[#eef6fd]">
-                  <td className="sticky left-0 z-10 border border-[#d9e3ec] px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-[#24425e]">A. Your priorities</td>
+                <tr className="bg-sand">
+                  <td className="sticky left-0 z-10 border border-line px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-muted">A. Your priorities</td>
                   {selectedFacilities.map((facility) => (
-                    <td key={`section-priority-${facility.facilityId}`} className="border border-[#d9e3ec] bg-[#eef6fd]" />
+                    <td key={`section-priority-${facility.facilityId}`} className="border border-line bg-sand" />
                   ))}
                 </tr>
                 {priorityRelevantRows.map((row) => (
                   <tr key={`relevant-row-${row.parameterId}`}>
-                    <td className="sticky left-0 z-10 border border-[#d9e3ec] bg-white px-3 py-2 align-top">
-                      <p className="font-semibold text-[#2f2a24]">{row.parameterName}</p>
-                      <p className="mt-1 text-[10px] text-[#6b6257]">Selected or implied need</p>
+                    <td className="sticky left-0 z-10 border border-line bg-white px-3 py-2 align-top">
+                      <p className="font-semibold text-ink">{row.parameterName}</p>
+                      <p className="mt-1 text-[10px] text-muted">Selected or implied need</p>
                     </td>
                     {row.cells.map((cell, cellIndex) => {
                       const facility = selectedFacilities[cellIndex];
                       return (
-                        <td key={`relevant-cell-${facility.facilityId}-${row.parameterId}`} className="border border-[#d9e3ec] bg-white px-3 py-2 align-top">
-                          <p className="font-semibold text-[#2f2a24]">{cell.statusLabel}</p>
-                          <p className="mt-1 text-[#4f473d]">{cell.displayValue}</p>
-                          <p className="mt-1 text-[10px] text-[#6b6257]">{cell.scopeLabel}</p>
-                          <p className="text-[10px] text-[#6b6257]">Source: {cell.source}</p>
+                        <td key={`relevant-cell-${facility.facilityId}-${row.parameterId}`} className="border border-line bg-white px-3 py-2 align-top">
+                          <p className="font-semibold text-ink">{cell.statusLabel}</p>
+                          <p className="mt-1 text-muted">{cell.displayValue}</p>
+                          <p className="mt-1 text-[10px] text-muted">{cell.scopeLabel}</p>
+                          <p className="text-[10px] text-muted">Source: {cell.source}</p>
                           {cell.clickableLabel && cell.payload ? (
-                            <button type="button" onClick={() => setActiveEvidencePayload(cell.payload)} className="mt-1 text-xs font-medium text-[#1f5f94] hover:underline">
+                            <button type="button" onClick={() => setActiveEvidencePayload(cell.payload)} className="mt-1 text-xs font-medium text-forest hover:underline">
                               {cell.clickableLabel}
                             </button>
                           ) : null}
@@ -740,28 +740,28 @@ export function ComparePageClient() {
                     })}
                   </tr>
                 ))}
-                <tr className="bg-[#eef6fd]">
-                  <td className="sticky left-0 z-10 border border-[#d9e3ec] px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-[#24425e]">B. OPTIME recommends considering</td>
+                <tr className="bg-sand">
+                  <td className="sticky left-0 z-10 border border-line px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-muted">B. OPTIME recommends considering</td>
                   {selectedFacilities.map((facility) => (
-                    <td key={`section-recommended-${facility.facilityId}`} className="border border-[#d9e3ec] bg-[#eef6fd]" />
+                    <td key={`section-recommended-${facility.facilityId}`} className="border border-line bg-sand" />
                   ))}
                 </tr>
                 {recommendedRelevantRows.map((row) => (
                   <tr key={`recommended-row-${row.parameterId}`}>
-                    <td className="sticky left-0 z-10 border border-[#d9e3ec] bg-white px-3 py-2 align-top">
-                      <p className="font-semibold text-[#2f2a24]">{row.parameterName}</p>
-                      <p className="mt-1 text-[10px] text-[#6b6257]">OPTIME-recommended relevant parameter</p>
+                    <td className="sticky left-0 z-10 border border-line bg-white px-3 py-2 align-top">
+                      <p className="font-semibold text-ink">{row.parameterName}</p>
+                      <p className="mt-1 text-[10px] text-muted">OPTIME-recommended relevant parameter</p>
                     </td>
                     {row.cells.map((cell, cellIndex) => {
                       const facility = selectedFacilities[cellIndex];
                       return (
-                        <td key={`recommended-cell-${facility.facilityId}-${row.parameterId}`} className="border border-[#d9e3ec] bg-white px-3 py-2 align-top">
-                          <p className="font-semibold text-[#2f2a24]">{cell.statusLabel}</p>
-                          <p className="mt-1 text-[#4f473d]">{cell.displayValue}</p>
-                          <p className="mt-1 text-[10px] text-[#6b6257]">{cell.scopeLabel}</p>
-                          <p className="text-[10px] text-[#6b6257]">Source: {cell.source}</p>
+                        <td key={`recommended-cell-${facility.facilityId}-${row.parameterId}`} className="border border-line bg-white px-3 py-2 align-top">
+                          <p className="font-semibold text-ink">{cell.statusLabel}</p>
+                          <p className="mt-1 text-muted">{cell.displayValue}</p>
+                          <p className="mt-1 text-[10px] text-muted">{cell.scopeLabel}</p>
+                          <p className="text-[10px] text-muted">Source: {cell.source}</p>
                           {cell.clickableLabel && cell.payload ? (
-                            <button type="button" onClick={() => setActiveEvidencePayload(cell.payload)} className="mt-1 text-xs font-medium text-[#1f5f94] hover:underline">
+                            <button type="button" onClick={() => setActiveEvidencePayload(cell.payload)} className="mt-1 text-xs font-medium text-forest hover:underline">
                               {cell.clickableLabel}
                             </button>
                           ) : null}
@@ -776,16 +776,16 @@ export function ComparePageClient() {
         </section>
 
         {showAllParameters ? (
-          <section className="rounded-3xl border border-[#d9e3ec] bg-white p-5 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.25)]">
+          <section className="rounded-3xl border border-line bg-white p-5 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.25)] oomnik-panel">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#24425e]">All 59 parameters</p>
-              <p className="mt-2 text-sm text-[#4a6076]">This is the full canonical comparison. Missing evidence stays visible as needs verification or not verified.</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.14em] text-muted">All 59 parameters</p>
+              <p className="mt-2 text-sm text-muted">This is the full canonical comparison. Missing evidence stays visible as needs verification or not verified.</p>
               {fullParameterIds.length !== 59 ? (
                 <p className="mt-1 text-xs text-[#8b4f3f]">Current payload includes {fullParameterIds.length} parameters. Canonical target is 59.</p>
               ) : null}
             </div>
-            <button type="button" onClick={() => setShowAllParameters(false)} className="rounded-full border border-[#cddce5] bg-[#f6fbff] px-4 py-2 text-sm font-semibold text-[#24425e] hover:bg-[#edf6fb]">
+            <button type="button" onClick={() => setShowAllParameters(false)} className="rounded-full border border-line bg-sand px-4 py-2 text-sm font-semibold text-muted hover:bg-sand">
               Return to patient-relevant view
             </button>
           </div>
@@ -794,29 +794,29 @@ export function ComparePageClient() {
             <table className="min-w-full border-collapse text-xs">
               <thead>
                 <tr>
-                  <th className="sticky left-0 z-10 border border-[#d9e3ec] bg-white px-3 py-2 text-left">Parameter</th>
+                  <th className="sticky left-0 z-10 border border-line bg-white px-3 py-2 text-left">Parameter</th>
                   {selectedFacilities.map((facility) => (
-                    <th key={`full-${facility.facilityId}`} className="border border-[#d9e3ec] bg-white px-3 py-2 text-left">{facility.facilityName}</th>
+                    <th key={`full-${facility.facilityId}`} className="border border-line bg-white px-3 py-2 text-left">{facility.facilityName}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {comparisonRows.map((row) => (
                   <tr key={row.parameterId}>
-                    <td className="sticky left-0 z-10 border border-[#d9e3ec] bg-white px-3 py-2 align-top">
-                      <p className="font-semibold text-[#2f2a24]">{row.parameterName}</p>
+                    <td className="sticky left-0 z-10 border border-line bg-white px-3 py-2 align-top">
+                      <p className="font-semibold text-ink">{row.parameterName}</p>
                     </td>
                     {row.cells.map((cell, cellIndex) => {
                       const facility = selectedFacilities[cellIndex];
                       return (
-                        <td key={`${facility.facilityId}-${row.parameterId}`} className="border border-[#d9e3ec] bg-white px-3 py-2 align-top">
-                          <p className="font-semibold text-[#2f2a24]">{cell.statusLabel}</p>
-                          <p className="mt-1 text-[#4f473d]">{cell.displayValue}</p>
-                          <p className="mt-1 text-[10px] text-[#6b6257]">{cell.scopeLabel}</p>
-                          <p className="text-[10px] text-[#6b6257]">Source: {cell.source}</p>
-                          <p className="text-[10px] text-[#6b6257]">Last verified: {cell.lastVerified}</p>
+                        <td key={`${facility.facilityId}-${row.parameterId}`} className="border border-line bg-white px-3 py-2 align-top">
+                          <p className="font-semibold text-ink">{cell.statusLabel}</p>
+                          <p className="mt-1 text-muted">{cell.displayValue}</p>
+                          <p className="mt-1 text-[10px] text-muted">{cell.scopeLabel}</p>
+                          <p className="text-[10px] text-muted">Source: {cell.source}</p>
+                          <p className="text-[10px] text-muted">Last verified: {cell.lastVerified}</p>
                           {cell.clickableLabel && cell.payload ? (
-                            <button type="button" onClick={() => setActiveEvidencePayload(cell.payload)} className="mt-1 text-xs font-medium text-[#1f5f94] hover:underline">
+                            <button type="button" onClick={() => setActiveEvidencePayload(cell.payload)} className="mt-1 text-xs font-medium text-forest hover:underline">
                               {cell.clickableLabel}
                             </button>
                           ) : null}
