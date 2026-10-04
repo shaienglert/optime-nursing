@@ -144,7 +144,7 @@ function IntakeConfirmationContent() {
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
           <button type="button" onClick={() => router.push("/intake")} className="rounded-xl border border-forest bg-white px-7 py-4 text-base font-semibold text-forest">Change answers</button>
-          <button data-testid="confirm-understanding" type="button" onClick={confirm} disabled={!!reviewError || reviewed?.key !== inputKey || confirmationRequested} className="inline-flex items-center gap-2 rounded-xl bg-forest px-7 py-4 text-base font-semibold text-white hover:bg-forest-hover disabled:opacity-40"><OOmnikMark size={16} /> Yes, you understood me — find my options</button>
+          <button data-testid="confirm-understanding" type="button" onClick={confirm} disabled={!!reviewError || reviewed?.key !== inputKey || confirmationRequested} className="inline-flex items-center gap-2 rounded-xl bg-forest px-7 py-4 text-base font-semibold text-white hover:bg-forest-hover disabled:opacity-40"><OOmnikMark /> Yes, you understood me — find my options</button>
         </div>
       </section>
     </main>

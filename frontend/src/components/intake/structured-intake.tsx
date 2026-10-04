@@ -261,8 +261,8 @@ export function StructuredIntake() {
                 ← Back
               </button>
               <p className="text-sm text-forest">Question {index + 1} of {questions.length}</p>
-              <button type="button" onClick={next} disabled={onBudget && (priceFloorLoading || belowKnownFloor)} className="rounded-xl bg-forest px-6 py-2.5 text-sm font-semibold text-white hover:bg-forest-hover disabled:opacity-40">
-                {question.required && !isAnswered(question, context) ? "Next →" : index + 1 === questions.length ? "See the summary →" : "Next →"}
+              <button type="button" onClick={next} disabled={onBudget && (priceFloorLoading || belowKnownFloor)} className="inline-flex items-center justify-center gap-3 rounded-xl bg-forest px-6 py-2.5 text-sm font-semibold text-white hover:bg-forest-hover disabled:opacity-40">
+                <OomnikMark /> {question.required && !isAnswered(question, context) ? "Next →" : index + 1 === questions.length ? "See the summary →" : "Next →"}
               </button>
             </div>
           </section>
@@ -312,7 +312,7 @@ export function StructuredIntake() {
                 ← Change an answer
               </button>
               <button type="button" onClick={continueToInterview} className="inline-flex items-center justify-center gap-2 rounded-xl bg-forest px-7 py-3 text-base font-semibold text-white hover:bg-forest-hover">
-                <OomnikMark size={18} /> Continue our conversation
+                <OomnikMark /> Continue our conversation
               </button>
             </div>
           </section>

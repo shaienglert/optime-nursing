@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { FontSizeControl } from "@/components/brand/font-size-control";
 import { OptimeStaticLogo } from "@/components/brand/optime-static-logo";
-import { JourneyIcon } from "@/components/brand/journey-icon";
+import { OomnikMark } from "@/components/brand/oomnik-mark";
 
 const SECONDARY_LINKS = [
   { href: "/results", label: "Your results" }, { href: "/facilities", label: "Explore communities" },
@@ -14,7 +14,7 @@ export function SiteHeader() {
     <a href="#main-content" className="sr-only z-[60] rounded-xl bg-white p-4 text-lg text-forest focus:not-sr-only focus:fixed focus:left-4 focus:top-4">Skip to content</a>
     <header className="sticky top-0 z-50 border-b border-line bg-canvas/95 backdrop-blur">
       <div className="mx-auto grid max-w-6xl grid-cols-[1fr_auto] items-center gap-x-4 gap-y-3 px-5 py-4 sm:px-8 xl:flex xl:gap-6">
-        <OptimeStaticLogo height={26} />
+        <OptimeStaticLogo height={36} />
         <nav aria-label="Primary" className="hidden flex-1 items-center justify-center gap-6 text-lg font-medium xl:flex">
           <Link href="/#how-it-works" className="inline-flex min-h-12 items-center hover:text-forest">How it works</Link>
           <Link href="/workspace" className="inline-flex min-h-12 items-center hover:text-forest">Saved conversations</Link>
@@ -22,7 +22,7 @@ export function SiteHeader() {
         </nav>
         <FontSizeControl />
         <details className="relative xl:hidden"><summary className="flex min-h-12 cursor-pointer items-center text-lg font-medium">Menu</summary><nav aria-label="Mobile navigation" className="absolute left-0 top-full mt-2 max-h-[65vh] w-[min(19rem,85vw)] overflow-y-auto rounded-xl border border-line bg-white p-3 text-lg shadow-lg"><Link href="/#how-it-works" className="flex min-h-12 items-center rounded-lg px-3 hover:bg-sand">How it works</Link><Link href="/workspace" className="flex min-h-12 items-center rounded-lg px-3 hover:bg-sand">Saved conversations</Link>{SECONDARY_LINKS.map(item => <Link key={item.href} href={item.href} prefetch={item.href === "/admin" ? false : undefined} className="flex min-h-12 items-center rounded-lg px-3 hover:bg-sand">{item.label}</Link>)}</nav></details>
-        <Link href="/#start-search" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-forest px-4 py-3 text-lg font-semibold text-white transition hover:bg-forest-hover">Start here<JourneyIcon kind="forward" /></Link>
+        <Link href="/#start-search" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-forest px-4 py-3 text-lg font-semibold text-white transition hover:bg-forest-hover">Start here<OomnikMark /></Link>
       </div>
     </header>
   </>;

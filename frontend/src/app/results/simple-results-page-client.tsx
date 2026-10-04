@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { OomnikMark } from "@/components/brand/oomnik-mark";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -287,11 +288,11 @@ export function SimpleResultsPageClient() {
           <form className="mt-5" onSubmit={event => { event.preventDefault(); submitFollowUp(followUpAnswer); }}>
             <label htmlFor="results-follow-up" className="block text-lg">Your answer</label>
             <textarea id="results-follow-up" value={followUpAnswer} onChange={event => setFollowUpAnswer(event.target.value)} disabled={continuingInterview} rows={3} className="mt-2 w-full rounded-xl border p-4 text-lg" />
-            <button type="submit" disabled={continuingInterview || !followUpAnswer.trim()} className="mt-4 rounded-xl bg-forest px-7 py-4 text-xl text-white disabled:opacity-50">{continuingInterview ? "Using your answer…" : "Continue"}</button>
+            <button type="submit" disabled={continuingInterview || !followUpAnswer.trim()} className="mt-4 inline-flex items-center gap-3 rounded-xl bg-forest px-7 py-4 text-xl text-white disabled:opacity-50"><OomnikMark />{continuingInterview ? "Using your answer…" : "Continue"}</button>
           </form>
         </> : <>
           <p className="mt-5 text-xl">Your answers are saved. We need to check our understanding before showing recommendations.</p>
-          <Link href="/adaptive-interview?next=%2Fresults" className="mt-6 inline-block rounded-xl bg-forest px-6 py-4 text-lg text-white">Continue our conversation</Link>
+          <Link href="/adaptive-interview?next=%2Fresults" className="mt-6 inline-flex items-center gap-3 rounded-xl bg-forest px-6 py-4 text-lg text-white"><OomnikMark />Continue our conversation</Link>
         </>}
       </section>
     </main>;

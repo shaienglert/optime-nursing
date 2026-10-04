@@ -306,7 +306,7 @@ export default function AdaptiveInterviewPage() {
               <form className="ml-12 mt-5" onSubmit={(event) => { event.preventDefault(); void submitAnswer(answer); }}>
                 <label htmlFor="decision-answer" className="sr-only">Your answer</label>
                 <textarea id="decision-answer" value={answer} onChange={(event) => setAnswer(event.target.value)} disabled={busy} rows={3} placeholder="Tell me in your own words…" className="w-full rounded-[1.5rem] border border-line bg-white px-5 py-4 text-lg leading-8 outline-none focus:border-line" />
-                <button type="submit" disabled={busy || !answer.trim()} className="mt-4 inline-flex items-center gap-2 rounded-2xl bg-forest px-7 py-4 text-xl font-semibold text-white disabled:opacity-50">{!busy && <OomnikMark size={18} />}{busy ? "Using your answer…" : "Continue"}</button>
+                <button type="submit" disabled={busy || !answer.trim()} className="mt-4 inline-flex items-center gap-2 rounded-2xl bg-forest px-7 py-4 text-xl font-semibold text-white disabled:opacity-50">{!busy && <OomnikMark />}{busy ? "Using your answer…" : "Continue"}</button>
               </form>
             )}
           </div>
