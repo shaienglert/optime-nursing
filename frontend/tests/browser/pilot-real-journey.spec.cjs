@@ -137,7 +137,7 @@ test.describe('real synthetic-pilot customer journey', () => {
       await page.waitForLoadState('domcontentloaded');
       const adaptivePrompt = await page.locator('main').innerText().catch(() => '');
       console.log('OOMNIK_ADAPTIVE_TURN', JSON.stringify({ scenario_id: scenario.id, turn, url: page.url(), prompt: adaptivePrompt.slice(0, 1200) }));
-      const finalConfirmation = page.getByRole('button', { name: /I confirm—show recommendations/i });
+      const finalConfirmation = page.getByTestId('confirm-understanding');
       const continueReview = page.getByRole('button', { name: 'Continue our conversation', exact: true });
       let phase = 'LOADING';
       await expect.poll(async () => {
@@ -172,8 +172,8 @@ test.describe('real synthetic-pilot customer journey', () => {
       await page.waitForTimeout(500);
     }
 
-    await expect(page.getByRole('heading', { name: /Please confirm what Oomnik understood/i })).toBeVisible({ timeout: 300_000 });
-    const confirmRecommendations = page.getByRole('button', { name: /I confirm—show recommendations/i });
+    await expect(page.getByTestId('intake-personal-summary-heading')).toBeVisible({ timeout: 300_000 });
+    const confirmRecommendations = page.getByTestId('confirm-understanding');
     await expect(confirmRecommendations, 'Needs profile must finish loading before confirmation').toBeEnabled({ timeout: 300_000 });
     const recommendationResponse = page.waitForResponse(
       (response) => response.url().includes('/decision-engine/recommendations')
@@ -236,7 +236,7 @@ test.describe('real synthetic-pilot customer journey', () => {
     const budgetCeiling = expectedBudget * 1.1;
     if (budgetCeiling < minimumCarePrice) {
       expect(results).toHaveLength(0);
-      await expect(page.getByText('I don’t have a verified recommendation to show yet. Missing information is still being distinguished from a confirmed mismatch.')).toBeVisible();
+      await expect(page.getByText(/^(No community is ready to recommend from this search|Some communities still need important details verified before I can recommend them)/)).toBeVisible();
     } else if (results.length === 0) {
       // A price under budget does not verify another mandatory facility claim.
       // Semantic AI may correctly identify dietary safety or another client MUST

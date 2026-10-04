@@ -247,6 +247,39 @@ def market_price_floor_endpoint(questionnaire_state: dict):
     return minimum_price_for_questionnaire(questionnaire_state)
 
 
+class ClientGuidanceRequest(BaseModel):
+    questionnaire_state: dict
+    natural_language_query: str = Field(default="", max_length=12000)
+    intake_profile_id: str | None = None
+    decision_id: str | None = None
+    facility_id: str | None = None
+    limit: int = Field(default=50, ge=1, le=100)
+
+
+@app.post("/api/client-guidance")
+def client_guidance_endpoint(payload: ClientGuidanceRequest):
+    from app.services.client_guidance import build_guidance
+    decision = None
+    if payload.decision_id:
+        decision = recall_decision_result(payload.decision_id, inputs_fingerprint=decision_inputs_fingerprint(
+            payload.questionnaire_state, payload.natural_language_query, payload.limit))
+        if decision is None:
+            raise HTTPException(status_code=409, detail="Please refresh your recommendations.")
+        profile = decision.get("patient_needs_profile") or {}
+    elif payload.intake_profile_id:
+        artifact = recall_intake_profile(payload.intake_profile_id, questionnaire_state=payload.questionnaire_state,
+                                        natural_language_query=payload.natural_language_query)
+        if artifact is None:
+            raise HTTPException(status_code=409, detail="Please review your updated answers.")
+        profile = artifact["profile"]
+    else:
+        raise HTTPException(status_code=400, detail="A reviewed profile or decision is required.")
+    if payload.facility_id and decision is None:
+        raise HTTPException(status_code=400, detail="Facility guidance requires a decision.")
+    return build_guidance(state=payload.questionnaire_state, profile=profile, query=payload.natural_language_query,
+                          decision=decision, facility_id=payload.facility_id)
+
+
 @app.get("/api/client-cases/{case_token}")
 def get_client_case_endpoint(case_token: str):
     db = SessionLocal()
@@ -2447,6 +2480,37 @@ async def post_request_facility_outreach(canonical_id: str, db: Session = Depend
         raise HTTPException(status_code=404, detail="Canonical facility not found")
     outreach = facility_outreach_service.request_outreach(db, canonical_id)
     return _serialize_outreach_request(outreach, include_draft=True)
+
+
+@app.get("/api/admin/client-followups")
+def get_client_followups(db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
+    from app.models.client_case import ClientCase, ClientCaseEvent
+    rows = db.query(ClientCaseEvent, ClientCase).join(ClientCase, ClientCase.id == ClientCaseEvent.case_id).filter(
+        ClientCaseEvent.event_type.in_(["VISIT_REQUESTED", "ROOM_PRICING_REQUESTED"]),
+        ClientCaseEvent.status.in_(["AWAITING_CONFIRMATION", "IN_PROGRESS"]),
+    ).order_by(ClientCaseEvent.created_at.asc()).limit(100).all()
+    return [{"id": event.id, "event_type": event.event_type, "facility_id": event.facility_id,
+             "status": event.status, "note": event.note, "created_at": event.created_at,
+             "contact_name": case.contact_name, "email": case.email, "phone": case.phone,
+             "request": json.loads(event.payload_json or "{}")} for event, case in rows]
+
+
+class ClientFollowupUpdate(BaseModel):
+    status: str
+
+
+@app.patch("/api/admin/client-followups/{event_id}")
+def update_client_followup(event_id: int, payload: ClientFollowupUpdate, db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
+    from app.models.client_case import ClientCaseEvent
+    if payload.status not in {"IN_PROGRESS", "COMPLETED"}:
+        raise HTTPException(status_code=400, detail="Unsupported follow-up status")
+    event = db.query(ClientCaseEvent).filter(ClientCaseEvent.id == event_id, ClientCaseEvent.event_type.in_([
+        "VISIT_REQUESTED", "ROOM_PRICING_REQUESTED"])).one_or_none()
+    if event is None:
+        raise HTTPException(status_code=404, detail="Request not found")
+    event.status = payload.status
+    db.commit()
+    return {"id": event.id, "status": event.status}
 
 
 @app.get("/facility-outreach-requests/awaiting-approval", response_model=List[FacilityOutreachRequestOut])

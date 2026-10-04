@@ -108,7 +108,7 @@ export function EvidenceDetailsModal({ isOpen, payload, onClose }: EvidenceDetai
 
   return (
     <div
-      className="fixed inset-0 z-[90] bg-[#1f2024]/45 px-4 py-4 sm:py-8"
+      className="fixed inset-0 z-[90] bg-forest/45 px-4 py-4 sm:py-8"
       role="presentation"
       onClick={(event) => {
         if (event.target === event.currentTarget) {
@@ -121,19 +121,19 @@ export function EvidenceDetailsModal({ isOpen, payload, onClose }: EvidenceDetai
         role="dialog"
         aria-modal="true"
         aria-label={`${payload.parameterLabel} evidence details`}
-        className="mx-auto flex h-full w-full max-w-3xl flex-col overflow-hidden rounded-3xl border border-[#d9e3ec] bg-white shadow-[0_30px_90px_-44px_rgba(17,28,40,0.7)]"
+        className="mx-auto flex h-full w-full max-w-3xl flex-col overflow-hidden rounded-3xl border border-line bg-white shadow-[0_30px_90px_-44px_rgba(17,28,40,0.7)] oomnik-panel"
       >
-        <header className="flex items-start justify-between gap-3 border-b border-[#e6edf3] px-5 py-4 sm:px-6">
+        <header className="flex items-start justify-between gap-3 border-b border-line px-5 py-4 sm:px-6">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#4a6076]">Evidence details</p>
-            <h2 className="mt-1 text-lg font-semibold text-[#23364a] sm:text-xl">{payload.parameterLabel}</h2>
-            <p className="mt-1 text-sm text-[#4f6173]">{payload.facilityName}</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">Evidence details</p>
+            <h2 className="mt-1 text-lg font-semibold text-muted sm:text-xl">{payload.parameterLabel}</h2>
+            <p className="mt-1 text-sm text-muted">{payload.facilityName}</p>
           </div>
           <button
             ref={closeButtonRef}
             type="button"
             onClick={onClose}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#d0dde8] bg-white text-[#294861] hover:bg-[#edf5fb]"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-line bg-white text-forest hover:bg-sand"
             aria-label="Close evidence details"
           >
             x
@@ -141,10 +141,10 @@ export function EvidenceDetailsModal({ isOpen, payload, onClose }: EvidenceDetai
         </header>
 
         <div className="overflow-y-auto px-5 py-4 sm:px-6">
-          <p className="rounded-2xl border border-[#e6edf3] bg-[#f8fbff] px-4 py-3 text-sm text-[#334e67]">{payload.summary}</p>
+          <p className="rounded-2xl border border-line bg-sand px-4 py-3 text-sm text-muted">{payload.summary}</p>
 
           {payload.unavailableDetailsMessage ? (
-            <p className="mt-4 rounded-2xl border border-[#f0d9b0] bg-[#fff8ea] px-4 py-3 text-sm text-[#6f4f1f]">
+            <p className="mt-4 rounded-2xl border border-line bg-sand px-4 py-3 text-sm text-[#6f4f1f]">
               {payload.unavailableDetailsMessage}
             </p>
           ) : null}
@@ -154,8 +154,8 @@ export function EvidenceDetailsModal({ isOpen, payload, onClose }: EvidenceDetai
               {payload.records.map((record, index) => {
                 const validSourceUrl = maybeLink(record.sourceUrl);
                 return (
-                  <li key={`${record.identifier || record.title || record.eventType || "record"}-${index}`} className="rounded-2xl border border-[#e6edf3] bg-white px-4 py-3 text-sm text-[#2e3d4d]">
-                    <p className="font-semibold text-[#23364a]">{record.title || record.eventType || `Record ${index + 1}`}</p>
+                  <li key={`${record.identifier || record.title || record.eventType || "record"}-${index}`} className="rounded-2xl border border-line bg-white px-4 py-3 text-sm text-muted oomnik-panel">
+                    <p className="font-semibold text-muted">{record.title || record.eventType || `Record ${index + 1}`}</p>
                     {record.date ? <p className="mt-1"><span className="font-medium">Date:</span> {record.date}</p> : null}
                     {record.amount ? <p><span className="font-medium">Amount:</span> {record.amount}</p> : null}
                     {record.severityScope ? <p><span className="font-medium">Severity/scope:</span> {record.severityScope}</p> : null}
@@ -166,7 +166,7 @@ export function EvidenceDetailsModal({ isOpen, payload, onClose }: EvidenceDetai
                     {record.sourceOrganization ? <p><span className="font-medium">Source:</span> {record.sourceOrganization}</p> : null}
                     {record.sourceDate ? <p><span className="font-medium">Source date:</span> {record.sourceDate}</p> : null}
                     {validSourceUrl ? (
-                      <a href={validSourceUrl} target="_blank" rel="noreferrer" className="mt-2 inline-flex text-[#1f5f94] underline underline-offset-2">
+                      <a href={validSourceUrl} target="_blank" rel="noreferrer" className="mt-2 inline-flex text-forest underline underline-offset-2">
                         View official source
                       </a>
                     ) : null}

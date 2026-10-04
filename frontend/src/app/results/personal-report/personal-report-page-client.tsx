@@ -86,7 +86,7 @@ export function PersonalReportPageClient() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#fffaf2] px-5 py-12 text-[#22332d]">
+      <main className="min-h-screen bg-canvas px-5 py-12 text-ink">
         <div className="mx-auto max-w-5xl text-xl">Preparing your personal report…</div>
       </main>
     );
@@ -94,8 +94,8 @@ export function PersonalReportPageClient() {
 
   if (error || !report) {
     return (
-      <main className="min-h-screen bg-[#fffaf2] px-5 py-12 text-[#22332d]">
-        <div className="mx-auto max-w-5xl rounded-3xl border border-rose-200 bg-white p-8 text-lg">
+      <main className="min-h-screen bg-canvas px-5 py-12 text-ink">
+        <div className="mx-auto max-w-5xl rounded-3xl border border-rose-200 bg-white p-8 text-lg oomnik-panel">
           <p>We could not prepare your personal report. Your recommendations are still available.</p>
           <Link href={backHref} className="mt-4 inline-block underline">Back to your recommendations</Link>
         </div>
@@ -104,16 +104,16 @@ export function PersonalReportPageClient() {
   }
 
   return (
-    <main className="min-h-screen bg-[#fffaf2] px-5 py-8 text-[#22332d] sm:px-8 lg:px-12">
+    <main className="min-h-screen bg-canvas px-5 py-8 text-ink sm:px-8 lg:px-12">
       <div className="mx-auto max-w-6xl">
-        <section className="rounded-[2rem] border border-[#e1d8c9] bg-white p-7 shadow-sm sm:p-10">
-          <p className="text-base font-semibold uppercase tracking-[0.14em] text-[#437667]">Personal decision report</p>
+        <section className="rounded-[2rem] border border-line bg-white p-7 shadow-sm sm:p-10">
+          <p className="text-base font-semibold uppercase tracking-[0.14em] text-forest">Personal decision report</p>
           <h1 className="mt-3 text-4xl font-semibold leading-tight sm:text-5xl">The full picture for {relationship}</h1>
-          {role ? <p className="mt-5 max-w-4xl text-xl leading-8 text-[#53635d]">{role.text}</p> : null}
+          {role ? <p className="mt-5 max-w-4xl text-xl leading-8 text-muted">{role.text}</p> : null}
         </section>
 
         {situation.length > 0 ? (
-          <section className="mt-8 rounded-[2rem] border border-[#ded6c9] bg-white p-7 shadow-sm sm:p-9">
+          <section className="mt-8 rounded-[2rem] border border-line bg-white p-7 shadow-sm sm:p-9">
             <h2 className="text-3xl font-semibold">Your situation</h2>
             <ul className="mt-5 space-y-3 text-xl leading-8">
               {situation.map((claim) => (
@@ -124,7 +124,7 @@ export function PersonalReportPageClient() {
         ) : null}
 
         {whatMatters.length > 0 ? (
-          <section className="mt-8 rounded-[2rem] border border-[#ded6c9] bg-white p-7 shadow-sm sm:p-9">
+          <section className="mt-8 rounded-[2rem] border border-line bg-white p-7 shadow-sm sm:p-9">
             <h2 className="text-3xl font-semibold">What matters most in your case</h2>
             <ul className="mt-5 space-y-3 text-xl leading-8">
               {whatMatters.map((claim) => (
@@ -135,8 +135,8 @@ export function PersonalReportPageClient() {
         ) : null}
 
         {whyRecommendation.length > 0 ? (
-          <section className="mt-8 rounded-2xl bg-[#eef7f2] p-6 text-xl leading-8 text-[#214d40]">
-            <h2 className="text-2xl font-semibold text-[#22332d]">Why this recommendation</h2>
+          <section className="mt-8 rounded-3xl bg-sand p-6 text-xl leading-8 text-forest">
+            <h2 className="text-2xl font-semibold text-ink">Why this recommendation</h2>
             <ul className="mt-4 space-y-2">
               {whyRecommendation.map((claim) => (
                 <li key={claim.claim_id}>{claim.text}</li>
@@ -153,22 +153,22 @@ export function PersonalReportPageClient() {
               return (
                 <article
                   key={candidate.canonical_facility_id}
-                  className="rounded-[2rem] border border-[#ded6c9] bg-white p-7 shadow-sm sm:p-9"
+                  className="rounded-[2rem] border border-line bg-white p-7 shadow-sm sm:p-9"
                 >
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                      <p className="text-lg font-semibold text-[#3e7868]">#{index + 1} current match</p>
+                      <p className="text-lg font-semibold text-forest">#{index + 1} current match</p>
                       <h2 className="mt-1 text-3xl font-semibold leading-tight sm:text-4xl">{candidate.facility_name}</h2>
                     </div>
                     <div className="flex flex-col items-start gap-2 sm:items-end">
                       {candidate.match_score !== null ? (
-                        <span className="w-fit rounded-full bg-[#eaf6ef] px-4 py-2 text-lg font-semibold text-[#25613f]">
+                        <span className="w-fit rounded-full bg-sand px-4 py-2 text-lg font-semibold text-forest">
                           {candidate.match_band ? candidate.match_band.replace(/_/g, " ") : "Match"} · {Math.round(candidate.match_score)}%
                         </span>
                       ) : null}
                       <Link
                         href={`/facility/canonical?canonical=${encodeURIComponent(candidate.canonical_facility_id)}&back=${encodeURIComponent(`/results/personal-report${searchParams.toString() ? `?${searchParams.toString()}` : ""}`)}`}
-                        className="rounded-full border border-[#315f53] px-4 py-2 text-base font-semibold text-[#315f53] hover:bg-[#f4fbf7]"
+                        className="rounded-full border border-forest px-4 py-2 text-base font-semibold text-forest hover:bg-sand"
                       >
                         View full listing →
                       </Link>
@@ -176,7 +176,7 @@ export function PersonalReportPageClient() {
                   </div>
 
                   <div className="mt-7 grid gap-5 lg:grid-cols-2">
-                    <div className="rounded-2xl bg-[#f4f8f6] p-6">
+                    <div className="rounded-2xl bg-sand p-6">
                       <h3 className="text-2xl font-semibold">Why it fits your case</h3>
                       {whyThisPlace.length ? (
                         <ul className="mt-3 space-y-3 text-xl leading-8">
@@ -187,13 +187,13 @@ export function PersonalReportPageClient() {
                           ))}
                         </ul>
                       ) : (
-                        <p className="mt-3 text-xl leading-8 text-[#596761]">
+                        <p className="mt-3 text-xl leading-8 text-muted">
                           We are still building the plain-language explanation for this option.
                         </p>
                       )}
                     </div>
 
-                    <div className="rounded-2xl bg-[#fff7e7] p-6">
+                    <div className="rounded-2xl bg-sand p-6">
                       <h3 className="text-2xl font-semibold">We don&apos;t know yet</h3>
                       {stillUnknown.length ? (
                         <ul className="mt-3 space-y-3 text-xl leading-8">
@@ -213,9 +213,9 @@ export function PersonalReportPageClient() {
         ) : null}
 
         {!report.report_ready && pending.length > 0 ? (
-          <section className="mt-8 rounded-[2rem] border border-[#ead9b4] bg-[#fffaf0] p-7 sm:p-9">
+          <section className="mt-8 rounded-[2rem] border border-line bg-sand p-7 sm:p-9">
             <h2 className="text-3xl font-semibold">We need a bit more information first</h2>
-            <ul className="mt-5 space-y-3 text-xl leading-8 text-[#655a45]">
+            <ul className="mt-5 space-y-3 text-xl leading-8 text-muted">
               {pending.map((claim) => (
                 <li key={claim.claim_id}>{claim.text}</li>
               ))}
@@ -224,12 +224,12 @@ export function PersonalReportPageClient() {
         ) : null}
 
         <section className="mt-8 flex flex-wrap gap-4 pb-10">
-          <Link href={backHref} className="rounded-2xl border-2 border-[#315f53] px-6 py-4 text-xl font-semibold text-[#315f53]">
+          <Link href={backHref} className="rounded-2xl border-2 border-forest px-6 py-4 text-xl font-semibold text-forest">
             Back to results
           </Link>
           <Link
             href="/adaptive-interview?review=1&next=/results/personal-report"
-            className="rounded-2xl border border-[#cfc6b7] bg-white px-6 py-4 text-xl font-semibold"
+            className="rounded-2xl border border-line bg-white px-6 py-4 text-xl font-semibold oomnik-panel"
           >
             Change answers
           </Link>

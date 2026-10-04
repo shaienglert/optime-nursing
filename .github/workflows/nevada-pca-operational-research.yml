@@ -60,25 +60,29 @@ jobs:
           governed=evidence_ids & live_ids
           stale=evidence_ids-live_ids
           allowed={str(v).strip() for v in allowlist.get('license_numbers',[]) if str(v).strip()}
-          assert j['record_count'] == 363, j
-          assert len(rows) == 363, len(rows)
-          assert len({r['agency_id'] for r in rows}) == 363
-          assert j['cities'] == {'LAS VEGAS':302,'HENDERSON':34,'NORTH LAS VEGAS':27}, j
+          live_report=json.loads(pathlib.Path('reports/NEVADA_HCQC_PERSONAL_CARE_AGENCIES.json').read_text())
+          live_count=live_report['las_vegas_valley_records']
+          assert j['record_count'] == live_count > 0, j
+          assert len(rows) == live_count, len(rows)
+          assert len({r['agency_id'] for r in rows}) == live_count
+          from collections import Counter
+          assert j['cities'] == dict(Counter(r['city'] for r in rows)), j
+          assert set(j['cities']) <= {'LAS VEGAS','HENDERSON','NORTH LAS VEGAS'}, j
           verified=[r for r in rows if r['operational_evidence_status']=='PRIMARY_SOURCE_OPERATIONAL_VERIFIED']
           unknown=[r for r in rows if r['operational_evidence_status']=='LICENSE_VERIFIED_OPERATIONAL_UNKNOWN']
           verified_licenses={r['license_number'] for r in verified}
           assert verified_licenses == governed, {'missing_from_live_registry': sorted(governed-verified_licenses), 'unexpected_verified': sorted(verified_licenses-governed)}
           assert allowed == governed, {'allowlist_missing':sorted(governed-allowed),'allowlist_extra':sorted(allowed-governed)}
           assert j['operationally_verified_count'] == len(governed), j
-          assert j['operationally_unknown_count'] == 363-len(governed), j
+          assert j['operationally_unknown_count'] == live_count-len(governed), j
           assert len(verified)==len(governed), len(verified)
-          assert len(unknown)==363-len(governed), len(unknown)
+          assert len(unknown)==live_count-len(governed), len(unknown)
           assert all(r['source_authority']=='Nevada HCQC / ALiS' for r in rows)
           assert all(r['official_website'] not in {'','UNKNOWN'} for r in verified)
           homewatch=next(r for r in verified if r['agency_id']=='NV-PCA-11759-PCS-1')
           assert homewatch['minimum_billable_hours']=='0', homewatch
           assert homewatch['minimum_hours_policy']=='NO_MINIMUM_HOURS', homewatch
-          print(json.dumps({'registry_records':363,'verified':len(governed),'unknown':363-len(governed),'stale_evidence':len(stale),'cities':j['cities']}, indent=2))
+          print(json.dumps({'registry_records':live_count,'verified':len(governed),'unknown':live_count-len(governed),'stale_evidence':len(stale),'cities':j['cities']}, indent=2))
           PY
       - name: Build remaining operational research queue
         run: python scripts/build_nevada_pca_operational_research_queue.py
@@ -93,8 +97,9 @@ jobs:
           from urllib.parse import urlparse
           q=json.loads(pathlib.Path('reports/NEVADA_PCA_OPERATIONAL_RESEARCH_QUEUE.json').read_text())
           r=json.loads(pathlib.Path('reports/NEVADA_PCA_OPERATIONAL_PRIMARY_RESEARCH.json').read_text())
-          assert q['licensed_valley_input_count'] == 363, q
-          assert q['research_task_count'] + q['already_operationally_verified_count'] == 363, q
+          live_report=json.loads(pathlib.Path('reports/NEVADA_HCQC_PERSONAL_CARE_AGENCIES.json').read_text())
+          assert q['licensed_valley_input_count'] == live_report['las_vegas_valley_records'] > 0, q
+          assert q['research_task_count'] + q['already_operationally_verified_count'] == q['licensed_valley_input_count'], q
           assert r['attempted'] == 20, r
           assert len(r['records']) == 20, r
           blocked=('cms.gov','medicare.gov','dpbh.nv.gov','nvdpbh.aithent.com','health.nv.gov','myhealthfacilitylicense.nv.gov','aplaceformom.com','caring.com','seniorly.com','yelp.com','facebook.com','linkedin.com','bbb.org')

@@ -179,7 +179,7 @@ export default function ProviderProfilePage({
   };
 
   if (isLoading) {
-    return <main className="mx-auto max-w-4xl px-6 py-14 text-slate-500">Loading profile&hellip;</main>;
+    return <main className="mx-auto max-w-4xl px-6 py-14 text-muted">Loading profile&hellip;</main>;
   }
 
   if (!snapshot) {
@@ -188,7 +188,7 @@ export default function ProviderProfilePage({
         <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-red-800">
           {error ?? "Profile not found."}
         </p>
-        <Link href="/provider" className="mt-4 inline-block text-teal-700 underline">
+        <Link href="/provider" className="mt-4 inline-block text-forest underline">
           Back to search
         </Link>
       </main>
@@ -197,25 +197,25 @@ export default function ProviderProfilePage({
 
   if (!canEdit) {
     return (
-      <main className="min-h-screen bg-[#f5f5f7] px-4 py-8 text-[#1d1d1f] sm:px-8 sm:py-12">
+      <main className="min-h-screen bg-canvas px-4 py-8 text-ink sm:px-8 sm:py-12">
         <section className="mx-auto max-w-3xl">
-          <Link href="/provider" className="text-base font-semibold text-[#17624f]">← Back to community search</Link>
-          <div className="mt-6 rounded-[2rem] border border-[#e5e5ea] bg-[radial-gradient(circle_at_92%_4%,#e3f1eb_0,transparent_31%),linear-gradient(135deg,#ffffff_0%,#fbfbfc_100%)] px-6 py-10 shadow-[0_18px_60px_-40px_rgba(29,29,31,.38)] sm:px-12 sm:py-14">
-            <p className="text-sm font-semibold uppercase tracking-[.18em] text-[#26715d]">Step 2 of 3 · secure access</p>
+          <Link href="/provider" className="text-base font-semibold text-forest">← Back to community search</Link>
+          <div className="mt-6 rounded-[2rem] border border-line bg-sand px-6 py-10 shadow-[0_18px_60px_-40px_rgba(29,29,31,.38)] sm:px-12 sm:py-14">
+            <p className="text-sm font-semibold uppercase tracking-[.18em] text-forest">Step 2 of 3 · secure access</p>
             <h1 className="mt-5 text-4xl font-semibold leading-[1.05] tracking-[-.045em] sm:text-5xl">Confirm that you represent {snapshot.name}.</h1>
-            <p className="mt-5 max-w-2xl text-xl leading-8 text-[#4b4b4f]">We will verify a work email before anyone can update the public listing. Every change remains linked to the person who made it.</p>
-            <div className="mt-8 rounded-2xl border border-[#d7e3dc] bg-white/85 p-5 text-base leading-7 text-[#3d4b46]">
-              <p className="font-semibold text-[#1d1d1f]">What happens next</p>
+            <p className="mt-5 max-w-2xl text-xl leading-8 text-muted">We will verify a work email before anyone can update the public listing. Every change remains linked to the person who made it.</p>
+            <div className="mt-8 rounded-2xl border border-line bg-white/85 p-5 text-base leading-7 text-muted oomnik-panel">
+              <p className="font-semibold text-ink">What happens next</p>
               <p className="mt-2">After email verification, a short questionnaire helps place the community accurately. Information you enter is clearly labelled as provider-supplied and does not improve organic ranking by itself.</p>
             </div>
             {snapshot.is_demo ? (
-              <div className="mt-8 rounded-2xl border border-[#9bcbb9] bg-[#edf8f3] p-5">
-                <p className="font-semibold text-[#185f4c]">OPTICARE is a fictitious practice profile.</p>
-                <p className="mt-2 text-base leading-7 text-[#3d4b46]">Email delivery is not connected yet, so use the practice workspace to review editing, saving, photographs and audit history without claiming a real community.</p>
-                <button type="button" onClick={() => void enterDemoWorkspace()} className="mt-5 min-h-12 rounded-full bg-[#16715e] px-6 py-3 text-base font-semibold text-white shadow-[0_5px_14px_rgba(22,113,94,.2)] transition hover:bg-[#105c4d]">Open OPTICARE practice workspace</button>
+              <div className="mt-8 rounded-2xl border border-line bg-sand p-5">
+                <p className="font-semibold text-forest">OPTICARE is a fictitious practice profile.</p>
+                <p className="mt-2 text-base leading-7 text-muted">Email delivery is not connected yet, so use the practice workspace to review editing, saving, photographs and audit history without claiming a real community.</p>
+                <button type="button" onClick={() => void enterDemoWorkspace()} className="mt-5 min-h-12 rounded-full bg-forest px-6 py-3 text-base font-semibold text-white shadow-[0_5px_14px_rgba(22,113,94,.2)] transition hover:bg-forest-hover">Open OPTICARE practice workspace</button>
               </div>
             ) : (
-              <div className="mt-8 rounded-2xl border border-[#e5e5ea] bg-white p-5 text-base text-[#52645d]">Email verification will be available here once the OOmnik mail service is connected.</div>
+              <div className="mt-8 rounded-2xl border border-line bg-white p-5 text-base text-muted oomnik-panel">Email verification will be available here once the OOmnik mail service is connected.</div>
             )}
             {error ? <p className="mt-5 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-base text-red-800">{error}</p> : null}
           </div>
@@ -226,10 +226,10 @@ export default function ProviderProfilePage({
 
   return (
     <main className="mx-auto max-w-4xl px-6 py-12">
-      <Link href="/provider" className="text-sm text-teal-700 underline">
+      <Link href="/provider" className="text-sm text-forest underline">
         &larr; All communities
       </Link>
-      <h1 className="mt-3 text-3xl font-semibold text-slate-900">{snapshot.name}</h1>
+      <h1 className="mt-3 text-3xl font-semibold text-ink">{snapshot.name}</h1>
 
       <CompletenessPanel completeness={snapshot.completeness} />
 
@@ -237,25 +237,25 @@ export default function ProviderProfilePage({
         <p className="mt-6 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>
       ) : null}
       {notice ? (
-        <p className="mt-6 rounded-md border border-teal-200 bg-teal-50 px-4 py-3 text-sm text-teal-900">{notice}</p>
+        <p className="mt-6 rounded-md border border-line bg-sand px-4 py-3 text-sm text-forest">{notice}</p>
       ) : null}
 
       <section className="mt-10">
-        <h2 className="text-lg font-semibold text-slate-900">What we already hold</h2>
-        <p className="mt-1 text-sm text-slate-600">
+        <h2 className="text-lg font-semibold text-ink">What we already hold</h2>
+        <p className="mt-1 text-sm text-muted">
           Read from public records. Tell us if any of it is wrong.
         </p>
-        <dl className="mt-4 grid grid-cols-1 gap-px overflow-hidden rounded-md border border-slate-200 bg-slate-200 sm:grid-cols-2">
+        <dl className="mt-4 grid grid-cols-1 gap-px overflow-hidden rounded-md border border-line bg-sand sm:grid-cols-2">
           {snapshot.known_from_public_record.map((field) => (
             <div key={field.key} className="bg-white px-4 py-3">
-              <dt className="text-xs uppercase tracking-wide text-slate-500">{field.label}</dt>
-              <dd className="mt-1 text-slate-900">
+              <dt className="text-xs uppercase tracking-wide text-muted">{field.label}</dt>
+              <dd className="mt-1 text-ink">
                 {field.value === null || field.value === "" ? (
-                  <span className="text-slate-400">Not on file</span>
+                  <span className="text-muted">Not on file</span>
                 ) : (
                   String(field.value)
                 )}
-                <span className="ml-2 text-xs text-slate-400">{field.source}</span>
+                <span className="ml-2 text-xs text-muted">{field.source}</span>
               </dd>
             </div>
           ))}
@@ -263,19 +263,19 @@ export default function ProviderProfilePage({
       </section>
 
       <section className="mt-12">
-        <h2 className="text-lg font-semibold text-slate-900">
+        <h2 className="text-lg font-semibold text-ink">
           What only you can tell us
-          <span className="ml-2 text-sm font-normal text-slate-500">
+          <span className="ml-2 text-sm font-normal text-muted">
             {snapshot.completeness.total_questions - snapshot.completeness.unanswered_count} of{" "}
             {snapshot.completeness.total_questions} answered
           </span>
         </h2>
-        <p className="mt-1 max-w-2xl text-sm text-slate-600">
+        <p className="mt-1 max-w-2xl text-sm text-muted">
           &ldquo;Not sure&rdquo; is a real answer and costs you nothing in ranking. It just
           cannot match a family who asked for that thing.
         </p>
         {snapshot.sections.some((section) => section.prefilled_from_public_record > 0) ? (
-          <p className="mt-2 max-w-2xl text-sm text-slate-600">
+          <p className="mt-2 max-w-2xl text-sm text-muted">
             A few are already answered. We read those off your licence or your Medicare
             certification &mdash; hover to see which. Change any of them and your answer replaces
             ours permanently.
@@ -285,16 +285,16 @@ export default function ProviderProfilePage({
         <div className="mt-6 space-y-8">
           {snapshot.sections.map((section) => (
             <div key={section.section}>
-              <div className="flex items-baseline justify-between border-b border-slate-200 pb-2">
-                <h3 className="font-semibold text-slate-900">{section.section}</h3>
-                <span className="text-xs text-slate-500">
+              <div className="flex items-baseline justify-between border-b border-line pb-2">
+                <h3 className="font-semibold text-ink">{section.section}</h3>
+                <span className="text-xs text-muted">
                   {section.answered}/{section.total}
                   {section.prefilled_from_public_record > 0
                     ? ` · ${section.prefilled_from_public_record} from public record`
                     : ""}
                 </span>
               </div>
-              <ul className="mt-2 divide-y divide-slate-100">
+              <ul className="mt-2 divide-y divide-line">
                 {section.questions.map((question) => {
                   const current = answerOf(question.key, question.value);
                   const isDirty = draft[question.key] !== undefined;
@@ -303,12 +303,12 @@ export default function ProviderProfilePage({
                       key={question.key}
                       className="flex flex-wrap items-center justify-between gap-3 py-2.5"
                     >
-                      <span className="text-slate-800">
+                      <span className="text-ink">
                         {question.label}
-                        {isDirty ? <span className="ml-2 text-xs text-teal-700">unsaved</span> : null}
+                        {isDirty ? <span className="ml-2 text-xs text-forest">unsaved</span> : null}
                         {!isDirty && isDerived(question) ? (
                           <span
-                            className="ml-2 cursor-help text-xs text-slate-500 underline decoration-dotted"
+                            className="ml-2 cursor-help text-xs text-muted underline decoration-dotted"
                             title={question.note ?? undefined}
                           >
                             from public record
@@ -330,8 +330,8 @@ export default function ProviderProfilePage({
                               className={[
                                 "rounded border px-2.5 py-1 text-xs font-medium transition",
                                 selected
-                                  ? "border-teal-700 bg-teal-700 text-white"
-                                  : "border-slate-300 bg-white text-slate-600 hover:border-slate-400",
+                                  ? "border-forest bg-forest text-white"
+                                  : "border-line bg-white text-muted hover:border-line",
                                 canEdit ? "" : "cursor-not-allowed opacity-60",
                               ].join(" ")}
                             >
@@ -349,8 +349,8 @@ export default function ProviderProfilePage({
         </div>
 
         {canEdit ? (
-          <div className="sticky bottom-4 mt-8 flex items-center justify-between rounded-md border border-slate-300 bg-white px-4 py-3 shadow-sm">
-            <span className="text-sm text-slate-600">
+          <div className="sticky bottom-4 mt-8 flex items-center justify-between rounded-md border border-line bg-white px-4 py-3 shadow-sm">
+            <span className="text-sm text-muted">
               {pendingCount === 0
                 ? "No unsaved changes"
                 : `${pendingCount} unsaved ${pendingCount === 1 ? "answer" : "answers"}`}
@@ -359,7 +359,7 @@ export default function ProviderProfilePage({
               type="button"
               onClick={onSave}
               disabled={pendingCount === 0 || isSaving}
-              className="rounded-md bg-teal-700 px-5 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:cursor-not-allowed disabled:bg-slate-300"
+              className="rounded-md bg-forest px-5 py-2 text-sm font-medium text-white hover:bg-forest-hover disabled:cursor-not-allowed disabled:bg-sand"
             >
               {isSaving ? "Saving…" : "Save answers"}
             </button>
@@ -368,24 +368,24 @@ export default function ProviderProfilePage({
       </section>
 
       <section className="mt-12">
-        <h2 className="text-lg font-semibold text-slate-900">
+        <h2 className="text-lg font-semibold text-ink">
           Photographs
-          <span className="ml-2 text-sm font-normal text-slate-500">
+          <span className="ml-2 text-sm font-normal text-muted">
             {snapshot.completeness.photo_count} of {snapshot.photo_target}
           </span>
         </h2>
-        <p className="mt-1 text-sm text-slate-600">
+        <p className="mt-1 text-sm text-muted">
           Yours, rather than whatever a directory site scraped some years ago.
         </p>
 
         {snapshot.photos.length > 0 ? (
           <ul className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
             {snapshot.photos.map((photo) => (
-              <li key={photo.id} className="overflow-hidden rounded-md border border-slate-200">
+              <li key={photo.id} className="overflow-hidden rounded-md border border-line">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={photo.url} alt={photo.caption ?? "Community photograph"} className="h-32 w-full object-cover" />
                 <div className="flex items-center justify-between gap-2 px-2 py-1.5">
-                  <span className="truncate text-xs text-slate-600">{photo.caption ?? photo.category}</span>
+                  <span className="truncate text-xs text-muted">{photo.caption ?? photo.category}</span>
                   {canEdit ? (
                     <button
                       type="button"
@@ -400,7 +400,7 @@ export default function ProviderProfilePage({
             ))}
           </ul>
         ) : (
-          <p className="mt-4 rounded-md border border-dashed border-slate-300 px-4 py-6 text-center text-sm text-slate-500">
+          <p className="mt-4 rounded-md border border-dashed border-line px-4 py-6 text-center text-sm text-muted">
             No photographs yet.
           </p>
         )}
@@ -412,20 +412,20 @@ export default function ProviderProfilePage({
               onChange={(event) => setPhotoUrl(event.target.value)}
               placeholder="https://…/photo.jpg"
               aria-label="Photograph URL"
-              className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-teal-600"
+              className="flex-1 rounded-md border border-line px-3 py-2 text-sm outline-none focus:border-forest"
             />
             <input
               value={photoCaption}
               onChange={(event) => setPhotoCaption(event.target.value)}
               placeholder="Caption (optional)"
               aria-label="Photograph caption"
-              className="rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-teal-600"
+              className="rounded-md border border-line px-3 py-2 text-sm outline-none focus:border-forest"
             />
             <button
               type="button"
               onClick={() => void onAddPhoto()}
               disabled={!photoUrl.trim()}
-              className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-md border border-line px-4 py-2 text-sm font-medium text-muted hover:border-line disabled:cursor-not-allowed disabled:opacity-50"
             >
               Add
             </button>
@@ -433,15 +433,15 @@ export default function ProviderProfilePage({
         ) : null}
       </section>
 
-      <section className="mt-12 rounded-md border border-slate-200 bg-white p-6">
-        <h2 className="text-lg font-semibold text-slate-900">Activity calendar</h2>
+      <section className="mt-12 rounded-md border border-line bg-white p-6">
+        <h2 className="text-lg font-semibold text-ink">Activity calendar</h2>
         {snapshot.activity_calendar_connected ? (
-          <p className="mt-2 text-sm text-teal-800">
+          <p className="mt-2 text-sm text-forest">
             Connected. We are reading your published schedule and keeping the categories below
             current.
           </p>
         ) : (
-          <p className="mt-2 max-w-2xl text-sm text-slate-700">
+          <p className="mt-2 max-w-2xl text-sm text-muted">
             A daughter looking for her mother does not ask for &ldquo;assisted living&rdquo;.
             She asks whether there is a garden, whether services are held on Saturday, whether
             anyone still plays bridge. Connect the weekly or monthly schedule you already
@@ -457,8 +457,8 @@ export default function ProviderProfilePage({
                 className={[
                   "rounded border px-2.5 py-1 text-xs",
                   activity.availability === "UNKNOWN"
-                    ? "border-slate-200 bg-slate-50 text-slate-500"
-                    : "border-teal-200 bg-teal-50 text-teal-900",
+                    ? "border-line bg-canvas text-muted"
+                    : "border-line bg-sand text-forest",
                 ].join(" ")}
               >
                 {activity.category}
@@ -468,7 +468,7 @@ export default function ProviderProfilePage({
           </ul>
         ) : null}
 
-        <p className="mt-4 text-xs text-slate-500">
+        <p className="mt-4 text-xs text-muted">
           Calendar connection is handled by the activities import endpoint; ask us and we will
           set it up against whichever calendar you publish.
         </p>
@@ -490,10 +490,10 @@ function CompletenessPanel({ completeness }: { completeness: Completeness }) {
   );
 
   return (
-    <div className="mt-6 rounded-md border border-slate-200 bg-white p-5">
+    <div className="mt-6 rounded-md border border-line bg-white p-5">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="font-semibold text-slate-900">Profile completeness</h2>
-        <span className="text-2xl font-semibold tabular-nums text-teal-700">
+        <h2 className="font-semibold text-ink">Profile completeness</h2>
+        <span className="text-2xl font-semibold tabular-nums text-forest">
           {formatPercent(completeness.overall)}
         </span>
       </div>
@@ -501,12 +501,12 @@ function CompletenessPanel({ completeness }: { completeness: Completeness }) {
         {buckets.map((bucket) => (
           <div key={bucket.label}>
             <div className="flex items-baseline justify-between">
-              <span className="text-xs text-slate-600">{bucket.label}</span>
-              <span className="text-xs tabular-nums text-slate-500">{formatPercent(bucket.value)}</span>
+              <span className="text-xs text-muted">{bucket.label}</span>
+              <span className="text-xs tabular-nums text-muted">{formatPercent(bucket.value)}</span>
             </div>
-            <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-slate-200">
+            <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-sand">
               <div
-                className="h-full rounded-full bg-teal-600"
+                className="h-full rounded-full bg-forest"
                 style={{ width: `${Math.round(bucket.value * 100)}%` }}
               />
             </div>
@@ -514,12 +514,12 @@ function CompletenessPanel({ completeness }: { completeness: Completeness }) {
         ))}
       </div>
       {completeness.unanswered_count > 0 ? (
-        <p className="mt-4 text-sm text-slate-600">
+        <p className="mt-4 text-sm text-muted">
           {completeness.unanswered_count} of {completeness.total_questions} questions are still
           unanswered. Each one is a family conversation you are not currently part of.
         </p>
       ) : (
-        <p className="mt-4 text-sm text-teal-800">Every question answered.</p>
+        <p className="mt-4 text-sm text-forest">Every question answered.</p>
       )}
     </div>
   );

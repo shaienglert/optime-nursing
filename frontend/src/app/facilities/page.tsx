@@ -40,36 +40,36 @@ export default function FacilitiesPage() {
   }, [searchText]);
 
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-10 sm:px-10 lg:px-16">
+    <main className="min-h-screen bg-canvas px-6 py-10 sm:px-10 lg:px-16">
       <section className="mx-auto max-w-6xl">
         <div className="mb-8 flex items-end justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-700">Facilities</p>
-            <h1 className="mt-2 text-3xl font-semibold text-slate-900">Find Senior Living Matches</h1>
-            <p className="mt-2 text-slate-600">Browse available facilities and compare key quality indicators.</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-forest">Facilities</p>
+            <h1 className="mt-2 text-3xl font-semibold text-ink">Find Senior Living Matches</h1>
+            <p className="mt-2 text-muted">Browse available facilities and compare key quality indicators.</p>
           </div>
-          <Link href="/" className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:border-slate-300">
+          <Link href="/" className="rounded-full border border-line bg-white px-4 py-2 text-sm font-medium text-muted hover:border-line">
             Home
           </Link>
         </div>
 
-        <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-4">
-          <label htmlFor="facility-search" className="text-sm font-medium text-slate-700">Search communities</label>
+        <div className="mb-6 rounded-2xl border border-line bg-white p-4 oomnik-panel">
+          <label htmlFor="facility-search" className="text-sm font-medium text-muted">Search communities</label>
           <input
             id="facility-search"
             value={searchText}
             onChange={(event) => setSearchText(event.target.value)}
             placeholder="Try English or Hebrew (e.g. Hebrew, עברית, זוד)"
-            className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-800 outline-none ring-cyan-300 focus:ring-2"
+            className="mt-2 w-full rounded-xl border border-line px-4 py-3 text-sm text-ink outline-none ring-forest focus:ring-2"
           />
         </div>
 
         {isLoading ? (
-          <div className="rounded-2xl border border-cyan-100 bg-white p-6 text-cyan-700">Loading facilities...</div>
+          <div className="rounded-2xl border border-line bg-white p-6 text-forest oomnik-panel">We’re bringing the community details together…</div>
         ) : null}
 
         {error ? (
-          <div className="rounded-2xl border border-rose-200 bg-white p-6 text-rose-700">{error}</div>
+          <div className="rounded-2xl border border-rose-200 bg-white p-6 text-rose-700 oomnik-panel">{error}</div>
         ) : null}
 
         {!isLoading && !error ? (
@@ -78,13 +78,13 @@ export default function FacilitiesPage() {
               <Link
                 key={facility.id}
                 href={`/facility/${facility.id}`}
-                className="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-cyan-300 hover:shadow-md"
+                className="group rounded-2xl border border-line bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-line hover:shadow-md oomnik-panel"
               >
-                <h2 className="text-lg font-semibold text-slate-900 group-hover:text-cyan-800">{facility.name}</h2>
-                <p className="mt-1 text-sm text-slate-600">
+                <h2 className="text-lg font-semibold text-ink group-hover:text-forest">{facility.name}</h2>
+                <p className="mt-1 text-sm text-muted">
                   {facility.city}, {facility.state}
                 </p>
-                <dl className="mt-4 space-y-2 text-sm text-slate-700">
+                <dl className="mt-4 space-y-2 text-sm text-muted">
                   <div className="flex items-center justify-between">
                     <dt>Overall rating</dt>
                     <dd className="font-semibold">{facility.overall_rating ?? "N/A"}</dd>
