@@ -182,8 +182,8 @@ test('results default view is readable and does not expose internal evidence jar
   await page.goto('http://127.0.0.1:3000/results');
 
   await expect(page.getByTestId('personal-results-heading')).toBeVisible();
-  await expect(page.getByText('Verified Community')).toBeVisible();
-  await expect(page.getByText('Community Still Under Review')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Verified Community', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Community Still Under Review', exact: true })).toBeVisible();
   await expect(page.getByText('Verified care capabilities', { exact: true })).toBeVisible();
   await expect(page.getByText('Bathing and dressing support is verified.')).toBeVisible();
   await expect(page.getByText('Medication support is not verified.')).toHaveCount(0);

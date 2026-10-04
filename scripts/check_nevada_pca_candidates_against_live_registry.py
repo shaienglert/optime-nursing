@@ -130,8 +130,11 @@ def main() -> int:
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(json.dumps(payload, indent=2))
-    if len(live_rows) != 363:
-        raise SystemExit(f"Expected 363 live Valley PCA licenses, got {len(live_rows)}")
+    if not live_rows:
+        raise SystemExit("Live Valley PCA registry is empty")
+    licenses = [str(row.get("license_number") or "").strip() for row in live_rows]
+    if any(not license_number for license_number in licenses) or len(set(licenses)) != len(licenses):
+        raise SystemExit("Live Valley PCA registry contains missing or duplicate license identities")
     return 0
 
 
