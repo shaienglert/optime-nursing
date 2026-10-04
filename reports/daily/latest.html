@@ -5,7 +5,7 @@ Overall Progress: Coverage 64/67 | Verified 494/784<br/>
 Biggest Achievement: Florida coverage now 64/67 counties (95.5%).<br/>
 Biggest Risk: Statewide county coverage incomplete (64/67).<br/>
 Authority Status: PARTIAL | Answer: OPTIME is improving its evidence base, but publish/index/discover/cite measurement is still only partially instrumented.<br/>
-Agent Status: total=15 automatic=11 worked=6 failed=0<br/>
+Agent Status: total=15 automatic=11 worked=0 failed=0<br/>
 <br/>
 No measurable progress since the previous report.<br/>
 <br/>
@@ -13,55 +13,77 @@ No measurable progress since the previous report.<br/>
 <br/>
 - Total known agents: 15<br/>
 - Automatic agents: 11<br/>
-- Actually worked: 6<br/>
-- Ran with no new value: 5<br/>
-- Did not run: 0<br/>
+- Actually worked: 0<br/>
+- Ran with no new value: 1<br/>
+- Did not run: 1<br/>
 - Failed: 0<br/>
-- Unknown/manual-only: 4<br/>
+- Unknown/manual-only: 13<br/>
 <br/>
 | Agent | Status | Worked? | What it did | New achievement | Evidence |<br/>
 | --- | --- | --- | --- | --- | --- |<br/>
-| Clinical Knowledge Agent | WORKED - CREATED NEW VALUE | YES | Completed 4 refresh run(s) in the last 24h. Encountered 25 failed refresh attempt(s) in the last 24h. Current queued task: Review new domain research and trusted guidelines. | Created 54 knowledge record(s). | backend/optime_nursing.db:agent_knowledge_report_snapshots, backend/optime_nursing.db:agent_knowledge_refresh_events |<br/>
-| Senior Living Research Agent | WORKED - CREATED NEW VALUE | YES | Completed 6 refresh run(s) in the last 24h. Encountered 24 failed refresh attempt(s) in the last 24h. Current queued task: Execute domain discovery and verification tasks continuously. | Created 1 knowledge record(s). | backend/optime_nursing.db:agent_knowledge_report_snapshots, backend/optime_nursing.db:agent_knowledge_refresh_events |<br/>
-| Resident Needs Intelligence Agent | RAN - NO NEW FINDINGS | NO | Completed 5 refresh run(s) in the last 24h. Encountered 24 failed refresh attempt(s) in the last 24h. Current queued task: Execute domain discovery and verification tasks continuously. | No new verifiable output in the last 24h. | backend/optime_nursing.db:agent_knowledge_report_snapshots, backend/optime_nursing.db:agent_knowledge_refresh_events |<br/>
-| Provider Intelligence Agent | WORKED - CREATED NEW VALUE | YES | Completed 4 refresh run(s) in the last 24h. Encountered 25 failed refresh attempt(s) in the last 24h. Current queued task: Discover new Florida communities and provider changes from trusted sources. | Created 54 knowledge record(s). | backend/optime_nursing.db:agent_knowledge_report_snapshots, backend/optime_nursing.db:agent_knowledge_refresh_events |<br/>
-| Activities Intelligence Agent | RAN - NO NEW FINDINGS | NO | Completed 5 refresh run(s) in the last 24h. Encountered 24 failed refresh attempt(s) in the last 24h. Current queued task: Review new domain research and trusted guidelines. | No new verifiable output in the last 24h. | backend/optime_nursing.db:agent_knowledge_report_snapshots, backend/optime_nursing.db:agent_knowledge_refresh_events |<br/>
-| Nutrition Intelligence Agent | RAN - NO NEW FINDINGS | NO | Completed 5 refresh run(s) in the last 24h. Encountered 24 failed refresh attempt(s) in the last 24h. Current queued task: Review new domain research and trusted guidelines. | No new verifiable output in the last 24h. | backend/optime_nursing.db:agent_knowledge_report_snapshots, backend/optime_nursing.db:agent_knowledge_refresh_events |<br/>
-| Family Experience Intelligence Agent | RAN - NO NEW FINDINGS | NO | Completed 6 refresh run(s) in the last 24h. Encountered 24 failed refresh attempt(s) in the last 24h. Current queued task: Convert prepared institutional knowledge into advisor-ready guidance. | No new verifiable output in the last 24h. | backend/optime_nursing.db:agent_knowledge_report_snapshots, backend/optime_nursing.db:agent_knowledge_refresh_events |<br/>
-| Outcome Learning Agent | RAN - NO NEW FINDINGS | NO | Completed 5 refresh run(s) in the last 24h. Encountered 24 failed refresh attempt(s) in the last 24h. Current queued task: Verify newly discovered entities and changed facts. | No new verifiable output in the last 24h. | backend/optime_nursing.db:agent_knowledge_report_snapshots, backend/optime_nursing.db:agent_knowledge_refresh_events |<br/>
-| Matching Improvement Agent | WORKED - CREATED NEW VALUE | YES | Completed 10 refresh run(s) in the last 24h. Encountered 25 failed refresh attempt(s) in the last 24h. Current queued task: Verify newly discovered entities and changed facts. | Created 15 knowledge record(s). | backend/optime_nursing.db:agent_knowledge_report_snapshots, backend/optime_nursing.db:agent_knowledge_refresh_events |<br/>
-| Knowledge Graph Agent | WORKED - CREATED NEW VALUE | YES | Completed 4 refresh run(s) in the last 24h. Encountered 25 failed refresh attempt(s) in the last 24h. Current queued task: Link new knowledge objects into the knowledge graph. | Created 54 knowledge record(s). | backend/optime_nursing.db:agent_knowledge_report_snapshots, backend/optime_nursing.db:agent_knowledge_refresh_events |<br/>
-| Data Quality &amp; Trust Agent | WORKED - CREATED NEW VALUE | YES | Completed 10 refresh run(s) in the last 24h. Encountered 25 failed refresh attempt(s) in the last 24h. Current queued task: Discover new Florida communities and provider changes from trusted sources. | Created 1 knowledge record(s). | backend/optime_nursing.db:agent_knowledge_report_snapshots, backend/optime_nursing.db:agent_knowledge_refresh_events |<br/>
+| Clinical Knowledge Agent | RAN - NO NEW FINDINGS | NO | Executed 1 workflow run(s); processed 0 item(s); added 0; updated 0. Current queued task: Review new domain research and trusted guidelines. | No new verifiable output in the last 24h. | backend/optime_nursing.db:agent_knowledge_report_snapshots, backend/optime_nursing.db:agent_knowledge_refresh_events |<br/>
+| Senior Living Research Agent | DID NOT RUN | NO | Current queued task: Execute domain discovery and verification tasks continuously. | No new verifiable output in the last 24h. | backend/optime_nursing.db:agent_knowledge_report_snapshots, reports/report_registry.json |<br/>
+| Resident Needs Intelligence Agent | MANUAL_ONLY | UNKNOWN | Current queued task: Execute domain discovery and verification tasks continuously. | No runtime evidence table is connected for this agent. | reports/agent_task_queue.md |<br/>
+| Provider Intelligence Agent | MANUAL_ONLY | UNKNOWN | Current queued task: Discover new Florida communities and provider changes from trusted sources. | No runtime evidence table is connected for this agent. | reports/report_registry.json, reports/agent_task_queue.md |<br/>
+| Activities Intelligence Agent | MANUAL_ONLY | UNKNOWN | Current queued task: Review new domain research and trusted guidelines. | No runtime evidence table is connected for this agent. | reports/agent_task_queue.md |<br/>
+| Nutrition Intelligence Agent | MANUAL_ONLY | UNKNOWN | Current queued task: Review new domain research and trusted guidelines. | No runtime evidence table is connected for this agent. | reports/agent_task_queue.md |<br/>
+| Family Experience Intelligence Agent | MANUAL_ONLY | UNKNOWN | Current queued task: Convert prepared institutional knowledge into advisor-ready guidance. | No runtime evidence table is connected for this agent. | reports/agent_task_queue.md |<br/>
+| Outcome Learning Agent | MANUAL_ONLY | UNKNOWN | Current queued task: Verify newly discovered entities and changed facts. | No runtime evidence table is connected for this agent. | reports/report_registry.json, reports/agent_task_queue.md |<br/>
+| Matching Improvement Agent | MANUAL_ONLY | UNKNOWN | Current queued task: Verify newly discovered entities and changed facts. | No runtime evidence table is connected for this agent. | reports/report_registry.json, reports/agent_task_queue.md |<br/>
+| Knowledge Graph Agent | MANUAL_ONLY | UNKNOWN | Current queued task: Link new knowledge objects into the knowledge graph. | No runtime evidence table is connected for this agent. | reports/report_registry.json, reports/agent_task_queue.md |<br/>
+| Data Quality &amp; Trust Agent | MANUAL_ONLY | UNKNOWN | Current queued task: Discover new Florida communities and provider changes from trusted sources. | No runtime evidence table is connected for this agent. | reports/report_registry.json, reports/agent_task_queue.md |<br/>
 | Chief AI Supervisor | MANUAL_ONLY | UNKNOWN | Current queued task: Discover new Florida communities and provider changes from trusted sources. | No runtime evidence table is connected for this agent. | reports/report_registry.json, reports/agent_task_queue.md |<br/>
 | Clinical Evidence Agent | UNKNOWN | UNKNOWN | Current queued task: Verify newly discovered entities and changed facts. | No runtime evidence table is connected for this agent. | reports/agent_task_queue.md |<br/>
-| Competitive Intelligence Agent | UNKNOWN | UNKNOWN | Current queued task: Discover new Florida communities and provider changes from trusted sources. | No runtime evidence table is connected for this agent. | reports/report_registry.json, reports/agent_task_queue.md |<br/>
+| Competitive Intelligence Agent | MANUAL_ONLY | UNKNOWN | Current queued task: Discover new Florida communities and provider changes from trusted sources. | No runtime evidence table is connected for this agent. | reports/report_registry.json, reports/agent_task_queue.md |<br/>
 | Narrative Intelligence Agent | UNKNOWN | UNKNOWN | Current queued task: Convert prepared institutional knowledge into advisor-ready guidance. | No runtime evidence table is connected for this agent. | reports/report_registry.json, reports/agent_task_queue.md |<br/>
 <br/>
 # What OPTIME Achieved In The Last 24 Hours<br/>
 <br/>
-- NEW_EVIDENCE_FOUND: 179<br/>
-- FACTS_VERIFIED: 179<br/>
+- NEW_EVIDENCE_FOUND: 0<br/>
+- FACTS_VERIFIED: 0<br/>
 - UNKNOWN_FIELDS_RESOLVED: NOT_MEASURED<br/>
 - CONTRADICTIONS_FOUND: NOT_MEASURED<br/>
-- FACILITIES_ENRICHED: NOT_MEASURED<br/>
-- STALE_DATA_REFRESHED: 5<br/>
+- FACILITIES_ENRICHED: 0<br/>
+- STALE_DATA_REFRESHED: 1<br/>
 - GOLDEN_CASES_PASSED: NOT_MEASURED<br/>
 - REGRESSIONS_FOUND: NOT_MEASURED<br/>
 - NEW_AI_CITATIONS: NOT_CONFIGURED<br/>
 <br/>
 # Agents Requiring Attention<br/>
 <br/>
+- Resident Needs Intelligence Agent: why=MANUAL_ONLY impact=No runtime evidence table is connected for this agent. next_action=Current queued task: Execute domain discovery and verification tasks continuously.<br/>
+- Provider Intelligence Agent: why=MANUAL_ONLY impact=No runtime evidence table is connected for this agent. next_action=Current queued task: Discover new Florida communities and provider changes from trusted sources.<br/>
+- Activities Intelligence Agent: why=MANUAL_ONLY impact=No runtime evidence table is connected for this agent. next_action=Current queued task: Review new domain research and trusted guidelines.<br/>
+- Nutrition Intelligence Agent: why=MANUAL_ONLY impact=No runtime evidence table is connected for this agent. next_action=Current queued task: Review new domain research and trusted guidelines.<br/>
+- Family Experience Intelligence Agent: why=MANUAL_ONLY impact=No runtime evidence table is connected for this agent. next_action=Current queued task: Convert prepared institutional knowledge into advisor-ready guidance.<br/>
+- Outcome Learning Agent: why=MANUAL_ONLY impact=No runtime evidence table is connected for this agent. next_action=Current queued task: Verify newly discovered entities and changed facts.<br/>
+- Matching Improvement Agent: why=MANUAL_ONLY impact=No runtime evidence table is connected for this agent. next_action=Current queued task: Verify newly discovered entities and changed facts.<br/>
+- Knowledge Graph Agent: why=MANUAL_ONLY impact=No runtime evidence table is connected for this agent. next_action=Current queued task: Link new knowledge objects into the knowledge graph.<br/>
+- Data Quality &amp; Trust Agent: why=MANUAL_ONLY impact=No runtime evidence table is connected for this agent. next_action=Current queued task: Discover new Florida communities and provider changes from trusted sources.<br/>
 - Chief AI Supervisor: why=MANUAL_ONLY impact=No runtime evidence table is connected for this agent. next_action=Current queued task: Discover new Florida communities and provider changes from trusted sources.<br/>
 - Clinical Evidence Agent: why=UNKNOWN impact=No runtime evidence table is connected for this agent. next_action=Current queued task: Verify newly discovered entities and changed facts.<br/>
-- Competitive Intelligence Agent: why=UNKNOWN impact=No runtime evidence table is connected for this agent. next_action=Current queued task: Discover new Florida communities and provider changes from trusted sources.<br/>
+- Competitive Intelligence Agent: why=MANUAL_ONLY impact=No runtime evidence table is connected for this agent. next_action=Current queued task: Discover new Florida communities and provider changes from trusted sources.<br/>
 - Narrative Intelligence Agent: why=UNKNOWN impact=No runtime evidence table is connected for this agent. next_action=Current queued task: Convert prepared institutional knowledge into advisor-ready guidance.<br/>
+<br/>
+# What OPTIME Learned Today<br/>
+<br/>
+- No new external facts were verified today.<br/>
+<br/>
+# Source Connectivity Outcomes<br/>
+<br/>
+<br/>
+# External Sources Checked<br/>
+<br/>
+<br/>
+# Source Failures<br/>
+<br/>
 <br/>
 # Organic / AI Authority System<br/>
 <br/>
 - Status: PARTIAL<br/>
 - Last verified work: UNVERIFIED_EXTERNAL<br/>
-- What it actually did: Strategy docs and multi-AI benchmark scaffolding exist, but automated organic/citation monitoring is not configured.<br/>
-- New result created: No verified external search or citation result was collected automatically.<br/>
+- What it actually did: Ran local technical discoverability checks for robots, sitemap, metadata coverage, structured-data coverage, and facility profile route presence.<br/>
+- New result created: robots.txt present: NO; sitemap present: NO; route files checked: 26; metadata-covered files: 4; structured-data files: 2; facility profile route files: 2<br/>
 - Google visibility: UNVERIFIED_EXTERNAL<br/>
 - AI citation monitoring: NOT_CONFIGURED<br/>
 - Evidence: docs/GEO_STRATEGY.md, reports/MULTI_AI_BENCHMARK_SYSTEM_REPORT.md<br/>
@@ -84,7 +106,7 @@ No measurable progress since the previous report.<br/>
 - DIET_FOOD_EVIDENCE_COVERAGE: UNKNOWN<br/>
 - IMPORTANT_MISSING_DATA: 585<br/>
 - Status: PARTIAL<br/>
-- Last verified: 2026-07-20T15:26:03.734757+00:00<br/>
+- Last verified: 2026-10-04T15:46:56.993861+00:00<br/>
 - Blockers: None<br/>
 - Next action: Expand canonical coverage and preserve UNKNOWN for unmeasured evidence domains.<br/>
 <br/>
@@ -101,7 +123,7 @@ No measurable progress since the previous report.<br/>
 - HIGH_IMPACT_KNOWLEDGE_GAPS: 5<br/>
 - EVIDENCE_QUALITY: 198<br/>
 - Status: PARTIAL<br/>
-- Last verified: 2026-07-20T15:26:03.734764+00:00<br/>
+- Last verified: 2026-10-04T15:46:56.993878+00:00<br/>
 - Blockers: None<br/>
 - Next action: Close provenance gaps and add claim-level freshness timestamps.<br/>
 <br/>
@@ -118,7 +140,7 @@ No measurable progress since the previous report.<br/>
 - PROFESSIONAL_VALIDATION: UNKNOWN<br/>
 - EXTERNAL_VALIDATION_STATUS: PARTIAL<br/>
 - Status: PASS<br/>
-- Last verified: 2026-07-20T15:26:03.734768+00:00<br/>
+- Last verified: 2026-10-04T15:46:56.993883+00:00<br/>
 - Blockers: None<br/>
 - Next action: Resolve validation gaps and keep the golden case permanently visible.<br/>
 <br/>
@@ -133,7 +155,7 @@ No measurable progress since the previous report.<br/>
 - PROFILES_WITH_STRUCTURED_DATA: UNKNOWN<br/>
 - THIN_OR_INCOMPLETE_PROFILES: UNKNOWN<br/>
 - Status: PARTIAL<br/>
-- Last verified: 2026-07-20T15:26:03.734772+00:00<br/>
+- Last verified: 2026-10-04T15:46:56.993886+00:00<br/>
 - Blockers: None<br/>
 - Next action: Measure actual published profile surfaces before claiming public authority coverage.<br/>
 <br/>
@@ -149,7 +171,7 @@ No measurable progress since the previous report.<br/>
 - CANONICAL_ERRORS: UNKNOWN<br/>
 - GOOGLE_INDEX_STATUS: UNVERIFIED_EXTERNAL<br/>
 - Status: PARTIAL<br/>
-- Last verified: 2026-07-20T15:26:03.734775+00:00<br/>
+- Last verified: 2026-10-04T15:46:56.993889+00:00<br/>
 - Blockers: None<br/>
 - Next action: Add a verifiable sitemap/robots/index audit and connect external search telemetry if available.<br/>
 <br/>
@@ -162,7 +184,7 @@ No measurable progress since the previous report.<br/>
 - LOST_RANKING_PAGES: UNKNOWN<br/>
 - COMPETITORS_OUTRANKING_OPTIME: UNKNOWN<br/>
 - Status: NOT_YET_MEASURED<br/>
-- Last verified: 2026-07-20T15:26:03.734778+00:00<br/>
+- Last verified: 2026-10-04T15:46:56.993892+00:00<br/>
 - Blockers: None<br/>
 - Next action: Configure search monitoring before asserting discoverability performance.<br/>
 <br/>
@@ -180,7 +202,7 @@ No measurable progress since the previous report.<br/>
 - QUERY_LEVEL_CITATION_RATE: UNKNOWN<br/>
 - AI_CITATION_MONITORING: NOT_CONFIGURED<br/>
 - Status: NOT_CONFIGURED<br/>
-- Last verified: 2026-07-20T15:26:03.734781+00:00<br/>
+- Last verified: 2026-10-04T15:46:56.993895+00:00<br/>
 - Blockers: None<br/>
 - Next action: Reuse the existing multi-AI benchmark surfaces if access is configured; otherwise keep this as UNKNOWN.<br/>
 <br/>
@@ -193,7 +215,7 @@ No measurable progress since the previous report.<br/>
 - DECISION_REGRESSION_PATTERNS: UNPROVEN<br/>
 - TOP_AUTHORITY_PRIORITIES: [&#x27;Close remaining statewide coverage gaps.&#x27;, &#x27;Instrument publication/index audits for real profile surfaces.&#x27;, &#x27;Connect discoverability and citation monitoring if available.&#x27;]<br/>
 - Status: PARTIAL<br/>
-- Last verified: 2026-07-20T15:26:03.734785+00:00<br/>
+- Last verified: 2026-10-04T15:46:56.993898+00:00<br/>
 - Blockers: None<br/>
 - Next action: Prioritize evidence gaps, publication coverage, and traceability before model changes.<br/>
 <br/>
@@ -209,12 +231,12 @@ No measurable progress since the previous report.<br/>
 <br/>
 # Provider Intelligence<br/>
 <br/>
-- Profiles enriched: 54<br/>
+- Profiles enriched: 0<br/>
 - Ownership changes: 0<br/>
-- Inspection updates: 67<br/>
+- Inspection updates: 0<br/>
 - Licensing updates: 0<br/>
-- CMS updates: 54<br/>
-- Staffing updates: 56<br/>
+- CMS updates: 0<br/>
+- Staffing updates: 0<br/>
 - Pricing updates: 0<br/>
 - Website changes: 0<br/>
 <br/>
@@ -224,8 +246,8 @@ No measurable progress since the previous report.<br/>
 - Knowledge Objects updated: 132<br/>
 - Evidence Objects added: 0<br/>
 - Best Practices added: 8<br/>
-- Clinical Guidelines added: 54<br/>
-- Research Papers reviewed: 54<br/>
+- Clinical Guidelines added: 0<br/>
+- Research Papers reviewed: 0<br/>
 - Evidence verified: 198<br/>
 - Knowledge relationships created: 100<br/>
 <br/>
@@ -256,26 +278,34 @@ No measurable progress since the previous report.<br/>
 <br/>
 - Recommendation improvements: 0<br/>
 - Reasoning improvements: 8<br/>
-- Confidence improvements: 54<br/>
+- Confidence improvements: 0<br/>
 - Validation results: release_gate=UNKNOWN advisor_agreement=52%<br/>
 - Regression tests: UNKNOWN<br/>
 <br/>
+# Evidence Parity / Proven Match<br/>
+<br/>
+- Status: ACTIVE<br/>
+- Regression status: PASS<br/>
+- Corrected proven-match top 5: SANDS AT SOUTH BEACH CARE CENTER, THE, BISCAYNE HEALTH AND REHABILITATION CENTER, CORAL GABLES NURSING AND REHABILITATION CENTER, Pinecrest Center for Rehabilitation and Healing, FOUNTAIN MANOR HEALTH &amp; REHABILITATION CENTER<br/>
+- High-potential / needs-verification:<br/>
+  - None<br/>
+<br/>
 # Agent Activity<br/>
 <br/>
-| Clinical Knowledge Agent | WORKED - CREATED NEW VALUE | YES | Completed 4 refresh run(s) in the last 24h. Encountered 25 failed refresh attempt(s) in the last 24h. Current queued task: Review new domain research and trusted guidelines. | Created 54 knowledge record(s). | backend/optime_nursing.db:agent_knowledge_report_snapshots, backend/optime_nursing.db:agent_knowledge_refresh_events |<br/>
-| Senior Living Research Agent | WORKED - CREATED NEW VALUE | YES | Completed 6 refresh run(s) in the last 24h. Encountered 24 failed refresh attempt(s) in the last 24h. Current queued task: Execute domain discovery and verification tasks continuously. | Created 1 knowledge record(s). | backend/optime_nursing.db:agent_knowledge_report_snapshots, backend/optime_nursing.db:agent_knowledge_refresh_events |<br/>
-| Resident Needs Intelligence Agent | RAN - NO NEW FINDINGS | NO | Completed 5 refresh run(s) in the last 24h. Encountered 24 failed refresh attempt(s) in the last 24h. Current queued task: Execute domain discovery and verification tasks continuously. | No new verifiable output in the last 24h. | backend/optime_nursing.db:agent_knowledge_report_snapshots, backend/optime_nursing.db:agent_knowledge_refresh_events |<br/>
-| Provider Intelligence Agent | WORKED - CREATED NEW VALUE | YES | Completed 4 refresh run(s) in the last 24h. Encountered 25 failed refresh attempt(s) in the last 24h. Current queued task: Discover new Florida communities and provider changes from trusted sources. | Created 54 knowledge record(s). | backend/optime_nursing.db:agent_knowledge_report_snapshots, backend/optime_nursing.db:agent_knowledge_refresh_events |<br/>
-| Activities Intelligence Agent | RAN - NO NEW FINDINGS | NO | Completed 5 refresh run(s) in the last 24h. Encountered 24 failed refresh attempt(s) in the last 24h. Current queued task: Review new domain research and trusted guidelines. | No new verifiable output in the last 24h. | backend/optime_nursing.db:agent_knowledge_report_snapshots, backend/optime_nursing.db:agent_knowledge_refresh_events |<br/>
-| Nutrition Intelligence Agent | RAN - NO NEW FINDINGS | NO | Completed 5 refresh run(s) in the last 24h. Encountered 24 failed refresh attempt(s) in the last 24h. Current queued task: Review new domain research and trusted guidelines. | No new verifiable output in the last 24h. | backend/optime_nursing.db:agent_knowledge_report_snapshots, backend/optime_nursing.db:agent_knowledge_refresh_events |<br/>
-| Family Experience Intelligence Agent | RAN - NO NEW FINDINGS | NO | Completed 6 refresh run(s) in the last 24h. Encountered 24 failed refresh attempt(s) in the last 24h. Current queued task: Convert prepared institutional knowledge into advisor-ready guidance. | No new verifiable output in the last 24h. | backend/optime_nursing.db:agent_knowledge_report_snapshots, backend/optime_nursing.db:agent_knowledge_refresh_events |<br/>
-| Outcome Learning Agent | RAN - NO NEW FINDINGS | NO | Completed 5 refresh run(s) in the last 24h. Encountered 24 failed refresh attempt(s) in the last 24h. Current queued task: Verify newly discovered entities and changed facts. | No new verifiable output in the last 24h. | backend/optime_nursing.db:agent_knowledge_report_snapshots, backend/optime_nursing.db:agent_knowledge_refresh_events |<br/>
-| Matching Improvement Agent | WORKED - CREATED NEW VALUE | YES | Completed 10 refresh run(s) in the last 24h. Encountered 25 failed refresh attempt(s) in the last 24h. Current queued task: Verify newly discovered entities and changed facts. | Created 15 knowledge record(s). | backend/optime_nursing.db:agent_knowledge_report_snapshots, backend/optime_nursing.db:agent_knowledge_refresh_events |<br/>
-| Knowledge Graph Agent | WORKED - CREATED NEW VALUE | YES | Completed 4 refresh run(s) in the last 24h. Encountered 25 failed refresh attempt(s) in the last 24h. Current queued task: Link new knowledge objects into the knowledge graph. | Created 54 knowledge record(s). | backend/optime_nursing.db:agent_knowledge_report_snapshots, backend/optime_nursing.db:agent_knowledge_refresh_events |<br/>
-| Data Quality &amp; Trust Agent | WORKED - CREATED NEW VALUE | YES | Completed 10 refresh run(s) in the last 24h. Encountered 25 failed refresh attempt(s) in the last 24h. Current queued task: Discover new Florida communities and provider changes from trusted sources. | Created 1 knowledge record(s). | backend/optime_nursing.db:agent_knowledge_report_snapshots, backend/optime_nursing.db:agent_knowledge_refresh_events |<br/>
+| Clinical Knowledge Agent | RAN - NO NEW FINDINGS | NO | Executed 1 workflow run(s); processed 0 item(s); added 0; updated 0. Current queued task: Review new domain research and trusted guidelines. | No new verifiable output in the last 24h. | backend/optime_nursing.db:agent_knowledge_report_snapshots, backend/optime_nursing.db:agent_knowledge_refresh_events |<br/>
+| Senior Living Research Agent | DID NOT RUN | NO | Current queued task: Execute domain discovery and verification tasks continuously. | No new verifiable output in the last 24h. | backend/optime_nursing.db:agent_knowledge_report_snapshots, reports/report_registry.json |<br/>
+| Resident Needs Intelligence Agent | MANUAL_ONLY | UNKNOWN | Current queued task: Execute domain discovery and verification tasks continuously. | No runtime evidence table is connected for this agent. | reports/agent_task_queue.md |<br/>
+| Provider Intelligence Agent | MANUAL_ONLY | UNKNOWN | Current queued task: Discover new Florida communities and provider changes from trusted sources. | No runtime evidence table is connected for this agent. | reports/report_registry.json, reports/agent_task_queue.md |<br/>
+| Activities Intelligence Agent | MANUAL_ONLY | UNKNOWN | Current queued task: Review new domain research and trusted guidelines. | No runtime evidence table is connected for this agent. | reports/agent_task_queue.md |<br/>
+| Nutrition Intelligence Agent | MANUAL_ONLY | UNKNOWN | Current queued task: Review new domain research and trusted guidelines. | No runtime evidence table is connected for this agent. | reports/agent_task_queue.md |<br/>
+| Family Experience Intelligence Agent | MANUAL_ONLY | UNKNOWN | Current queued task: Convert prepared institutional knowledge into advisor-ready guidance. | No runtime evidence table is connected for this agent. | reports/agent_task_queue.md |<br/>
+| Outcome Learning Agent | MANUAL_ONLY | UNKNOWN | Current queued task: Verify newly discovered entities and changed facts. | No runtime evidence table is connected for this agent. | reports/report_registry.json, reports/agent_task_queue.md |<br/>
+| Matching Improvement Agent | MANUAL_ONLY | UNKNOWN | Current queued task: Verify newly discovered entities and changed facts. | No runtime evidence table is connected for this agent. | reports/report_registry.json, reports/agent_task_queue.md |<br/>
+| Knowledge Graph Agent | MANUAL_ONLY | UNKNOWN | Current queued task: Link new knowledge objects into the knowledge graph. | No runtime evidence table is connected for this agent. | reports/report_registry.json, reports/agent_task_queue.md |<br/>
+| Data Quality &amp; Trust Agent | MANUAL_ONLY | UNKNOWN | Current queued task: Discover new Florida communities and provider changes from trusted sources. | No runtime evidence table is connected for this agent. | reports/report_registry.json, reports/agent_task_queue.md |<br/>
 | Chief AI Supervisor | MANUAL_ONLY | UNKNOWN | Current queued task: Discover new Florida communities and provider changes from trusted sources. | No runtime evidence table is connected for this agent. | reports/report_registry.json, reports/agent_task_queue.md |<br/>
 | Clinical Evidence Agent | UNKNOWN | UNKNOWN | Current queued task: Verify newly discovered entities and changed facts. | No runtime evidence table is connected for this agent. | reports/agent_task_queue.md |<br/>
-| Competitive Intelligence Agent | UNKNOWN | UNKNOWN | Current queued task: Discover new Florida communities and provider changes from trusted sources. | No runtime evidence table is connected for this agent. | reports/report_registry.json, reports/agent_task_queue.md |<br/>
+| Competitive Intelligence Agent | MANUAL_ONLY | UNKNOWN | Current queued task: Discover new Florida communities and provider changes from trusted sources. | No runtime evidence table is connected for this agent. | reports/report_registry.json, reports/agent_task_queue.md |<br/>
 | Narrative Intelligence Agent | UNKNOWN | UNKNOWN | Current queued task: Convert prepared institutional knowledge into advisor-ready guidance. | No runtime evidence table is connected for this agent. | reports/report_registry.json, reports/agent_task_queue.md |<br/>
 <br/>
 # Data Quality<br/>
@@ -296,7 +326,7 @@ No measurable progress since the previous report.<br/>
 - Certified Knowledge Centers: UNPROVEN<br/>
 - Knowledge Objects: 2634<br/>
 - Evidence Objects: 3056<br/>
-- Research Papers: 54<br/>
+- Research Papers: 0<br/>
 - Best Practices: 8<br/>
 - Open Knowledge Gaps: 5<br/>
 - Closed Knowledge Gaps Today: 0<br/>
@@ -306,9 +336,18 @@ No measurable progress since the previous report.<br/>
 <br/>
 # Critical Alerts<br/>
 <br/>
+- Resident Needs Intelligence Agent status=MANUAL_ONLY<br/>
+- Provider Intelligence Agent status=MANUAL_ONLY<br/>
+- Activities Intelligence Agent status=MANUAL_ONLY<br/>
+- Nutrition Intelligence Agent status=MANUAL_ONLY<br/>
+- Family Experience Intelligence Agent status=MANUAL_ONLY<br/>
+- Outcome Learning Agent status=MANUAL_ONLY<br/>
+- Matching Improvement Agent status=MANUAL_ONLY<br/>
+- Knowledge Graph Agent status=MANUAL_ONLY<br/>
+- Data Quality &amp; Trust Agent status=MANUAL_ONLY<br/>
 - Chief AI Supervisor status=MANUAL_ONLY<br/>
 - Clinical Evidence Agent status=UNKNOWN<br/>
-- Competitive Intelligence Agent status=UNKNOWN<br/>
+- Competitive Intelligence Agent status=MANUAL_ONLY<br/>
 - Narrative Intelligence Agent status=UNKNOWN<br/>
 <br/>
 # Tomorrow<br/>

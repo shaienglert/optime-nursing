@@ -36,7 +36,7 @@ export function fundingLines(funding: FundingExplanation | null | undefined, med
   if (medicaidAnswered || funding.pathway === "MEDICAID") {
     lines.push({
       label: "Medicaid",
-      text: `${MEDICAID_LABEL[funding.medicaid.state]} — ${funding.medicaid.acceptance_evidence === "YES" ? "acceptance is verified for this community" : "acceptance not confirmed; coverage is not promised"}`,
+      text: `Your status: ${MEDICAID_LABEL[funding.medicaid.state]}. This community’s Medicaid participation: ${funding.medicaid.acceptance_evidence === "YES" ? "verified" : "not confirmed"}. Coverage is not promised.`,
     });
   }
   return lines;

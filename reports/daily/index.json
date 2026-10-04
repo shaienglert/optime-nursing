@@ -10,5 +10,17 @@
     "sent": false,
     "sent_at_utc": null,
     "recipients": []
+  },
+  {
+    "report_id": "2026-10-04",
+    "report_date": "2026-10-04",
+    "generated_at_utc": "2026-10-04T15:46:56.994249+00:00",
+    "subject": "OPTIME Executive Intelligence Report | 2026-10-04",
+    "markdown_path": "reports/daily/archive/executive_intelligence_report_2026-10-04.md",
+    "html_path": "reports/daily/archive/executive_intelligence_report_2026-10-04.html",
+    "json_path": "reports/daily/archive/executive_intelligence_report_2026-10-04.json",
+    "sent": false,
+    "sent_at_utc": null,
+    "recipients": []
   }
 ]

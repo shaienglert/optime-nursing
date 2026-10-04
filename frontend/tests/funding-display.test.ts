@@ -25,7 +25,7 @@ describe("funding display", () => {
   it("states Medicaid state and never promises coverage without evidence", () => {
     const text = fundingLines(base, true)[2].text;
     expect(text).toContain("Application pending");
-    expect(text).toContain("coverage is not promised");
+    expect(text).toContain("Coverage is not promised");
   });
 
   it("states unknown cost as unknown, not as a fit", () => {
@@ -43,5 +43,15 @@ describe("funding display", () => {
     const page = readFileSync("src/app/results/simple-results-page-client.tsx", "utf8");
     expect(page).toContain('data-testid="funding-explanation"');
     expect(page).toContain("fundingLines(item.funding_explanation");
+  });
+});
+
+describe("verified participation is not mistaken for the family's own approval", () => {
+  it("separates the family's Medicaid state from the community's participation", () => {
+    const verified = { ...base, medicaid: { ...base.medicaid, acceptance_evidence: "YES" as const } };
+    const text = fundingLines(verified, true)[2].text;
+    expect(text).toContain("Your status: Application pending");
+    expect(text).toContain("participation: verified");
+    expect(text).toContain("Coverage is not promised");
   });
 });
