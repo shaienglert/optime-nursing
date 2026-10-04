@@ -489,7 +489,13 @@ def run_decision_pipeline(questionnaire_state: dict[str, Any], natural_language_
     # policy and preserves the owner rule: in-budget first, then all otherwise-eligible
     # candidates up to +10%, with transparent deviation.
     _merge_funnel_fit(result)
-    result = apply_must_ai_nice_pipeline(result, decision_questionnaire, "", limit)
+    completion = questionnaire_state.get("questionnaireCompletion") or {}
+    accepted_changes = completion.get("oomnikerRelaxedPreferences") if isinstance(completion, dict) else None
+    if accepted_changes:
+        result = apply_must_ai_nice_pipeline(result, decision_questionnaire, "", limit,
+                                            accepted_preference_changes=accepted_changes)
+    else:
+        result = apply_must_ai_nice_pipeline(result, decision_questionnaire, "", limit)
     stage_started = _mark("apply_must_ai_nice_pipeline_ms", stage_started)
     # Re-seal after the MUST/ranking stages before the process owner reads
     # phase or visibility.  Raw pipeline facts may change; control state may

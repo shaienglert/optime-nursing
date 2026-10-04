@@ -425,6 +425,9 @@ export type OOmnikerPreferenceSuggestion = {
   authority: "PREFERENCE";
   action: "OFFER_PREFERENCE_ALTERNATIVE";
   alternative_value: string;
+  label?: string;
+  change_kind?: "WAIVE_NTH" | "PROFILE_PATCH";
+  acceptance?: { parameter: string; input_fingerprint: string } | null;
   message: string;
   new_recommendation_count: number;
   requires_client_approval: boolean;
@@ -442,7 +445,7 @@ export type DecisionEngineResponse = {
   oomniker?: {
     suggestions?: Array<OOmnikerPreferenceSuggestion | { action: "VERIFY_WITH_COMMUNITIES"; parameter: string }>;
     constraint_impacts?: Array<{ parameter: string; authority: string; blocked_count: number; sole_verified_blocker_count: number }>;
-    preference_analysis?: { eligible_candidate_count?: number; parameters?: Array<{ parameter: string; verified_mismatch_count: number; unknown_count: number; eligible_below_display_count: number; new_recommendation_count: number }> };
+    preference_analysis?: { eligible_candidate_count?: number; accepted_changes?: string[]; parameters?: Array<{ parameter: string; label?: string; status?: string; verified_mismatch_count: number; unknown_count: number; eligible_below_display_count: number; new_recommendation_count: number }> };
   };
   pending_evidence_summary?: {
     candidate_count: number;
