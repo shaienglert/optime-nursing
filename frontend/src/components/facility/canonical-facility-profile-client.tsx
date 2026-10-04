@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { FacilityPersonalFit } from "@/components/guidance/facility-personal-fit";
 import { useEffect, useMemo, useState } from "react";
 
 import { FacilityParameterTable, FacilityRooms, fetchFacilityParameterTable, fetchFacilityRooms, requestFacilityOutreach } from "@/lib/api";
@@ -29,7 +30,7 @@ type RegulatoryResponse = {
 };
 
 function displayValue(value: unknown): string {
-  if (value === null || value === undefined || value === "" || value === "UNKNOWN") return "UNKNOWN";
+  if (value === null || value === undefined || value === "" || value === "UNKNOWN") return "Not yet verified";
   if (value === true || value === "YES") return "Yes";
   if (value === false || value === "NO") return "No";
   return String(value);
@@ -151,12 +152,12 @@ export function CanonicalFacilityProfileClient({ canonicalFacilityId, backHref, 
         <header className="rounded-3xl border border-[#e9dfce] bg-white/90 p-6 shadow-[0_22px_80px_-42px_rgba(82,65,42,0.4)]">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#5f7f6b]">Canonical Facility Intelligence Profile</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#5f7f6b]">Get to know this community</p>
               <h1 className="mt-2 text-3xl font-semibold text-[#2f2a24]">{table.facility_name}</h1>
               <p className="mt-1 text-[#6d655b]">{[table.city, table.state, table.zip].filter(Boolean).join(", ")}</p>
               <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
-                <span className="rounded-full border border-[#cfe2d8] bg-[#f4fbf7] px-3 py-1 text-[#315f53]">{table.canonical_type || "Type UNKNOWN"}</span>
-                <span className="rounded-full border border-[#d9cfbf] bg-[#faf7f1] px-3 py-1 text-[#6d655b]">Canonical ID: {table.canonical_facility_id}</span>
+                <span className="rounded-full border border-[#cfe2d8] bg-[#f4fbf7] px-3 py-1 text-[#315f53]">{table.canonical_type ? prettyLabel(table.canonical_type) : "Community type not supplied"}</span>
+
               </div>
               {table.canonical_type === "INDEPENDENT_LIVING" && (
                 <p className="mt-4 rounded-xl border border-[#e8ddcc] bg-[#faf7f1] p-3 text-sm text-[#5b5245]">
@@ -167,6 +168,8 @@ export function CanonicalFacilityProfileClient({ canonicalFacilityId, backHref, 
             <Link href={backHref} className="rounded-full border border-[#d9cfbf] bg-white px-4 py-2 text-sm font-semibold text-[#5b5245] hover:bg-[#f5eee2]">{backLabel}</Link>
           </div>
         </header>
+
+        {canonicalFacilityId ? <FacilityPersonalFit facilityId={canonicalFacilityId} facilityName={table.facility_name} backHref={backHref} /> : null}
 
         <section className="rounded-3xl border border-[#e8ddcc] bg-white p-5">
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#5f7f6b]">Rooms & pricing</p>
@@ -250,7 +253,7 @@ export function CanonicalFacilityProfileClient({ canonicalFacilityId, backHref, 
           <div className="rounded-3xl border border-[#e8ddcc] bg-white p-5">
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#5f7f6b]">Nevada regulatory history</p>
             {history ? (
-              <div className="mt-4 space-y-3 text-sm text-[#4f473d]">
+              <div className="mt-4 space-y-3 text-lg leading-8 text-[#4f473d]">
                 <p><span className="font-semibold">Source:</span> {regulatory?.source || "Nevada HCQC / ALiS"}</p>
                 <p><span className="font-semibold">Inspections found:</span> {displayValue(history.inspection_count)}</p>
                 <p><span className="font-semibold">Latest known grade:</span> {displayValue(history.latest_known_grade)}{history.latest_known_grade_date ? ` · ${history.latest_known_grade_date}` : ""}</p>
@@ -259,20 +262,21 @@ export function CanonicalFacilityProfileClient({ canonicalFacilityId, backHref, 
                   <p className="font-semibold">Grade history</p>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {["A", "B", "C", "D"].map((grade) => (
-                      <span key={grade} className="rounded-full border border-[#d9cfbf] bg-[#faf7f1] px-3 py-1 text-xs">{grade}: {Number(gradeCounts[grade] || 0)}</span>
+                      <span key={grade} className="rounded-full border border-[#d9cfbf] bg-[#faf7f1] px-3 py-1 text-base">{grade}: {gradeCounts[grade] != null ? Number(gradeCounts[grade]) : "Not recorded"}</span>
                     ))}
                   </div>
                 </div>
                 <p className="rounded-2xl border border-[#eedfbf] bg-[#fff9ed] p-3 text-xs leading-5 text-[#745e32]">Regulatory history is evidence used to distinguish otherwise similarly matched residential facilities. UNKNOWN is not treated as a failure.</p>
               </div>
             ) : (
-              <p className="mt-4 text-sm text-[#776e62]">Detailed ALiS grade history is not available for this facility. UNKNOWN is preserved.</p>
+              <p className="mt-4 text-lg leading-8 text-[#776e62]">Detailed inspection grade history is not available for this community. It still requires verification.</p>
             )}
           </div>
         </section>
 
-        <section className="rounded-3xl border border-[#e8ddcc] bg-white p-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#5f7f6b]">Evidence ledger</p>
+        <section className="rounded-3xl border border-[#e8ddcc] bg-white p-5"><h2 className="text-2xl font-semibold">Family reviews and OOmnik assessment</h2><p className="mt-3 text-lg leading-8">A sourced family-review rating and a separate OOmnik assessment are not available in this profile. The regulatory history above reports inspection evidence; it is not a family-review score.</p></section>
+        <details className="rounded-3xl border border-[#e8ddcc] bg-white p-5">
+          <summary className="cursor-pointer text-lg font-semibold text-[#5f7f6b]">Explore the supporting evidence</summary>
           <div className="mt-4 overflow-x-auto">
             <table className="min-w-full text-left text-sm">
               <thead className="border-b border-[#e8ddcc] text-xs uppercase tracking-[0.08em] text-[#776e62]">
@@ -290,7 +294,7 @@ export function CanonicalFacilityProfileClient({ canonicalFacilityId, backHref, 
               </tbody>
             </table>
           </div>
-        </section>
+        </details>
       </section>
     </main>
   );

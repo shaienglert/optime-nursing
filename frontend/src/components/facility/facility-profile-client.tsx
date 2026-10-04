@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { FacilityPersonalFit } from "@/components/guidance/facility-personal-fit";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
@@ -213,6 +214,8 @@ export function FacilityProfileClient({ facilityId, backHref, backLabel }: Facil
             </Link>
           </div>
         </header>
+
+        {canonicalFacilityId ? <FacilityPersonalFit facilityId={String(canonicalFacilityId)} facilityName={facility.name} backHref={backHref} /> : null}
 
         <section className="grid gap-6 lg:grid-cols-[360px,1fr]">
           <div className="rounded-3xl border border-[#e8ddcc] bg-white p-5 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.45)]">

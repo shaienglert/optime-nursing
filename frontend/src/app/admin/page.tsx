@@ -13,6 +13,10 @@ export default function AdminIndexPage() {
         </header>
 
         <div className="grid gap-4 md:grid-cols-2">
+          <Link href="/admin/client-followups" className="rounded-3xl border border-slate-800 bg-slate-900/80 p-6 hover:border-slate-600">
+            <h2 className="text-xl font-semibold">Client visits and pricing enquiries</h2>
+            <p className="mt-2 text-sm text-slate-300">Follow up on saved requests, preferred visit dates, contact details and current room quotations.</p>
+          </Link>
           <Link href="/admin/platform-operations" className="rounded-3xl border border-slate-800 bg-slate-900/80 p-6 hover:border-slate-600">
             <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Owner Operations</p>
             <h2 className="mt-2 text-xl font-semibold">Runtime, Supervisor, Knowledge</h2>

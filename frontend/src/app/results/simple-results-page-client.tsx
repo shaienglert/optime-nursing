@@ -13,6 +13,10 @@ import { applyAdaptiveAnswer } from "@/lib/adaptive-answer";
 import { resultsClientState } from "@/lib/results-client-state";
 import { DistanceScope } from "./distance-scope";
 
+import { PersonalNarrative } from "@/components/guidance/personal-narrative";
+import { CommunityNextStep, WelcomeOffer } from "@/components/guidance/community-next-step";
+import { facilityExplanation, resultsIntroduction } from "@/lib/personal-guidance";
+
 const TOP_COUNT = 5;
 
 const missingEvidenceLabels: Record<string, string> = {
@@ -294,15 +298,11 @@ export function SimpleResultsPageClient() {
         <section className="rounded-[2rem] border border-[#e1d8c9] bg-white p-7 shadow-sm sm:p-10">
           {syntheticPilot ? <div className="mb-6 rounded-2xl border-2 border-amber-500 bg-amber-50 p-4 text-lg font-semibold text-amber-950">Pilot mode: every community, price, availability value and image on this page is synthetic test data—not a real facility.</div> : null}
           <p className="text-base font-semibold uppercase tracking-[0.14em] text-[#437667]">OOmnik results</p>
-          <h1 className="mt-3 text-4xl font-semibold leading-tight sm:text-5xl">Care-compatible options to review for {relationship}</h1>
-          <p className="mt-5 max-w-4xl text-xl leading-8 text-[#53635d]">
-            {top.length > 0
-              ? "The options below have verified care capabilities for this case. Availability and admission details still need direct confirmation."
-              : "I don’t have a verified recommendation to show yet. Missing information is still being distinguished from a confirmed mismatch."}
-          </p>
+          <h1 className="mt-3 text-4xl font-semibold leading-tight sm:text-5xl">Let’s explore the next home for {relationship}</h1>
+          <div className="mt-5 max-w-4xl"><PersonalNarrative state={state} query={naturalLanguageQuery} decisionId={response.decision_id || undefined} fallback={resultsIntroduction(state, top.length)} /></div>
           {top.length > 0 ? (
             <div className="mt-7 rounded-2xl bg-[#eef7f2] p-5 text-xl leading-8 text-[#214d40]">
-              I found <strong>{top.length}</strong> option{top.length === 1 ? "" : "s"} I think deserve your attention. I’ll show you what I like about each one, what gives me pause, and anything I still want to verify before you rely on it.
+              Explore <strong>{top.length}</strong> option{top.length === 1 ? "" : "s"} below. Start with the personal fit, then choose a visit or ask us to check rooms and current prices.
             </div>
           ) : (
             <div className="mt-7 rounded-2xl bg-[#fff5df] p-5 text-xl leading-8 text-[#6d5426]">
@@ -318,6 +318,7 @@ export function SimpleResultsPageClient() {
               {(response.results || []).some((item: any) => item.budget_exception === true) ? <p className="mt-3 text-base leading-7">We did not find enough otherwise suitable communities within the budget you requested, so OOmnik is also showing suitable options up to 10% above it. The budget difference lowers their ranking and is marked on the relevant option. Use OOmniker below to change the budget or any other parameter and add more communities.</p> : null}
             </div>
           )}
+          {top.length > 0 ? <WelcomeOffer /> : null}
           <div className="mt-6 rounded-2xl border border-[#d9e3df] bg-[#f7faf8] p-5">
             {savedCaseToken ? <p className="text-lg"><strong>Your OOmnik case is saved.</strong> Your questionnaire and future activity can now stay together under one case.</p> : <>
               <p className="text-lg font-semibold">Want to save this case or have OOmnik help with the next steps?</p>
@@ -351,13 +352,12 @@ export function SimpleResultsPageClient() {
         {top.length > 0 ? (
           <section className="mt-8 grid gap-6">
             {top.map((item, index) => {
-              // The free-form ranking narrative sees a bounded claim sample and
-              // can therefore describe evidence as missing even when the full
-              // deterministic MUST gate verified it elsewhere.  Show only the
-              // canonical, structured explanation on the customer results page;
-              // keep AI ranking prose internal for audit and diagnostics.
-              const why = (item.explanation?.why_matches || []).map(cleanText).filter(Boolean).slice(0, 3);
-              const verify = (item.explanation?.needs_verification || []).map(cleanText).filter(Boolean).slice(0, 3);
+              // Personal guidance reads the stored final decision and full match
+              // explanation. AI ranking prose remains internal: it must never
+              // override the authoritative eligibility checks or comparison.
+              const why = facilityExplanation(item);
+              const verify = (item.explanation?.needs_verification || []).map(cleanText).filter(Boolean);
+              const concerns = (item.explanation?.concerns || []).map(cleanText).filter(Boolean);
               const nearbyFit = item.explanation?.nearby_place_fit;
               const personalDistances = nearbyFit?.personal_destinations || [];
               const nearbyDistances = Object.entries(nearbyFit?.nearest || {}).filter(([, place]) => Number.isFinite(place?.driving_distance_miles ?? place?.distance_miles)).sort((a, b) => Number(a[1]?.driving_distance_miles ?? a[1]?.distance_miles ?? 999) - Number(b[1]?.driving_distance_miles ?? b[1]?.distance_miles ?? 999));
@@ -397,25 +397,23 @@ export function SimpleResultsPageClient() {
                     </div>
                   </div>
 
-                  <div className="mt-7 grid gap-5 lg:grid-cols-2">
+                  <div className="mt-7 space-y-5">
                     <div className="rounded-2xl bg-[#f4f8f6] p-6">
-                      <h3 className="text-2xl font-semibold">Why I think this is worth looking at</h3>
-                      {why.length ? (
-                        <ul className="mt-3 space-y-3 text-xl leading-8">{why.map((text) => <li key={text}>✓ {text}</li>)}</ul>
-                      ) : (
-                        <p className="mt-3 text-xl leading-8 text-[#596761]">It meets the important requirements we agreed on. I’m still building the clearest explanation of why it stands out from the other options.</p>
-                      )}
+                      <h3 className="text-2xl font-semibold">Why this place fits your search</h3>
+                      <div className="mt-3"><PersonalNarrative state={state} query={naturalLanguageQuery} decisionId={response.decision_id || undefined} facilityId={item.canonical_facility_id} fallback={why} /></div>
                     </div>
 
                     <div className="rounded-2xl bg-[#fff7e7] p-6">
-                      <h3 className="text-2xl font-semibold">What gives me pause</h3>
+                      <h3 className="text-2xl font-semibold">What we’ll check for you next</h3>
                       {verify.length ? (
                         <ul className="mt-3 space-y-3 text-xl leading-8">{verify.map((text) => <li key={text}>• {text}</li>)}</ul>
                       ) : (
-                        <p className="mt-3 text-xl leading-8">I don’t see a critical unresolved issue here right now.</p>
+                        <p className="mt-3 text-xl leading-8">Next, confirm the room, total monthly cost and a suitable move-in date with the community.</p>
                       )}
                     </div>
                   </div>
+                  {concerns.length > 0 ? <div className="mt-5 rounded-2xl bg-amber-50 p-5 text-lg leading-8"><h3 className="text-xl font-semibold">Important considerations</h3>{concerns.map(text => <p key={text}>{text}</p>)}</div> : null}
+                  <CommunityNextStep facilityId={item.canonical_facility_id} facilityName={item.facility_name} />
                 </article>
               );
             })}

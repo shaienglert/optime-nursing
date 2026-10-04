@@ -10,6 +10,9 @@ import { fetchPatientNeedsProfile, type PatientNeedsProfile } from "@/lib/api";
 import { intakeInputKey, saveConfirmedIntake } from "@/lib/confirmed-intake";
 import { hasUnresolvedSemanticConflict, semanticIntakeFailure } from "@/lib/semantic-conflict";
 
+import { PersonalNarrative } from "@/components/guidance/personal-narrative";
+import { personalSummary } from "@/lib/personal-guidance";
+
 function SummaryRow({ label, value }: { label: string; value: string }) {
   return <div className="rounded-2xl border border-[#d9e3df] bg-white p-4"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#5c786f]">{label}</p><p className="mt-2 text-base leading-7 text-[#293a34]">{value || "Not provided"}</p></div>;
 }
@@ -100,15 +103,16 @@ function IntakeConfirmationContent() {
   return (
     <main className="min-h-screen bg-[#f6f3ed] px-4 py-10 text-[#26352f] sm:px-8">
       <section className="mx-auto max-w-5xl">
-        <p className="text-sm font-semibold uppercase tracking-[0.15em] text-[#397a69]">Final understanding check</p>
-        <h1 className="mt-3 text-4xl font-semibold tracking-[-0.04em] sm:text-6xl">Please confirm what OOmnik understood.</h1>
-        <p className="mt-5 max-w-3xl text-lg leading-8 text-[#5c665f]">This confirmed profile—not free-text guesses—will be the basis for research, matching, and the questions shown for each community.</p>
+        <p className="text-sm font-semibold uppercase tracking-[0.15em] text-[#397a69]">Your next chapter starts here</p>
+        <h1 className="mt-3 text-4xl font-semibold tracking-[-0.04em] sm:text-6xl">Here’s what matters for your next home.</h1>
+        <p className="mt-5 max-w-3xl text-lg leading-8 text-[#5c665f]">Before we look at communities, let’s make sure we understand the person, the priorities and what would make this move feel right.</p>
         {narrativeUnprocessed ? <div role="status" className="mt-6 rounded-2xl border border-amber-300 bg-amber-50 p-5 text-lg leading-7">OOmnik could not read the free-text story right now. Your structured answers below are still usable and will be the only information used for matching. The story will not affect recommendations unless it is successfully interpreted and you approve the updated profile.</div> : null}
         {reviewError ? <div role="alert" className="mt-6 rounded-2xl bg-amber-50 p-5 text-lg">{reviewError} <button type="button" onClick={() => { setReviewed(null); setRetry(value => value + 1); }} className="ml-3 underline">Try again</button> <button type="button" onClick={() => router.push("/adaptive-interview?next=%2Fresults")} className="ml-3 underline">Continue our conversation</button></div>
           : reviewed?.key !== inputKey ? <p role="status" className="mt-6 text-xl">Preparing the profile for your review…</p>
-          : <section className="mt-6 rounded-2xl bg-white p-5"><h2 className="text-2xl font-semibold">Needs used in your search</h2><ul className="mt-3 space-y-2 text-lg">{reviewed.profile.needs.map((need, index) => <li key={`${need.parameter_id}-${index}`}>{need.need_text}</li>)}</ul></section>}
+          : <details className="mt-6 rounded-2xl bg-white p-5"><summary className="cursor-pointer text-lg font-semibold">Review the needs guiding your search</summary><h2 className="text-2xl font-semibold">Needs used in your search</h2><ul className="mt-3 space-y-2 text-lg">{reviewed.profile.needs.map((need, index) => <li key={`${need.parameter_id}-${index}`}>{need.need_text}</li>)}</ul></details>}
 
-        <div className="mt-8 grid gap-4 sm:grid-cols-2">
+        <section className="mt-8 rounded-3xl bg-white p-6 sm:p-8"><PersonalNarrative state={state} intakeProfileId={reviewed?.key === inputKey ? reviewed.profile.intake_profile_id || undefined : undefined} fallback={personalSummary(state)} /></section>
+        <details className="mt-6"><summary className="cursor-pointer text-lg font-semibold text-[#315f53]">Review all my recorded answers</summary><div className="mt-4 grid gap-4 sm:grid-cols-2">
           {state.notes?.trim() ? <div className="sm:col-span-2"><SummaryRow label="Story provided" value={state.notes} /></div> : null}
           <SummaryRow label="Person" value={[state.relationship, state.ageGroup].filter(Boolean).join(", ")} />
           <SummaryRow label="Daily support" value={state.relationship === "Couple" ? state.coupleAssistance || state.assistanceLevel : state.assistanceLevel} />
@@ -129,7 +133,7 @@ function IntakeConfirmationContent() {
                   state.maximumDistanceMiles ? `within ${state.maximumDistanceMiles} miles` : "",
                 ].filter(Boolean).join("; ")
           } />
-        </div>
+        </div></details>
 
         <section className="mt-10 rounded-3xl border border-[#d9e3df] bg-white p-6">
           <h2 className="text-2xl font-semibold">Anything you’d like to add or correct?</h2>
@@ -140,7 +144,7 @@ function IntakeConfirmationContent() {
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
           <button type="button" onClick={() => router.push("/intake")} className="rounded-full border border-[#76958a] bg-white px-7 py-4 text-base font-semibold text-[#315f53]">Change answers</button>
-          <button type="button" onClick={confirm} disabled={!!reviewError || reviewed?.key !== inputKey || confirmationRequested} className="inline-flex items-center gap-2 rounded-full bg-[#397a69] px-7 py-4 text-base font-semibold text-white hover:bg-[#2f6759] disabled:opacity-40"><OOmnikMark size={16} /> I confirm—show recommendations</button>
+          <button type="button" onClick={confirm} disabled={!!reviewError || reviewed?.key !== inputKey || confirmationRequested} className="inline-flex items-center gap-2 rounded-full bg-[#397a69] px-7 py-4 text-base font-semibold text-white hover:bg-[#2f6759] disabled:opacity-40"><OOmnikMark size={16} /> Yes, you understood me — find my options</button>
         </div>
       </section>
     </main>
