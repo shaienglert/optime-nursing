@@ -656,6 +656,7 @@ def apply_must_ai_nice_pipeline(
         rankable, client_intent, questionnaire_state, _layered_rank,
         display_limit=min(5, max(0, int(limit))),
         dynamic_preference_count=int(dynamic_preferences.get("preference_count") or 0),
+        dynamic_preferences=dynamic_preferences,
     )
     result["decision_intelligence"] = decision
     return result

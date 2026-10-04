@@ -89,6 +89,18 @@ def test_budget_partition_survives_preference_change():
         item["budget_exception"] = True
     assert not analyze(rows)["suggestions"]
 
+def test_exact_changed_size_trace_is_recomputed_but_unmapped_narrative_stays_unknown():
+    model = {"preferences": [{"preference_id": "size", "client_expression": "Small and familiar",
+                              "mapped_parameters": ["humanIntelligenceV2.personalityProfile.communitySizePreference"]}]}
+    assert analyze(pool(), dynamic_preference_count=1, dynamic_preferences=model)["suggestions"]
+    model["preferences"].append({"preference_id": "other", "client_expression": "Quiet at night", "mapped_parameters": []})
+    assert not analyze(pool(), dynamic_preference_count=2, dynamic_preferences=model)["suggestions"]
+
+def test_mixed_size_and_other_narrative_cannot_be_silently_dropped():
+    model = {"preferences": [{"preference_id": "mixed", "client_expression": "Small and familiar with nightly concerts",
+                              "mapped_parameters": ["humanIntelligenceV2.personalityProfile.communitySizePreference"]}]}
+    assert not analyze(pool(), dynamic_preference_count=1, dynamic_preferences=model)["suggestions"]
+
 def test_quality_does_not_cherry_pick_after_worse_inspection_rating():
     rows = pool()
     for item in rows[5:]:

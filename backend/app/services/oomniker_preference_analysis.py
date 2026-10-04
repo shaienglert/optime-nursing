@@ -70,7 +70,7 @@ def _quality_advantage(candidate: dict, displaced: list[dict]) -> dict | None:
 
 def analyze_preferences(rows: list[dict], intent: dict, profile: dict,
                         rank: Callable[[list[dict]], list[dict]], *, display_limit: int = DISPLAY_LIMIT,
-                        dynamic_preference_count: int = 0) -> dict:
+                        dynamic_preference_count: int = 0, dynamic_preferences: dict | None = None) -> dict:
     """Rerank isolated copies. Original MUST decisions and recommendation order survive.
 
     Supported canonical levers are explicit, extensible contracts. Unsupported NICEs
@@ -115,6 +115,17 @@ def analyze_preferences(rows: list[dict], intent: dict, profile: dict,
                 continue
             choices = [("No continuity preference", "", {p: "No preference" for p in paths})]
         for label, size_preference, patch in choices:
+            remaining_dynamic = []
+            for preference in (dynamic_preferences or {}).get("preferences") or []:
+                paths = set(preference.get("mapped_parameters") or [])
+                quote = str(preference.get("client_expression") or "").strip()
+                # This exact, single-field quoted size answer has already been
+                # recomputed from the governed size evidence. It is not a second
+                # unresolved preference. Arbitrary/mixed narrative stays open-world.
+                replaced_size_trace = (key == "COMMUNITY_ENVIRONMENT_MATCH" and paths == {path}
+                                       and quote == str(value) and bool(size_preference))
+                if not replaced_size_trace:
+                    remaining_dynamic.append(str(preference.get("preference_id") or ""))
             simulated = deepcopy(eligible)
             for row in simulated:
                 _remove_nice(row, key)
@@ -145,7 +156,10 @@ def analyze_preferences(rows: list[dict], intent: dict, profile: dict,
                 signature = row.get("rank_group_signature")
                 if signature is not None and any(other.get("rank_group_signature") == signature for other in full_after[window:]):
                     continue  # A display-order change inside a true tie is not a rank gain.
-                if dynamic_preference_count and (row.get("dynamic_preference_fit") or {}).get("status") != "NICE_COMPLETE":
+                assessments = {str(a.get("preference_id")): a.get("status") for a in (row.get("dynamic_preference_fit") or {}).get("assessments") or []}
+                if any(assessments.get(pref_id) not in {"MATCH", "NOT_APPLICABLE"} for pref_id in remaining_dynamic):
+                    continue
+                if dynamic_preference_count and dynamic_preferences is None and (row.get("dynamic_preference_fit") or {}).get("status") != "NICE_COMPLETE":
                     continue
                 remaining = nice_keys - _IMPLICIT - {key}
                 if not remaining.issubset(set(fit.get("nice_match") or [])):

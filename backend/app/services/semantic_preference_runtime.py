@@ -53,7 +53,7 @@ def build_dynamic_preference_model(human_context: Dict[str, Any]) -> Dict[str, A
     context and explicit absence of preference remain in the original statement audit.
     """
     result = _semantic_result(human_context)
-    raw: List[Tuple[str, str, str]] = []
+    raw: List[Tuple[str, str, str, List[str]]] = []
     excluded_expressions: set[str] = set()
     relevant_statements = []
     neutral_answers = {"none", "no preference", "not important", "not required", "not needed"}
@@ -85,7 +85,7 @@ def build_dynamic_preference_model(human_context: Dict[str, Any]) -> Dict[str, A
         for value in result.get("preferences") or []:
             text = str(value or "").strip()
             if text and text.casefold() not in excluded_expressions and text.casefold() not in neutral_answers:
-                raw.append((text, text, "semantic_ai.preferences"))
+                raw.append((text, text, "semantic_ai.preferences", []))
 
     for statement in relevant_statements:
         if str(statement.get("importance") or "").upper() != "NICE":
@@ -95,11 +95,11 @@ def build_dynamic_preference_model(human_context: Dict[str, Any]) -> Dict[str, A
         original = str(statement.get("raw_text") or "").strip()
         meaning = str(statement.get("meaning") or original).strip()
         if original or meaning:
-            raw.append((original or meaning, meaning or original, "semantic_ai.statements"))
+            raw.append((original or meaning, meaning or original, "semantic_ai.statements", list(statement.get("mapped_parameters") or [])))
 
     seen: set[str] = set()
     preferences: List[Dict[str, Any]] = []
-    for original, meaning, source in raw:
+    for original, meaning, source, paths in raw:
         canonical_text = meaning.strip()
         dedupe_key = canonical_text.casefold()
         if not canonical_text or dedupe_key in seen:
@@ -112,6 +112,7 @@ def build_dynamic_preference_model(human_context: Dict[str, Any]) -> Dict[str, A
                 "semantic_meaning": canonical_text,
                 "importance": "NICE",
                 "source": source,
+                "mapped_parameters": paths,
                 "verification_rule": "MATCH requires governed facility evidence that specifically supports this semantic preference; broader or adjacent evidence is insufficient unless it directly entails the preference.",
             }
         )
