@@ -36,6 +36,12 @@ const missingEvidenceLabels: Record<string, string> = {
   REHAB_PATH_AVAILABLE: "a rehabilitation pathway",
   COUPLE_CORESIDENCE: "a shared living arrangement",
   RECOVERY_TRANSITION_COMPATIBLE: "a suitable recovery transition",
+  MEDICAID_PATHWAY_REQUIRED: "Medicaid participation and what your household would pay out of pocket",
+  KOSHER_MEALS: "kosher meals",
+  REQUIRED_LANGUAGE_SUPPORT: "support in the language you need",
+  CONTINUUM_OF_CARE_REQUIRED: "a continuum of care on one campus",
+  REQUIRED_ACTIVITIES: "the activities you require",
+  CURRENT_AVAILABILITY_FOR_URGENT_MOVE: "current availability for an urgent move",
 };
 
 function personLabel(relationship: string, query: string): string {
