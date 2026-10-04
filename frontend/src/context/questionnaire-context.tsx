@@ -37,6 +37,8 @@ export type QuestionnaireState = {
   medicaidAmountKnown?: string;
   medicaidMonthlyAmount?: number;
   medicaidBudgetIncludesSupport?: string;
+  medicaidBudgetScenarioChoice?: string;
+  medicaidOriginalBudget?: number;
   moveTiming: string;
   careSearchApproach: string;
   questionnaireCompletion: {

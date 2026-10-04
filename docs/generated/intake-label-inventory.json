@@ -1,12 +1,12 @@
 {
-  "question_count": 64,
-  "option_count": 242,
+  "question_count": 65,
+  "option_count": 244,
   "questions": [
     {
       "id": "relationship",
       "kind": "single",
       "prompt": "Who are we finding the right place for?",
-      "source": "frontend/src/lib/intake-questions.ts:216",
+      "source": "frontend/src/lib/intake-questions.ts:217",
       "required": true,
       "options": [
         "Mom",
@@ -27,7 +27,7 @@
       "id": "ageGroup",
       "kind": "single",
       "prompt": "About how old are they?",
-      "source": "frontend/src/lib/intake-questions.ts:229",
+      "source": "frontend/src/lib/intake-questions.ts:230",
       "required": true,
       "options": [
         "60-64",
@@ -47,7 +47,7 @@
       "id": "locationImportant",
       "kind": "single",
       "prompt": "Should we limit the search to a particular part of the Las Vegas Valley?",
-      "source": "frontend/src/lib/intake-questions.ts:241",
+      "source": "frontend/src/lib/intake-questions.ts:242",
       "required": false,
       "options": [
         "Yes",
@@ -61,7 +61,7 @@
       "id": "referenceAddress",
       "kind": "single",
       "prompt": "Which part of the Las Vegas Valley would you prefer?",
-      "source": "frontend/src/lib/intake-questions.ts:253",
+      "source": "frontend/src/lib/intake-questions.ts:254",
       "required": true,
       "options": [
         "Anywhere in the Las Vegas Valley",
@@ -82,7 +82,7 @@
       "id": "maximumDistanceMiles",
       "kind": "single",
       "prompt": "How far is still close enough?",
-      "source": "frontend/src/lib/intake-questions.ts:265",
+      "source": "frontend/src/lib/intake-questions.ts:266",
       "required": true,
       "options": [
         "10",
@@ -99,7 +99,7 @@
       "id": "assistance",
       "kind": "multi",
       "prompt": "What kind of help makes everyday life easier? Choose anything that fits.",
-      "source": "frontend/src/lib/intake-questions.ts:278",
+      "source": "frontend/src/lib/intake-questions.ts:279",
       "required": true,
       "options": [
         "Fully independent",
@@ -120,7 +120,7 @@
       "id": "mobilityMethod",
       "kind": "single",
       "prompt": "How do they usually get around?",
-      "source": "frontend/src/lib/intake-questions.ts:296",
+      "source": "frontend/src/lib/intake-questions.ts:297",
       "required": true,
       "options": [
         "Independent",
@@ -137,7 +137,7 @@
       "id": "transferAssistance",
       "kind": "single",
       "prompt": "Do they need help getting up, sitting down, or transferring?",
-      "source": "frontend/src/lib/intake-questions.ts:308",
+      "source": "frontend/src/lib/intake-questions.ts:309",
       "required": true,
       "options": [
         "No",
@@ -154,7 +154,7 @@
       "id": "recentFalls",
       "kind": "single",
       "prompt": "Have there been any falls in the last six months?",
-      "source": "frontend/src/lib/intake-questions.ts:320",
+      "source": "frontend/src/lib/intake-questions.ts:321",
       "required": true,
       "options": [
         "No",
@@ -170,7 +170,7 @@
       "id": "memoryStatus",
       "kind": "single",
       "prompt": "Have you noticed any changes in memory or confusion lately?",
-      "source": "frontend/src/lib/intake-questions.ts:332",
+      "source": "frontend/src/lib/intake-questions.ts:333",
       "required": true,
       "options": [
         "No",
@@ -187,7 +187,7 @@
       "id": "memoryWandering",
       "kind": "single",
       "prompt": "Is there any concern about wandering or getting lost?",
-      "source": "frontend/src/lib/intake-questions.ts:344",
+      "source": "frontend/src/lib/intake-questions.ts:345",
       "required": true,
       "options": [
         "Yes",
@@ -202,7 +202,7 @@
       "id": "secureMemory",
       "kind": "single",
       "prompt": "Would a secure memory-care setting feel necessary?",
-      "source": "frontend/src/lib/intake-questions.ts:356",
+      "source": "frontend/src/lib/intake-questions.ts:357",
       "required": true,
       "options": [
         "Yes",
@@ -217,7 +217,7 @@
       "id": "hasOngoingMedicalNeeds",
       "kind": "single",
       "prompt": "Is there any ongoing medical care the community would need to provide or coordinate?",
-      "source": "frontend/src/lib/intake-questions.ts:368",
+      "source": "frontend/src/lib/intake-questions.ts:369",
       "required": true,
       "options": [
         "No",
@@ -232,7 +232,7 @@
       "id": "medicalNeeds",
       "kind": "multi",
       "prompt": "Which of these are part of the current routine?",
-      "source": "frontend/src/lib/intake-questions.ts:380",
+      "source": "frontend/src/lib/intake-questions.ts:381",
       "required": true,
       "options": [
         "Dialysis",
@@ -253,7 +253,7 @@
       "id": "medicalOther",
       "kind": "text",
       "prompt": "What other medical care should we know about?",
-      "source": "frontend/src/lib/intake-questions.ts:392",
+      "source": "frontend/src/lib/intake-questions.ts:393",
       "required": true,
       "options": [],
       "read": "({ extras }) => extras.medicalOther",
@@ -264,7 +264,7 @@
       "id": "dialysisFrequency",
       "kind": "text",
       "prompt": "How often is dialysis needed?",
-      "source": "frontend/src/lib/intake-questions.ts:404",
+      "source": "frontend/src/lib/intake-questions.ts:405",
       "required": true,
       "options": [],
       "read": "({ draft }) => draft.medicalCareProfile.dialysisFrequency",
@@ -275,7 +275,7 @@
       "id": "dialysisCenter",
       "kind": "text",
       "prompt": "Which dialysis center is used today?",
-      "source": "frontend/src/lib/intake-questions.ts:416",
+      "source": "frontend/src/lib/intake-questions.ts:417",
       "required": false,
       "options": [],
       "read": "({ draft }) => draft.medicalCareProfile.dialysisCenter",
@@ -286,7 +286,7 @@
       "id": "dialysisTransportation",
       "kind": "single",
       "prompt": "Would transportation to dialysis be needed?",
-      "source": "frontend/src/lib/intake-questions.ts:428",
+      "source": "frontend/src/lib/intake-questions.ts:429",
       "required": true,
       "options": [
         "Yes",
@@ -301,7 +301,7 @@
       "id": "oxygenUse",
       "kind": "single",
       "prompt": "How is oxygen used day to day?",
-      "source": "frontend/src/lib/intake-questions.ts:440",
+      "source": "frontend/src/lib/intake-questions.ts:441",
       "required": true,
       "options": [
         "Continuously",
@@ -317,7 +317,7 @@
       "id": "woundCareFrequency",
       "kind": "text",
       "prompt": "How often is wound care required?",
-      "source": "frontend/src/lib/intake-questions.ts:452",
+      "source": "frontend/src/lib/intake-questions.ts:453",
       "required": true,
       "options": [],
       "read": "({ draft }) => draft.medicalCareProfile.woundCareFrequency",
@@ -328,7 +328,7 @@
       "id": "complexConditionDetails",
       "kind": "text",
       "prompt": "Describe what the community must provide or coordinate.",
-      "source": "frontend/src/lib/intake-questions.ts:464",
+      "source": "frontend/src/lib/intake-questions.ts:465",
       "required": false,
       "options": [],
       "read": "({ draft }) => draft.medicalCareProfile.complexConditionDetails",
@@ -339,7 +339,7 @@
       "id": "physicianCoordination",
       "kind": "single",
       "prompt": "Would it help if the community coordinated doctors, appointments, tests, or medication changes?",
-      "source": "frontend/src/lib/intake-questions.ts:476",
+      "source": "frontend/src/lib/intake-questions.ts:477",
       "required": true,
       "options": [
         "Yes",
@@ -354,7 +354,7 @@
       "id": "recentHospitalization",
       "kind": "single",
       "prompt": "Has there been a hospital stay recently?",
-      "source": "frontend/src/lib/intake-questions.ts:488",
+      "source": "frontend/src/lib/intake-questions.ts:489",
       "required": true,
       "options": [
         "No",
@@ -369,7 +369,7 @@
       "id": "hospitalTiming",
       "kind": "single",
       "prompt": "Roughly when was that?",
-      "source": "frontend/src/lib/intake-questions.ts:500",
+      "source": "frontend/src/lib/intake-questions.ts:501",
       "required": true,
       "options": [
         "Within 30 days",
@@ -385,7 +385,7 @@
       "id": "recentProcedure",
       "kind": "single",
       "prompt": "Was the recent hospital stay related to a surgery or medical procedure?",
-      "source": "frontend/src/lib/intake-questions.ts:512",
+      "source": "frontend/src/lib/intake-questions.ts:513",
       "required": true,
       "options": [
         "Yes",
@@ -400,7 +400,7 @@
       "id": "procedureType",
       "kind": "text",
       "prompt": "What surgery or procedure was it?",
-      "source": "frontend/src/lib/intake-questions.ts:524",
+      "source": "frontend/src/lib/intake-questions.ts:525",
       "required": true,
       "options": [],
       "read": "({ extras }) => extras.procedureType",
@@ -411,7 +411,7 @@
       "id": "expectedRecovery",
       "kind": "single",
       "prompt": "Is the current extra support expected to be temporary as recovery progresses?",
-      "source": "frontend/src/lib/intake-questions.ts:535",
+      "source": "frontend/src/lib/intake-questions.ts:536",
       "required": true,
       "options": [
         "Yes",
@@ -426,7 +426,7 @@
       "id": "temporarySupportMonths",
       "kind": "number",
       "prompt": "About how many months is the extra support expected to be needed?",
-      "source": "frontend/src/lib/intake-questions.ts:547",
+      "source": "frontend/src/lib/intake-questions.ts:548",
       "required": true,
       "options": [],
       "read": "({ extras }) => extras.temporarySupportMonths",
@@ -437,7 +437,7 @@
       "id": "rehabNeed",
       "kind": "single",
       "prompt": "Is rehabilitation or closer monitoring still needed?",
-      "source": "frontend/src/lib/intake-questions.ts:558",
+      "source": "frontend/src/lib/intake-questions.ts:559",
       "required": true,
       "options": [
         "Yes",
@@ -452,7 +452,7 @@
       "id": "medicareStatus",
       "kind": "single",
       "prompt": "What’s the current Medicare situation?",
-      "source": "frontend/src/lib/intake-questions.ts:570",
+      "source": "frontend/src/lib/intake-questions.ts:571",
       "required": true,
       "options": [
         "Original Medicare",
@@ -468,7 +468,7 @@
       "id": "medicaidStatus",
       "kind": "single",
       "prompt": "And what’s the Medicaid situation?",
-      "source": "frontend/src/lib/intake-questions.ts:582",
+      "source": "frontend/src/lib/intake-questions.ts:583",
       "required": true,
       "options": [
         "Approved",
@@ -478,50 +478,50 @@
         "Not sure"
       ],
       "read": "({ draft }) => draft.medicaidStatus",
-      "write": "(context, value) => setDraft(context, { medicaidStatus: text(value) })",
+      "write": "(context, value) => setDraft(context, { medicaidStatus: text(value), budget: context.draft.medicaidOriginalBudget ?? context.draft.budget, medicaidOriginalBudget: undefined, medicaidBudgetScenarioChoice: \"\" })",
       "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
     },
     {
       "id": "medicaidAmountKnown",
       "kind": "single",
       "prompt": "Do you know the monthly Medicaid coverage amount approved or expected?",
-      "source": "frontend/src/lib/intake-questions.ts:594",
+      "source": "frontend/src/lib/intake-questions.ts:595",
       "required": true,
       "options": [
         "Yes",
         "Amount not known"
       ],
       "read": "({ draft }) => draft.medicaidAmountKnown || \"\"",
-      "write": "(context, value) => setDraft(context, { medicaidAmountKnown: text(value), medicaidMonthlyAmount: text(value) === \"Yes\" ? context.draft.medicaidMonthlyAmount : 0, medicaidBudgetIncludesSupport: \"\" })",
+      "write": "(context, value) => setDraft(context, { medicaidAmountKnown: text(value), medicaidMonthlyAmount: text(value) === \"Yes\" ? context.draft.medicaidMonthlyAmount : 0, medicaidBudgetIncludesSupport: \"\", budget: context.draft.medicaidOriginalBudget ?? context.draft.budget, medicaidOriginalBudget: undefined, medicaidBudgetScenarioChoice: \"\" })",
       "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
     },
     {
       "id": "medicaidMonthlyAmount",
       "kind": "number",
       "prompt": "What is that monthly amount in dollars?",
-      "source": "frontend/src/lib/intake-questions.ts:606",
+      "source": "frontend/src/lib/intake-questions.ts:607",
       "required": true,
       "options": [],
       "read": "({ draft }) => draft.medicaidMonthlyAmount || 0",
-      "write": "(context, value) => setDraft(context, { medicaidMonthlyAmount: Math.max(0, Number(value) || 0) })",
+      "write": "(context, value) => setDraft(context, { medicaidMonthlyAmount: Math.max(0, Number(value) || 0), budget: context.draft.medicaidOriginalBudget ?? context.draft.budget, medicaidOriginalBudget: undefined, medicaidBudgetScenarioChoice: \"\" })",
       "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
     },
     {
       "id": "budget",
       "kind": "number",
       "prompt": "What monthly budget would feel comfortable?",
-      "source": "frontend/src/lib/intake-questions.ts:617",
+      "source": "frontend/src/lib/intake-questions.ts:618",
       "required": true,
       "options": [],
       "read": "({ draft }) => draft.budget",
-      "write": "(context, value) => setDraft(context, { budget: Math.max(0, Number(value) || 0) })",
+      "write": "(context, value) => setDraft(context, { budget: Math.max(0, Number(value) || 0), medicaidOriginalBudget: undefined, medicaidBudgetScenarioChoice: \"\" })",
       "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
     },
     {
       "id": "medicaidBudgetIncludesSupport",
       "kind": "single",
       "prompt": "Does the monthly budget you chose already include that Medicaid amount?",
-      "source": "frontend/src/lib/intake-questions.ts:629",
+      "source": "frontend/src/lib/intake-questions.ts:630",
       "required": true,
       "options": [
         "Already included",
@@ -529,14 +529,28 @@
         "Not sure"
       ],
       "read": "({ draft }) => draft.medicaidBudgetIncludesSupport || \"\"",
-      "write": "(context, value) => setDraft(context, { medicaidBudgetIncludesSupport: text(value) })",
+      "write": "(context, value) => setDraft(context, { medicaidBudgetIncludesSupport: text(value), budget: context.draft.medicaidOriginalBudget ?? context.draft.budget, medicaidOriginalBudget: undefined, medicaidBudgetScenarioChoice: \"\" })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "medicaidBudgetScenarioChoice",
+      "kind": "single",
+      "prompt": "Would you like to include that additional support amount in the search budget?",
+      "source": "frontend/src/lib/intake-questions.ts:643",
+      "required": true,
+      "options": [
+        "Include support in my search",
+        "Use my own budget only"
+      ],
+      "read": "({ draft }) => draft.medicaidBudgetScenarioChoice || \"\"",
+      "write": "(context, value) => ({ ...context, draft: (0, medicaid_budget_scenario_1.applyMedicaidBudgetScenario)(context.draft, text(value)) })",
       "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
     },
     {
       "id": "moveTiming",
       "kind": "single",
       "prompt": "When would you ideally like the move to happen?",
-      "source": "frontend/src/lib/intake-questions.ts:642",
+      "source": "frontend/src/lib/intake-questions.ts:656",
       "required": true,
       "options": [
         "Immediately",
@@ -554,7 +568,7 @@
       "id": "moveAttitude",
       "kind": "single",
       "prompt": "How do they feel about the idea of moving?",
-      "source": "frontend/src/lib/intake-questions.ts:654",
+      "source": "frontend/src/lib/intake-questions.ts:668",
       "required": true,
       "options": [
         "Wants to move",
@@ -572,7 +586,7 @@
       "id": "socialFrequency",
       "kind": "single",
       "prompt": "How social would they like everyday life to be?",
-      "source": "frontend/src/lib/intake-questions.ts:666",
+      "source": "frontend/src/lib/intake-questions.ts:680",
       "required": true,
       "options": [
         "Daily",
@@ -589,7 +603,7 @@
       "id": "communityStyle",
       "kind": "single",
       "prompt": "What kind of community would feel most comfortable?",
-      "source": "frontend/src/lib/intake-questions.ts:678",
+      "source": "frontend/src/lib/intake-questions.ts:692",
       "required": true,
       "options": [
         "Small and familiar",
@@ -606,7 +620,7 @@
       "id": "activities",
       "kind": "multi",
       "prompt": "What do they genuinely enjoy doing? Choose anything that matters.",
-      "source": "frontend/src/lib/intake-questions.ts:690",
+      "source": "frontend/src/lib/intake-questions.ts:704",
       "required": true,
       "options": [
         "Music",
@@ -627,7 +641,7 @@
       "id": "activityImportance",
       "kind": "single",
       "prompt": "Are these activities a requirement for the community, or preferences?",
-      "source": "frontend/src/lib/intake-questions.ts:702",
+      "source": "frontend/src/lib/intake-questions.ts:716",
       "required": true,
       "options": [
         "Requirement",
@@ -641,7 +655,7 @@
       "id": "nearbyPlaces",
       "kind": "multi",
       "prompt": "What would you like to have nearby?",
-      "source": "frontend/src/lib/intake-questions.ts:714",
+      "source": "frontend/src/lib/intake-questions.ts:728",
       "required": true,
       "options": [
         "Shopping",
@@ -669,7 +683,7 @@
       "id": "nearbyOther",
       "kind": "text",
       "prompt": "What else would you like to have nearby?",
-      "source": "frontend/src/lib/intake-questions.ts:731",
+      "source": "frontend/src/lib/intake-questions.ts:745",
       "required": true,
       "options": [],
       "read": "({ extras }) => extras.nearbyOther",
@@ -680,7 +694,7 @@
       "id": "nearbyImportance",
       "kind": "single",
       "prompt": "How important is it to be close to these places?",
-      "source": "frontend/src/lib/intake-questions.ts:743",
+      "source": "frontend/src/lib/intake-questions.ts:757",
       "required": true,
       "options": [
         "Important",
@@ -695,7 +709,7 @@
       "id": "personalDestinationLabel",
       "kind": "single",
       "prompt": "Is there a specific person or place it would be important to stay close to?",
-      "source": "frontend/src/lib/intake-questions.ts:755",
+      "source": "frontend/src/lib/intake-questions.ts:769",
       "required": true,
       "options": [
         "Daughter",
@@ -715,7 +729,7 @@
       "id": "personalDestinationAddress",
       "kind": "text",
       "prompt": "What address or ZIP code should we measure from?",
-      "source": "frontend/src/lib/intake-questions.ts:767",
+      "source": "frontend/src/lib/intake-questions.ts:781",
       "required": true,
       "options": [],
       "read": "({ extras }) => extras.personalDestinationAddress",
@@ -726,7 +740,7 @@
       "id": "moveLossConcerns",
       "kind": "multi",
       "prompt": "What would you hate for them to lose after the move?",
-      "source": "frontend/src/lib/intake-questions.ts:779",
+      "source": "frontend/src/lib/intake-questions.ts:793",
       "required": true,
       "options": [
         "Good food",
@@ -752,7 +766,7 @@
       "id": "otherInterests",
       "kind": "text",
       "prompt": "Anything specific we should preserve?",
-      "source": "frontend/src/lib/intake-questions.ts:791",
+      "source": "frontend/src/lib/intake-questions.ts:805",
       "required": false,
       "options": [],
       "read": "({ draft }) => draft.otherInterests",
@@ -763,7 +777,7 @@
       "id": "language",
       "kind": "single",
       "prompt": "What language feels most natural day to day?",
-      "source": "frontend/src/lib/intake-questions.ts:803",
+      "source": "frontend/src/lib/intake-questions.ts:817",
       "required": true,
       "options": [
         "English",
@@ -782,7 +796,7 @@
       "id": "languageImportance",
       "kind": "single",
       "prompt": "Is support in this language a requirement, or a preference?",
-      "source": "frontend/src/lib/intake-questions.ts:815",
+      "source": "frontend/src/lib/intake-questions.ts:829",
       "required": true,
       "options": [
         "Requirement",
@@ -796,7 +810,7 @@
       "id": "medicalLanguage",
       "kind": "text",
       "prompt": "Which language is needed for medical communication?",
-      "source": "frontend/src/lib/intake-questions.ts:827",
+      "source": "frontend/src/lib/intake-questions.ts:841",
       "required": true,
       "options": [],
       "read": "({ extras }) => extras.medicalLanguage",
@@ -807,7 +821,7 @@
       "id": "dietary",
       "kind": "multi",
       "prompt": "Are there food preferences or requirements we should respect?",
-      "source": "frontend/src/lib/intake-questions.ts:839",
+      "source": "frontend/src/lib/intake-questions.ts:853",
       "required": false,
       "options": [
         "No restrictions / eats everything",
@@ -828,7 +842,7 @@
       "id": "kosherImportance",
       "kind": "single",
       "prompt": "Is keeping kosher a requirement, or a preference?",
-      "source": "frontend/src/lib/intake-questions.ts:856",
+      "source": "frontend/src/lib/intake-questions.ts:870",
       "required": true,
       "options": [
         "Requirement",
@@ -842,7 +856,7 @@
       "id": "dietaryOther",
       "kind": "text",
       "prompt": "What other food preference or requirement should we know about?",
-      "source": "frontend/src/lib/intake-questions.ts:877",
+      "source": "frontend/src/lib/intake-questions.ts:891",
       "required": true,
       "options": [],
       "read": "({ extras }) => extras.dietaryOther",
@@ -853,7 +867,7 @@
       "id": "religiousCommunity",
       "kind": "single",
       "prompt": "Would a religious or faith community be important?",
-      "source": "frontend/src/lib/intake-questions.ts:889",
+      "source": "frontend/src/lib/intake-questions.ts:903",
       "required": true,
       "options": [
         "No",
@@ -867,7 +881,7 @@
       "id": "religion",
       "kind": "text",
       "prompt": "Which religion or tradition?",
-      "source": "frontend/src/lib/intake-questions.ts:901",
+      "source": "frontend/src/lib/intake-questions.ts:915",
       "required": true,
       "options": [],
       "read": "({ extras }) => extras.religion",
@@ -878,7 +892,7 @@
       "id": "religiousNeeds",
       "kind": "multi",
       "prompt": "What is needed?",
-      "source": "frontend/src/lib/intake-questions.ts:912",
+      "source": "frontend/src/lib/intake-questions.ts:926",
       "required": true,
       "options": [
         "Services",
@@ -896,7 +910,7 @@
       "id": "petOwnershipImportance",
       "kind": "single",
       "prompt": "Would a pet need to move with them?",
-      "source": "frontend/src/lib/intake-questions.ts:924",
+      "source": "frontend/src/lib/intake-questions.ts:938",
       "required": true,
       "options": [
         "Yes",
@@ -911,7 +925,7 @@
       "id": "abilityToLeaveIndependently",
       "kind": "single",
       "prompt": "Can the person we’re finding a home for leave the community and go out on their own?",
-      "source": "frontend/src/lib/intake-questions.ts:936",
+      "source": "frontend/src/lib/intake-questions.ts:950",
       "required": true,
       "options": [
         "Yes",
@@ -927,7 +941,7 @@
       "id": "biggestFear",
       "kind": "text",
       "prompt": "What worries them most about moving?",
-      "source": "frontend/src/lib/intake-questions.ts:948",
+      "source": "frontend/src/lib/intake-questions.ts:962",
       "required": true,
       "options": [],
       "read": "({ draft }) => draft.humanIntelligenceV2.transitionRiskProfile.biggestFear",
@@ -938,7 +952,7 @@
       "id": "parkingRequirement",
       "kind": "single",
       "prompt": "Will they need parking at the community?",
-      "source": "frontend/src/lib/intake-questions.ts:960",
+      "source": "frontend/src/lib/intake-questions.ts:974",
       "required": true,
       "options": [
         "No",
@@ -955,7 +969,7 @@
       "id": "parkingVehicleCount",
       "kind": "single",
       "prompt": "Would that be for one car or two?",
-      "source": "frontend/src/lib/intake-questions.ts:972",
+      "source": "frontend/src/lib/intake-questions.ts:986",
       "required": true,
       "options": [
         "One vehicle",
@@ -969,7 +983,7 @@
       "id": "continuum",
       "kind": "single",
       "prompt": "Would you prefer a place that can provide more care later, so another move may be avoided?",
-      "source": "frontend/src/lib/intake-questions.ts:984",
+      "source": "frontend/src/lib/intake-questions.ts:998",
       "required": true,
       "options": [
         "Required",
@@ -985,7 +999,7 @@
       "id": "careSearchApproach",
       "kind": "single",
       "prompt": "How broadly would you like me to search?",
-      "source": "frontend/src/lib/intake-questions.ts:996",
+      "source": "frontend/src/lib/intake-questions.ts:1010",
       "required": false,
       "options": [
         "Show me both approaches",

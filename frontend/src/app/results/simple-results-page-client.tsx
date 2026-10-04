@@ -12,6 +12,7 @@ import { isFinalRecommendation, isPendingRecommendation } from "@/lib/recommenda
 import { applyAdaptiveAnswer } from "@/lib/adaptive-answer";
 import { resultsClientState } from "@/lib/results-client-state";
 import { parseOomnikerQuantities } from "@/lib/oomniker-quantity";
+import { medicaidBudgetIsConditional } from "@/lib/medicaid-budget-scenario";
 import { DistanceScope } from "./distance-scope";
 
 const TOP_COUNT = 5;
@@ -101,7 +102,7 @@ export function SimpleResultsPageClient() {
       oomnikerHistory.current.push(JSON.parse(JSON.stringify(current)));
       const next = JSON.parse(JSON.stringify(current));
       const quantities = parseOomnikerQuantities(text);
-      if (quantities.budget !== undefined) next.budget = quantities.budget;
+      if (quantities.budget !== undefined) { next.budget = quantities.budget; next.medicaidOriginalBudget = undefined; next.medicaidBudgetScenarioChoice = ""; next.medicaidBudgetIncludesSupport = "Not sure"; }
       if (quantities.miles) { next.maximumDistanceMiles = quantities.miles; next.customDistanceMiles = quantities.miles; next.approvedSearchRadiusMiles = ""; next.locationImportant = "Yes"; }
       if (quantities.clearRadius) { next.maximumDistanceMiles = ""; next.customDistanceMiles = ""; next.approvedSearchRadiusMiles = ""; next.locationImportant = "No"; }
       if (/dog.*(?:not|no longer).*(?:require|important)|(?:remove|drop).*(?:dog|pet)/.test(lower)) next.humanIntelligenceV2.independenceProfile.petOwnershipImportance = "Not important";
@@ -314,6 +315,7 @@ export function SimpleResultsPageClient() {
               </p> : null}
               {response.market_coverage_notice ? <p className="mt-3 text-base leading-7">{response.market_coverage_notice}</p> : null}
               {(response.results || []).some((item: any) => item.budget_exception === true) ? <p className="mt-3 text-base leading-7">We did not find enough otherwise suitable communities within the budget you requested, so OOmnik is also showing suitable options up to 10% above it. The budget difference lowers their ranking and is marked on the relevant option. Use OOmniker below to change the budget or any other parameter and add more communities.</p> : null}
+              {medicaidBudgetIsConditional(state) ? <p className="mt-3 text-base leading-7">Your search budget is ${state.budget.toLocaleString()} per month and includes ${Number(state.medicaidMonthlyAmount).toLocaleString()} in Medicaid support you reported. {state.medicaidStatus === "Application pending" ? "That support is pending approval. " : ""}These options depend on that support being usable for the quoted services. OOmnik has not verified coverage or the amount you will personally pay; confirm both with the funding agency and community before committing.</p> : null}
             </div>
           )}
           <div className="mt-6 rounded-2xl border border-[#d9e3df] bg-[#f7faf8] p-5">
