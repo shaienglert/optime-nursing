@@ -161,7 +161,9 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
     language_profile = human_profile.get("languageProfile") if isinstance(human_profile.get("languageProfile"), dict) else {}
     preferred_language = str(language_profile.get("preferredSpokenLanguage") or language_profile.get("medicalDiscussionLanguage") or "").strip()
     language_scope = _selection(language_profile.get("languageNeedScope"))
-    if preferred_language and _selection(preferred_language) not in _NEUTRAL_SELECTIONS | {"ENGLISH"} and language_scope not in _NEUTRAL_SELECTIONS:
+    # "Other" names no language: it cannot be matched against a facility language list, so it
+    # would only create a false mismatch (or, as a requirement, exclude every community).
+    if preferred_language and _selection(preferred_language) not in _NEUTRAL_SELECTIONS | {"ENGLISH", "OTHER"} and language_scope not in _NEUTRAL_SELECTIONS:
         language_required = language_scope in _REQUIRED_SELECTIONS
         if language_required:
             add_must("REQUIRED_LANGUAGE_SUPPORT", f"The resident explicitly requires {preferred_language} language support.", "verified language capability")
@@ -169,6 +171,17 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
         else:
             add_nice("PREFERRED_LANGUAGE_SUPPORT", f"The resident prefers {preferred_language}; verified language support should rank higher.")
             nice[-1]["value"] = preferred_language
+    pending_clarification: List[Dict[str, Any]] = []
+    if preferred_language and _selection(preferred_language) == "OTHER" and language_scope in _REQUIRED_SELECTIONS:
+        # The family marked a language as required but did not name it. The requirement is
+        # kept (not dropped, not matched against "Other") until the language is clarified.
+        pending_clarification.append({
+            "key": "REQUIRED_LANGUAGE_SUPPORT",
+            "status": "PENDING_CLARIFICATION",
+            "question_key": "required_language",
+            "question": "Which language is required?",
+            "reason": "A required language was marked as Other without naming it.",
+        })
     social_profile = human_profile.get("socialProfile") if isinstance(human_profile.get("socialProfile"), dict) else {}
     activities = [str(x).strip() for x in social_profile.get("hobbyParticipation") or [] if str(x).strip() and _selection(x) not in _NEUTRAL_SELECTIONS]
     if activities and _selection(social_profile.get("activityRequirementLevel")) in _REQUIRED_SELECTIONS:
@@ -244,7 +257,7 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
                     continue
                 source_links.append({"answer_path": path, "selection_index": index,
                                      "answer": answer, "intent_key": item["key"]})
-    return {
+    result = {
         "version": "client-intent-runtime-v1.6",
         "answer_source_links": source_links,
         "unrecognized_controls": [
@@ -263,6 +276,10 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
         "unknown_policy": "A material MUST with UNKNOWN evidence is not a pass or a fail; it triggers clarification or research and prevents finality. A specific NICE preference remains unresolved until evidence verifies that exact preference; known poor fit is MISMATCH, not UNKNOWN, and a broader category cannot silently satisfy it.",
         "external_care_policy": "A care-delivery MUST (e.g. medication management, ADL support) is satisfied by a verified in-house capability or a verified external-agency pathway as a complementary product; it is not restricted to in-house delivery unless the client explicitly asked for in-house-only care. External-vs-in-house delivery affects ranking and must be disclosed to the user, never used to silently exclude a facility.",
     }
+    # Additive only when present, so intents without a pending requirement are unchanged.
+    if pending_clarification:
+        result["pending_clarification_requirements"] = pending_clarification
+    return result
 
 
 def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Dict[str, Any]:

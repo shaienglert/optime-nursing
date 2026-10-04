@@ -7,8 +7,9 @@ relationship from narrative text.  Structured facts remain authoritative and an
 explicit gender is never overwritten by a relationship-derived value.
 """
 
+import re
 from copy import deepcopy
-from typing import Any, Dict, Mapping
+from typing import Any, Dict, Mapping, Optional, Union
 
 
 _RELATIONSHIP_ALIASES = {
@@ -49,6 +50,28 @@ _GENDER_ALIASES = {
 }
 
 
+# One unambiguous monthly amount: optional $, digits with optional thousands commas or a
+# decimal part, optional "k", optional monthly marker. Anything else (a distance, words, two
+# amounts, a negative) is not read as money and is left exactly as the family wrote it.
+_MONEY_TEXT = re.compile(
+    r"^\$?\s*(?P<amount>\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)\s*(?P<k>k)?"
+    r"\s*(?:/\s*mo(?:nth)?|per\s+month|monthly|a\s+month)?$",
+    re.IGNORECASE,
+)
+
+
+def _budget_amount(value: Any) -> Optional[Union[int, float]]:
+    if not isinstance(value, str):
+        return None
+    match = _MONEY_TEXT.match(value.strip())
+    if not match:
+        return None
+    amount = float(match.group("amount").replace(",", ""))
+    if match.group("k"):
+        amount *= 1000
+    return int(amount) if amount == int(amount) else amount
+
+
 def canonicalize_intake_state(questionnaire_state: Mapping[str, Any] | None) -> Dict[str, Any]:
     """Return an idempotent copy with explicit identity vocabulary normalized."""
 
@@ -68,5 +91,9 @@ def canonicalize_intake_state(questionnaire_state: Mapping[str, Any] | None) -> 
         state["gender"] = canonical_gender
     elif relationship_gender:
         state["gender"] = relationship_gender
+
+    amount = _budget_amount(state.get("budget"))
+    if amount is not None:
+        state["budget"] = amount
 
     return state

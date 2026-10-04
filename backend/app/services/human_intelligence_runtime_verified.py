@@ -137,6 +137,8 @@ def _strategy_client_blockers(strategy_context: Dict[str, Any], answered_fact_ke
             "answer_options": [str(value) for value in row.get("options") or []],
             "owner": "CLIENT",
             "source": "LIVING_STRATEGY_GUARDIAN",
+            # Questions with owner-approved wording carry it (additive only when present).
+            **({"fixed_question": str(row.get("question") or "")} if row.get("exact_wording") else {}),
         })
     return unresolved
 
@@ -272,7 +274,7 @@ def _canonical_fallback_result(base_result: Dict[str, Any], blocker: Dict[str, A
     fact_key = str(blocker.get("fact_key") or "required_information")
     options = [str(value) for value in blocker.get("answer_options") or []]
     readable_fact = fact_key.replace("_", " ")
-    fallback_question = f"Which option best describes {readable_fact}: {', '.join(options)}?"
+    fallback_question = str(blocker.get("fixed_question") or "") or f"Which option best describes {readable_fact}: {', '.join(options)}?"
     return {
         **base_result,
         "decision_readiness": "NEEDS_CLARIFICATION",
@@ -312,7 +314,7 @@ def _apply_canonical_policy_without_ai(
     context["readiness_guardian"]["client_owned_blockers"] = blockers
     context["readiness_guardian"]["ready_veto_active"] = bool(blockers) or bool(gap_policy.get("escalation_required"))
     context["adaptive_questions"] = []
-    if blockers and blockers[0].get("answer_options"):
+    if blockers and (blockers[0].get("answer_options") or blockers[0].get("fixed_question")):
         blocker = blockers[0]
         fallback = _canonical_fallback_result({}, blocker)
         question_text = str(fallback["next_question"])
