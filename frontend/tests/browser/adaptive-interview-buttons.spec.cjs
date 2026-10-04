@@ -183,8 +183,9 @@ test('results default view is readable and does not expose internal evidence jar
 
   await expect(page.getByTestId('personal-results-heading')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Verified Community', exact: true })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Community Still Under Review', exact: true })).toBeVisible();
-  await expect(page.getByText('Verified care capabilities', { exact: true })).toBeVisible();
+  await expect(page.getByText('Community Still Under Review', { exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Why this place fits your search', exact: true })).toBeVisible();
+  await page.getByText('The matching facts behind this explanation', { exact: true }).click();
   await expect(page.getByText('Bathing and dressing support is verified.')).toBeVisible();
   await expect(page.getByText('Medication support is not verified.')).toHaveCount(0);
   await expect(page.getByText('ADL support is not verified.')).toHaveCount(0);
