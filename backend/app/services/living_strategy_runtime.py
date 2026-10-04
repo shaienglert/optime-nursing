@@ -164,6 +164,7 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
     # daily assistance", and "light daily assistance") that were accounted for
     # as client statements but were not promoted into the strategy signal.  The
     # downstream MUST gate therefore silently lost ADL_SUPPORT_AVAILABLE.
+    from app.services.structured_intake_mapping import assistance_parameters
     adl = (not no_adl_support) and (
         _contains(
             query,
@@ -178,6 +179,7 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
             "activities of daily living",
             "daily living assistance",
         )
+        or "adl_support" in assistance_parameters(questionnaire_state.get("assistanceLevel"))
         or _contains(_norm(questionnaire_state.get("assistanceLevel")), "bathing", "dressing", "assistance")
     )
     medication = (not no_medication_support) and (

@@ -11,6 +11,7 @@ import { loadDecisionResponseCache, saveDecisionResponseCache, saveSessionJson, 
 import { isFinalRecommendation, isPendingRecommendation } from "@/lib/recommendation-eligibility";
 import { applyAdaptiveAnswer } from "@/lib/adaptive-answer";
 import { resultsClientState } from "@/lib/results-client-state";
+import { parseOomnikerQuantities } from "@/lib/oomniker-quantity";
 import { DistanceScope } from "./distance-scope";
 
 const TOP_COUNT = 5;
@@ -99,19 +100,16 @@ export function SimpleResultsPageClient() {
     setState((current) => {
       oomnikerHistory.current.push(JSON.parse(JSON.stringify(current)));
       const next = JSON.parse(JSON.stringify(current));
-      const budget = lower.match(/(?:budget|up to|maximum|max)[^$0-9]{0,20}\$?([0-9][0-9,]*)/);
-      if (budget) next.budget = Number(budget[1].replaceAll(",", ""));
-      const miles = lower.match(/([0-9]+)\s*miles?/);
-      // A distance stated here replaces the limit outright, including any wider radius
-      // accepted earlier -- otherwise "make it 10 miles" after widening to 30 would change
-      // nothing, because the engine applies the larger of the two.
-      if (miles) { next.maximumDistanceMiles = miles[1]; next.customDistanceMiles = miles[1]; next.approvedSearchRadiusMiles = ""; next.locationImportant = "Yes"; }
+      const quantities = parseOomnikerQuantities(text);
+      if (quantities.budget !== undefined) next.budget = quantities.budget;
+      if (quantities.miles) { next.maximumDistanceMiles = quantities.miles; next.customDistanceMiles = quantities.miles; next.approvedSearchRadiusMiles = ""; next.locationImportant = "Yes"; }
+      if (quantities.clearRadius) { next.maximumDistanceMiles = ""; next.customDistanceMiles = ""; next.approvedSearchRadiusMiles = ""; next.locationImportant = "No"; }
       if (/dog.*(?:not|no longer).*(?:require|important)|(?:remove|drop).*(?:dog|pet)/.test(lower)) next.humanIntelligenceV2.independenceProfile.petOwnershipImportance = "Not important";
       if (/large community.*(?:not|no longer).*(?:important|required)|(?:remove|drop).*large community/.test(lower)) next.humanIntelligenceV2.personalityProfile.communitySizePreference = "No preference";
       if (/independent.*(?:outing|leave|go out).*(?:required|must|only)/.test(lower)) next.humanIntelligenceV2.independenceProfile.abilityToLeaveIndependently = "Very important";
       if (/community.*small|small community/.test(lower)) next.humanIntelligenceV2.personalityProfile.communitySizePreference = "Small";
       if (/community.*medium|medium community/.test(lower)) next.humanIntelligenceV2.personalityProfile.communitySizePreference = "Medium";
-      if (/community.*large|large community/.test(lower)) next.humanIntelligenceV2.personalityProfile.communitySizePreference = "Large";
+      if (/community.*large|large community/.test(lower) && !/large community.*(?:not|no longer).*(?:important|required)|(?:remove|drop).*large community/.test(lower)) next.humanIntelligenceV2.personalityProfile.communitySizePreference = "Large";
       if (/parking.*(?:not|no longer).*(?:need|required)|(?:remove|drop).*parking/.test(lower)) next.parkingRequirement = "No";
       if (/parking.*(?:need|required|important)/.test(lower) && !/(?:not|no longer)/.test(lower)) next.parkingRequirement = "Yes";
       if (/future care.*(?:important|required)|avoid another move/.test(lower)) next.futureCarePreference = /future care.*required/.test(lower) ? "Required" : "Preferred";
