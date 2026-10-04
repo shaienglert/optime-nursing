@@ -2,7 +2,7 @@
 
 import { updateClientCaseQuestionnaire } from "@/lib/api";
 import { budgetChoices } from "@/lib/budget-choices";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { useQuestionnaire } from "@/context/questionnaire-context";
@@ -25,7 +25,7 @@ function toggle(values: string[], value: string): string[] {
 
 function Choice({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
   return (
-    <button type="button" aria-pressed={active} onClick={onClick} className={`rounded-xl border min-h-12 px-4 py-3 text-left text-xl font-semibold transition ${active ? "border-forest bg-sand text-forest" : "border-line bg-white text-muted hover:border-forest"}`}>
+    <button type="button" aria-pressed={active} aria-label={label} onClick={onClick} className={`rounded-xl border min-h-12 px-4 py-3 text-left text-xl font-semibold transition ${active ? "border-forest bg-forest text-white" : "border-line bg-white text-muted hover:border-forest"}`}>
       {active ? "✓ " : ""}{label}
     </button>
   );
@@ -63,7 +63,7 @@ function AnswerControl({ question, value, onAnswer, priceFloor }: { question: In
     return <div className="mt-4">
       <input aria-label="Monthly budget slider" aria-valuetext={`$${current.toLocaleString()} per month`} type="range" min={0} max={choices.length - 1} step="1" value={selectedIndex} onChange={(event) => onAnswer(choices[Number(event.target.value)], false)} className="w-full" />
       <div className="mt-2 flex justify-between text-sm text-forest"><span>From ${min.toLocaleString()}</span><strong>${current.toLocaleString()} / month</strong><span>${max.toLocaleString()}+</span></div>
-      <label className="mt-3 block text-sm">Monthly budget in dollars<select aria-label="Monthly budget in dollars" value={choices.includes(current) ? current : ""} onChange={event => onAnswer(Number(event.target.value), false)} className="ml-3 rounded-xl border p-2"><option value="" disabled>{Number(value) > 0 ? `$${current.toLocaleString()} (previously entered)` : "Choose a budget"}</option>{choices.map(amount => <option key={amount} value={amount}>${amount.toLocaleString()}</option>)}</select></label>
+      <label className="mt-3 block text-sm">Monthly budget in dollars<select aria-label="Monthly budget in dollars" style={Number(value) > 0 ? { backgroundColor: "var(--primary)", color: "var(--primary-contrast)" } : undefined} value={choices.includes(current) ? current : ""} onChange={event => onAnswer(Number(event.target.value), false)} className="ml-3 rounded-xl border p-2"><option value="" disabled>{Number(value) > 0 ? `$${current.toLocaleString()} (previously entered)` : "Choose a budget"}</option>{choices.map(amount => <option key={amount} value={amount}>${amount.toLocaleString()}</option>)}</select></label>
       {knownFloor ? <p className="mt-3 text-sm">{priceFloor?.synthetic_pilot ? "Synthetic pilot: " : ""}The lowest known starting monthly price in your selected area for the care answers given so far is ${knownFloor.toLocaleString()}.</p> : <p className="mt-3 text-sm">The minimum price for this search has not been verified. Your budget will be kept as stated; affordability still needs evidence.</p>}
       {priceFloor?.funding_pathway === "MEDICAID_COST_REQUIRES_VERIFICATION" ? <p className="mt-2 text-sm">That is a private-pay price, not your Medicaid household cost. Enter what the household can pay; Medicaid coverage and out-of-pocket cost still need verification.</p> : null}
       <p className="mt-2 text-xs text-forest">This is a starting monthly cost, not proof of total affordability. Mandatory fees, one-time entrance fees and any outside care must be checked separately.</p>
@@ -109,6 +109,9 @@ export function StructuredIntake() {
   const [priceFloorLoading, setPriceFloorLoading] = useState(false);
   const [priceFloorError, setPriceFloorError] = useState(false);
   const [priceFloorRetry, setPriceFloorRetry] = useState(0);
+  const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (advanceTimer.current) clearTimeout(advanceTimer.current); }, []);
+  function cancelAdvance() { if (advanceTimer.current) clearTimeout(advanceTimer.current); advanceTimer.current = null; }
 
   const questions = useMemo(() => visibleQuestions(context), [context]);
 
@@ -174,6 +177,7 @@ export function StructuredIntake() {
   }
 
   function goToIndex(nextIndex: number) {
+    cancelAdvance();
     if (nextIndex >= questions.length) {
       finishQuestionnaire(context);
       return;
@@ -183,6 +187,7 @@ export function StructuredIntake() {
   }
 
   function answer(value: IntakeAnswer, advance: boolean) {
+    cancelAdvance();
     if (!question) return;
     const next = question.set(context, value);
     setContext(next);
@@ -195,14 +200,16 @@ export function StructuredIntake() {
     // answer may have just opened or closed a follow-up.
     const updated = visibleQuestions(next);
     const position = updated.findIndex((item) => item.id === question.id);
-    if (position === -1 || position + 1 >= updated.length) {
-      finishQuestionnaire(next);
-      return;
-    }
-    setStepId(updated[position + 1].id);
+    // Keep the chosen green answer visible before an automatic transition.
+    advanceTimer.current = setTimeout(() => {
+      advanceTimer.current = null;
+      if (position === -1 || position + 1 >= updated.length) finishQuestionnaire(next);
+      else setStepId(updated[position + 1].id);
+    }, 450);
   }
 
   function next() {
+    cancelAdvance();
     if (!question) return;
     if (onBudget && (priceFloorLoading || belowKnownFloor)) { setShowError(true); return; }
     if (question.required && !isAnswered(question, context)) {

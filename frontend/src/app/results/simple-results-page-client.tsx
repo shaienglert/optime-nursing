@@ -18,6 +18,7 @@ import { medicaidBudgetIsConditional } from "@/lib/medicaid-budget-scenario";
 import { DistanceScope } from "./distance-scope";
 
 import { PersonalNarrative } from "@/components/guidance/personal-narrative";
+import { LiveText } from "@/components/guidance/live-text";
 import { CommunityNextStep } from "@/components/guidance/community-next-step";
 import { facilityExplanation, resultsIntroduction } from "@/lib/personal-guidance";
 
@@ -87,6 +88,8 @@ export function SimpleResultsPageClient() {
   const [error, setError] = useState<string | null>(null);
   const [followUpAnswer, setFollowUpAnswer] = useState("");
   const [continuingInterview, setContinuingInterview] = useState(false);
+  const followUpTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (followUpTimer.current) clearTimeout(followUpTimer.current); }, []);
   const [searchStage, setSearchStage] = useState(0);
   const [oomnikerOpen, setOOmnikerOpen] = useState(false);
   const [oomnikerText, setOOmnikerText] = useState("");
@@ -306,7 +309,7 @@ export function SimpleResultsPageClient() {
         {question ? <>
           <p className="mt-6 text-2xl leading-9">{question.question}</p>
           <div className="mt-5 flex flex-wrap gap-3">{(question.answer_options || []).map(option =>
-            <button key={option} type="button" disabled={continuingInterview} onClick={() => submitFollowUp(option)} className="rounded-xl border px-5 py-3 text-lg disabled:opacity-50">{option}</button>
+            <button key={option} type="button" aria-pressed={followUpAnswer === option} aria-label={option} disabled={continuingInterview} onClick={() => { setFollowUpAnswer(option); setContinuingInterview(true); followUpTimer.current = setTimeout(() => submitFollowUp(option), 450); }} className={`rounded-xl border px-5 py-3 text-lg ${followUpAnswer === option ? "border-forest bg-forest text-white" : "border-line bg-white text-ink disabled:opacity-50"}`}>{followUpAnswer === option ? "✓ " : ""}{option}</button>
           )}</div>
           <form className="mt-5" onSubmit={event => { event.preventDefault(); submitFollowUp(followUpAnswer); }}>
             <label htmlFor="results-follow-up" className="block text-lg">Your answer</label>
@@ -455,13 +458,13 @@ export function SimpleResultsPageClient() {
 
         <section className="mt-8 rounded-xl bg-sand p-7 sm:p-9">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div><p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#934b38]">OOMNIKER</p><h2 className="mt-2 text-3xl font-semibold">We can think this through together</h2><p className="mt-3 max-w-3xl text-lg leading-8 text-forest">How do these places feel to you? If something isn’t quite right, tell me what you would like to be different. We can explore your preferences together and keep the essential support you need in place.</p></div>
+            <div><p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#934b38]">OOMNIKER</p><h2 className="mt-2 text-3xl font-semibold">We can think this through together</h2><LiveText paragraphs={["How do these places feel to you? If something isn’t quite right, tell me what you would like to be different. We can explore your preferences together and keep the essential support you need in place."]} className="mt-3 max-w-3xl text-lg leading-8 text-forest" /></div>
             <button type="button" onClick={() => setOOmnikerOpen((v) => !v)} className="rounded-xl bg-forest px-5 py-3 font-semibold text-white">{oomnikerOpen ? "Close conversation" : "Talk it through"}</button>
           </div>
-          <div className="mt-5 space-y-4 text-xl leading-9">{preferenceAdvice(response).map(text => <p key={text}>{text}</p>)}</div><details className="mt-5"><summary className="cursor-pointer underline underline-offset-4">The preferences guiding our conversation</summary><p className="mt-3 text-lg leading-8">{activeCriteria.map(([label, value]) => `${label}: ${value}`).join(". ")}.</p></details>
+          <LiveText paragraphs={preferenceAdvice(response)} className="mt-5 text-xl leading-9" /><details className="mt-5"><summary className="cursor-pointer underline underline-offset-4">The preferences guiding our conversation</summary><p className="mt-3 text-lg leading-8">{activeCriteria.map(([label, value]) => `${label}: ${value}`).join(". ")}.</p></details>
           {measuredPreferenceAdvice.map(suggestion => <article key={`${suggestion.parameter}-${suggestion.alternative_value}`} className="mt-5 rounded-2xl border border-line bg-white p-5">
             <h3 className="text-xl font-semibold">An alternative for your {adviceLabels[suggestion.parameter]?.toLowerCase() || "preference"}</h3>
-            <p className="mt-3 leading-7">{suggestion.message}</p>
+            <LiveText paragraphs={[suggestion.message]} className="mt-3 leading-7" />
             <ul className="mt-3 space-y-3">{suggestion.candidates.map(candidate => <li key={candidate.canonical_facility_id}>
               <strong>{candidate.facility_name || "Community"}</strong>: {adviceLabels[candidate.quality_advantage.parameter] || "Verified quality measure"}: {String(candidate.quality_advantage.value)}, compared with {String(candidate.quality_advantage.compared_value)} for a current option ({candidate.quality_advantage.source_family}).
               {candidate.unresolved_preferences.length ? <p>Still to verify: {candidate.unresolved_preferences.map(key => adviceLabels[key] || missingEvidenceLabels[key] || "another preference").join(", ")}.</p> : null}
@@ -475,7 +478,7 @@ export function SimpleResultsPageClient() {
           {(response.oomniker?.constraint_impacts || []).slice(0, 3).map(item => <p key={item.parameter} className="mt-3 text-base leading-7">
             <strong>{missingEvidenceLabels[item.parameter] || "A required condition"}:</strong> {item.blocked_count} communities have a confirmed blocker; for {item.sole_verified_blocker_count}, it is the only confirmed blocker with no pending evidence. Your requirements stay in force. Counts may overlap across conditions.
           </p>)}
-          {oomnikerNotice ? <div className="mt-4 rounded-xl bg-white p-4 text-base text-forest">{oomnikerNotice}{oomnikerDiff ? <p className="mt-2 font-medium">{oomnikerDiff}</p> : null} {oomnikerHistory.current.length > 0 ? <button type="button" onClick={() => { const previous = oomnikerHistory.current.pop(); if (previous) { setState(previous); setOOmnikerNotice("Done. I’ve put the previous preference back and I’m reassessing the earlier search."); } }} className="ml-2 font-semibold underline underline-offset-4">Undo last change</button> : null}</div> : null}
+          {oomnikerNotice ? <div className="mt-4 rounded-xl bg-white p-4 text-base text-forest"><LiveText paragraphs={[oomnikerNotice, ...(oomnikerDiff ? [oomnikerDiff] : [])]} /> {oomnikerHistory.current.length > 0 ? <button type="button" onClick={() => { const previous = oomnikerHistory.current.pop(); if (previous) { setState(previous); setOOmnikerNotice("Done. I’ve put the previous preference back and I’m reassessing the earlier search."); } }} className="ml-2 font-semibold underline underline-offset-4">Undo last change</button> : null}</div> : null}
           {oomnikerOpen ? <div className="mt-6"><label htmlFor="oomniker-message" className="mb-3 block text-lg">What would you like me to consider?</label><textarea id="oomniker-message" value={oomnikerText} onChange={(e) => setOOmnikerText(e.target.value)} rows={3} placeholder="For example: I’d like to consider a medium community, or search within 30 miles." className="w-full rounded-xl border border-line bg-white px-5 py-4 text-lg outline-none focus:border-forest" /><button type="button" onClick={applyOOmnikerChange} disabled={!oomnikerText.trim()} className="mt-3 rounded-xl bg-forest px-6 py-3 font-semibold text-white disabled:opacity-40">Update results</button></div> : null}
 
         </section>
@@ -489,4 +492,3 @@ export function SimpleResultsPageClient() {
     </main>
   );
 }
-

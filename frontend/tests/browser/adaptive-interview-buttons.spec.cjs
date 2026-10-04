@@ -262,3 +262,59 @@ test('direct adaptive-interview access is blocked until the structured questionn
   await expect(page).toHaveURL(/\/intake$/);
   await expect(page.getByText('Who are we finding the right place for?')).toBeVisible();
 });
+
+
+test('reading sizes and choice feedback stay clear on a phone', async ({ page }) => {
+  await mockBackend(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.clock.install();
+  await page.goto('http://127.0.0.1:3000/');
+  await expect(page.getByText('Welcome', { exact: true })).toHaveCSS('font-size', '36px');
+  await expect(page.getByRole('heading', { name: 'Find a place that feels like home.', exact: true })).toHaveCSS('font-size', '33.92px');
+  await expect(page.getByText('A few simple answers will help us get to know what matters.', { exact: true })).toHaveCSS('font-size', '24px');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  const mother = page.getByRole('button', { name: 'my mother', exact: true });
+  await mother.click();
+  await expect(mother).toHaveAttribute('aria-pressed', 'true');
+  await expect(mother).toHaveCSS('background-color', 'rgb(40, 75, 56)');
+  await expect(mother).toHaveCSS('color', 'rgb(255, 255, 255)');
+  await page.clock.runFor(500);
+  await expect(page.getByRole('button', { name: '80–84', exact: true })).toBeVisible();
+});
+
+test('fallback results reveal real wrapped lines and can be shown immediately', async ({ page }) => {
+  await mockBackend(page);
+  const confirmed = questionnaireState();
+  confirmed.questionnaireCompletion.clientSummaryConfirmed = true;
+  await page.addInitScript(state => window.sessionStorage.setItem('optime.questionnaire.session', JSON.stringify(state)), confirmed);
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await page.clock.install();
+  await page.goto('http://127.0.0.1:3000/results');
+  await expect(page.getByTestId('personal-results-heading')).toBeVisible();
+  const prose = page.getByTestId('live-text').first();
+  await expect(prose).toHaveAttribute('data-live-complete', 'false');
+  await page.clock.runFor(700);
+  const geometry = await prose.evaluate(el => ({ shown: el.firstElementChild.getBoundingClientRect().height, full: el.firstElementChild.firstElementChild.getBoundingClientRect().height }));
+  expect(geometry.shown).toBeGreaterThan(0);
+  expect(geometry.shown).toBeLessThan(geometry.full);
+  await prose.getByRole('button', { name: 'Show full text', exact: true }).click();
+  await expect(prose).toHaveAttribute('data-live-complete', 'true');
+  await page.getByRole('button', { name: 'Talk it through', exact: true }).click();
+  const advisor = page.locator('section').filter({ has: page.getByRole('heading', { name: 'We can think this through together', exact: true }) });
+  await expect(advisor.getByTestId('live-text').first()).toHaveAttribute('data-live-complete', 'false');
+  await page.clock.runFor(30000);
+  await expect(advisor.getByTestId('live-text').first()).toHaveAttribute('data-live-complete', 'true');
+});
+
+test('reduced motion shows complete explanations without waiting', async ({ page }) => {
+  await mockBackend(page);
+  const confirmed = questionnaireState();
+  confirmed.questionnaireCompletion.clientSummaryConfirmed = true;
+  await page.addInitScript(state => window.sessionStorage.setItem('optime.questionnaire.session', JSON.stringify(state)), confirmed);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('http://127.0.0.1:3000/results');
+  await expect(page.getByTestId('personal-results-heading')).toBeVisible();
+  await expect(page.getByTestId('live-text').first()).toHaveAttribute('data-live-complete', 'true');
+  await expect(page.getByRole('button', { name: 'Show full text', exact: true })).toHaveCount(0);
+});

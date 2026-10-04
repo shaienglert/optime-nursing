@@ -82,6 +82,8 @@ async function answerInterview(page, scenario, maxSteps = 120) {
     const value = scenario.answers[id];
     if (kind === 'single') {
       await page.getByRole('button', { name: String(value), exact: true }).click();
+      // The selected answer remains visible briefly before auto-advance.
+      await expect(page.locator(`main h1[data-question-id="${id}"]`)).toHaveCount(0);
       continue; // a single choice advances on its own
     }
     if (kind === 'multi') {
