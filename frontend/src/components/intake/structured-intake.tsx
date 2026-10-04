@@ -1,6 +1,7 @@
 "use client";
 
 import { updateClientCaseQuestionnaire } from "@/lib/api";
+import { budgetChoices } from "@/lib/budget-choices";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -54,13 +55,15 @@ function AnswerControl({ question, value, onAnswer, priceFloor }: { question: In
   }
   if (question.kind === "number" && question.id === "budget") {
     const knownFloor = priceFloor?.minimum_monthly_price;
-    const min = priceFloor?.minimum_budget_is_binding && knownFloor ? Math.ceil(knownFloor) : 100;
+    const min = priceFloor?.minimum_budget_is_binding && knownFloor ? knownFloor : 100;
     const max = Math.max(15000, min + 10000);
     const current = Number(value) > 0 ? Number(value) : min;
+    const choices = budgetChoices(min, max);
+    const selectedIndex = choices.reduce((best, amount, index) => Math.abs(amount - current) < Math.abs(choices[best] - current) ? index : best, 0);
     return <div className="mt-4">
-      <input aria-label="Monthly budget slider" type="range" min={min} max={max} step="1" value={Math.min(max, Math.max(min, current))} onChange={(event) => onAnswer(Number(event.target.value), false)} className="w-full" />
+      <input aria-label="Monthly budget slider" aria-valuetext={`$${current.toLocaleString()} per month`} type="range" min={0} max={choices.length - 1} step="1" value={selectedIndex} onChange={(event) => onAnswer(choices[Number(event.target.value)], false)} className="w-full" />
       <div className="mt-2 flex justify-between text-sm text-[#606a64]"><span>From ${min.toLocaleString()}</span><strong>${current.toLocaleString()} / month</strong><span>${max.toLocaleString()}+</span></div>
-      <label className="mt-3 block text-sm">Monthly budget in dollars<input aria-label="Monthly budget in dollars" type="number" min={min} step="1" value={Number(value) > 0 ? Number(value) : ""} onChange={event => onAnswer(Number(event.target.value), false)} className="ml-3 rounded-xl border p-2" /></label>
+      <label className="mt-3 block text-sm">Monthly budget in dollars<select aria-label="Monthly budget in dollars" value={choices.includes(current) ? current : ""} onChange={event => onAnswer(Number(event.target.value), false)} className="ml-3 rounded-xl border p-2"><option value="" disabled>{Number(value) > 0 ? `$${current.toLocaleString()} (previously entered)` : "Choose a budget"}</option>{choices.map(amount => <option key={amount} value={amount}>${amount.toLocaleString()}</option>)}</select></label>
       {knownFloor ? <p className="mt-3 text-sm">{priceFloor?.synthetic_pilot ? "Synthetic pilot: " : ""}The lowest known starting monthly price in your selected area for the care answers given so far is ${knownFloor.toLocaleString()}.</p> : <p className="mt-3 text-sm">The minimum price for this search has not been verified. Your budget will be kept as stated; affordability still needs evidence.</p>}
       {priceFloor?.funding_pathway === "MEDICAID_COST_REQUIRES_VERIFICATION" ? <p className="mt-2 text-sm">That is a private-pay price, not your Medicaid household cost. Enter what the household can pay; Medicaid coverage and out-of-pocket cost still need verification.</p> : null}
       <p className="mt-2 text-xs text-[#68766f]">This is a starting monthly cost, not proof of total affordability. Mandatory fees, one-time entrance fees and any outside care must be checked separately.</p>
