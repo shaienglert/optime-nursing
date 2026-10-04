@@ -236,7 +236,7 @@ test.describe('real synthetic-pilot customer journey', () => {
     const budgetCeiling = expectedBudget * 1.1;
     if (budgetCeiling < minimumCarePrice) {
       expect(results).toHaveLength(0);
-      await expect(page.getByText('I don’t have a verified recommendation to show yet. Missing information is still being distinguished from a confirmed mismatch.')).toBeVisible();
+      await expect(page.getByText(/^(No community is ready to recommend from this search|Some communities still need important details verified before I can recommend them)/)).toBeVisible();
     } else if (results.length === 0) {
       // A price under budget does not verify another mandatory facility claim.
       // Semantic AI may correctly identify dietary safety or another client MUST
