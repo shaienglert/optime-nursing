@@ -11,3 +11,5 @@ Each offer needs at least two promoted, MUST-passing facilities, verified eviden
 The initial region prompt mentions family, friends and established routines. New interviews do not ask a personal destination again or offer family/friends in the nearby amenities list. Historic saved destinations remain readable.
 
 API serialization explicitly preserves the governed advisor analysis. AI advice reads the saved server decision matched to the questionnaire fingerprint; browser-supplied analysis and capability claims have no advisory authority. The ten browser journeys assert this end-to-end contract.
+
+Parity declares only the intentionally changed OOMNIKER library/API/stored presentation and additive dynamic preference provenance. All existing recommendation identities/order, MUST decisions, prices, evidence, scores, source-path values and preference meanings still require exact equality. Boundary tests demonstrate that changing advice cannot hide a ranking or requirement change; no global decision-change label bypass is used.
