@@ -346,7 +346,7 @@ export function SimpleResultsPageClient() {
                 {" These are open questions, not confirmed mismatches."}
               </p> : null}
               {response.market_coverage_notice ? <p className="mt-3 text-base leading-7">{response.market_coverage_notice}</p> : null}
-              {(response.results || []).some((item) => item.budget_exception === true) ? <p className="mt-3 text-base leading-7">We did not find enough otherwise suitable communities within the budget you requested, so OOmnik is also showing suitable options up to 10% above it. The budget difference lowers their ranking and is marked on the relevant option. Use OOmniker below to change the budget or any other parameter and add more communities.</p> : null}
+              {(response.results || []).some((item) => item.budget_exception === true) ? <p className="mt-3 text-base leading-7">We did not find enough otherwise suitable communities within the budget you requested, so OOmnik is also showing suitable options up to 10% above it. The budget difference lowers their ranking and is marked on the relevant option. OOMNIKER can discuss measured preference changes below. To change your budget or required conditions, review your answers.</p> : null}
             </div>
           ) : null}
           <details className="mt-6 text-lg"><summary className="cursor-pointer underline underline-offset-4">Keep our conversation for later</summary><div className="mt-4">
