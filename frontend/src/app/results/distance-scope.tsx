@@ -39,7 +39,7 @@ export function DistanceScope({ scope, onWiden }: { scope?: LocationScope | null
   const excluded = scope.excluded_count || 0;
   const unknown = scope.distance_unknown_count || 0;
   return (
-    <div className="mt-4 rounded-xl border border-[#e0e2e4] bg-[#edf3fc] p-5 text-lg leading-8 text-[#1a1d20]" data-testid="distance-scope">
+    <div className="mt-4 rounded-xl border border-[#e4ded4] bg-[#f1f0e8] p-5 text-lg leading-8 text-[#1a1d20]" data-testid="distance-scope">
       <p>
         Showing communities within <strong>{scope.effective_miles ?? scope.requested_miles} miles</strong> of {place}
         {scope.reference?.approximate ? ", measured from the middle of that area" : ""}.
@@ -55,7 +55,7 @@ export function DistanceScope({ scope, onWiden }: { scope?: LocationScope | null
           <p className="text-base">
             {communities(offer.additional_count)} more {offer.additional_count === 1 ? "fits" : "fit"} within {offer.miles} miles (the nearest is {offer.nearest_excluded_miles} miles away).
           </p>
-          <button type="button" onClick={() => onWiden(offer.miles)} className="rounded-xl bg-[#0f52ba] px-5 py-2 font-semibold text-white">
+          <button type="button" onClick={() => onWiden(offer.miles)} className="rounded-xl bg-[#284b38] px-5 py-2 font-semibold text-white">
             Include up to {offer.miles} miles
           </button>
         </div>

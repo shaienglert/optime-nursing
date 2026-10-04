@@ -66,7 +66,7 @@ const AVAILABILITY_LABEL: Record<FacilityRooms["room_types"][number]["availabili
 };
 
 const AVAILABILITY_STYLE: Record<FacilityRooms["room_types"][number]["availability_status"], string> = {
-  AVAILABLE: "border-[#e0e2e4] bg-[#edf3fc] text-[#0f52ba]",
+  AVAILABLE: "border-[#e4ded4] bg-[#f1f0e8] text-[#284b38]",
   WAITLIST: "border-[#eedfbf] bg-[#fff9ed] text-[#8a6a1f]",
   UNAVAILABLE: "border-[#e6cfc7] bg-[#fdf4f1] text-[#8b3d2e]",
   UNKNOWN: "border-[#d9cfbf] bg-[#faf7f1] text-[#6d655b]",
@@ -131,12 +131,12 @@ export function CanonicalFacilityProfileClient({ canonicalFacilityId, backHref, 
   );
 
   if (isLoading) {
-    return <main className="min-h-screen bg-[#f5f5f3] px-6 py-12 text-[#5d5548]">Loading verified facility profile...</main>;
+    return <main className="min-h-screen bg-[#fdfbf7] px-6 py-12 text-[#5d5548]">Loading verified facility profile...</main>;
   }
 
   if (error || !table) {
     return (
-      <main className="min-h-screen bg-[#f5f5f3] px-6 py-12">
+      <main className="min-h-screen bg-[#fdfbf7] px-6 py-12">
         <p className="text-[#8b3d2e]">{error || "Canonical facility not found."}</p>
         <Link href={backHref} className="mt-4 inline-flex rounded-xl border border-[#d9cfbf] bg-white px-4 py-2 text-sm font-semibold text-[#5b5245]">{backLabel}</Link>
       </main>
@@ -147,16 +147,16 @@ export function CanonicalFacilityProfileClient({ canonicalFacilityId, backHref, 
   const gradeCounts = history?.grade_counts || {};
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,#f5f5f3_0%,#f8f5ec_24%,#ffffff_48%)] px-4 py-6 sm:px-8 lg:px-12">
+    <main className="min-h-screen bg-[linear-gradient(180deg,#fdfbf7_0%,#f8f5ec_24%,#ffffff_48%)] px-4 py-6 sm:px-8 lg:px-12">
       <section className="mx-auto max-w-6xl space-y-6">
         <header className="rounded-xl border border-[#e9dfce] bg-white/90 p-6 shadow-[0_22px_80px_-42px_rgba(82,65,42,0.4)]">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#0f52ba]">Get to know this community</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#284b38]">Get to know this community</p>
               <h1 className="mt-2 text-3xl font-semibold text-[#2f2a24]">{table.facility_name}</h1>
               <p className="mt-1 text-[#6d655b]">{[table.city, table.state, table.zip].filter(Boolean).join(", ")}</p>
               <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
-                <span className="rounded-xl border border-[#e0e2e4] bg-[#edf3fc] px-3 py-1 text-[#0f52ba]">{table.canonical_type ? prettyLabel(table.canonical_type) : "Community type not supplied"}</span>
+                <span className="rounded-xl border border-[#e4ded4] bg-[#f1f0e8] px-3 py-1 text-[#284b38]">{table.canonical_type ? prettyLabel(table.canonical_type) : "Community type not supplied"}</span>
 
               </div>
               {table.canonical_type === "INDEPENDENT_LIVING" && (
@@ -172,11 +172,11 @@ export function CanonicalFacilityProfileClient({ canonicalFacilityId, backHref, 
         {canonicalFacilityId ? <FacilityPersonalFit facilityId={canonicalFacilityId} facilityName={table.facility_name} backHref={backHref} /> : null}
 
         <section className="rounded-xl border border-[#e8ddcc] bg-white p-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#0f52ba]">Rooms & pricing</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#284b38]">Rooms & pricing</p>
           {rooms && rooms.has_data ? (
             <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {rooms.room_types.map((room) => (
-                <article key={room.room_type_name} className="flex flex-col overflow-hidden rounded-xl border border-[#e8ddcc] bg-[#f5f5f3]">
+                <article key={room.room_type_name} className="flex flex-col overflow-hidden rounded-xl border border-[#e8ddcc] bg-[#fdfbf7]">
                   {room.photos.length > 0 ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={room.photos[0].url} alt={room.photos[0].caption || room.room_type_name} className="h-40 w-full object-cover" />
@@ -191,7 +191,7 @@ export function CanonicalFacilityProfileClient({ canonicalFacilityId, backHref, 
                       </span>
                     </div>
                     {room.description && <p className="text-sm text-[#6d655b]">{room.description}</p>}
-                    <p className="mt-auto text-lg font-semibold text-[#0f52ba]">{formatMonthlyPrice(room.monthly_price)}</p>
+                    <p className="mt-auto text-lg font-semibold text-[#284b38]">{formatMonthlyPrice(room.monthly_price)}</p>
                     {room.last_verified_at && <p className="text-xs text-[#a89a80]">Verified {new Date(room.last_verified_at).toLocaleDateString()}</p>}
                   </div>
                 </article>
@@ -215,12 +215,12 @@ export function CanonicalFacilityProfileClient({ canonicalFacilityId, backHref, 
                       setOutreachState("error");
                     }
                   }}
-                  className="mt-3 rounded-xl bg-[#0f52ba] px-4 py-2 text-sm font-semibold text-white hover:bg-[#1a1d20] disabled:opacity-60"
+                  className="mt-3 rounded-xl bg-[#284b38] px-4 py-2 text-sm font-semibold text-white hover:bg-[#1a1d20] disabled:opacity-60"
                 >
                   {outreachState === "requesting" ? "Requesting…" : "Request details from this facility"}
                 </button>
               ) : outreachState === "sent" ? (
-                <p className="mt-3 text-sm font-medium text-[#0f52ba]">
+                <p className="mt-3 text-sm font-medium text-[#284b38]">
                   Request sent to our team for review -- we&apos;ll reach out to the community and add their reply here once it comes in.
                 </p>
               ) : outreachState === "no_contact" ? (
@@ -236,7 +236,7 @@ export function CanonicalFacilityProfileClient({ canonicalFacilityId, backHref, 
 
         <section className="grid gap-6 lg:grid-cols-2">
           <div className="rounded-xl border border-[#e8ddcc] bg-white p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#0f52ba]">Verified care & licensing evidence</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#284b38]">Verified care & licensing evidence</p>
             <div className="mt-4 divide-y divide-[#eee5d8]">
               {importantRows.length > 0 ? importantRows.map((row) => (
                 <div key={row.parameter_id} className="grid gap-1 py-3 sm:grid-cols-[1fr,auto] sm:gap-4">
@@ -244,14 +244,14 @@ export function CanonicalFacilityProfileClient({ canonicalFacilityId, backHref, 
                     <p className="font-medium text-[#332f29]">{row.parameter || prettyLabel(row.parameter_id)}</p>
                     <p className="mt-1 text-xs text-[#776e62]">Source: {row.source || "UNKNOWN"}{row.last_verified ? ` · Verified: ${row.last_verified}` : ""}</p>
                   </div>
-                  <span className="font-semibold text-[#0f52ba]">{displayValue(row.raw_value ?? row.status_value)}</span>
+                  <span className="font-semibold text-[#284b38]">{displayValue(row.raw_value ?? row.status_value)}</span>
                 </div>
               )) : <p className="py-3 text-sm text-[#776e62]">No verified parameter evidence is currently available.</p>}
             </div>
           </div>
 
           <div className="rounded-xl border border-[#e8ddcc] bg-white p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#0f52ba]">Nevada regulatory history</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#284b38]">Nevada regulatory history</p>
             {history ? (
               <div className="mt-4 space-y-3 text-lg leading-8 text-[#4f473d]">
                 <p><span className="font-semibold">Source:</span> {regulatory?.source || "Nevada HCQC / ALiS"}</p>
@@ -276,7 +276,7 @@ export function CanonicalFacilityProfileClient({ canonicalFacilityId, backHref, 
 
         <section className="rounded-xl border border-[#e8ddcc] bg-white p-5"><h2 className="text-2xl font-semibold">Family reviews and OOmnik assessment</h2><p className="mt-3 text-lg leading-8">A sourced family-review rating and a separate OOmnik assessment are not available in this profile. The regulatory history above reports inspection evidence; it is not a family-review score.</p></section>
         <details className="rounded-xl border border-[#e8ddcc] bg-white p-5">
-          <summary className="cursor-pointer text-lg font-semibold text-[#0f52ba]">Explore the supporting evidence</summary>
+          <summary className="cursor-pointer text-lg font-semibold text-[#284b38]">Explore the supporting evidence</summary>
           <div className="mt-4 overflow-x-auto">
             <table className="min-w-full text-left text-sm">
               <thead className="border-b border-[#e8ddcc] text-xs uppercase tracking-[0.08em] text-[#776e62]">
@@ -286,7 +286,7 @@ export function CanonicalFacilityProfileClient({ canonicalFacilityId, backHref, 
                 {table.rows.map((row) => (
                   <tr key={row.parameter_id}>
                     <td className="px-2 py-3 font-medium text-[#332f29]">{row.parameter || prettyLabel(row.parameter_id)}</td>
-                    <td className="px-2 py-3 text-[#0f52ba]">{displayValue(row.raw_value ?? row.status_value)}</td>
+                    <td className="px-2 py-3 text-[#284b38]">{displayValue(row.raw_value ?? row.status_value)}</td>
                     <td className="px-2 py-3 text-[#6d655b]">{row.source || "UNKNOWN"}</td>
                     <td className="px-2 py-3 text-[#6d655b]">{row.evidence_count} record{row.evidence_count === 1 ? "" : "s"}</td>
                   </tr>

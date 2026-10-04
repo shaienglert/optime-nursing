@@ -14,7 +14,7 @@ import { PersonalNarrative } from "@/components/guidance/personal-narrative";
 import { personalSummary } from "@/lib/personal-guidance";
 
 function SummaryRow({ label, value }: { label: string; value: string }) {
-  return <div className="rounded-xl border border-[#e0e2e4] bg-white p-4"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#0f52ba]">{label}</p><p className="mt-2 text-base leading-7 text-[#1a1d20]">{value || "Not provided"}</p></div>;
+  return <div className="rounded-xl border border-[#e4ded4] bg-white p-4"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#284b38]">{label}</p><p className="mt-2 text-base leading-7 text-[#1a1d20]">{value || "Not provided"}</p></div>;
 }
 
 function IntakeConfirmationContent() {
@@ -101,18 +101,18 @@ function IntakeConfirmationContent() {
   const hi = state.humanIntelligenceV2;
 
   return (
-    <main className="min-h-screen bg-[#f5f5f3] px-4 py-10 text-[#1a1d20] sm:px-8">
+    <main className="min-h-screen bg-[#fdfbf7] px-4 py-10 text-[#1a1d20] sm:px-8">
       <section className="mx-auto max-w-5xl">
-        <p className="text-sm font-semibold uppercase tracking-[0.15em] text-[#0f52ba]">Your next chapter starts here</p>
+        <p className="text-sm font-semibold uppercase tracking-[0.15em] text-[#284b38]">Your next chapter starts here</p>
         <h1 data-testid="intake-personal-summary-heading" className="mt-3 text-4xl font-semibold tracking-[-0.04em] sm:text-6xl">Here’s what matters for your next home.</h1>
-        <p className="mt-5 max-w-3xl text-lg leading-8 text-[#0f52ba]">Before we look at communities, let’s make sure we understand the person, the priorities and what would make this move feel right.</p>
+        <p className="mt-5 max-w-3xl text-lg leading-8 text-[#284b38]">Before we look at communities, let’s make sure we understand the person, the priorities and what would make this move feel right.</p>
         {narrativeUnprocessed ? <div role="status" className="mt-6 rounded-xl border border-amber-300 bg-amber-50 p-5 text-lg leading-7">OOmnik could not read the free-text story right now. Your structured answers below are still usable and will be the only information used for matching. The story will not affect recommendations unless it is successfully interpreted and you approve the updated profile.</div> : null}
         {reviewError ? <div role="alert" className="mt-6 rounded-xl bg-amber-50 p-5 text-lg">{reviewError} <button type="button" onClick={() => { setReviewed(null); setRetry(value => value + 1); }} className="ml-3 underline">Try again</button> <button type="button" onClick={() => router.push("/adaptive-interview?next=%2Fresults")} className="ml-3 underline">Continue our conversation</button></div>
           : reviewed?.key !== inputKey ? <p role="status" className="mt-6 text-xl">Preparing the profile for your review…</p>
           : <details className="mt-6 rounded-xl bg-white p-5"><summary className="cursor-pointer text-lg font-semibold">Review the needs guiding your search</summary><h2 className="text-2xl font-semibold">Needs used in your search</h2><ul className="mt-3 space-y-2 text-lg">{reviewed.profile.needs.map((need, index) => <li key={`${need.parameter_id}-${index}`}>{need.need_text}</li>)}</ul></details>}
 
         <section className="mt-8 rounded-xl bg-white p-6 sm:p-8"><PersonalNarrative state={state} intakeProfileId={reviewed?.key === inputKey ? reviewed.profile.intake_profile_id || undefined : undefined} fallback={personalSummary(state)} /></section>
-        <details className="mt-6"><summary className="cursor-pointer text-lg font-semibold text-[#0f52ba]">Review all my recorded answers</summary><div className="mt-4 grid gap-4 sm:grid-cols-2">
+        <details className="mt-6"><summary className="cursor-pointer text-lg font-semibold text-[#284b38]">Review all my recorded answers</summary><div className="mt-4 grid gap-4 sm:grid-cols-2">
           {state.notes?.trim() ? <div className="sm:col-span-2"><SummaryRow label="Story provided" value={state.notes} /></div> : null}
           <SummaryRow label="Person" value={[state.relationship, state.ageGroup].filter(Boolean).join(", ")} />
           <SummaryRow label="Daily support" value={state.relationship === "Couple" ? state.coupleAssistance || state.assistanceLevel : state.assistanceLevel} />
@@ -135,16 +135,16 @@ function IntakeConfirmationContent() {
           } />
         </div></details>
 
-        <section className="mt-10 rounded-xl border border-[#e0e2e4] bg-white p-6">
+        <section className="mt-10 rounded-xl border border-[#e4ded4] bg-white p-6">
           <h2 className="text-2xl font-semibold">Anything you’d like to add or correct?</h2>
-          <p className="mt-2 text-lg leading-8 text-[#0f52ba]">Add anything in your own words. OOmnik will read it together with your answers and prepare an updated understanding for you to approve.</p>
-          <textarea value={additionalContext} onChange={(event) => setAdditionalContext(event.target.value)} rows={4} className="mt-5 w-full resize-y rounded-xl border border-[#e0e2e4] bg-[#fbfaf7] p-4 text-xl leading-8 outline-none focus:border-[#0f52ba]" placeholder="Add a preference, concern, correction, or anything we missed…" />
-          <button type="button" onClick={addContext} disabled={!additionalContext.trim()} className="mt-4 rounded-xl border border-[#0f52ba] px-6 py-3 text-lg font-semibold text-[#0f52ba] disabled:opacity-40">Update my summary</button>
+          <p className="mt-2 text-lg leading-8 text-[#284b38]">Add anything in your own words. OOmnik will read it together with your answers and prepare an updated understanding for you to approve.</p>
+          <textarea value={additionalContext} onChange={(event) => setAdditionalContext(event.target.value)} rows={4} className="mt-5 w-full resize-y rounded-xl border border-[#e4ded4] bg-[#fbfaf7] p-4 text-xl leading-8 outline-none focus:border-[#284b38]" placeholder="Add a preference, concern, correction, or anything we missed…" />
+          <button type="button" onClick={addContext} disabled={!additionalContext.trim()} className="mt-4 rounded-xl border border-[#284b38] px-6 py-3 text-lg font-semibold text-[#284b38] disabled:opacity-40">Update my summary</button>
         </section>
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-          <button type="button" onClick={() => router.push("/intake")} className="rounded-xl border border-[#0f52ba] bg-white px-7 py-4 text-base font-semibold text-[#0f52ba]">Change answers</button>
-          <button data-testid="confirm-understanding" type="button" onClick={confirm} disabled={!!reviewError || reviewed?.key !== inputKey || confirmationRequested} className="inline-flex items-center gap-2 rounded-xl bg-[#0f52ba] px-7 py-4 text-base font-semibold text-white hover:bg-[#0f52ba] disabled:opacity-40"><OOmnikMark size={16} /> Yes, you understood me — find my options</button>
+          <button type="button" onClick={() => router.push("/intake")} className="rounded-xl border border-[#284b38] bg-white px-7 py-4 text-base font-semibold text-[#284b38]">Change answers</button>
+          <button data-testid="confirm-understanding" type="button" onClick={confirm} disabled={!!reviewError || reviewed?.key !== inputKey || confirmationRequested} className="inline-flex items-center gap-2 rounded-xl bg-[#284b38] px-7 py-4 text-base font-semibold text-white hover:bg-[#284b38] disabled:opacity-40"><OOmnikMark size={16} /> Yes, you understood me — find my options</button>
         </div>
       </section>
     </main>
@@ -153,7 +153,7 @@ function IntakeConfirmationContent() {
 
 export default function IntakeConfirmationPage() {
   return (
-    <Suspense fallback={<main className="min-h-screen bg-[#f5f5f3] px-6 py-12 text-xl text-[#0f52ba]">Preparing your summary…</main>}>
+    <Suspense fallback={<main className="min-h-screen bg-[#fdfbf7] px-6 py-12 text-xl text-[#284b38]">Preparing your summary…</main>}>
       <IntakeConfirmationContent />
     </Suspense>
   );
