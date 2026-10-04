@@ -210,7 +210,7 @@ def _score_tier(score: float, band: float) -> int:
 _MUST_EVIDENCE_TERMS = {
     "MEDICATION_SUPPORT_AVAILABLE": ("medication",),
     "ADL_SUPPORT_AVAILABLE": ("adl", "daily activities", "bathing", "dressing", "toileting"),
-    "SECURE_MEMORY_CARE_CONFIRMED": ("memory care", "dementia", "secure memory"),
+    "MEMORY_CARE_SETTING_CONFIRMED": ("memory care", "dementia", "secure memory"),
 }
 
 

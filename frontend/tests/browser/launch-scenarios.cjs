@@ -6,7 +6,7 @@ const scenarios = {
   },
   memory_mom: {
     story: "My mother is 84 and has advancing Alzheimer's disease. She needs constant supervision, help with bathing, dressing, toileting and medication management, and she sometimes wanders at night. She lives in the Las Vegas Valley. She needs a secure memory-care setting with 24/7 staff. Her budget is about $5,000 per month and Medicaid eligibility is pending.",
-    expectedMustKeys: ['LICENSE_CURRENTLY_VALID', 'LAS_VEGAS', 'SECURE_MEMORY_CARE_CONFIRMED', 'ADL_SUPPORT_AVAILABLE', 'MEDICATION_SUPPORT_AVAILABLE'],
+    expectedMustKeys: ['LICENSE_CURRENTLY_VALID', 'LAS_VEGAS', 'MEMORY_CARE_SETTING_CONFIRMED', 'ADL_SUPPORT_AVAILABLE', 'MEDICATION_SUPPORT_AVAILABLE'],
     forbiddenMustKeys: ['SEMANTIC_FUTURE_CARE_PATH'],
     forbiddenVerifiedFacilities: ['Revel Vegas', 'STEWART PINES II SENIOR APTS'],
     requiredVisibleGaps: ['availability', 'pricing', 'medicaid'],

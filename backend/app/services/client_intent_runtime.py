@@ -110,17 +110,20 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
     if signals.get("medication_support_needed"):
         add_must("MEDICATION_SUPPORT_AVAILABLE", "The resident explicitly needs medication-management support; a facility cannot be called eligible until this capability is verified.", "verified medication-support evidence")
 
-    if signals.get("secure_memory_required"):
+    # Two separate requirements. A memory need requires a setting that is officially
+    # classified as memory care (this MUST). A secured/locked unit is a different, narrower
+    # requirement that exists only for a confirmed wandering/security need (SECURED_UNIT_AVAILABLE).
+    if signals.get("memory_care_needed"):
         add_must(
-            "SECURE_MEMORY_CARE_CONFIRMED",
-            "The resident has a stated wandering/security safety need and requires an officially confirmed memory-care setting; ordinary assisted or independent living is not sufficient.",
+            "MEMORY_CARE_SETTING_CONFIRMED",
+            "The resident has a memory-care need and requires an officially confirmed memory-care setting; ordinary assisted or independent living is not sufficient.",
             "Nevada official-detail memory-care classification",
         )
 
     human = questionnaire_state.get("humanIntelligenceV2") or {}
     future = human.get("futureCareProfile") or {}
     transition = human.get("transitionRiskProfile") or {}
-    if _upper(future.get("secureMemoryNeighborhoodNeed")) == "YES" or _upper(transition.get("wanderingConcerns")) == "YES":
+    if signals.get("secure_memory_required") or _upper(future.get("secureMemoryNeighborhoodNeed")) == "YES" or _upper(transition.get("wanderingConcerns")) == "YES":
         add_must("SECURED_UNIT_AVAILABLE", "The resident explicitly needs a secure setting or wandering protection.", "verified secured-unit capability")
 
     if _upper(transition.get("postHospitalRehabNeed")) == "YES":
@@ -424,7 +427,7 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
                 must_pass.append(key)
             else:
                 must_unknown.append(key)
-        elif key == "SECURE_MEMORY_CARE_CONFIRMED":
+        elif key == "MEMORY_CARE_SETTING_CONFIRMED":
             if str(row.get("memory_care_classification") or "").strip().upper() == "CONFIRMED":
                 must_pass.append(key)
             else:

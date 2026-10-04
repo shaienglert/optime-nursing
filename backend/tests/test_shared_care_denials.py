@@ -84,7 +84,7 @@ def test_couple_denial_cannot_reappear_as_secure_memory_must():
     )
     assert p['living_strategy']['household']['type'] == 'COUPLE'
     assert p['living_strategy']['signals']['memory_care_needed'] is False
-    assert 'SECURE_MEMORY_CARE_CONFIRMED' not in musts(p)
+    assert 'MEMORY_CARE_SETTING_CONFIRMED' not in musts(p)
     assert {'COUPLE_CORESIDENCE', 'ADL_SUPPORT_AVAILABLE'} <= musts(p)
 
 
@@ -111,7 +111,7 @@ POSITIVE_CASES = [
 # sets medication_support_needed only from free text (the structured "Help with medications"
 # never creates MEDICATION_SUPPORT_AVAILABLE), and memory_care_needed only from free text or a
 # memoryStatus of yes/dementia/memory care/alzheimer -- never from the intake's and the
-# interpreter's own enum value "Significant memory issues" -- so SECURE_MEMORY_CARE_CONFIRMED
+# interpreter's own enum value "Significant memory issues" -- so MEMORY_CARE_SETTING_CONFIRMED
 # is unreachable from the Structured Profile.
 @pytest.mark.parametrize('story,questionnaire_patch', POSITIVE_CASES, ids=[case[0] for case in POSITIVE_CASES])
 def test_positive_needs_are_preserved_including_other_partner(story, questionnaire_patch):
@@ -119,9 +119,9 @@ def test_positive_needs_are_preserved_including_other_partner(story, questionnai
     assert {'adl_support', 'medication_support', 'memory_care'} <= {n['parameter_id'] for n in p['needs']}
     assert p['care_delivery_signals']['adl_support_needed'] is True
     assert p['care_delivery_signals']['medication_support_needed'] is True
-    assert {'ADL_SUPPORT_AVAILABLE', 'MEDICATION_SUPPORT_AVAILABLE'} <= musts(p)
-    # Owner decision: a memory label alone never requires a secured unit.
-    assert 'SECURE_MEMORY_CARE_CONFIRMED' not in musts(p)
+    assert {'ADL_SUPPORT_AVAILABLE', 'MEDICATION_SUPPORT_AVAILABLE', 'MEMORY_CARE_SETTING_CONFIRMED'} <= musts(p)
+    # A memory label alone never requires a secured unit.
+    assert 'SECURED_UNIT_AVAILABLE' not in musts(p)
 
 
 @pytest.mark.parametrize('story', [case[0] for case in POSITIVE_CASES])

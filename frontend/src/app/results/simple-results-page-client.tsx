@@ -30,7 +30,7 @@ const missingEvidenceLabels: Record<string, string> = {
   SEMANTIC_MEDICAID_PATHWAY: "Medicaid participation",
   MEDICATION_SUPPORT_AVAILABLE: "medication support",
   ADL_SUPPORT_AVAILABLE: "help with daily activities",
-  SECURE_MEMORY_CARE_CONFIRMED: "secure memory care",
+  MEMORY_CARE_SETTING_CONFIRMED: "memory care setting",
   SECURED_UNIT_AVAILABLE: "a secured unit with wandering protection",
   REHAB_PATH_AVAILABLE: "a rehabilitation pathway",
   COUPLE_CORESIDENCE: "a shared living arrangement",

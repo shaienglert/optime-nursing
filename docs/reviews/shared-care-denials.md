@@ -9,7 +9,7 @@ Reproductions on main:
 - Fully independent, explicitly denies medication and bathing/dressing help:
   core and strategy require neither; combined care requires both.
 - Parents moving together; "Neither has dementia": core has no memory-care need;
-  strategy still creates SECURE_MEMORY_CARE_CONFIRMED.
+  strategy still creates MEMORY_CARE_SETTING_CONFIRMED.
 
 Use the existing core denial rules as a shared authority, passed once through
 production intake composition. Preserve positive needs, existing attribution

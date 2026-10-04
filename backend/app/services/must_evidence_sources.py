@@ -23,7 +23,7 @@ MUST_EVIDENCE_SOURCES: Dict[str, Dict[str, List[str]]] = {
     "REHAB_PATH_AVAILABLE": {"parameters": ["pt", "ot"], "payload_fields": ["rehab_verified", "pt_ot_verified", "pt_ot_external_path_verified"]},
     "POST_HOSPITAL_REHAB_PROGRAM": {"parameters": ["pt", "ot", "therapy_staffing", "nursing_24_7"], "payload_fields": ["post_hospital_rehab_program_verified", "nursing_support_verified", "physician_coordination_verified"], "provider_capabilities": ["continuum_rehabilitation"]},
     "SECURED_UNIT_AVAILABLE": {"parameters": ["secured_units"]},
-    "SECURE_MEMORY_CARE_CONFIRMED": {"canonical_fields": ["memory_care_classification"]},
+    "MEMORY_CARE_SETTING_CONFIRMED": {"canonical_fields": ["memory_care_classification"]},
     "COUPLE_CORESIDENCE": {"canonical_fields": ["accepts_couples"], "payload_fields": ["couple_coresidence_verified", "same_apartment_transition_verified"]},
     "KOSHER_MEALS": {"parameters": ["kosher"]},
     "REQUIRED_LANGUAGE_SUPPORT": {"parameters": ["languages"]},

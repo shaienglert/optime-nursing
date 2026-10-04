@@ -10,10 +10,19 @@ def _must(state, query=""):
     return {row["key"] for row in build_client_intent(state, query, strategy, {})["must_haves"]}, strategy
 
 
-@pytest.mark.parametrize("status", ["Mild memory issues", "Significant memory issues", "Occasionally forgetful", "No", "Not sure"])
-def test_memory_severity_alone_never_requires_a_secured_unit(status):
+@pytest.mark.parametrize("status", ["Mild memory issues", "Occasionally forgetful", "No", "Not sure"])
+def test_lesser_memory_answers_require_neither_memory_setting_nor_secured_unit(status):
     must, _ = _must({"memoryStatus": status})
-    assert "SECURE_MEMORY_CARE_CONFIRMED" not in must and "SECURED_UNIT_AVAILABLE" not in must
+    assert not {"MEMORY_CARE_SETTING_CONFIRMED", "SECURED_UNIT_AVAILABLE"} & must
+
+
+@pytest.mark.parametrize("status", ["Significant memory issues", "Dementia"])
+def test_memory_need_requires_a_memory_care_setting_but_never_a_secured_unit(status):
+    from app.services.canonical_intake_state import canonicalize_intake_state
+
+    must, _ = _must(canonicalize_intake_state({"memoryStatus": status}))
+    assert "MEMORY_CARE_SETTING_CONFIRMED" in must
+    assert "SECURED_UNIT_AVAILABLE" not in must
 
 
 def test_significant_memory_without_safety_answer_asks_instead_of_assuming():
@@ -31,10 +40,10 @@ def test_answered_safety_question_is_not_asked_again(answer):
 
 
 @pytest.mark.parametrize("path", [("transitionRiskProfile", "wanderingConcerns"), ("futureCareProfile", "secureMemoryNeighborhoodNeed")])
-def test_explicit_safety_need_requires_confirmed_secured_memory_care(path):
+def test_explicit_safety_need_adds_the_secured_unit_requirement_on_top_of_the_memory_setting(path):
     state = {"memoryStatus": "Significant memory issues", "humanIntelligenceV2": {path[0]: {path[1]: "Yes"}}}
     must, _ = _must(state)
-    assert "SECURE_MEMORY_CARE_CONFIRMED" in must
+    assert {"MEMORY_CARE_SETTING_CONFIRMED", "SECURED_UNIT_AVAILABLE"} <= must
 
 
 def test_safety_question_is_asked_in_the_approved_words_even_without_semantic_wording():

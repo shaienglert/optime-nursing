@@ -79,3 +79,33 @@ def test_available_capital_text_is_parsed_separately_from_budget():
 
     out = canonicalize_intake_state({"budget": "$7,000", "availableCapital": "$120,000"})
     assert out["budget"] == 7000 and out["availableCapital"] == 120000
+
+
+@pytest.mark.parametrize("label", ["Dementia", "dementia", "Alzheimer's", "Alzheimers", "Memory care", "Yes"])
+def test_legacy_memory_labels_mean_significant_memory_issues(label):
+    from app.services.canonical_intake_state import canonicalize_intake_state
+
+    assert canonicalize_intake_state({"memoryStatus": label})["memoryStatus"] == "Significant memory issues"
+
+
+@pytest.mark.parametrize("label", ["No", "Occasionally forgetful", "Mild memory issues", "Not sure", ""])
+def test_other_memory_labels_are_untouched(label):
+    from app.services.canonical_intake_state import canonicalize_intake_state
+
+    assert canonicalize_intake_state({"memoryStatus": label})["memoryStatus"] == label
+
+
+@pytest.mark.parametrize("label", ["Dementia", "Alzheimer's", "Significant memory issues"])
+def test_every_memory_label_gives_strategy_engine_and_filter_the_same_meaning(label):
+    from app.services.client_intent_runtime import build_client_intent
+    from app.services.decision_engine_core import build_patient_needs_profile
+    from app.services.living_strategy_runtime import build_living_strategy_context
+    from app.services.canonical_intake_state import canonicalize_intake_state
+
+    state = canonicalize_intake_state({"memoryStatus": label})
+    strategy = build_living_strategy_context(state, "")
+    needs = {row["parameter_id"] for row in build_patient_needs_profile(state, "")["needs"]}
+    must = {row["key"] for row in build_client_intent(state, "", strategy, {})["must_haves"]}
+    assert strategy["signals"]["memory_care_needed"] is True
+    assert {"memory_care", "dementia_alz_programs"} <= needs
+    assert "MEMORY_CARE_SETTING_CONFIRMED" in must and "SECURED_UNIT_AVAILABLE" not in must
