@@ -1139,6 +1139,7 @@ class ClaimSearchOut(BaseModel):
 class CapabilitySaveIn(BaseModel):
     user_id: int
     answers: Dict[str, str]
+    details: Dict[str, dict] = Field(default_factory=dict)
     ip_address: Optional[str] = None
 
 
@@ -3672,6 +3673,7 @@ async def provider_facility_save_capabilities(
             facility_id=facility_id,
             user_id=payload.user_id,
             answers=payload.answers,
+            details=payload.details,
             ip_address=payload.ip_address,
         )
     except PermissionError as error:

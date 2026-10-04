@@ -31,7 +31,21 @@ export type PublicRecordField = {
   source: string;
 };
 
+export type QuestionnaireDetails = {
+  value?: string | number;
+  conditions?: string;
+  scope?: string;
+  delivery?: string;
+  evidence_url?: string;
+  observed_on?: string;
+};
+
 export type ProfileQuestion = {
+  response_kind?: "state" | "number" | "text" | "date";
+  hint?: string;
+  consumer_question_ids?: string[];
+  details?: QuestionnaireDetails;
+  claim_status?: string;
   key: string;
   label: string;
   value: AnswerState;
@@ -143,10 +157,11 @@ export async function saveCapabilities(
   facilityId: number,
   userId: number,
   answers: Record<string, AnswerState>,
+  details: Record<string, QuestionnaireDetails> = {},
 ): Promise<{ updated: number; unchanged: number; completeness: Completeness }> {
   return request(`/provider/facilities/${facilityId}/capabilities`, {
     method: "PUT",
-    body: JSON.stringify({ user_id: userId, answers }),
+    body: JSON.stringify({ user_id: userId, answers, details }),
   });
 }
 
