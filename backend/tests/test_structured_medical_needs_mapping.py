@@ -123,8 +123,9 @@ class StructuredMedicalNeedsMappingTests(unittest.TestCase):
     def test_skilled_nursing_does_not_invent_medication_or_transfer_help(self):
         base = build_patient_needs_profile({"assistanceLevel": "Skilled nursing care"}, "")
         ids = {item["parameter_id"] for item in base["needs"]}
-        self.assertTrue({"skilled_nursing_capabilities", "nursing_24_7"} <= ids)
-        self.assertTrue(ids.isdisjoint({"medication_support", "transfer_assistance", "adl_support"}))
+        self.assertIn("skilled_nursing_capabilities", ids)
+        # Owner decision: "Skilled nursing care" does not say around-the-clock.
+        self.assertTrue(ids.isdisjoint({"nursing_24_7", "medication_support", "transfer_assistance", "adl_support"}))
 
         explicit = build_patient_needs_profile({
             "assistanceLevel": "Skilled nursing care, Help with bathing, Help with medications",
