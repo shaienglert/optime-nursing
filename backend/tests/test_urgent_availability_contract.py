@@ -57,3 +57,31 @@ def test_engine_never_shows_recorded_no_for_an_urgent_move_and_keeps_it_for_a_la
     assert stage["removed_by"].get(f"{URGENT_AVAILABILITY_KEY}:PENDING_RECONFIRMATION", 0) > 0
     later_ids = set(later["decision_funnel"]["recommendable_ids"])
     assert any(recorded(r) == "NO" for r in later["results"]) or len(later_ids) > len(urgent["decision_funnel"]["recommendable_ids"])
+
+
+# Owner decision (2026-10-04): a community that publishes vacancies is relevant; FULL (YES)
+# ranks above LIMITED; a recorded NO ranks lowest and never excludes; unknown stays unknown.
+NICE_INTENT = {"nice_to_haves": [{"key": "AVAILABILITY_FIT"}]}
+
+
+@pytest.mark.parametrize("recorded,score,bucket", [
+    ("YES", 100.0, "nice_match"), ("LIMITED", 50.0, "nice_match"),
+    ("NO", 0.0, "nice_mismatch"), (None, None, "nice_unknown"),
+])
+def test_availability_fit_ranks_full_above_limited_and_keeps_unknown_distinct(recorded, score, bucket):
+    row = {"verified_capabilities": {"current_availability": recorded} if recorded else {}}
+    fit = evaluate_candidate_intent(row, NICE_INTENT)
+    assert "AVAILABILITY_FIT" in fit[bucket]
+    assert fit["nice_fit_scores"].get("AVAILABILITY_FIT") == score
+    assert fit["hard_gate"] != "FAIL"
+
+
+@pytest.mark.parametrize("timing", ["Immediately", "Within 30 days", "1-3 months"])
+def test_availability_preference_present_for_any_stated_timing_but_never_a_must_later(timing):
+    intent = build_client_intent({"moveTiming": timing}, "", {"signals": {}, "household": {}}, {"signals": {}})
+    assert "AVAILABILITY_FIT" in {n["key"] for n in intent["nice_to_haves"]}
+
+
+def test_planning_ahead_adds_no_availability_preference():
+    intent = build_client_intent({"moveTiming": "Planning ahead"}, "", {"signals": {}, "household": {}}, {"signals": {}})
+    assert "AVAILABILITY_FIT" not in {n["key"] for n in intent["nice_to_haves"]}
