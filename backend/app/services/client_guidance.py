@@ -70,6 +70,11 @@ def build_guidance(*, state: dict, profile: dict, query: str, decision: dict | N
         for row in selected[:5]:
             fid = row["canonical_facility_id"]
             facts[f"facility:{fid}:name"] = row["facility_name"]
+            facts[f"facility:{fid}:cost_scope"] = (
+                "A housing starting price or budget match does not establish total household affordability. "
+                "All required care, outside services, fees and any second resident need a complete written quote. "
+                "No real household quote or facility-specific provider approval is supplied in this guidance."
+            )
             for kind in ("why_matches", "needs_verification", "concerns"):
                 for index, value in enumerate((row.get("explanation") or {}).get(kind) or []):
                     facts[f"facility:{fid}:{kind}:{index}"] = str(value)

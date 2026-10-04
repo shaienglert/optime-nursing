@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-type Followup = { id: number; event_type: string; facility_id: string; status: string; note?: string; created_at: string; contact_name?: string; email?: string; phone?: string; request: { facility_name?: string; preferred_date?: string; contact_name?: string; email?: string; phone?: string } };
+type Followup = { id: number; event_type: string; facility_id: string; status: string; note?: string; created_at: string; contact_name?: string; email?: string; phone?: string; request: { facility_name?: string; preferred_date?: string; monthly_family_budget?: number; residents?: number; required_services?: string[]; quote_questions?: string[]; contact_name?: string; email?: string; phone?: string } };
 
 export default function ClientFollowupsPage() {
   const [token, setToken] = useState("");
@@ -45,6 +45,7 @@ export default function ClientFollowupsPage() {
       <p>{row.request.contact_name || row.contact_name || "Name not supplied"} · {row.request.email || row.email || "Email not supplied"} · {row.request.phone || row.phone || "Phone not supplied"}</p>
       <p>Status: {row.status === "IN_PROGRESS" ? "In progress" : "Awaiting follow-up"} · Received {new Date(row.created_at).toLocaleString()}</p>
       {row.request.preferred_date ? <p>Preferred visit date: {row.request.preferred_date} — needs confirmation</p> : null}
+      {row.request.quote_questions?.length ? <div className="mt-4 rounded-xl bg-[#f4f8f6] p-4"><h3 className="font-semibold">Complete household quote and provider verification</h3><p>Monthly ceiling: {row.request.monthly_family_budget ? `${row.request.monthly_family_budget.toLocaleString()}` : "Needs confirmation"} · Residents: {row.request.residents || "Needs confirmation"}</p><p>Requested services: {(row.request.required_services || []).join("; ") || "Review confirmed intake"}</p><ul className="mt-3 list-disc pl-6">{row.request.quote_questions.map(question => <li key={question}>{question}</li>)}</ul></div> : null}
       {row.note ? <p className="whitespace-pre-wrap">{row.note}</p> : null}
       <div className="mt-4 flex flex-wrap gap-3"><button type="button" disabled={busy || row.status === "IN_PROGRESS"} onClick={() => void update(row.id, "IN_PROGRESS")} className="rounded-full border px-5 py-2 disabled:opacity-40">Start follow-up</button><button type="button" disabled={busy} onClick={() => void update(row.id, "COMPLETED")} className="rounded-full bg-[#315f53] px-5 py-2 text-white disabled:opacity-40">Mark follow-up complete</button></div>
     </article>)}</div>

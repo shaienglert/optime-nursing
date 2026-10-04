@@ -3,12 +3,13 @@
 import { useState } from "react";
 import { useQuestionnaire } from "@/context/questionnaire-context";
 import { createClientCase } from "@/lib/api";
+import { serviceQuoteQuestions } from "@/lib/service-budget";
 
 export function WelcomeOffer() {
   return <div className="mt-5 rounded-2xl bg-[#eef7f2] p-5 text-lg leading-8"><p className="font-semibold">A little help with your next chapter</p><p>OOmnik offers eligible clients a Welcome package of services valued at $500 to help with the move.</p><details className="mt-2"><summary className="cursor-pointer underline underline-offset-4">Welcome eligibility and costs</summary><p className="mt-2">For an eligible first placement, the community funds the package. For subsequent placements, the community and client each contribute $250. Government-funded placements are excluded. The services available and your eligibility must be confirmed before you commit. This is a service package, not a cash payment.</p></details></div>;
 }
 
-export function CommunityNextStep({ facilityId, facilityName }: { facilityId: string; facilityName: string }) {
+export function CommunityNextStep({ facilityId, facilityName, serviceNeeds = [] }: { facilityId: string; facilityName: string; serviceNeeds?: string[] }) {
   const { state } = useQuestionnaire();
   const [intent, setIntent] = useState<"visit" | "pricing" | null>(null);
   const [contact, setContact] = useState({ name: "", email: "", phone: "", date: "", note: "", consent: false });
@@ -20,7 +21,7 @@ export function CommunityNextStep({ facilityId, facilityName }: { facilityId: st
     try {
       const token = window.localStorage.getItem("oomnik.client.case.token") || (await createClientCase({ questionnaire_state: state as unknown as Record<string, unknown>, contact_name: contact.name.trim(), email: contact.email.trim() || undefined, phone: contact.phone.trim() || undefined, terms_accepted: true })).case_token;
       window.localStorage.setItem("oomnik.client.case.token", token);
-      const response = await fetch(`/api/backend/api/client-cases/${encodeURIComponent(token)}/events`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ event_type: intent === "visit" ? "VISIT_REQUESTED" : "ROOM_PRICING_REQUESTED", facility_id: facilityId, status: "AWAITING_CONFIRMATION", note: contact.note.trim(), payload: { facility_name: facilityName, preferred_date: intent === "visit" ? contact.date || null : null, contact_name: contact.name.trim(), email: contact.email.trim(), phone: contact.phone.trim(), contact_consent: true } }) });
+      const response = await fetch(`/api/backend/api/client-cases/${encodeURIComponent(token)}/events`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ event_type: intent === "visit" ? "VISIT_REQUESTED" : "ROOM_PRICING_REQUESTED", facility_id: facilityId, status: "AWAITING_CONFIRMATION", note: contact.note.trim(), payload: { facility_name: facilityName, preferred_date: intent === "visit" ? contact.date || null : null, contact_name: contact.name.trim(), email: contact.email.trim(), phone: contact.phone.trim(), contact_consent: true, monthly_family_budget: state.budget > 0 ? state.budget : null, residents: state.relationship === "Couple" ? 2 : 1, required_services: serviceNeeds, quote_questions: serviceQuoteQuestions } }) });
       if (!response.ok) throw new Error("We could not save your request. Please try again.");
       setStatus("sent");
     } catch (err) { setError(err instanceof Error ? err.message : "Unable to save your request."); setStatus("idle"); }
@@ -29,9 +30,10 @@ export function CommunityNextStep({ facilityId, facilityName }: { facilityId: st
     <h3 className="text-2xl font-semibold">Like what you see? Let’s take the next step.</h3>
     <p className="mt-3 text-lg leading-8">A visit to {facilityName} can help you meet the team, explore the rooms and get a feel for daily life. Would you like to arrange one?</p>
     {status === "sent" ? <p role="status" className="mt-4 text-lg font-semibold">Your {intent === "visit" ? "visit" : "room and pricing"} request is saved in your OOmnik case, pending follow-up. {intent === "visit" ? "Your visit is not booked yet; the community must confirm a date." : "Current room types, care costs and availability still require the community’s reply."}</p> : <>
-      <div className="mt-4 flex flex-col gap-3 sm:items-start"><button type="button" onClick={() => setIntent("visit")} className="rounded-full bg-[#315f53] px-6 py-4 text-lg font-semibold text-white">Arrange a visit</button><button type="button" onClick={() => setIntent("pricing")} className="rounded-full border border-[#315f53] px-6 py-3 text-lg text-[#315f53]">First, check rooms and current prices for me</button></div>
+      <div className="mt-4 flex flex-col gap-3 sm:items-start"><button type="button" onClick={() => setIntent("visit")} className="rounded-full bg-[#315f53] px-6 py-4 text-lg font-semibold text-white">Arrange a visit</button><button type="button" onClick={() => setIntent("pricing")} className="rounded-full border border-[#315f53] px-6 py-3 text-lg text-[#315f53]">Check services and total cost within my budget</button></div>
       {intent ? <form onSubmit={event => { event.preventDefault(); void submit(); }} className="mt-5 space-y-4 text-lg">
-        <h4 className="text-xl font-semibold">{intent === "visit" ? "Request a visit" : "Request rooms and prices"}</h4>
+        <h4 className="text-xl font-semibold">{intent === "visit" ? "Request a visit" : "Request a complete service and price plan"}</h4>
+        {intent === "pricing" ? <div className="rounded-xl bg-white p-4"><p className="font-semibold">The request includes your {state.budget > 0 ? `$${state.budget.toLocaleString()} monthly` : "unconfirmed"} family budget{state.relationship === "Couple" ? " for both residents" : ""}.</p><ul className="mt-3 list-disc space-y-2 pl-6">{serviceQuoteQuestions.map(question => <li key={question}>{question}</li>)}</ul></div> : null}
         {intent === "visit" ? <><p className="leading-8">A live appointment calendar is not connected. Choose your preferred date; the visit will require confirmation.</p><label className="block">Preferred date<input type="date" min={new Date().toLocaleDateString("en-CA")} value={contact.date} onChange={e => setContact(v => ({ ...v, date: e.target.value }))} className="mt-2 block w-full rounded-xl border bg-white p-3" /></label></> : <p className="leading-8">Ask for a current quote covering the room and care services you need.</p>}
         <label className="block">Name<input value={contact.name} onChange={e => setContact(v => ({ ...v, name: e.target.value }))} autoComplete="name" className="mt-2 block w-full rounded-xl border p-3" /></label>
         <label className="block">Email<input type="email" value={contact.email} onChange={e => setContact(v => ({ ...v, email: e.target.value }))} autoComplete="email" className="mt-2 block w-full rounded-xl border p-3" /></label>

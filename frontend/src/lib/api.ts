@@ -302,6 +302,25 @@ export type PatientNeedsProfile = {
   decision_intelligence?: Record<string, unknown>;
 };
 
+export type CarePartnerOption = {
+  agency_id: string;
+  agency_name: string;
+  license_number: string;
+  license_status: string;
+  license_snapshot_date?: string;
+  primary_source_url: string;
+  bathing_assistance?: boolean | string;
+  dressing_assistance?: boolean | string;
+  transfer_assistance?: boolean | string;
+  minimum_visit_minutes?: number | string;
+  minimum_billable_hours?: number | string;
+  hourly_rate?: number | string;
+  availability_status?: string;
+  fixed_caregiver_possible?: boolean | string;
+  languages?: string[];
+  care_agency_fit?: { hard_gate?: string; material_unknowns?: string[] };
+};
+
 export type DecisionEngineRecommendation = {
   canonical_facility_id: string;
   facility_name: string;
@@ -324,8 +343,8 @@ export type DecisionEngineRecommendation = {
   structured_nice_to_have_coverage?: { unresolved?: string[] };
   combined_care_solution?: {
     delivery_model?: string;
-    care_component?: { delivery_model?: string };
-    medication_component?: { delivery_model?: string };
+    care_component?: { delivery_model?: string; adl_required?: boolean; external_care_allowed?: boolean | string };
+    medication_component?: { delivery_model?: string; medication_required?: boolean; external_care_allowed?: boolean | string };
   };
   availability_status?: "YES" | "NO" | "LIMITED" | "UNKNOWN";
   visual_media?: {
@@ -421,6 +440,7 @@ export type LocationScope = {
 };
 
 export type DecisionEngineResponse = {
+  care_partner_options?: CarePartnerOption[];
   pending_evidence_summary?: {
     candidate_count: number;
     unresolved_requirements: string[];

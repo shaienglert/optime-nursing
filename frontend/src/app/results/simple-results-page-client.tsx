@@ -17,6 +17,9 @@ import { PersonalNarrative } from "@/components/guidance/personal-narrative";
 import { CommunityNextStep, WelcomeOffer } from "@/components/guidance/community-next-step";
 import { facilityExplanation, resultsIntroduction } from "@/lib/personal-guidance";
 
+import { ServiceBudgetPlan } from "@/components/guidance/service-budget-plan";
+import { isOutsideCareConcern } from "@/lib/service-budget";
+
 const TOP_COUNT = 5;
 
 const missingEvidenceLabels: Record<string, string> = {
@@ -375,16 +378,7 @@ export function SimpleResultsPageClient() {
                       {item.synthetic_pilot && item.monthly_rate_includes_verified_care ? <p className="mt-2 text-base text-[#334b42]">{item.monthly_price_basis === "TWO_RESIDENT_TOTAL" ? `Pilot monthly total for two residents, including verified care and the $${Number(item.second_resident_monthly_fee || 0).toLocaleString()} second-resident fee.` : "Pilot monthly rate includes the care services verified for this community."}</p> : null}
                       {typeof item.entrance_fee === "number" && item.entrance_fee > 0 ? <div className="mt-2 rounded-xl border border-amber-300 bg-amber-50 p-3 text-base text-[#684d19]"><p>One-time entrance fee: ${item.entrance_fee.toLocaleString()}, separate from the monthly rate.</p><p className="mt-2">One-time affordability is not confirmed. Can the household fund this amount separately? The community must also confirm whether this fee applies to the specific care program and admission contract.</p></div> : null}
                       {(item.nice_to_have_coverage?.unresolved || []).length > 0 || (item.structured_nice_to_have_coverage?.unresolved || []).length > 0 ? <p className="mt-3 text-sm text-[#684d19]">Some of your personal preferences still need facility-specific evidence. Verified care does not prove every lifestyle preference.</p> : null}
-                      {state.budget > 0 && !(item.synthetic_pilot && item.monthly_rate_includes_verified_care && (state.relationship !== "Couple" || item.monthly_price_basis === "TWO_RESIDENT_TOTAL")) && (state.relationship === "Couple" || (response?.patient_needs_profile?.needs || []).some((need) => ["adl_support", "medication_support", "transfer_assistance", "memory_care", "nursing_24_7"].includes(need.parameter_id) && ["REQUIRED", "HIGH"].includes(need.requirement_level))) ? (
-                        <p className="mt-3 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm leading-6 text-[#684d19]">
-                          <strong>Full monthly cost needs confirmation.</strong> The starting price alone does not show whether care, outside agency support, or a second resident is included. Request a written quote for everyone and every required service before treating this as within your ${state.budget.toLocaleString()} budget.
-                        </p>
-                      ) : null}
-                      {item.starting_monthly_price && (item.combined_care_solution?.care_component?.delivery_model === "FACILITY_PLUS_EXTERNAL_AGENCY" || item.combined_care_solution?.medication_component?.delivery_model === "FACILITY_PLUS_EXTERNAL_AGENCY") ? (
-                        <div className="mt-3 rounded-xl border border-[#cfe3da] bg-[#f7fbf9] px-4 py-3 text-sm leading-6 text-[#40564e]">
-                          <strong>Verified care depends on an outside agency:</strong> housing starts at ${"$"}{item.starting_monthly_price.toLocaleString()} / month. Outside-care cost is shown separately only when a verified provider price and required service package are available. Until then, the combined monthly cost remains <strong>to be verified</strong>.
-                        </div>
-                      ) : null}
+
                     </div>
                     <div className="flex flex-col items-start gap-2 sm:items-end">
                       <span className="w-fit rounded-full bg-[#eaf6ef] px-4 py-2 text-lg font-semibold text-[#25613f]">Verified care capabilities</span>
@@ -412,8 +406,10 @@ export function SimpleResultsPageClient() {
                       )}
                     </div>
                   </div>
-                  {concerns.length > 0 ? <div className="mt-5 rounded-2xl bg-amber-50 p-5 text-lg leading-8"><h3 className="text-xl font-semibold">Important considerations</h3>{concerns.map(text => <p key={text}>{text}</p>)}</div> : null}
-                  <CommunityNextStep facilityId={item.canonical_facility_id} facilityName={item.facility_name} />
+                  <ServiceBudgetPlan item={item} budget={state.budget} couple={state.relationship === "Couple"} needs={response.patient_needs_profile?.needs} options={response.care_partner_options} />
+                  {concerns.filter(text => !isOutsideCareConcern(text)).length > 0 ? <div className="mt-5 rounded-2xl bg-amber-50 p-5 text-lg leading-8"><h3 className="text-xl font-semibold">Important considerations</h3>{concerns.filter(text => !isOutsideCareConcern(text)).map(text => <p key={text}>{text}</p>)}</div> : null}
+                  {concerns.some(isOutsideCareConcern) ? <details className="mt-4 text-base"><summary className="cursor-pointer underline">Original care evidence notes</summary>{concerns.filter(isOutsideCareConcern).map(text => <p key={text}>{text}</p>)}</details> : null}
+                  <CommunityNextStep facilityId={item.canonical_facility_id} facilityName={item.facility_name} serviceNeeds={response.patient_needs_profile?.needs.map(need => need.need_text || need.parameter_id)} />
                 </article>
               );
             })}

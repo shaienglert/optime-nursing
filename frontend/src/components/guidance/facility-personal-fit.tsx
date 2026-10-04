@@ -8,6 +8,9 @@ import { facilityExplanation, recommendationFromDecision } from "@/lib/personal-
 import { PersonalNarrative } from "./personal-narrative";
 import { CommunityNextStep } from "./community-next-step";
 
+import { ServiceBudgetPlan } from "./service-budget-plan";
+import { isOutsideCareConcern } from "@/lib/service-budget";
+
 const subscribeCache = (callback: () => void) => {
   window.addEventListener("storage", callback);
   return () => window.removeEventListener("storage", callback);
@@ -32,10 +35,12 @@ export function FacilityPersonalFit({ facilityId, facilityName, backHref }: { fa
   return <section className="rounded-3xl border border-[#d4e2da] bg-white p-5 sm:p-8">
     <h2 className="text-3xl font-semibold text-[#294f41]">{item ? "Why this place fits your search" : "Explore this community"}</h2>
     {item ? <div className="mt-4"><PersonalNarrative state={state} decisionId={decision?.decision_id || undefined} facilityId={facilityId} query={query} fallback={facilityExplanation(item)} />
-      {(item.explanation?.concerns || []).length ? <div className="mt-5 rounded-2xl bg-amber-50 p-5 text-lg leading-8"><h3 className="font-semibold">Important considerations</h3>{item.explanation.concerns.map(text => <p key={text}>{text}</p>)}</div> : null}
+      {(item.explanation?.concerns || []).filter(text => !isOutsideCareConcern(text)).length ? <div className="mt-5 rounded-2xl bg-amber-50 p-5 text-lg leading-8"><h3 className="font-semibold">Important considerations</h3>{item.explanation.concerns.filter(text => !isOutsideCareConcern(text)).map(text => <p key={text}>{text}</p>)}</div> : null}
       {(item.explanation?.needs_verification || []).length ? <div className="mt-5 text-lg leading-8"><h3 className="font-semibold">What we’ll check with the community</h3>{item.explanation.needs_verification.map(text => <p key={text}>{text}</p>)}</div> : null}
     </div> : <p className="mt-4 text-lg leading-8">A personal recommendation is available after you complete and confirm your questionnaire. The details below describe the evidence we have for this community.</p>}
+    {item ? <ServiceBudgetPlan item={item} budget={state.budget} couple={state.relationship === "Couple"} needs={decision?.patient_needs_profile?.needs} options={decision?.care_partner_options} /> : null}
+    {item?.explanation?.concerns.some(isOutsideCareConcern) ? <details className="mt-4 text-base"><summary className="cursor-pointer underline">Original care evidence notes</summary>{item.explanation.concerns.filter(isOutsideCareConcern).map(text => <p key={text}>{text}</p>)}</details> : null}
     {item?.synthetic_pilot ? <p className="mt-5 rounded-xl bg-amber-50 p-4 text-lg">This is a synthetic pilot community. Visits and room enquiries for it are test requests.</p> : null}
-    <CommunityNextStep facilityId={facilityId} facilityName={facilityName} />
+    <CommunityNextStep facilityId={facilityId} facilityName={facilityName} serviceNeeds={decision?.patient_needs_profile?.needs.map(need => need.need_text || need.parameter_id)} />
   </section>;
 }
