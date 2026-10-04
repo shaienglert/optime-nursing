@@ -238,7 +238,9 @@ def oomniker_advice_endpoint(payload: dict):
         state, str(payload.get("natural_language_query") or ""), payload.get("limit", 50)))
     if stored is None:
         raise HTTPException(status_code=409, detail="Your decision expired or your answers changed. Run the search again for current advice.")
-    return advise_with_ai(analysis=stored.get("oomniker") or {}, client_context=stored.get("patient_needs_profile") or {})
+    return advise_with_ai(analysis=stored.get("oomniker") or {}, client_context=stored.get("patient_needs_profile") or {},
+                          client_message=str(payload.get("client_message") or "")[:2000],
+                          conversation=payload.get("conversation") if isinstance(payload.get("conversation"), list) else [])
 
 
 @app.post("/api/market-price-floor")

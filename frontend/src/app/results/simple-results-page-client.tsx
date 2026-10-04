@@ -13,9 +13,9 @@ import { loadDecisionResponseCache, saveDecisionResponseCache, saveSessionJson, 
 import { isFinalRecommendation, isPendingRecommendation } from "@/lib/recommendation-eligibility";
 import { applyAdaptiveAnswer } from "@/lib/adaptive-answer";
 import { resultsClientState } from "@/lib/results-client-state";
-import { parseOomnikerQuantities } from "@/lib/oomniker-quantity";
 import { medicaidBudgetIsConditional } from "@/lib/medicaid-budget-scenario";
 import { DistanceScope } from "./distance-scope";
+import { applyMeasuredPreferenceAdvice, askMeasuredAdvisor, type AdvisorReply, type AdvisorTurn } from "@/lib/oomniker-advice";
 
 import { PersonalNarrative } from "@/components/guidance/personal-narrative";
 import { LiveText } from "@/components/guidance/live-text";
@@ -31,6 +31,9 @@ const TOP_COUNT = 5;
 
 const adviceLabels: Record<string, string> = {
   COMMUNITY_ENVIRONMENT_MATCH: "Community size", PREFERRED_LANGUAGE_SUPPORT: "Preferred language", CONTINUUM_OF_CARE: "Future care continuity",
+  RICH_CULTURE_AND_ACTIVITIES: "Culture and activities", CLASSICAL_MUSIC_ACCESS: "Classical music",
+  TRANSPORTATION_AND_OUTINGS: "Transportation and outings", DINING_EXPERIENCE: "Dining experience",
+  KOSHER_MEALS: "Kosher meals", SOCIAL_INTERACTION_FREQUENCY: "Social interaction frequency", NEARBY_PLACES: "Nearby amenities",
   inspection_rating: "Inspection rating", deficiency_count: "Inspection deficiencies", total_nurse_hours_per_resident_day: "Nursing hours per resident per day",
   rn_hours_per_resident_day: "Registered nurse hours per resident per day", staffing_turnover: "Staff turnover (%)",
   public_rating: "Public review rating", public_review_count: "Public review count", alis_latest_grade: "Regulatory grade", alis_disciplinary_action: "Regulatory disciplinary record",
@@ -113,50 +116,46 @@ export function SimpleResultsPageClient() {
     } finally { setSavingCase(false); }
   }
 
-  function applyOOmnikerChange() {
-    const text = oomnikerText.trim();
-    if (!text) return;
-    const lower = text.toLowerCase();
-    beforeOOmnikerIds.current = (response?.results || []).filter(isFinalRecommendation).slice(0, TOP_COUNT).map((item) => item.canonical_facility_id);
-    setOOmnikerDiff("");
-    setState((current) => {
-      oomnikerHistory.current.push(JSON.parse(JSON.stringify(current)));
-      const next = JSON.parse(JSON.stringify(current));
-      const quantities = parseOomnikerQuantities(text);
-      if (quantities.budget !== undefined) { next.budget = quantities.budget; next.medicaidOriginalBudget = undefined; next.medicaidBudgetScenarioChoice = ""; next.medicaidBudgetIncludesSupport = "Not sure"; }
-      if (quantities.miles) { next.maximumDistanceMiles = quantities.miles; next.customDistanceMiles = quantities.miles; next.approvedSearchRadiusMiles = ""; next.locationImportant = "Yes"; }
-      if (quantities.clearRadius) { next.maximumDistanceMiles = ""; next.customDistanceMiles = ""; next.approvedSearchRadiusMiles = ""; next.locationImportant = "No"; }
-      if (/dog.*(?:not|no longer).*(?:require|important)|(?:remove|drop).*(?:dog|pet)/.test(lower)) next.humanIntelligenceV2.independenceProfile.petOwnershipImportance = "Not important";
-      if (/large community.*(?:not|no longer).*(?:important|required)|(?:remove|drop).*large community/.test(lower)) next.humanIntelligenceV2.personalityProfile.communitySizePreference = "No preference";
-      if (/independent.*(?:outing|leave|go out).*(?:required|must|only)/.test(lower)) next.humanIntelligenceV2.independenceProfile.abilityToLeaveIndependently = "Very important";
-      if (/community.*small|small community/.test(lower)) next.humanIntelligenceV2.personalityProfile.communitySizePreference = "Small";
-      if (/community.*medium|medium community/.test(lower)) next.humanIntelligenceV2.personalityProfile.communitySizePreference = "Medium";
-      if (/community.*large|large community/.test(lower) && !/large community.*(?:not|no longer).*(?:important|required)|(?:remove|drop).*large community/.test(lower)) next.humanIntelligenceV2.personalityProfile.communitySizePreference = "Large";
-      if (/parking.*(?:not|no longer).*(?:need|required)|(?:remove|drop).*parking/.test(lower)) next.parkingRequirement = "No";
-      if (/parking.*(?:need|required|important)/.test(lower) && !/(?:not|no longer)/.test(lower)) next.parkingRequirement = "Yes";
-      if (/future care.*(?:important|required)|avoid another move/.test(lower)) next.futureCarePreference = /future care.*required/.test(lower) ? "Required" : "Preferred";
-      if (/future care.*(?:not|no longer).*(?:important|required)|(?:remove|drop).*future care/.test(lower)) next.futureCarePreference = "No preference";
-      next.questionnaireCompletion.clientSummaryConfirmed = true;
-      next.questionnaireCompletion.confirmedAt = new Date().toISOString();
-      return next;
-    });
-    setOOmnikerNotice(`Got it. I’ll make this change — “${text}” — and leave everything else as we agreed. I’m checking whether it changes the decision in a meaningful way.`);
+  const [advisorConversation, setAdvisorConversation] = useState<AdvisorTurn[]>([]);
+  const [advisorReply, setAdvisorReply] = useState<AdvisorReply | null>(null);
+  const [advisorBusy, setAdvisorBusy] = useState(false);
+  const advisorGeneration = useRef(0);
+
+  async function askOOmniker(message: string) {
+    if (!response?.decision_id || advisorBusy) return;
+    const generation = advisorGeneration.current;
+    const text = message.trim() || "Which two or three preference changes would you recommend, and why?";
+    const history = advisorConversation;
+    setAdvisorConversation(current => [...current, { role: "user", content: text }]);
+    setAdvisorBusy(true);
     setOOmnikerText("");
-    setOOmnikerOpen(false);
+    try {
+      const reply = await askMeasuredAdvisor({ decision_id: response.decision_id, questionnaire_state: state,
+        natural_language_query: naturalLanguageQuery, limit: 50, client_message: text, conversation: history });
+      if (generation !== advisorGeneration.current) return;
+      if (reply.status !== "AI_ADVISORY_READY") {
+        setAdvisorConversation(current => [...current, { role: "assistant", content: "The advisor is temporarily unavailable. You can still review the measured options below." }]);
+        return;
+      }
+      setAdvisorReply(reply);
+      setAdvisorConversation(current => [...current, { role: "assistant",
+        content: [reply.message, reply.follow_up].filter(Boolean).join(" ") }]);
+    } catch (cause) {
+      if (generation === advisorGeneration.current) setAdvisorConversation(current => [...current, { role: "assistant",
+        content: cause instanceof Error ? cause.message : "The advisor is temporarily unavailable." }]);
+    } finally {
+      if (generation === advisorGeneration.current) setAdvisorBusy(false);
+    }
   }
 
-  function acceptCommunitySizeAdvice(suggestion: OOmnikerPreferenceSuggestion) {
-    if (suggestion.parameter !== "COMMUNITY_ENVIRONMENT_MATCH" || suggestion.new_recommendation_count < 2
-      || suggestion.may_auto_change || !suggestion.requires_client_approval
-      || !["Medium", "Large and active"].includes(suggestion.alternative_value)) return;
+  function acceptPreferenceAdvice(suggestion: OOmnikerPreferenceSuggestion) {
+    const next = applyMeasuredPreferenceAdvice(state, suggestion);
+    if (next === state) return;
     beforeOOmnikerIds.current = (response?.results || []).filter(isFinalRecommendation).slice(0, TOP_COUNT).map(item => item.canonical_facility_id);
     setOOmnikerDiff("");
-    setState(current => {
-      oomnikerHistory.current.push(JSON.parse(JSON.stringify(current)));
-      return { ...current, humanIntelligenceV2: { ...current.humanIntelligenceV2,
-        personalityProfile: { ...current.humanIntelligenceV2.personalityProfile, communitySizePreference: suggestion.alternative_value } } };
-    });
-    setOOmnikerNotice(`You chose ${suggestion.alternative_value.toLowerCase()}. I’m running the search again with that community size preference.`);
+    oomnikerHistory.current.push(structuredClone(state));
+    setState(next);
+    setOOmnikerNotice(`You chose ${suggestion.alternative_value.toLowerCase()}. I’m running the search again. Your required conditions remain in force.`);
   }
 
   // Widening waits for the family: the engine only counts who fits a little further out,
@@ -191,6 +190,15 @@ export function SimpleResultsPageClient() {
     () => JSON.stringify({ questionnaire_state: state, natural_language_query: naturalLanguageQuery, limit: 50 }),
     [state, naturalLanguageQuery],
   );
+
+  useEffect(() => {
+    // A reply belongs to exactly one saved decision. Cancel stale conversational
+    // responses when a preference is accepted, undone or any answer changes.
+    advisorGeneration.current += 1;
+    setAdvisorConversation([]);
+    setAdvisorReply(null);
+    setAdvisorBusy(false);
+  }, [decisionRequestKey]);
 
   useEffect(() => {
     if (continuingInterview) return;
@@ -270,8 +278,8 @@ export function SimpleResultsPageClient() {
     [response],
   );
   const top = eligible.slice(0, TOP_COUNT);
-  const measuredPreferenceAdvice = (response?.oomniker?.suggestions || []).filter((item): item is OOmnikerPreferenceSuggestion =>
-    item.action === "OFFER_PREFERENCE_ALTERNATIVE" && item.authority === "PREFERENCE" && "new_recommendation_count" in item && item.new_recommendation_count >= 2);
+  const measuredPreferenceAdvice = (advisorReply?.proposals || response?.oomniker?.suggestions || []).filter((item): item is OOmnikerPreferenceSuggestion =>
+    item.action === "OFFER_PREFERENCE_ALTERNATIVE" && item.authority === "PREFERENCE" && "new_recommendation_count" in item && item.new_recommendation_count >= 2).slice(0, 3);
   const pendingEvidence = response?.pending_evidence_summary;
   const missingEvidence = [...new Set(pendingEvidence?.unresolved_requirements || [])]
     .map((key) => missingEvidenceLabels[key] || "another required facility detail");
@@ -343,7 +351,7 @@ export function SimpleResultsPageClient() {
                 {" These are open questions, not confirmed mismatches."}
               </p> : null}
               {response.market_coverage_notice ? <p className="mt-3 text-base leading-7">{response.market_coverage_notice}</p> : null}
-              {(response.results || []).some((item: any) => item.budget_exception === true) ? <p className="mt-3 text-base leading-7">We did not find enough otherwise suitable communities within the budget you requested, so OOmnik is also showing suitable options up to 10% above it. The budget difference lowers their ranking and is marked on the relevant option. Use OOmniker below to change the budget or any other parameter and add more communities.</p> : null}
+              {(response.results || []).some((item) => item.budget_exception === true) ? <p className="mt-3 text-base leading-7">We did not find enough otherwise suitable communities within the budget you requested, so OOmnik is also showing suitable options up to 10% above it. The budget difference lowers their ranking and is marked on the relevant option. OOmniker can discuss measured preference changes below. To change your budget or required conditions, review your answers.</p> : null}
               {medicaidBudgetIsConditional(state) ? <p className="mt-3 text-base leading-7">Your search budget is ${state.budget.toLocaleString()} per month and includes ${Number(state.medicaidMonthlyAmount).toLocaleString()} in Medicaid support you reported. {state.medicaidStatus === "Application pending" ? "That support is pending approval. " : ""}These options depend on that support being usable for the quoted services. OOmnik has not verified coverage or the amount you will personally pay; confirm both with the funding agency and community before committing.</p> : null}
             </div>
           ) : null}
@@ -398,7 +406,7 @@ export function SimpleResultsPageClient() {
                       <h2 className="mt-1 text-3xl font-semibold leading-tight sm:text-4xl">{item.facility_name}</h2>
                       <p className="mt-2 text-lg text-forest">{[item.city, item.state].filter(Boolean).join(", ")}</p>
                       <details className="mt-4 text-base"><summary className="cursor-pointer underline underline-offset-4">Practical details and the places that matter to you</summary>
-                      <p className="mt-2 text-lg font-semibold text-ink">{item.starting_monthly_price ? `Starting at $${item.starting_monthly_price.toLocaleString("en-US")} / month` : "Price not provided"}{(item as any).budget_exception ? ` · ${Math.abs(Number((item as any).budget_variance_pct || 0)).toFixed(1)}% above your requested budget` : ""} · Availability: {item.availability_status === "YES" ? "available" : item.availability_status === "LIMITED" ? "limited / waitlist" : item.availability_status === "NO" ? "not currently available" : "needs confirmation"}</p>
+                      <p className="mt-2 text-lg font-semibold text-ink">{item.starting_monthly_price ? `Starting at $${item.starting_monthly_price.toLocaleString("en-US")} / month` : "Price not provided"}{item.budget_exception ? ` · ${Math.abs(Number(item.budget_variance_pct || 0)).toFixed(1)}% above your requested budget` : ""} · Availability: {item.availability_status === "YES" ? "available" : item.availability_status === "LIMITED" ? "limited / waitlist" : item.availability_status === "NO" ? "not currently available" : "needs confirmation"}</p>
                       <p className="mt-2 text-base text-[#684d19]">{item.availability_status === "NO" ? "No space is currently recorded. Ask whether a suitable opening is expected by your move date." : "Confirm a suitable room and admission date directly with the community."} Care compatibility does not confirm readiness to move.</p>
                       {personalDistances.length > 0 || nearbyDistances.length > 0 ? <div className="mt-4 rounded-xl bg-sand p-4">{personalDistances.length > 0 ? <><p className="text-sm font-semibold uppercase tracking-[0.12em] text-forest">Close to the people and places that matter</p><ul className="mt-2 grid gap-x-6 gap-y-1 text-base sm:grid-cols-2">{personalDistances.map((place, destinationIndex) => <li key={`${place.label}-${destinationIndex}`}><strong>{place.label}</strong>: {place.driving_distance_miles != null || place.distance_miles != null ? `${Number(place.driving_distance_miles ?? place.distance_miles).toFixed(1)} mi` : "distance unavailable"}{place.driving_time_minutes ? ` · ${place.driving_time_minutes} min drive` : place.status === "UNKNOWN" ? "" : " · estimated"}</li>)}</ul></> : null}{nearbyDistances.length > 0 ? <><p className="text-sm font-semibold uppercase tracking-[0.12em] text-forest">Distances that matter to you</p><ul className="mt-2 grid gap-x-6 gap-y-1 text-base sm:grid-cols-2">{nearbyDistances.map(([category, place]) => <li key={category}><strong>{category}</strong>: {Number(place.driving_distance_miles ?? place.distance_miles).toFixed(1)} mi{place.driving_time_minutes ? ` · ${place.driving_time_minutes} min drive` : ""}{place.name && place.name !== category ? ` · ${place.name}` : ""}</li>)}</ul><p className="mt-2 text-xs text-forest">Based on the preferences you selected. Driving distance and time are shown when routing is available; otherwise OOmnik shows straight-line proximity and labels it as an estimate.</p></> : null}</div> : null}
                       {item.synthetic_pilot && item.monthly_rate_includes_verified_care ? <p className="mt-2 text-base text-ink">{item.monthly_price_basis === "TWO_RESIDENT_TOTAL" ? `Pilot monthly total for two residents, including verified care and the $${Number(item.second_resident_monthly_fee || 0).toLocaleString()} second-resident fee.` : "Pilot monthly rate includes the care services verified for this community."}</p> : null}
@@ -459,28 +467,34 @@ export function SimpleResultsPageClient() {
         <section className="mt-8 rounded-xl bg-sand p-7 sm:p-9">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div><p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#934b38]">OOMNIKER</p><h2 className="mt-2 text-3xl font-semibold">We can think this through together</h2><LiveText paragraphs={["How do these places feel to you? If something isn’t quite right, tell me what you would like to be different. We can explore your preferences together and keep the essential support you need in place."]} className="mt-3 max-w-3xl text-lg leading-8 text-forest" /></div>
-            <button type="button" onClick={() => setOOmnikerOpen((v) => !v)} className="rounded-xl bg-forest px-5 py-3 font-semibold text-white">{oomnikerOpen ? "Close conversation" : "Talk it through"}</button>
+            <button type="button" onClick={() => { if (!oomnikerOpen && !advisorConversation.length) void askOOmniker(""); setOOmnikerOpen((v) => !v); }} className="rounded-xl bg-forest px-5 py-3 font-semibold text-white">{oomnikerOpen ? "Close conversation" : "Talk it through"}</button>
           </div>
           <LiveText paragraphs={preferenceAdvice(response)} className="mt-5 text-xl leading-9" /><details className="mt-5"><summary className="cursor-pointer underline underline-offset-4">The preferences guiding our conversation</summary><p className="mt-3 text-lg leading-8">{activeCriteria.map(([label, value]) => `${label}: ${value}`).join(". ")}.</p></details>
           {measuredPreferenceAdvice.map(suggestion => <article key={`${suggestion.parameter}-${suggestion.alternative_value}`} className="mt-5 rounded-2xl border border-line bg-white p-5">
-            <h3 className="text-xl font-semibold">An alternative for your {adviceLabels[suggestion.parameter]?.toLowerCase() || "preference"}</h3>
+            <h3 className="text-xl font-semibold">An alternative for your {(suggestion.label || adviceLabels[suggestion.parameter])?.toLowerCase() || "preference"}</h3>
             <LiveText paragraphs={[suggestion.message]} className="mt-3 leading-7" />
             <ul className="mt-3 space-y-3">{suggestion.candidates.map(candidate => <li key={candidate.canonical_facility_id}>
               <strong>{candidate.facility_name || "Community"}</strong>: {adviceLabels[candidate.quality_advantage.parameter] || "Verified quality measure"}: {String(candidate.quality_advantage.value)}, compared with {String(candidate.quality_advantage.compared_value)} for a current option ({candidate.quality_advantage.source_family}).
               {candidate.unresolved_preferences.length ? <p>Still to verify: {candidate.unresolved_preferences.map(key => adviceLabels[key] || missingEvidenceLabels[key] || "another preference").join(", ")}.</p> : null}
               {typeof candidate.entrance_fee === "number" && candidate.entrance_fee > 0 ? <p>Entrance fee: ${candidate.entrance_fee.toLocaleString("en-US")}. One-time affordability and contract details still need confirmation.</p> : null}
             </li>)}</ul>
-            {suggestion.parameter === "COMMUNITY_ENVIRONMENT_MATCH" ? <button type="button" onClick={() => acceptCommunitySizeAdvice(suggestion)} className="mt-4 inline-flex items-center gap-3 rounded-xl bg-forest px-5 py-3 font-semibold text-white"><OomnikMark />Try {suggestion.alternative_value.toLowerCase()}</button> : <Link href="/adaptive-interview?review=1&next=/results" className="mt-4 inline-block font-semibold underline">Review this preference</Link>}
+            {suggestion.change_kind === "WAIVE_NTH" || suggestion.parameter === "COMMUNITY_ENVIRONMENT_MATCH" ? <button type="button" onClick={() => acceptPreferenceAdvice(suggestion)} className="mt-4 inline-flex items-center gap-3 rounded-xl bg-forest px-5 py-3 font-semibold text-white"><OomnikMark />Explore this change</button> : <Link href="/adaptive-interview?review=1&next=/results" className="mt-4 inline-block font-semibold underline">Review this preference</Link>}
           </article>)}
-          {(response.oomniker?.preference_analysis?.parameters || []).filter(item => item.eligible_below_display_count > 0 || item.unknown_count > 0).slice(0, 3).map(item => <p key={item.parameter} className="mt-4 text-base leading-7">
-            <strong>{adviceLabels[item.parameter] || "Another preference"}:</strong> {item.eligible_below_display_count} eligible communities outside the first five have a verified mismatch; {item.unknown_count} need more evidence. This preference does not exclude them.
+          {(response.oomniker?.preference_analysis?.parameters || []).map(item => <p key={item.parameter} className="mt-4 text-base leading-7">
+            <strong>{item.label || adviceLabels[item.parameter] || "Another preference"}:</strong> {item.eligible_below_display_count} eligible communities outside the first five have a verified mismatch; {item.unknown_count} need more evidence. This preference does not exclude them.
+            {item.status === "NO_VERIFIED_RANKING_EFFECT" ? " Changing it has no verified effect on the current recommendation order." : null}
           </p>)}
           {(response.oomniker?.constraint_impacts || []).slice(0, 3).map(item => <p key={item.parameter} className="mt-3 text-base leading-7">
             <strong>{missingEvidenceLabels[item.parameter] || "A required condition"}:</strong> {item.blocked_count} communities have a confirmed blocker; for {item.sole_verified_blocker_count}, it is the only confirmed blocker with no pending evidence. Your requirements stay in force. Counts may overlap across conditions.
           </p>)}
           {oomnikerNotice ? <div className="mt-4 rounded-xl bg-white p-4 text-base text-forest"><LiveText paragraphs={[oomnikerNotice, ...(oomnikerDiff ? [oomnikerDiff] : [])]} /> {oomnikerHistory.current.length > 0 ? <button type="button" onClick={() => { const previous = oomnikerHistory.current.pop(); if (previous) { setState(previous); setOOmnikerNotice("Done. I’ve put the previous preference back and I’m reassessing the earlier search."); } }} className="ml-2 font-semibold underline underline-offset-4">Undo last change</button> : null}</div> : null}
-          {oomnikerOpen ? <div className="mt-6"><label htmlFor="oomniker-message" className="mb-3 block text-lg">What would you like me to consider?</label><textarea id="oomniker-message" value={oomnikerText} onChange={(e) => setOOmnikerText(e.target.value)} rows={3} placeholder="For example: I’d like to consider a medium community, or search within 30 miles." className="w-full rounded-xl border border-line bg-white px-5 py-4 text-lg outline-none focus:border-forest" /><button type="button" onClick={applyOOmnikerChange} disabled={!oomnikerText.trim()} className="mt-3 rounded-xl bg-forest px-6 py-3 font-semibold text-white disabled:opacity-40">Update results</button></div> : null}
-
+          {oomnikerOpen ? <div className="mt-6">
+            <div aria-live="polite" className="space-y-3">{advisorConversation.map((turn, index) => <div key={index} className="rounded-xl bg-white p-4"><strong>{turn.role === "user" ? "You" : "OOmniker"}:</strong> <LiveText paragraphs={[turn.content]} /></div>)}{advisorBusy ? <p>Reviewing your question and the evidence…</p> : null}</div>
+            <label className="mt-4 block font-semibold" htmlFor="oomniker-question">Discuss your options</label>
+            <textarea id="oomniker-question" value={oomnikerText} onChange={(e) => setOOmnikerText(e.target.value)} rows={3} placeholder="Which change would help most? What would I give up?" className="mt-2 w-full rounded-xl border border-line bg-white px-5 py-4 text-lg outline-none focus:border-forest" />
+            <button type="button" onClick={() => void askOOmniker(oomnikerText)} disabled={advisorBusy || !oomnikerText.trim() || !response.decision_id} className="mt-3 rounded-xl bg-forest px-6 py-3 font-semibold text-white disabled:opacity-40">Ask OOMNIKER</button>
+            <p className="mt-3 text-sm">Discussing a change does not apply it. Choose an option above to run a new search, or <Link href="/adaptive-interview?review=1&next=/results" className="underline">review your answers</Link>.</p>
+          </div> : null}
         </section>
 
         <section className="mt-8 flex flex-wrap gap-4 pb-10">

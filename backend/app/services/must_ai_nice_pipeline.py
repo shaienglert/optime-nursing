@@ -278,6 +278,7 @@ def apply_must_ai_nice_pipeline(
     questionnaire_state: Dict[str, Any],
     natural_language_query: str,
     limit: int,
+    *, accepted_preference_changes: object = None,
 ) -> Dict[str, Any]:
     rows = list(result.get("results") or [])
     decision = result.setdefault("decision_intelligence", {})
@@ -329,6 +330,15 @@ def apply_must_ai_nice_pipeline(
                 row["budget_exception"] = variance > 0
         # In-budget candidates always rank ahead of the permitted +10% expansion.
         # The normal ranking still decides quality within each band.
+    from app.services.oomniker_nth_contract import apply_accepted_nth_changes
+    consent_audit = apply_accepted_nth_changes(rankable, client_intent, questionnaire_state, accepted_preference_changes)
+    if consent_audit["applied"] or consent_audit["ignored"]:
+        decision["oomniker_client_consent"] = consent_audit
+        client_intent = deepcopy(client_intent)
+        client_intent["nice_to_haves"] = [item for item in client_intent.get("nice_to_haves") or []
+                                         if item.get("key") not in consent_audit["applied"]]
+        # No MUST item or facility source evidence is changed.
+        decision["client_intent"] = client_intent
     # The shortlist cut uses the same layered order as the final ranking.
     rankable = _layered_rank(rankable)
     decision["ranking_universe_audit"] = {
@@ -687,7 +697,10 @@ def apply_must_ai_nice_pipeline(
         display_limit=min(5, max(0, int(limit))),
         dynamic_preference_count=int(dynamic_preferences.get("preference_count") or 0),
         dynamic_preferences=dynamic_preferences,
+        waived_keys=consent_audit["applied"],
     )
+    if consent_audit["applied"]:
+        result["oomniker_preference_analysis"]["accepted_changes"] = consent_audit["applied"]
     result["decision_intelligence"] = decision
     return result
 

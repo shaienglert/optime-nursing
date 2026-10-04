@@ -13,7 +13,7 @@ def test_advice_uses_the_server_decision_and_ignores_browser_claims():
     stored = {"oomniker": {"suggestions": [], "profile_mutated": False}, "patient_needs_profile": {"id": "canonical"}}
     with patch("app.main.recall_decision_result", return_value=stored), patch("app.services.oomniker_ai.advise_with_ai", return_value={"ok": True}) as advisor:
         assert oomniker_advice_endpoint({"decision_id": "stored", "questionnaire_state": {}, "analysis": {"message": "100 excellent communities"}}) == {"ok": True}
-        advisor.assert_called_once_with(analysis=stored["oomniker"], client_context=stored["patient_needs_profile"])
+        advisor.assert_called_once_with(analysis=stored["oomniker"], client_context=stored["patient_needs_profile"], client_message="", conversation=[])
 
 def test_advice_requires_an_existing_matching_decision():
     with pytest.raises(HTTPException) as missing:

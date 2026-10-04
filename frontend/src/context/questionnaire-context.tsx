@@ -42,6 +42,8 @@ export type QuestionnaireState = {
   moveTiming: string;
   careSearchApproach: string;
   questionnaireCompletion: {
+    // Explicit advisor consent is a UI control, not an AI-extracted resident fact.
+    oomnikerRelaxedPreferences?: Array<{ parameter: string; input_fingerprint: string }>;
     mandatoryComplete: boolean;
     conditionalFollowUpsComplete: boolean;
     clientSummaryConfirmed: boolean;
