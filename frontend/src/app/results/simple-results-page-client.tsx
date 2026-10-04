@@ -9,6 +9,7 @@ import { useQuestionnaire } from "@/context/questionnaire-context";
 import { createClientCase, DecisionEngineResponse, fetchPatientDecisionRecommendations } from "@/lib/api";
 import { loadDecisionResponseCache, saveDecisionResponseCache, saveSessionJson, QUESTIONNAIRE_SESSION_KEY } from "@/lib/search-session";
 import { isFinalRecommendation, isPendingRecommendation } from "@/lib/recommendation-eligibility";
+import { BUDGET_MISSING_EXPLANATION, budgetIsKnown, checkOpenAnswer } from "@/lib/open-answer";
 import { applyAdaptiveAnswer } from "@/lib/adaptive-answer";
 import { resultsClientState } from "@/lib/results-client-state";
 import { parseOomnikerQuantities } from "@/lib/oomniker-quantity";
@@ -69,6 +70,8 @@ export function SimpleResultsPageClient() {
   const [error, setError] = useState<string | null>(null);
   const [followUpAnswer, setFollowUpAnswer] = useState("");
   const [continuingInterview, setContinuingInterview] = useState(false);
+  const [budgetEntry, setBudgetEntry] = useState("");
+  const [budgetEntryError, setBudgetEntryError] = useState("");
   const [searchStage, setSearchStage] = useState(0);
   const [oomnikerOpen, setOOmnikerOpen] = useState(false);
   const [oomnikerText, setOOmnikerText] = useState("");
@@ -240,6 +243,20 @@ export function SimpleResultsPageClient() {
     .map((key) => missingEvidenceLabels[key] || "another required facility detail");
   const syntheticPilot = (response?.results || []).some((item) => item.synthetic_pilot)
     || pendingEvidence?.synthetic_pilot === true;
+  const budgetMissing = !budgetIsKnown(state.budget);
+  const submitBudget = (raw: string) => {
+    const checked = checkOpenAnswer("monthly_budget", raw);
+    if (!checked.ok) { setBudgetEntryError(checked.message); return; }
+    setBudgetEntryError("");
+    const next = applyAdaptiveAnswer({ ...state, notes: naturalLanguageQuery }, {
+      question_key: "monthly_budget",
+      question: "What is your monthly budget in dollars?",
+      target_fact_key: "monthly_budget",
+    }, checked.answer);
+    saveSessionJson(QUESTIONNAIRE_SESSION_KEY, next);
+    setState(next);
+    router.push("/adaptive-interview?next=%2Fresults");
+  };
   const relationship = personLabel(state.relationship, naturalLanguageQuery);
   const detailsHref = `/results/details${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
   const personalReportHref = `/results/personal-report${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
@@ -313,6 +330,15 @@ export function SimpleResultsPageClient() {
                 {missingEvidence.length > 0 ? ` I still need to verify ${missingEvidence.join(", ")}.` : " I still need to verify the required conditions."}
                 {" These are open questions, not confirmed mismatches."}
               </p> : null}
+              {budgetMissing ? <div className="mt-3 text-base leading-7" data-testid="budget-missing">
+                <p>{BUDGET_MISSING_EXPLANATION}</p>
+                <form className="mt-3 flex flex-wrap items-center gap-3" onSubmit={event => { event.preventDefault(); submitBudget(budgetEntry); }}>
+                  <label htmlFor="results-budget" className="sr-only">Monthly budget in dollars</label>
+                  <input id="results-budget" inputMode="numeric" placeholder="e.g. 7,000" value={budgetEntry} onChange={event => { setBudgetEntry(event.target.value); setBudgetEntryError(""); }} className="rounded-xl border p-3 text-lg" />
+                  <button type="submit" disabled={!budgetEntry.trim()} className="rounded-full bg-[#315f53] px-6 py-3 font-semibold text-white disabled:opacity-40">Add my budget</button>
+                </form>
+                {budgetEntryError ? <p role="alert" className="mt-2 text-rose-800">{budgetEntryError}</p> : null}
+              </div> : null}
               {response.market_coverage_notice ? <p className="mt-3 text-base leading-7">{response.market_coverage_notice}</p> : null}
               {(response.results || []).some((item: any) => item.budget_exception === true) ? <p className="mt-3 text-base leading-7">We did not find enough otherwise suitable communities within the budget you requested, so OOmnik is also showing suitable options up to 10% above it. The budget difference lowers their ranking and is marked on the relevant option. Use OOmniker below to change the budget or any other parameter and add more communities.</p> : null}
             </div>
