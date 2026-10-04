@@ -235,3 +235,27 @@ describe("submission", () => {
     expect(submitted.humanIntelligenceV2.futureCareProfile.secureMemoryNeighborhoodNeed).toBe("");
   });
 });
+
+describe("Medicaid amount intake", () => {
+  it("keeps stated coverage separate from budget and clears stale amounts", () => {
+    let context = ctx();
+    context = answer(context, "medicaidStatus", "Application pending");
+    context = answer(context, "medicaidAmountKnown", "Yes");
+    context = answer(context, "medicaidMonthlyAmount", 3000);
+    context = answer(context, "budget", 5000);
+    context = answer(context, "medicaidBudgetIncludesSupport", "Additional to my budget");
+    const submitted = buildSubmission(context);
+    expect(submitted.budget).toBe(5000);
+    expect(submitted.medicaidMonthlyAmount).toBe(3000);
+    expect(submitted.medicaidBudgetIncludesSupport).toBe("Additional to my budget");
+    context = answer(context, "medicaidStatus", "Not eligible");
+    expect(buildSubmission(context).medicaidMonthlyAmount).toBe(0);
+    expect(buildSubmission(context).medicaidBudgetIncludesSupport).toBe("");
+  });
+  it("allows an unknown amount without requiring a fabricated number", () => {
+    let context = answer(ctx(), "medicaidStatus", "Approved");
+    context = answer(context, "medicaidAmountKnown", "Amount not known");
+    expect(visibleQuestions(context).map(question => question.id)).not.toContain("medicaidMonthlyAmount");
+    expect(visibleQuestions(context).map(question => question.id)).not.toContain("medicaidBudgetIncludesSupport");
+  });
+});

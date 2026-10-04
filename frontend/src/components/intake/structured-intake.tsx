@@ -252,6 +252,12 @@ export function StructuredIntake() {
 
             <div className="mt-7">
               {question.note ? <p className="mb-3 text-base leading-7 text-[#527083]">{question.note}</p> : null}
+              {question.id === "medicaidStatus" || question.id === "medicaidAmountKnown" ? <div className="mb-4 text-sm leading-6">
+                <p>Medicaid may cover approved care at home or in Assisted Living, or care and accommodation in a participating nursing facility. Community-based coverage generally does not pay for room and board. A coverage amount is not necessarily money available to add to your housing budget.</p>
+                <p className="mt-2">OOmnik uses the information you provide. We do not process Medicaid applications or determine or guarantee eligibility, coverage or payment. Confirm coverage and your remaining cost with the funding agency and provider before committing.</p>
+                <p className="mt-2 flex flex-wrap gap-x-4"><a className="underline" href="https://www.medicaid.gov/medicaid/long-term-services-supports/institutional-long-term-care/nursing-facilities" target="_blank" rel="noopener noreferrer">Official Medicaid guide</a><a className="underline" href="https://adsd.nv.gov/Programs/Seniors/HCBS_%28FE%29/HCBS_%28FE%29/" target="_blank" rel="noopener noreferrer">Nevada home and Assisted Living support</a><a className="underline" href="https://www.ecfr.gov/current/title-42/chapter-IV/subchapter-C/part-441/subpart-G/section-441.310" target="_blank" rel="noopener noreferrer">Federal regulation: 42 CFR 441.310</a></p>
+                {context.draft.medicaidStatus === "Application pending" ? <p className="mt-2 font-medium">Expected coverage is conditional on approval.</p> : null}
+              </div> : null}
               {onBudget && priceFloorLoading ? <p role="status">Checking starting prices in your selected area for the care answers given so far…</p> : <AnswerControl question={question} value={question.get(context)} onAnswer={answer} priceFloor={priceFloor} />}
               {onBudget && priceFloorError ? <p className="mt-3 text-sm">Price lookup is unavailable. <button type="button" onClick={() => setPriceFloorRetry(value => value + 1)} className="underline">Try price lookup again</button></p> : null}
               {belowKnownFloor ? <p role="alert" className="mt-3 text-sm text-[#a4501f]">Your stated budget is below the known private-pay starting price. I have kept your amount. Choose a budget you can fund, or go back to change the area or funding answer before continuing.</p> : null}
