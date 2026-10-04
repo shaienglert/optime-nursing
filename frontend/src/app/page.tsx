@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 
 import { useQuestionnaire } from "@/context/questionnaire-context";
@@ -48,7 +48,7 @@ function ChoiceLink({
       onClick={onClick}
       aria-pressed={selected}
       className={`group relative inline-flex min-h-12 max-w-full items-center rounded-xl border px-4 py-3 text-left text-xl font-medium transition ${
-        selected ? "border-forest bg-sand text-forest" : "border-line bg-white text-ink hover:border-forest hover:bg-sand"
+        selected ? "border-forest bg-forest text-white" : "border-line bg-white text-ink hover:border-forest hover:bg-sand"
       }`}
     >
       <span>
@@ -63,6 +63,15 @@ export default function HomePage() {
   const { state, setState, resetState } = useQuestionnaire();
   const [heroStep, setHeroStep] = useState<HeroStep>("relationship");
   const [relationshipLabel, setRelationshipLabel] = useState("your loved one");
+  const [selectedChoice, setSelectedChoice] = useState("");
+  const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (advanceTimer.current) clearTimeout(advanceTimer.current); }, []);
+
+  function afterSelection(label: string, advance: () => void) {
+    if (advanceTimer.current) clearTimeout(advanceTimer.current);
+    setSelectedChoice(label);
+    advanceTimer.current = setTimeout(() => { advanceTimer.current = null; setSelectedChoice(""); advance(); }, 450);
+  }
 
   // Landing on "/" is always the start of a new case -- "Continue where I left
   // off" is the one sanctioned path back into an existing case, and it goes to
@@ -91,7 +100,7 @@ export default function HomePage() {
     const gender = label === "my mother" || label === "my wife" ? "Female" : label === "my father" || label === "my husband" ? "Male" : "";
     setState((current) => ({ ...current, relationship: value, gender }));
     setRelationshipLabel(personCopy(label));
-    setHeroStep("age");
+    afterSelection(label, () => setHeroStep("age"));
   }
 
   function chooseAge(label: string): void {
@@ -99,15 +108,15 @@ export default function HomePage() {
     const nextState = { ...state, ageGroup };
     flushSync(() => setState((current) => ({ ...current, ageGroup })));
     saveSessionJson(QUESTIONNAIRE_SESSION_KEY, nextState);
-    router.push("/intake");
+    afterSelection(label, () => router.push("/intake"));
   }
 
   return (
     <main className="min-h-screen bg-canvas text-ink">
       <section className="mx-auto max-w-6xl px-5 py-12 sm:px-8 sm:py-16">
         <div className="mx-auto max-w-3xl text-center">
-          <p className="text-lg font-semibold text-[#934b38]">Welcome</p>
-          <h1 className="mt-4 text-[2.65rem] font-semibold leading-[1.1] tracking-[-0.04em] sm:text-6xl">Find a place that feels like home.</h1>
+          <p className="oomnik-welcome font-semibold text-[#934b38]">Welcome</p>
+          <h1 className="oomnik-home-title mt-4 font-semibold leading-[1.1] tracking-[-0.04em]">Find a place that feels like home.</h1>
           <p className="mt-6 text-xl leading-8 text-muted">Tell us about the person, the life they want and the support they need. We’ll help you understand the choices and take the next step at your own pace.</p>
           <p className="mt-5 text-lg leading-8 text-muted">Starting in the Las Vegas Valley. Your needs guide the recommendations.</p>
         </div>
@@ -116,11 +125,11 @@ export default function HomePage() {
           {heroStep === "relationship" ? <>
             <h2 className="mt-4 text-3xl font-semibold leading-tight">Who are you looking for?</h2>
             <p className="mt-3 text-xl leading-8 text-muted">A few simple answers will help us get to know what matters.</p>
-            <div className="mt-6 flex flex-wrap gap-3">{RELATIONSHIP_OPTIONS.map(option => <ChoiceLink key={option.label} label={option.label} onClick={() => chooseRelationship(option.label, option.value)} />)}</div>
+            <div className="mt-6 flex flex-wrap gap-3">{RELATIONSHIP_OPTIONS.map(option => <ChoiceLink key={option.label} label={option.label} selected={selectedChoice === option.label} onClick={() => chooseRelationship(option.label, option.value)} />)}</div>
           </> : <>
-            <button type="button" onClick={() => setHeroStep("relationship")} className="mt-2 inline-flex min-h-12 items-center gap-2 text-lg font-medium text-forest"><JourneyIcon kind="back" />Change who this is for</button>
+            <button type="button" onClick={() => { if (advanceTimer.current) clearTimeout(advanceTimer.current); setSelectedChoice(""); setHeroStep("relationship"); }} className="mt-2 inline-flex min-h-12 items-center gap-2 text-lg font-medium text-forest"><JourneyIcon kind="back" />Change who this is for</button>
             <h2 className="mt-4 text-3xl font-semibold leading-tight">Thanks. About how old is {relationshipLabel}?</h2>
-            <div className="mt-6 flex flex-wrap gap-3">{AGE_OPTIONS.map(option => <ChoiceLink key={option} label={option} onClick={() => chooseAge(option)} />)}</div>
+            <div className="mt-6 flex flex-wrap gap-3">{AGE_OPTIONS.map(option => <ChoiceLink key={option} label={option} selected={selectedChoice === option} onClick={() => chooseAge(option)} />)}</div>
           </>}
           <Link href="/intake" className="mt-7 inline-flex min-h-12 items-center text-lg font-medium text-forest underline underline-offset-4">Continue where I left off</Link>
         </div>

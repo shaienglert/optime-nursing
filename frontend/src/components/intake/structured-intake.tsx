@@ -2,7 +2,7 @@
 
 import { updateClientCaseQuestionnaire } from "@/lib/api";
 import { budgetChoices } from "@/lib/budget-choices";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { useQuestionnaire } from "@/context/questionnaire-context";
@@ -25,7 +25,7 @@ function toggle(values: string[], value: string): string[] {
 
 function Choice({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
   return (
-    <button type="button" aria-pressed={active} onClick={onClick} className={`rounded-xl border min-h-12 px-4 py-3 text-left text-xl font-semibold transition ${active ? "border-forest bg-sand text-forest" : "border-line bg-white text-muted hover:border-forest"}`}>
+    <button type="button" aria-pressed={active} onClick={onClick} className={`rounded-xl border min-h-12 px-4 py-3 text-left text-xl font-semibold transition ${active ? "border-forest bg-forest text-white" : "border-line bg-white text-muted hover:border-forest"}`}>
       {active ? "✓ " : ""}{label}
     </button>
   );
@@ -109,6 +109,9 @@ export function StructuredIntake() {
   const [priceFloorLoading, setPriceFloorLoading] = useState(false);
   const [priceFloorError, setPriceFloorError] = useState(false);
   const [priceFloorRetry, setPriceFloorRetry] = useState(0);
+  const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (advanceTimer.current) clearTimeout(advanceTimer.current); }, []);
+  function cancelAdvance() { if (advanceTimer.current) clearTimeout(advanceTimer.current); advanceTimer.current = null; }
 
   const questions = useMemo(() => visibleQuestions(context), [context]);
 
@@ -174,6 +177,7 @@ export function StructuredIntake() {
   }
 
   function goToIndex(nextIndex: number) {
+    cancelAdvance();
     if (nextIndex >= questions.length) {
       finishQuestionnaire(context);
       return;
@@ -183,6 +187,7 @@ export function StructuredIntake() {
   }
 
   function answer(value: IntakeAnswer, advance: boolean) {
+    cancelAdvance();
     if (!question) return;
     const next = question.set(context, value);
     setContext(next);
@@ -195,14 +200,16 @@ export function StructuredIntake() {
     // answer may have just opened or closed a follow-up.
     const updated = visibleQuestions(next);
     const position = updated.findIndex((item) => item.id === question.id);
-    if (position === -1 || position + 1 >= updated.length) {
-      finishQuestionnaire(next);
-      return;
-    }
-    setStepId(updated[position + 1].id);
+    // Keep the chosen green answer visible before an automatic transition.
+    advanceTimer.current = setTimeout(() => {
+      advanceTimer.current = null;
+      if (position === -1 || position + 1 >= updated.length) finishQuestionnaire(next);
+      else setStepId(updated[position + 1].id);
+    }, 450);
   }
 
   function next() {
+    cancelAdvance();
     if (!question) return;
     if (onBudget && (priceFloorLoading || belowKnownFloor)) { setShowError(true); return; }
     if (question.required && !isAnswered(question, context)) {

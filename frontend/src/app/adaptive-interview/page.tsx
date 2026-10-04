@@ -156,6 +156,8 @@ export default function AdaptiveInterviewPage() {
   const [question, setQuestion] = useState<AdaptiveQuestion | null>(null);
   const [answer, setAnswer] = useState("");
   const [busy, setBusy] = useState(true);
+  const feedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (feedbackTimer.current) clearTimeout(feedbackTimer.current); }, []);
   const [error, setError] = useState<string | null>(null);
   const nextUrl = useRef("/results");
 
@@ -255,6 +257,8 @@ export default function AdaptiveInterviewPage() {
     const value = raw.trim();
     if (!value) return;
     setBusy(true);
+    setAnswer(value);
+    await new Promise<void>(resolve => { feedbackTimer.current = setTimeout(resolve, 450); });
     const nextState = applyAdaptiveAnswer(state, question, value);
     setState(nextState);
     void persistAdaptiveQuestionSignal({
@@ -299,7 +303,7 @@ export default function AdaptiveInterviewPage() {
             {options.length > 0 ? (
               <div className="ml-12 mt-5 flex flex-wrap gap-3">
                 {options.map((option) => (
-                  <button key={option} type="button" disabled={busy} onClick={() => void submitAnswer(option)} className="rounded-full border border-line bg-white px-5 py-3 text-left text-lg font-medium text-muted shadow-sm hover:border-line hover:bg-sand disabled:opacity-50">{option}</button>
+                  <button key={option} type="button" aria-pressed={answer === option} disabled={busy} onClick={() => void submitAnswer(option)} className={`rounded-xl border px-5 py-3 text-left text-lg font-medium shadow-sm ${answer === option ? "border-forest bg-forest text-white" : "border-line bg-white text-muted hover:border-forest hover:bg-sand disabled:opacity-50"}`}>{answer === option ? "✓ " : ""}{option}</button>
                 ))}
               </div>
             ) : (

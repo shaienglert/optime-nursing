@@ -15,6 +15,20 @@
 }
 
 @theme inline {
+  /* Text grows 20% without enlarging the layout's spacing or breakpoints. */
+  --text-xs: 0.9rem;
+  --text-sm: 1.05rem;
+  --text-base: 1.2rem;
+  --text-lg: 1.35rem;
+  --text-xl: 1.5rem;
+  --text-2xl: 1.8rem;
+  --text-3xl: 2.25rem;
+  --text-4xl: 2.7rem;
+  --text-5xl: 3.6rem;
+  --text-6xl: 4.5rem;
+  --text-7xl: 5.4rem;
+  --text-8xl: 7.2rem;
+  --text-9xl: 9.6rem;
   --color-canvas: #fdfbf7;
   --color-surface: #ffffff;
   --color-sand: #f1f0e8;
@@ -113,7 +127,7 @@ html { scroll-padding-top: 10rem; }
 /* A single warm canvas across family, community and operations screens. */
 @layer base {
   :root { color-scheme: light; }
-  body { font-size: 1.125rem; line-height: 1.65; }
+  body { font-size: 1.35rem; line-height: 1.65; }
   main { min-width: 0; }
   main h1, main h2, main h3 { text-wrap: balance; overflow-wrap: anywhere; }
   main p { text-wrap: pretty; }
@@ -123,5 +137,12 @@ html { scroll-padding-top: 10rem; }
   main button, main a { touch-action: manipulation; }
 }
 @layer components {
+  .oomnik-welcome { font-size: 2.25rem; line-height: 1.3; }
+  .oomnik-home-title { font-size: 2.12rem; }
+  @media (min-width: 40rem) { .oomnik-home-title { font-size: 3rem; } }
   .oomnik-panel { border: 1px solid var(--border); border-radius: 1.5rem; background: var(--surface); box-shadow: 0 8px 28px -20px rgb(40 75 56 / 0.3); }
+}
+
+@layer utilities {
+  .text-\[10px\] { font-size: 12px; }
 }
