@@ -27,6 +27,10 @@ def _relax(state, suggestion):
     structured lever for it (reported, never silently skipped)."""
     s = copy.deepcopy(state)
     if suggestion.get("action") == "OFFER_PREFERENCE_ALTERNATIVE":
+        if suggestion.get("change_kind") == "WAIVE_NTH":
+            assert suggestion["acceptance"]["parameter"] == suggestion["parameter"]
+            s.setdefault("questionnaireCompletion", {})["oomnikerRelaxedPreferences"] = [suggestion["acceptance"]]
+            return s
         for path, value in suggestion["profile_patch"].items():
             current = s
             parts = path.split(".")

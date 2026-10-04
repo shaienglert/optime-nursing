@@ -53,6 +53,11 @@ def _counterfactual(profile: dict, shown: list[dict], context: dict) -> dict:
                 and item.get("new_recommendation_count") == len(ids) and len(ids) >= 2 and "" not in ids
                 and item.get("requires_client_approval") is True and item.get("may_auto_change") is False):
             suggestions.append(item)
+    # Present at most three different changes; effects are alternatives, not additive.
+    best_by_parameter = {}
+    for suggestion in sorted(suggestions, key=lambda item: -item["new_recommendation_count"]):
+        best_by_parameter.setdefault(suggestion["parameter"], suggestion)
+    suggestions = list(best_by_parameter.values())[:3]
     for reason, counts in sorted(pending_only.items()):
         if counts["waiting"] < 2:
             continue
