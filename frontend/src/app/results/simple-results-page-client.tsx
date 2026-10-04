@@ -12,6 +12,8 @@ import { loadDecisionResponseCache, saveDecisionResponseCache, saveSessionJson, 
 import { isFinalRecommendation, isPendingRecommendation } from "@/lib/recommendation-eligibility";
 import { applyAdaptiveAnswer } from "@/lib/adaptive-answer";
 import { resultsClientState } from "@/lib/results-client-state";
+import { parseOomnikerQuantities } from "@/lib/oomniker-quantity";
+import { medicaidBudgetIsConditional } from "@/lib/medicaid-budget-scenario";
 import { DistanceScope } from "./distance-scope";
 
 import { PersonalNarrative } from "@/components/guidance/personal-narrative";
@@ -116,22 +118,19 @@ export function SimpleResultsPageClient() {
     setState((current) => {
       oomnikerHistory.current.push(JSON.parse(JSON.stringify(current)));
       const next = JSON.parse(JSON.stringify(current));
-      const budget = lower.match(/(?:budget|up to|maximum|max)[^$0-9]{0,20}\$?([0-9][0-9,]*)/);
-      if (budget) next.budget = Number(budget[1].replaceAll(",", ""));
-      const miles = lower.match(/([0-9]+)\s*miles?/);
-      // A distance stated here replaces the limit outright, including any wider radius
-      // accepted earlier -- otherwise "make it 10 miles" after widening to 30 would change
-      // nothing, because the engine applies the larger of the two.
-      if (miles) { next.maximumDistanceMiles = miles[1]; next.customDistanceMiles = miles[1]; next.approvedSearchRadiusMiles = ""; next.locationImportant = "Yes"; }
+      const quantities = parseOomnikerQuantities(text);
+      if (quantities.budget !== undefined) { next.budget = quantities.budget; next.medicaidOriginalBudget = undefined; next.medicaidBudgetScenarioChoice = ""; next.medicaidBudgetIncludesSupport = "Not sure"; }
+      if (quantities.miles) { next.maximumDistanceMiles = quantities.miles; next.customDistanceMiles = quantities.miles; next.approvedSearchRadiusMiles = ""; next.locationImportant = "Yes"; }
+      if (quantities.clearRadius) { next.maximumDistanceMiles = ""; next.customDistanceMiles = ""; next.approvedSearchRadiusMiles = ""; next.locationImportant = "No"; }
       if (/dog.*(?:not|no longer).*(?:require|important)|(?:remove|drop).*(?:dog|pet)/.test(lower)) next.humanIntelligenceV2.independenceProfile.petOwnershipImportance = "Not important";
       if (/large community.*(?:not|no longer).*(?:important|required)|(?:remove|drop).*large community/.test(lower)) next.humanIntelligenceV2.personalityProfile.communitySizePreference = "No preference";
       if (/independent.*(?:outing|leave|go out).*(?:required|must|only)/.test(lower)) next.humanIntelligenceV2.independenceProfile.abilityToLeaveIndependently = "Very important";
       if (/community.*small|small community/.test(lower)) next.humanIntelligenceV2.personalityProfile.communitySizePreference = "Small";
       if (/community.*medium|medium community/.test(lower)) next.humanIntelligenceV2.personalityProfile.communitySizePreference = "Medium";
-      if (/community.*large|large community/.test(lower)) next.humanIntelligenceV2.personalityProfile.communitySizePreference = "Large";
+      if (/community.*large|large community/.test(lower) && !/large community.*(?:not|no longer).*(?:important|required)|(?:remove|drop).*large community/.test(lower)) next.humanIntelligenceV2.personalityProfile.communitySizePreference = "Large";
       if (/parking.*(?:not|no longer).*(?:need|required)|(?:remove|drop).*parking/.test(lower)) next.parkingRequirement = "No";
       if (/parking.*(?:need|required|important)/.test(lower) && !/(?:not|no longer)/.test(lower)) next.parkingRequirement = "Yes";
-      if (/future care.*(?:important|required)|avoid another move/.test(lower)) next.futureCarePreference = "Yes";
+      if (/future care.*(?:important|required)|avoid another move/.test(lower)) next.futureCarePreference = /future care.*required/.test(lower) ? "Required" : "Preferred";
       if (/future care.*(?:not|no longer).*(?:important|required)|(?:remove|drop).*future care/.test(lower)) next.futureCarePreference = "No preference";
       next.questionnaireCompletion.clientSummaryConfirmed = true;
       next.questionnaireCompletion.confirmedAt = new Date().toISOString();
@@ -341,6 +340,7 @@ export function SimpleResultsPageClient() {
               </p> : null}
               {response.market_coverage_notice ? <p className="mt-3 text-base leading-7">{response.market_coverage_notice}</p> : null}
               {(response.results || []).some((item: any) => item.budget_exception === true) ? <p className="mt-3 text-base leading-7">We did not find enough otherwise suitable communities within the budget you requested, so OOmnik is also showing suitable options up to 10% above it. The budget difference lowers their ranking and is marked on the relevant option. Use OOmniker below to change the budget or any other parameter and add more communities.</p> : null}
+              {medicaidBudgetIsConditional(state) ? <p className="mt-3 text-base leading-7">Your search budget is ${state.budget.toLocaleString()} per month and includes ${Number(state.medicaidMonthlyAmount).toLocaleString()} in Medicaid support you reported. {state.medicaidStatus === "Application pending" ? "That support is pending approval. " : ""}These options depend on that support being usable for the quoted services. OOmnik has not verified coverage or the amount you will personally pay; confirm both with the funding agency and community before committing.</p> : null}
             </div>
           ) : null}
           <details className="mt-6 text-lg"><summary className="cursor-pointer underline underline-offset-4">Keep our conversation for later</summary><div className="mt-4">

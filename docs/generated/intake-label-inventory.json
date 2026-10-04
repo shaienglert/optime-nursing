@@ -1,0 +1,1013 @@
+{
+  "question_count": 65,
+  "option_count": 243,
+  "questions": [
+    {
+      "id": "relationship",
+      "kind": "single",
+      "prompt": "Who are we finding the right place for?",
+      "source": "frontend/src/lib/intake-questions.ts:217",
+      "required": true,
+      "options": [
+        "Mom",
+        "Dad",
+        "Grandma",
+        "Grandpa",
+        "Spouse",
+        "Myself",
+        "Couple",
+        "Relative",
+        "Friend"
+      ],
+      "read": "({ draft }) => draft.relationship",
+      "write": "(context, value) => ({ ...context, draft: (0, canonical_intake_state_1.applyCanonicalIdentity)({ ...context.draft, gender: \"\" }, text(value)) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "ageGroup",
+      "kind": "single",
+      "prompt": "About how old are they?",
+      "source": "frontend/src/lib/intake-questions.ts:230",
+      "required": true,
+      "options": [
+        "60-64",
+        "65-69",
+        "70-74",
+        "75-79",
+        "80-84",
+        "85-89",
+        "90-94",
+        "95+"
+      ],
+      "read": "({ draft }) => draft.ageGroup",
+      "write": "(context, value) => setDraft(context, { ageGroup: text(value) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "locationImportant",
+      "kind": "single",
+      "prompt": "Should we limit the search to a particular part of the Las Vegas Valley?",
+      "source": "frontend/src/lib/intake-questions.ts:242",
+      "required": false,
+      "options": [
+        "Yes",
+        "No"
+      ],
+      "read": "({ draft }) => draft.locationImportant",
+      "write": "(context, value) => setDraft(context, { locationImportant: text(value) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "referenceAddress",
+      "kind": "single",
+      "prompt": "Which part of the Las Vegas Valley would you prefer?",
+      "source": "frontend/src/lib/intake-questions.ts:254",
+      "required": true,
+      "options": [
+        "Anywhere in the Las Vegas Valley",
+        "Las Vegas",
+        "Henderson",
+        "North Las Vegas",
+        "Summerlin",
+        "Spring Valley",
+        "Paradise",
+        "Enterprise",
+        "Boulder City"
+      ],
+      "read": "({ draft }) => draft.referenceAddress",
+      "write": "(context, value) => setDraft(context, { referenceAddress: text(value), referenceLocationValue: text(value), locationImportant: text(value) === \"Anywhere in the Las Vegas Valley\" ? \"No\" : \"Yes\" })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "maximumDistanceMiles",
+      "kind": "single",
+      "prompt": "How far is still close enough?",
+      "source": "frontend/src/lib/intake-questions.ts:267",
+      "required": true,
+      "options": [
+        "10",
+        "20",
+        "30",
+        "50",
+        "100"
+      ],
+      "read": "({ draft }) => draft.maximumDistanceMiles",
+      "write": "(context, value) => setDraft(context, { maximumDistanceMiles: text(value) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "assistance",
+      "kind": "multi",
+      "prompt": "What kind of help makes everyday life easier? Choose anything that fits.",
+      "source": "frontend/src/lib/intake-questions.ts:280",
+      "required": true,
+      "options": [
+        "Fully independent",
+        "Light assistance",
+        "Help with bathing",
+        "Help with dressing",
+        "Help with toileting",
+        "Help with medications",
+        "Daytime supervision",
+        "24/7 support required",
+        "Skilled nursing care"
+      ],
+      "read": "({ extras }) => extras.assistance",
+      "write": "(context, value) => {\n            const next = list(value);\n            // \"Fully independent\" cannot coexist with a specific support need.\n            const added = next.find((item) => !context.extras.assistance.includes(item));\n            if (added === \"Fully independent\")\n                return setExtra(context, { assistance: [\"Fully independent\"] });\n            return setExtra(context, { assistance: next.filter((item) => item !== \"Fully independent\") });\n        }",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "mobilityMethod",
+      "kind": "single",
+      "prompt": "How do they usually get around?",
+      "source": "frontend/src/lib/intake-questions.ts:298",
+      "required": true,
+      "options": [
+        "Independent",
+        "Cane",
+        "Walker",
+        "Wheelchair",
+        "Mostly in bed"
+      ],
+      "read": "({ draft }) => draft.medicalCareProfile.mobilityMethod",
+      "write": "(context, value) => setMedical(context, { mobilityMethod: text(value) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "transferAssistance",
+      "kind": "single",
+      "prompt": "Do they need help getting up, sitting down, or transferring?",
+      "source": "frontend/src/lib/intake-questions.ts:310",
+      "required": true,
+      "options": [
+        "No",
+        "One person",
+        "Two people",
+        "Mechanical lift",
+        "Not sure"
+      ],
+      "read": "({ draft }) => draft.medicalCareProfile.transferAssistance",
+      "write": "(context, value) => setMedical(context, { transferAssistance: text(value) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "recentFalls",
+      "kind": "single",
+      "prompt": "Have there been any falls in the last six months?",
+      "source": "frontend/src/lib/intake-questions.ts:322",
+      "required": true,
+      "options": [
+        "No",
+        "One",
+        "More than one",
+        "Not sure"
+      ],
+      "read": "({ draft }) => draft.medicalCareProfile.recentFalls",
+      "write": "(context, value) => setMedical(context, { recentFalls: text(value) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "memoryStatus",
+      "kind": "single",
+      "prompt": "Have you noticed any changes in memory or confusion lately?",
+      "source": "frontend/src/lib/intake-questions.ts:334",
+      "required": true,
+      "options": [
+        "No",
+        "Occasionally forgetful",
+        "Mild memory issues",
+        "Significant memory issues",
+        "Not sure"
+      ],
+      "read": "({ draft }) => draft.memoryStatus",
+      "write": "(context, value) => setDraft(context, { memoryStatus: text(value) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "memoryWandering",
+      "kind": "single",
+      "prompt": "Is there any concern about wandering or getting lost?",
+      "source": "frontend/src/lib/intake-questions.ts:346",
+      "required": true,
+      "options": [
+        "Yes",
+        "No",
+        "Not sure"
+      ],
+      "read": "({ extras }) => extras.memoryWandering",
+      "write": "(context, value) => setExtra(context, { memoryWandering: text(value) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "secureMemory",
+      "kind": "single",
+      "prompt": "Would a secure memory-care setting feel necessary?",
+      "source": "frontend/src/lib/intake-questions.ts:358",
+      "required": true,
+      "options": [
+        "Yes",
+        "No",
+        "Not sure"
+      ],
+      "read": "({ extras }) => extras.secureMemory",
+      "write": "(context, value) => setExtra(context, { secureMemory: text(value) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "hasOngoingMedicalNeeds",
+      "kind": "single",
+      "prompt": "Is there any ongoing medical care the community would need to provide or coordinate?",
+      "source": "frontend/src/lib/intake-questions.ts:370",
+      "required": true,
+      "options": [
+        "No",
+        "Yes",
+        "Not sure"
+      ],
+      "read": "({ draft }) => draft.medicalCareProfile.hasOngoingMedicalNeeds",
+      "write": "(context, value) => setMedical(context, { hasOngoingMedicalNeeds: text(value), needs: text(value) === \"No\" ? [] : context.draft.medicalCareProfile.needs })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "medicalNeeds",
+      "kind": "multi",
+      "prompt": "Which of these are part of the current routine?",
+      "source": "frontend/src/lib/intake-questions.ts:382",
+      "required": true,
+      "options": [
+        "Dialysis",
+        "Oxygen",
+        "Wound care",
+        "Injections or infusions",
+        "Complex medication management",
+        "Complex chronic condition",
+        "Permanent medical equipment",
+        "Nursing supervision",
+        "Other"
+      ],
+      "read": "({ draft }) => draft.medicalCareProfile.needs",
+      "write": "(context, value) => setMedical(context, { needs: list(value).filter((item) => !item.startsWith(\"Other: \")) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "medicalOther",
+      "kind": "text",
+      "prompt": "What other medical care should we know about?",
+      "source": "frontend/src/lib/intake-questions.ts:394",
+      "required": true,
+      "options": [],
+      "read": "({ extras }) => extras.medicalOther",
+      "write": "(context, value) => setExtra(context, { medicalOther: text(value) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "dialysisFrequency",
+      "kind": "text",
+      "prompt": "How often is dialysis needed?",
+      "source": "frontend/src/lib/intake-questions.ts:406",
+      "required": true,
+      "options": [],
+      "read": "({ draft }) => draft.medicalCareProfile.dialysisFrequency",
+      "write": "(context, value) => setMedical(context, { dialysisFrequency: text(value) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "dialysisCenter",
+      "kind": "text",
+      "prompt": "Which dialysis center is used today?",
+      "source": "frontend/src/lib/intake-questions.ts:418",
+      "required": false,
+      "options": [],
+      "read": "({ draft }) => draft.medicalCareProfile.dialysisCenter",
+      "write": "(context, value) => setMedical(context, { dialysisCenter: text(value) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "dialysisTransportation",
+      "kind": "single",
+      "prompt": "Would transportation to dialysis be needed?",
+      "source": "frontend/src/lib/intake-questions.ts:430",
+      "required": true,
+      "options": [
+        "Yes",
+        "No",
+        "Not sure"
+      ],
+      "read": "({ draft }) => draft.medicalCareProfile.dialysisTransportation",
+      "write": "(context, value) => setMedical(context, { dialysisTransportation: text(value) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "oxygenUse",
+      "kind": "single",
+      "prompt": "How is oxygen used day to day?",
+      "source": "frontend/src/lib/intake-questions.ts:442",
+      "required": true,
+      "options": [
+        "Continuously",
+        "At night",
+        "As needed",
+        "Not sure"
+      ],
+      "read": "({ draft }) => draft.medicalCareProfile.oxygenUse",
+      "write": "(context, value) => setMedical(context, { oxygenUse: text(value) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "woundCareFrequency",
+      "kind": "text",
+      "prompt": "How often is wound care required?",
+      "source": "frontend/src/lib/intake-questions.ts:454",
+      "required": true,
+      "options": [],
+      "read": "({ draft }) => draft.medicalCareProfile.woundCareFrequency",
+      "write": "(context, value) => setMedical(context, { woundCareFrequency: text(value) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "complexConditionDetails",
+      "kind": "text",
+      "prompt": "Describe what the community must provide or coordinate.",
+      "source": "frontend/src/lib/intake-questions.ts:466",
+      "required": false,
+      "options": [],
+      "read": "({ draft }) => draft.medicalCareProfile.complexConditionDetails",
+      "write": "(context, value) => setMedical(context, { complexConditionDetails: text(value) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "physicianCoordination",
+      "kind": "single",
+      "prompt": "Would it help if the community coordinated doctors, appointments, tests, or medication changes?",
+      "source": "frontend/src/lib/intake-questions.ts:478",
+      "required": true,
+      "options": [
+        "Yes",
+        "No",
+        "Not sure"
+      ],
+      "read": "({ draft }) => draft.medicalCareProfile.physicianCoordination",
+      "write": "(context, value) => setMedical(context, { physicianCoordination: text(value) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "recentHospitalization",
+      "kind": "single",
+      "prompt": "Has there been a hospital stay recently?",
+      "source": "frontend/src/lib/intake-questions.ts:490",
+      "required": true,
+      "options": [
+        "No",
+        "Yes",
+        "Not sure"
+      ],
+      "read": "({ extras }) => extras.recentHospitalization",
+      "write": "(context, value) => setExtra(context, { recentHospitalization: text(value) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "hospitalTiming",
+      "kind": "single",
+      "prompt": "Roughly when was that?",
+      "source": "frontend/src/lib/intake-questions.ts:502",
+      "required": true,
+      "options": [
+        "Within 30 days",
+        "1-3 months",
+        "3-6 months",
+        "More than 6 months"
+      ],
+      "read": "({ extras }) => extras.hospitalTiming",
+      "write": "(context, value) => setExtra(context, { hospitalTiming: text(value) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "recentProcedure",
+      "kind": "single",
+      "prompt": "Was the recent hospital stay related to a surgery or medical procedure?",
+      "source": "frontend/src/lib/intake-questions.ts:514",
+      "required": true,
+      "options": [
+        "Yes",
+        "No",
+        "Not sure"
+      ],
+      "read": "({ extras }) => extras.recentProcedure",
+      "write": "(context, value) => setRecovery(context, { recentProcedure: text(value) }, { recentProcedure: text(value) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "procedureType",
+      "kind": "text",
+      "prompt": "What surgery or procedure was it?",
+      "source": "frontend/src/lib/intake-questions.ts:526",
+      "required": true,
+      "options": [],
+      "read": "({ extras }) => extras.procedureType",
+      "write": "(context, value) => setRecovery(context, { procedureType: text(value) }, { procedureType: text(value) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "expectedRecovery",
+      "kind": "single",
+      "prompt": "Is the current extra support expected to be temporary as recovery progresses?",
+      "source": "frontend/src/lib/intake-questions.ts:537",
+      "required": true,
+      "options": [
+        "Yes",
+        "No",
+        "Not sure"
+      ],
+      "read": "({ extras }) => extras.expectedRecovery",
+      "write": "(context, value) => setRecovery(context, { expectedRecovery: text(value) }, { expectedRecovery: text(value) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "temporarySupportMonths",
+      "kind": "number",
+      "prompt": "About how many months is the extra support expected to be needed?",
+      "source": "frontend/src/lib/intake-questions.ts:549",
+      "required": true,
+      "options": [],
+      "read": "({ extras }) => extras.temporarySupportMonths",
+      "write": "(context, value) => setRecovery(context, { temporarySupportMonths: text(value) }, { temporarySupportMonths: text(value) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "rehabNeed",
+      "kind": "single",
+      "prompt": "Is rehabilitation or closer monitoring still needed?",
+      "source": "frontend/src/lib/intake-questions.ts:560",
+      "required": true,
+      "options": [
+        "Yes",
+        "No",
+        "Not sure"
+      ],
+      "read": "({ extras }) => extras.rehabNeed",
+      "write": "(context, value) => setExtra(context, { rehabNeed: text(value) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "medicareStatus",
+      "kind": "single",
+      "prompt": "What’s the current Medicare situation?",
+      "source": "frontend/src/lib/intake-questions.ts:572",
+      "required": true,
+      "options": [
+        "Original Medicare",
+        "Medicare Advantage",
+        "No Medicare",
+        "Not sure"
+      ],
+      "read": "({ draft }) => draft.medicareStatus",
+      "write": "(context, value) => setDraft(context, { medicareStatus: text(value) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "medicaidStatus",
+      "kind": "single",
+      "prompt": "And what’s the Medicaid situation?",
+      "source": "frontend/src/lib/intake-questions.ts:584",
+      "required": true,
+      "options": [
+        "Approved",
+        "Application pending",
+        "May qualify",
+        "Not eligible",
+        "Not sure"
+      ],
+      "read": "({ draft }) => draft.medicaidStatus",
+      "write": "(context, value) => setDraft(context, { medicaidStatus: text(value), budget: context.draft.medicaidOriginalBudget ?? context.draft.budget, medicaidOriginalBudget: undefined, medicaidBudgetScenarioChoice: \"\" })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "medicaidAmountKnown",
+      "kind": "single",
+      "prompt": "Do you know the monthly Medicaid coverage amount approved or expected?",
+      "source": "frontend/src/lib/intake-questions.ts:596",
+      "required": true,
+      "options": [
+        "Yes",
+        "Amount not known"
+      ],
+      "read": "({ draft }) => draft.medicaidAmountKnown || \"\"",
+      "write": "(context, value) => setDraft(context, { medicaidAmountKnown: text(value), medicaidMonthlyAmount: text(value) === \"Yes\" ? context.draft.medicaidMonthlyAmount : 0, medicaidBudgetIncludesSupport: \"\", budget: context.draft.medicaidOriginalBudget ?? context.draft.budget, medicaidOriginalBudget: undefined, medicaidBudgetScenarioChoice: \"\" })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "medicaidMonthlyAmount",
+      "kind": "number",
+      "prompt": "What is that monthly amount in dollars?",
+      "source": "frontend/src/lib/intake-questions.ts:608",
+      "required": true,
+      "options": [],
+      "read": "({ draft }) => draft.medicaidMonthlyAmount || 0",
+      "write": "(context, value) => setDraft(context, { medicaidMonthlyAmount: Math.max(0, Number(value) || 0), budget: context.draft.medicaidOriginalBudget ?? context.draft.budget, medicaidOriginalBudget: undefined, medicaidBudgetScenarioChoice: \"\" })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "budget",
+      "kind": "number",
+      "prompt": "What monthly budget would feel comfortable?",
+      "source": "frontend/src/lib/intake-questions.ts:619",
+      "required": true,
+      "options": [],
+      "read": "({ draft }) => draft.budget",
+      "write": "(context, value) => setDraft(context, { budget: Math.max(0, Number(value) || 0), medicaidOriginalBudget: undefined, medicaidBudgetScenarioChoice: \"\" })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "medicaidBudgetIncludesSupport",
+      "kind": "single",
+      "prompt": "Does the monthly budget you chose already include that Medicaid amount?",
+      "source": "frontend/src/lib/intake-questions.ts:631",
+      "required": true,
+      "options": [
+        "Already included",
+        "Additional to my budget",
+        "Not sure"
+      ],
+      "read": "({ draft }) => draft.medicaidBudgetIncludesSupport || \"\"",
+      "write": "(context, value) => setDraft(context, { medicaidBudgetIncludesSupport: text(value), budget: context.draft.medicaidOriginalBudget ?? context.draft.budget, medicaidOriginalBudget: undefined, medicaidBudgetScenarioChoice: \"\" })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "medicaidBudgetScenarioChoice",
+      "kind": "single",
+      "prompt": "Would you like to include that additional support amount in the search budget?",
+      "source": "frontend/src/lib/intake-questions.ts:644",
+      "required": true,
+      "options": [
+        "Include support in my search",
+        "Use my own budget only"
+      ],
+      "read": "({ draft }) => draft.medicaidBudgetScenarioChoice || \"\"",
+      "write": "(context, value) => ({ ...context, draft: (0, medicaid_budget_scenario_1.applyMedicaidBudgetScenario)(context.draft, text(value)) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "moveTiming",
+      "kind": "single",
+      "prompt": "When would you ideally like the move to happen?",
+      "source": "frontend/src/lib/intake-questions.ts:657",
+      "required": true,
+      "options": [
+        "Immediately",
+        "Within 30 days",
+        "1-3 months",
+        "3-6 months",
+        "Planning ahead",
+        "Not sure"
+      ],
+      "read": "({ draft }) => draft.moveTiming",
+      "write": "(context, value) => setDraft(context, { moveTiming: text(value) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "moveAttitude",
+      "kind": "single",
+      "prompt": "How do they feel about the idea of moving?",
+      "source": "frontend/src/lib/intake-questions.ts:669",
+      "required": true,
+      "options": [
+        "Wants to move",
+        "Positive",
+        "Cautious but open",
+        "Anxious",
+        "Resistant",
+        "Not sure"
+      ],
+      "read": "({ extras }) => extras.moveAttitude",
+      "write": "(context, value) => setExtra(context, { moveAttitude: text(value) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "socialFrequency",
+      "kind": "single",
+      "prompt": "How social would they like everyday life to be?",
+      "source": "frontend/src/lib/intake-questions.ts:681",
+      "required": true,
+      "options": [
+        "Daily",
+        "Several times weekly",
+        "Weekly",
+        "Occasionally",
+        "Very little"
+      ],
+      "read": "({ extras }) => extras.socialFrequency",
+      "write": "(context, value) => setExtra(context, { socialFrequency: text(value) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "communityStyle",
+      "kind": "single",
+      "prompt": "What kind of community would feel most comfortable?",
+      "source": "frontend/src/lib/intake-questions.ts:693",
+      "required": true,
+      "options": [
+        "Small and familiar",
+        "Medium",
+        "Large and active",
+        "Quiet",
+        "No preference"
+      ],
+      "read": "({ extras }) => extras.communityStyle",
+      "write": "(context, value) => setExtra(context, { communityStyle: text(value) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "activities",
+      "kind": "multi",
+      "prompt": "What do they genuinely enjoy doing? Choose anything that matters.",
+      "source": "frontend/src/lib/intake-questions.ts:705",
+      "required": true,
+      "options": [
+        "Music",
+        "Movies",
+        "Games",
+        "Exercise",
+        "Outdoor activities",
+        "Religious life",
+        "Cultural activities",
+        "Classes",
+        "Volunteering"
+      ],
+      "read": "({ extras }) => extras.activities",
+      "write": "(context, value) => setExtra(context, { activities: list(value) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "activityImportance",
+      "kind": "single",
+      "prompt": "Are these activities a requirement for the community, or preferences?",
+      "source": "frontend/src/lib/intake-questions.ts:717",
+      "required": true,
+      "options": [
+        "Requirement",
+        "Preference"
+      ],
+      "read": "({ extras }) => extras.activityImportance",
+      "write": "(context, value) => setExtra(context, { activityImportance: text(value) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "nearbyPlaces",
+      "kind": "multi",
+      "prompt": "What would you like to have nearby?",
+      "source": "frontend/src/lib/intake-questions.ts:729",
+      "required": true,
+      "options": [
+        "Shopping",
+        "Restaurants & cafés",
+        "Movie theater",
+        "Bowling",
+        "Senior center / social club",
+        "Parks & walking paths",
+        "Gym / pool",
+        "Library",
+        "Place of worship",
+        "Medical center / doctors",
+        "Pharmacy",
+        "Public transportation",
+        "Entertainment / cultural venues",
+        "Nothing in particular",
+        "Other"
+      ],
+      "read": "({ extras }) => extras.nearbyPlaces",
+      "write": "(context, value) => {\n            const next = list(value);\n            const added = next.find((item) => !context.extras.nearbyPlaces.includes(item));\n            if (added === \"Nothing in particular\")\n                return setExtra(context, { nearbyPlaces: [\"Nothing in particular\"], nearbyOther: \"\", nearbyImportance: \"No preference\" });\n            return setExtra(context, { nearbyPlaces: next.filter((item) => item !== \"Nothing in particular\") });\n        }",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "nearbyOther",
+      "kind": "text",
+      "prompt": "What else would you like to have nearby?",
+      "source": "frontend/src/lib/intake-questions.ts:746",
+      "required": true,
+      "options": [],
+      "read": "({ extras }) => extras.nearbyOther",
+      "write": "(context, value) => setExtra(context, { nearbyOther: text(value) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "nearbyImportance",
+      "kind": "single",
+      "prompt": "How important is it to be close to these places?",
+      "source": "frontend/src/lib/intake-questions.ts:758",
+      "required": true,
+      "options": [
+        "Important",
+        "Nice to have",
+        "No preference"
+      ],
+      "read": "({ extras }) => extras.nearbyImportance",
+      "write": "(context, value) => setExtra(context, { nearbyImportance: text(value) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "personalDestinationLabel",
+      "kind": "single",
+      "prompt": "Is there a specific person or place it would be important to stay close to?",
+      "source": "frontend/src/lib/intake-questions.ts:770",
+      "required": false,
+      "options": [
+        "Daughter",
+        "Son",
+        "Family",
+        "Friend",
+        "Doctor / medical provider",
+        "Place of worship",
+        "Other",
+        "No specific destination"
+      ],
+      "read": "({ extras }) => extras.personalDestinationLabel",
+      "write": "(context, value) => setExtra(context, { personalDestinationLabel: text(value), personalDestinationAddress: text(value) === \"No specific destination\" ? \"\" : context.extras.personalDestinationAddress })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "personalDestinationAddress",
+      "kind": "text",
+      "prompt": "What address or ZIP code should we measure from?",
+      "source": "frontend/src/lib/intake-questions.ts:782",
+      "required": false,
+      "options": [],
+      "read": "({ extras }) => extras.personalDestinationAddress",
+      "write": "(context, value) => setExtra(context, { personalDestinationAddress: text(value) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "moveLossConcerns",
+      "kind": "multi",
+      "prompt": "What would you hate for them to lose after the move?",
+      "source": "frontend/src/lib/intake-questions.ts:794",
+      "required": true,
+      "options": [
+        "Good food",
+        "Privacy",
+        "Independence",
+        "Social life",
+        "Existing friends",
+        "A specific class or activity",
+        "Ability to go out independently",
+        "Proximity to family",
+        "My language or culture",
+        "Daily routine",
+        "Space for visitors",
+        "A pet",
+        "Transportation",
+        "Other"
+      ],
+      "read": "({ draft }) => draft.moveLossConcerns",
+      "write": "(context, value) => setDraft(context, { moveLossConcerns: list(value) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "otherInterests",
+      "kind": "text",
+      "prompt": "Anything specific we should preserve?",
+      "source": "frontend/src/lib/intake-questions.ts:806",
+      "required": false,
+      "options": [],
+      "read": "({ draft }) => draft.otherInterests",
+      "write": "(context, value) => setDraft(context, { otherInterests: text(value) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "language",
+      "kind": "single",
+      "prompt": "What language feels most natural day to day?",
+      "source": "frontend/src/lib/intake-questions.ts:818",
+      "required": true,
+      "options": [
+        "English",
+        "Spanish",
+        "Hebrew",
+        "Russian",
+        "Mandarin",
+        "Arabic",
+        "Other"
+      ],
+      "read": "({ extras }) => extras.language",
+      "write": "(context, value) => setExtra(context, { language: text(value) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "languageImportance",
+      "kind": "single",
+      "prompt": "Is support in this language a requirement, or a preference?",
+      "source": "frontend/src/lib/intake-questions.ts:830",
+      "required": true,
+      "options": [
+        "Requirement",
+        "Preference"
+      ],
+      "read": "({ extras }) => extras.languageImportance",
+      "write": "(context, value) => setExtra(context, { languageImportance: text(value) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "medicalLanguage",
+      "kind": "text",
+      "prompt": "Which language is needed for medical communication?",
+      "source": "frontend/src/lib/intake-questions.ts:842",
+      "required": true,
+      "options": [],
+      "read": "({ extras }) => extras.medicalLanguage",
+      "write": "(context, value) => setExtra(context, { medicalLanguage: text(value) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "dietary",
+      "kind": "multi",
+      "prompt": "Are there food preferences or requirements we should respect?",
+      "source": "frontend/src/lib/intake-questions.ts:854",
+      "required": false,
+      "options": [
+        "No restrictions / eats everything",
+        "Kosher",
+        "Halal",
+        "Vegetarian",
+        "Vegan",
+        "Low sodium",
+        "Diabetic",
+        "Gluten free",
+        "Other"
+      ],
+      "read": "({ extras }) => extras.dietary",
+      "write": "(context, value) => {\n            const next = list(value);\n            const added = next.find((item) => !context.extras.dietary.includes(item));\n            if (added === \"No restrictions / eats everything\")\n                return setExtra(context, { dietary: [\"No restrictions / eats everything\"], dietaryOther: \"\" });\n            return setExtra(context, { dietary: next.filter((item) => item !== \"No restrictions / eats everything\") });\n        }",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "kosherImportance",
+      "kind": "single",
+      "prompt": "Is keeping kosher a requirement, or a preference?",
+      "source": "frontend/src/lib/intake-questions.ts:871",
+      "required": true,
+      "options": [
+        "Requirement",
+        "Preference"
+      ],
+      "read": "({ extras }) => extras.kosherImportance",
+      "write": "(context, value) => ({\n            ...setExtra(context, { kosherImportance: text(value) }),\n            draft: {\n                ...context.draft,\n                humanIntelligenceV2: {\n                    ...context.draft.humanIntelligenceV2,\n                    culturalProfile: { ...context.draft.humanIntelligenceV2.culturalProfile, kosherRequirements: text(value) },\n                },\n            },\n        })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "dietaryOther",
+      "kind": "text",
+      "prompt": "What other food preference or requirement should we know about?",
+      "source": "frontend/src/lib/intake-questions.ts:892",
+      "required": true,
+      "options": [],
+      "read": "({ extras }) => extras.dietaryOther",
+      "write": "(context, value) => setExtra(context, { dietaryOther: text(value) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "religiousCommunity",
+      "kind": "single",
+      "prompt": "Would a religious or faith community be important?",
+      "source": "frontend/src/lib/intake-questions.ts:904",
+      "required": true,
+      "options": [
+        "No",
+        "Yes"
+      ],
+      "read": "({ extras }) => extras.religiousCommunity",
+      "write": "(context, value) => setExtra(context, { religiousCommunity: text(value) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "religion",
+      "kind": "text",
+      "prompt": "Which religion or tradition?",
+      "source": "frontend/src/lib/intake-questions.ts:916",
+      "required": true,
+      "options": [],
+      "read": "({ extras }) => extras.religion",
+      "write": "(context, value) => setExtra(context, { religion: text(value) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "religiousNeeds",
+      "kind": "multi",
+      "prompt": "What is needed?",
+      "source": "frontend/src/lib/intake-questions.ts:927",
+      "required": true,
+      "options": [
+        "Services",
+        "Place of worship",
+        "Prayer space",
+        "Holiday celebrations",
+        "Dietary accommodation",
+        "Chaplain"
+      ],
+      "read": "({ extras }) => extras.religiousNeeds",
+      "write": "(context, value) => setExtra(context, { religiousNeeds: list(value) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "petOwnershipImportance",
+      "kind": "single",
+      "prompt": "Would a pet need to move with them?",
+      "source": "frontend/src/lib/intake-questions.ts:939",
+      "required": true,
+      "options": [
+        "Yes",
+        "No",
+        "Not sure"
+      ],
+      "read": "({ draft }) => draft.humanIntelligenceV2.independenceProfile.petOwnershipImportance",
+      "write": "(context, value) => setIndependence(context, { petOwnershipImportance: text(value) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "abilityToLeaveIndependently",
+      "kind": "single",
+      "prompt": "Can the person we’re finding a home for leave the community and go out on their own?",
+      "source": "frontend/src/lib/intake-questions.ts:951",
+      "required": true,
+      "options": [
+        "Yes",
+        "With support",
+        "No",
+        "Not sure"
+      ],
+      "read": "({ draft }) => draft.humanIntelligenceV2.independenceProfile.abilityToLeaveIndependently",
+      "write": "(context, value) => setIndependence(context, { abilityToLeaveIndependently: text(value) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "biggestFear",
+      "kind": "text",
+      "prompt": "What worries them most about moving?",
+      "source": "frontend/src/lib/intake-questions.ts:963",
+      "required": true,
+      "options": [],
+      "read": "({ draft }) => draft.humanIntelligenceV2.transitionRiskProfile.biggestFear",
+      "write": "(context, value) => setTransitionRisk(context, { biggestFear: text(value) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "parkingRequirement",
+      "kind": "single",
+      "prompt": "Will they need parking at the community?",
+      "source": "frontend/src/lib/intake-questions.ts:975",
+      "required": true,
+      "options": [
+        "No",
+        "Regular parking",
+        "Accessible parking",
+        "Covered parking",
+        "Not sure"
+      ],
+      "read": "({ draft }) => draft.parkingRequirement",
+      "write": "(context, value) => setDraft(context, { parkingRequirement: text(value) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "parkingVehicleCount",
+      "kind": "single",
+      "prompt": "Would that be for one car or two?",
+      "source": "frontend/src/lib/intake-questions.ts:987",
+      "required": true,
+      "options": [
+        "One vehicle",
+        "Two vehicles"
+      ],
+      "read": "({ draft }) => draft.parkingVehicleCount",
+      "write": "(context, value) => setDraft(context, { parkingVehicleCount: text(value) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "continuum",
+      "kind": "single",
+      "prompt": "Would you prefer a place that can provide more care later, so another move may be avoided?",
+      "source": "frontend/src/lib/intake-questions.ts:999",
+      "required": true,
+      "options": [
+        "Required",
+        "Preferred",
+        "Not important",
+        "Not sure"
+      ],
+      "read": "({ extras }) => extras.continuum",
+      "write": "(context, value) => setExtra(context, { continuum: text(value) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    },
+    {
+      "id": "careSearchApproach",
+      "kind": "single",
+      "prompt": "How broadly would you like me to search?",
+      "source": "frontend/src/lib/intake-questions.ts:1011",
+      "required": false,
+      "options": [
+        "Show me both approaches",
+        "Care provided by the community",
+        "Independent living + outside support"
+      ],
+      "read": "({ draft }) => draft.careSearchApproach",
+      "write": "(context, value) => setDraft(context, { careSearchApproach: text(value) })",
+      "semantic_review": "PENDING_REVIEW_EXISTING_BEHAVIOR_NOT_CHANGED"
+    }
+  ]
+}

@@ -30,6 +30,19 @@ URGENT_MOVE_TIMINGS = {"immediately", "within 30 days"}
 URGENT_AVAILABILITY_KEY = "CURRENT_AVAILABILITY_FOR_URGENT_MOVE"
 
 
+_NEUTRAL_SELECTIONS = {
+    "NO", "NONE", "NO PREFERENCE", "NO_PREFERENCE", "NOT IMPORTANT",
+    "NOT REQUIRED", "NOT NEEDED", "NOT SURE", "UNKNOWN",
+}
+_REQUIRED_SELECTIONS = {"REQUIRED", "REQUIREMENT", "MUST", "MUST HAVE"}
+_PREFERRED_SELECTIONS = {"PREFERRED", "PREFERENCE", "IMPORTANT", "VERY IMPORTANT", "NICE TO HAVE"}
+
+
+def _selection(value: Any) -> str:
+    """Compare questionnaire choices as complete values, never text fragments."""
+    return str(value or "").strip().upper()
+
+
 def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_query: str, living_strategy: Dict[str, Any], human_context: Dict[str, Any], *, care_delivery_signals=None) -> Dict[str, Any]:
     query = str(natural_language_query or "").lower()
     signals = living_strategy.get("signals") if isinstance(living_strategy.get("signals"), dict) else {}
@@ -135,7 +148,7 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
 
     community = human_signals.get("community_size_preference") if isinstance(human_signals.get("community_size_preference"), dict) else {}
     community_value = _upper(community.get("value"))
-    if community_value not in {"UNKNOWN", "NO_PREFERENCE", "NONE"}:
+    if community_value not in _NEUTRAL_SELECTIONS:
         add_nice("COMMUNITY_ENVIRONMENT_MATCH", "The client expressed a community-size/environment preference.")
 
     if "transport" in query or "outings" in query:
@@ -147,8 +160,9 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
     # dropped before ranking (golden ranking oracle, persona 007).
     language_profile = human_profile.get("languageProfile") if isinstance(human_profile.get("languageProfile"), dict) else {}
     preferred_language = str(language_profile.get("preferredSpokenLanguage") or language_profile.get("medicalDiscussionLanguage") or "").strip()
-    if preferred_language and preferred_language.lower() not in {"english", "no preference", "unknown", "not sure"}:
-        language_required = _upper(language_profile.get("languageNeedScope")) in {"REQUIREMENT", "REQUIRED", "MUST"}
+    language_scope = _selection(language_profile.get("languageNeedScope"))
+    if preferred_language and _selection(preferred_language) not in _NEUTRAL_SELECTIONS | {"ENGLISH"} and language_scope not in _NEUTRAL_SELECTIONS:
+        language_required = language_scope in _REQUIRED_SELECTIONS
         if language_required:
             add_must("REQUIRED_LANGUAGE_SUPPORT", f"The resident explicitly requires {preferred_language} language support.", "verified language capability")
             must[-1]["value"] = preferred_language
@@ -156,16 +170,16 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
             add_nice("PREFERRED_LANGUAGE_SUPPORT", f"The resident prefers {preferred_language}; verified language support should rank higher.")
             nice[-1]["value"] = preferred_language
     social_profile = human_profile.get("socialProfile") if isinstance(human_profile.get("socialProfile"), dict) else {}
-    activities = [str(x).strip() for x in social_profile.get("hobbyParticipation") or [] if str(x).strip()]
-    if activities and _upper(social_profile.get("activityRequirementLevel")) in {"REQUIREMENT", "REQUIRED", "MUST"}:
+    activities = [str(x).strip() for x in social_profile.get("hobbyParticipation") or [] if str(x).strip() and _selection(x) not in _NEUTRAL_SELECTIONS]
+    if activities and _selection(social_profile.get("activityRequirementLevel")) in _REQUIRED_SELECTIONS:
         add_must("REQUIRED_ACTIVITIES", "The family explicitly marked the selected activities as required.", "verified activities/programming evidence")
         must[-1]["value"] = activities
     food_profile = human_profile.get("foodProfile") if isinstance(human_profile.get("foodProfile"), dict) else {}
-    dietary_preferences = " ".join(str(value or "").lower() for value in food_profile.get("dietaryPreferences") or [])
-    if "kosher" in query or "kosher" in dietary_preferences:
-        cultural_profile = human_profile.get("culturalProfile") if isinstance(human_profile.get("culturalProfile"), dict) else {}
-        kosher_level = _upper(cultural_profile.get("kosherRequirements"))
-        if kosher_level in {"REQUIREMENT", "REQUIRED", "MUST"}:
+    dietary_preferences = {_selection(value) for value in food_profile.get("dietaryPreferences") or []}
+    cultural_profile = human_profile.get("culturalProfile") if isinstance(human_profile.get("culturalProfile"), dict) else {}
+    kosher_level = _selection(cultural_profile.get("kosherRequirements"))
+    if kosher_level not in _NEUTRAL_SELECTIONS and ("kosher" in query or "KOSHER" in dietary_preferences):
+        if kosher_level in _REQUIRED_SELECTIONS:
             add_must("KOSHER_MEALS", "The client explicitly marked keeping kosher as a requirement.", "verified kosher meal capability")
         else:
             add_nice("KOSHER_MEALS", "Verified kosher meal availability is an explicit resident preference.")
@@ -186,32 +200,62 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
         add_nice("AVAILABILITY_FIT", "Verified availability should fit the client's requested move timing.")
 
     future_profile = human_profile.get("futureCareProfile") if isinstance(human_profile.get("futureCareProfile"), dict) else {}
-    continuum_required = any(
-        str(value or "").strip().lower() == "required"
+    continuum_selections = {
+        _selection(value)
         for value in (
             future_profile.get("avoidFutureMovesPreference"),
             future_profile.get("continuumOfCarePreference"),
             questionnaire_state.get("futureCarePreference"),
-        )
-    )
-    continuum_preference = " ".join(
-        str(value or "").lower()
-        for value in (
-            future_profile.get("avoidFutureMovesPreference"),
-            future_profile.get("continuumOfCarePreference"),
-            questionnaire_state.get("futureCarePreference"),
-        )
-    )
-    if continuum_required:
+        ) if _selection(value)
+    }
+    if continuum_selections & _REQUIRED_SELECTIONS:
         add_must("CONTINUUM_OF_CARE_REQUIRED", "The client marked future care continuity as required.", "verified life-plan care continuum")
     elif (
-        any(token in query for token in ("continuum of care", "continuing care", "life plan", "ccrc"))
-        or any(token in continuum_preference for token in ("required", "preferred", "important", "continuum"))
+        continuum_selections & _PREFERRED_SELECTIONS
+        or "FULL CONTINUUM OF CARE ON ONE CAMPUS" in continuum_selections
+        or (not continuum_selections and any(token in query for token in ("continuum of care", "continuing care", "life plan", "ccrc")))
     ):
         add_nice("CONTINUUM_OF_CARE", "The client wants future care levels available without another move.")
 
+    # Record sources at the deterministic consumer, separately from semantic
+    # interpretation and actual comparator effects. Only active intent keys are
+    # linked; arbitrary narrative mentions cannot credit a questionnaire answer.
+    source_links = []
+    from app.services.questionnaire_answer_accounting import _at
+    source_paths = {
+        "BUDGET_FIT": ("budget",),
+        "REQUIRED_ACTIVITIES": ("humanIntelligenceV2.socialProfile.hobbyParticipation", "humanIntelligenceV2.socialProfile.activityRequirementLevel"),
+        "PREFERRED_LANGUAGE_SUPPORT": ("humanIntelligenceV2.languageProfile.preferredLanguage", "humanIntelligenceV2.languageProfile.medicalDiscussionLanguage", "humanIntelligenceV2.languageProfile.languageNeedScope"),
+        "REQUIRED_LANGUAGE_SUPPORT": ("humanIntelligenceV2.languageProfile.preferredLanguage", "humanIntelligenceV2.languageProfile.medicalDiscussionLanguage", "humanIntelligenceV2.languageProfile.languageNeedScope"),
+        "CONTINUUM_OF_CARE": ("futureCarePreference", "humanIntelligenceV2.futureCareProfile.avoidFutureMovesPreference", "humanIntelligenceV2.futureCareProfile.continuumOfCarePreference"),
+        "CONTINUUM_OF_CARE_REQUIRED": ("futureCarePreference", "humanIntelligenceV2.futureCareProfile.avoidFutureMovesPreference", "humanIntelligenceV2.futureCareProfile.continuumOfCarePreference"),
+    }
+    for item in must + nice:
+        for path in source_paths.get(item["key"], ()):
+            value = _at(questionnaire_state, path)
+            values = list(enumerate(value)) if isinstance(value, list) else [(None, value)]
+            for index, answer in values:
+                if answer is None or answer == "" or _selection(answer) in _NEUTRAL_SELECTIONS:
+                    continue
+                if item["key"].startswith("CONTINUUM_OF_CARE") and _selection(answer) not in (_REQUIRED_SELECTIONS | _PREFERRED_SELECTIONS | {"FULL CONTINUUM OF CARE ON ONE CAMPUS"}):
+                    continue
+                # The fallback language field is read only without a preferred language.
+                if path.endswith("medicalDiscussionLanguage") and language_profile.get("preferredLanguage"):
+                    continue
+                source_links.append({"answer_path": path, "selection_index": index,
+                                     "answer": answer, "intent_key": item["key"]})
     return {
         "version": "client-intent-runtime-v1.6",
+        "answer_source_links": source_links,
+        "unrecognized_controls": [
+            {"answer_path": path, "answer": value, "status": "UNRECOGNIZED_CONTROL_VALUE"}
+            for path, value in (
+                ("futureCarePreference", questionnaire_state.get("futureCarePreference")),
+                ("humanIntelligenceV2.futureCareProfile.avoidFutureMovesPreference", future_profile.get("avoidFutureMovesPreference")),
+                ("humanIntelligenceV2.futureCareProfile.continuumOfCarePreference", future_profile.get("continuumOfCarePreference")),
+            ) if _selection(value) and _selection(value) not in
+            (_NEUTRAL_SELECTIONS | _REQUIRED_SELECTIONS | _PREFERRED_SELECTIONS | {"FULL CONTINUUM OF CARE ON ONE CAMPUS"})
+        ],
         "must_haves": must,
         "nice_to_haves": nice,
         "in_house_only_requested": in_house_only_requested,
@@ -629,6 +673,46 @@ def intent_rank_key(row: Dict[str, Any]) -> tuple[Any, ...]:
 def attach_client_intent_fit(rows: List[Dict[str, Any]], intent: Dict[str, Any]) -> None:
     for row in rows:
         row["client_intent_fit"] = evaluate_candidate_intent(row, intent)
+        attach_explicit_intent_explanation(row, intent)
+
+
+def attach_explicit_intent_explanation(row: Dict[str, Any], intent: Dict[str, Any]) -> None:
+    """Surface specific requested properties only when their actual fit passed.
+
+    Existing care explanations retain their evidence. Language support is not a
+    selling point just because a provider has a language entry in its profile.
+    """
+    fit = row.get("client_intent_fit") or {}
+    proofs = []
+    for kind, passed, role in (
+        ("must_haves", set(fit.get("must_pass") or []), "requirement"),
+        ("nice_to_haves", set(fit.get("nice_match") or []), "preference"),
+    ):
+        for item in intent.get(kind) or []:
+            key = item.get("key")
+            if key not in passed:
+                continue
+            value = item.get("value")
+            if key in {"REQUIRED_LANGUAGE_SUPPORT", "PREFERRED_LANGUAGE_SUPPORT"} and isinstance(value, str) and value.strip():
+                text = f"Verified {value.strip()} language support matches your {role}."
+            elif key == "REQUIRED_ACTIVITIES" and isinstance(value, list) and value:
+                text = f"Verified activities match your requirement: {', '.join(str(activity) for activity in value)}."
+            elif key == "KOSHER_MEALS":
+                text = f"Verified kosher meals match your {role}."
+            elif key in {"CONTINUUM_OF_CARE_REQUIRED", "CONTINUUM_OF_CARE"}:
+                text = f"A verified care continuum matches your {role} to avoid another move as care needs change."
+            else:
+                continue
+            proofs.append({"key": key, "role": role, "requested_value": value, "fit": "PASS" if role == "requirement" else "MATCH", "text": text})
+
+    explanation = row.setdefault("explanation", {})
+    # Retain a requested-language point only from the explicit proof above, so a
+    # generic English capability cannot be advertised as a personalized match.
+    existing = [str(text) for text in explanation.get("why_matches") or [] if not str(text).casefold().startswith("language support")]
+    previous = {item.get("text") for item in explanation.get("explicit_intent_matches") or []}
+    existing = [text for text in existing if text not in previous]
+    explanation["explicit_intent_matches"] = proofs
+    explanation["why_matches"] = list(dict.fromkeys([item["text"] for item in proofs] + existing))
 
 
 __all__ = ["attach_client_intent_fit", "build_client_intent", "evaluate_candidate_intent", "intent_rank_key"]

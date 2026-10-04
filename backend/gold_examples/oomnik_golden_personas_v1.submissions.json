@@ -259,6 +259,9 @@
         ],
         "medicareStatus": "",
         "medicaidStatus": "Not eligible",
+        "medicaidAmountKnown": "",
+        "medicaidMonthlyAmount": 0,
+        "medicaidBudgetIncludesSupport": "",
         "moveTiming": "1-3 months",
         "careSearchApproach": "Show me both approaches",
         "questionnaireCompletion": {
@@ -442,7 +445,8 @@
             "recommendationImpacts": [],
             "additionalQuestionAsked": ""
           }
-        }
+        },
+        "medicaidBudgetScenarioChoice": ""
       }
     },
     {
@@ -701,6 +705,9 @@
         ],
         "medicareStatus": "",
         "medicaidStatus": "Not eligible",
+        "medicaidAmountKnown": "",
+        "medicaidMonthlyAmount": 0,
+        "medicaidBudgetIncludesSupport": "",
         "moveTiming": "Within 30 days",
         "careSearchApproach": "Show me both approaches",
         "questionnaireCompletion": {
@@ -884,7 +891,8 @@
             "recommendationImpacts": [],
             "additionalQuestionAsked": ""
           }
-        }
+        },
+        "medicaidBudgetScenarioChoice": ""
       }
     },
     {
@@ -1156,6 +1164,9 @@
         ],
         "medicareStatus": "",
         "medicaidStatus": "Not eligible",
+        "medicaidAmountKnown": "",
+        "medicaidMonthlyAmount": 0,
+        "medicaidBudgetIncludesSupport": "",
         "moveTiming": "1-3 months",
         "careSearchApproach": "Show me both approaches",
         "questionnaireCompletion": {
@@ -1339,7 +1350,8 @@
             "recommendationImpacts": [],
             "additionalQuestionAsked": ""
           }
-        }
+        },
+        "medicaidBudgetScenarioChoice": ""
       }
     },
     {
@@ -1644,6 +1656,9 @@
         ],
         "medicareStatus": "Original Medicare",
         "medicaidStatus": "Not eligible",
+        "medicaidAmountKnown": "",
+        "medicaidMonthlyAmount": 0,
+        "medicaidBudgetIncludesSupport": "",
         "moveTiming": "Immediately",
         "careSearchApproach": "Show me both approaches",
         "questionnaireCompletion": {
@@ -1829,7 +1844,8 @@
             "recommendationImpacts": [],
             "additionalQuestionAsked": ""
           }
-        }
+        },
+        "medicaidBudgetScenarioChoice": ""
       }
     },
     {
@@ -2088,6 +2104,9 @@
         ],
         "medicareStatus": "",
         "medicaidStatus": "Not eligible",
+        "medicaidAmountKnown": "",
+        "medicaidMonthlyAmount": 0,
+        "medicaidBudgetIncludesSupport": "",
         "moveTiming": "1-3 months",
         "careSearchApproach": "Show me both approaches",
         "questionnaireCompletion": {
@@ -2271,7 +2290,8 @@
             "recommendationImpacts": [],
             "additionalQuestionAsked": ""
           }
-        }
+        },
+        "medicaidBudgetScenarioChoice": ""
       }
     },
     {
@@ -2368,6 +2388,12 @@
           "kind": "single",
           "required": true,
           "answer": "Application pending"
+        },
+        {
+          "id": "medicaidAmountKnown",
+          "kind": "single",
+          "required": true,
+          "answer": "Amount not known"
         },
         {
           "id": "budget",
@@ -2531,6 +2557,9 @@
         ],
         "medicareStatus": "",
         "medicaidStatus": "Application pending",
+        "medicaidAmountKnown": "Amount not known",
+        "medicaidMonthlyAmount": 0,
+        "medicaidBudgetIncludesSupport": "",
         "moveTiming": "Within 30 days",
         "careSearchApproach": "Show me both approaches",
         "questionnaireCompletion": {
@@ -2714,7 +2743,8 @@
             "recommendationImpacts": [],
             "additionalQuestionAsked": ""
           }
-        }
+        },
+        "medicaidBudgetScenarioChoice": ""
       }
     },
     {
@@ -2993,6 +3023,9 @@
         ],
         "medicareStatus": "",
         "medicaidStatus": "Not eligible",
+        "medicaidAmountKnown": "",
+        "medicaidMonthlyAmount": 0,
+        "medicaidBudgetIncludesSupport": "",
         "moveTiming": "1-3 months",
         "careSearchApproach": "Show me both approaches",
         "questionnaireCompletion": {
@@ -3176,7 +3209,8 @@
             "recommendationImpacts": [],
             "additionalQuestionAsked": ""
           }
-        }
+        },
+        "medicaidBudgetScenarioChoice": ""
       }
     },
     {
@@ -3437,6 +3471,9 @@
         ],
         "medicareStatus": "",
         "medicaidStatus": "Not eligible",
+        "medicaidAmountKnown": "",
+        "medicaidMonthlyAmount": 0,
+        "medicaidBudgetIncludesSupport": "",
         "moveTiming": "1-3 months",
         "careSearchApproach": "Show me both approaches",
         "questionnaireCompletion": {
@@ -3620,7 +3657,8 @@
             "recommendationImpacts": [],
             "additionalQuestionAsked": ""
           }
-        }
+        },
+        "medicaidBudgetScenarioChoice": ""
       }
     },
     {
@@ -3918,6 +3956,9 @@
         ],
         "medicareStatus": "",
         "medicaidStatus": "Not eligible",
+        "medicaidAmountKnown": "",
+        "medicaidMonthlyAmount": 0,
+        "medicaidBudgetIncludesSupport": "",
         "moveTiming": "Within 30 days",
         "careSearchApproach": "Show me both approaches",
         "questionnaireCompletion": {
@@ -4104,7 +4145,8 @@
             "recommendationImpacts": [],
             "additionalQuestionAsked": ""
           }
-        }
+        },
+        "medicaidBudgetScenarioChoice": ""
       }
     },
     {
@@ -4121,7 +4163,7 @@
           "INDEPENDENT_LIVING_ONLY",
           "ASSISTED_LIVING_ONLY"
         ],
-        "budget": 9900,
+        "budget": 10000,
         "location": "Las Vegas",
         "distance": "50",
         "futureCare": "Required"
@@ -4207,7 +4249,7 @@
           "id": "budget",
           "kind": "number",
           "required": true,
-          "answer": 9900
+          "answer": 10000
         },
         {
           "id": "moveTiming",
@@ -4345,7 +4387,7 @@
         ],
         "nearbyPlacesImportance": "Nice to have",
         "personalDestinations": [],
-        "budget": 9900,
+        "budget": 10000,
         "distanceFromFamily": "",
         "referenceLocationType": "",
         "referenceLocationValue": "Las Vegas",
@@ -4365,6 +4407,9 @@
         ],
         "medicareStatus": "",
         "medicaidStatus": "Not eligible",
+        "medicaidAmountKnown": "",
+        "medicaidMonthlyAmount": 0,
+        "medicaidBudgetIncludesSupport": "",
         "moveTiming": "Planning ahead",
         "careSearchApproach": "Show me both approaches",
         "questionnaireCompletion": {
@@ -4548,7 +4593,8 @@
             "recommendationImpacts": [],
             "additionalQuestionAsked": ""
           }
-        }
+        },
+        "medicaidBudgetScenarioChoice": ""
       }
     }
   ]

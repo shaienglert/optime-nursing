@@ -57,6 +57,11 @@ FIELD_RULES = {
 }
 
 
+def canonical_source_path(path: str) -> str:
+    """Normalize existing storage aliases, without interpreting their values."""
+    return {"humanIntelligenceV2.socialProfile.hobbyParticipation": "happinessPreferences"}.get(path, path)
+
+
 def leaves(obj, prefix=""):
     for key, value in obj.items():
         path = f"{prefix}.{key}" if prefix else key

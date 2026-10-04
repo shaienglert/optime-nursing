@@ -2,6 +2,7 @@
   "schema_version": "oomnik-golden-personas/1",
   "about": "The ten golden browser personas, as answers keyed by intake question id (frontend/src/lib/intake-questions.ts QUESTIONS[].id) -- never by prompt wording. The intake's own set() functions turn them into a QuestionnaireState, which is the Structured Profile's BUTTON layer. frontend/tests/golden-personas.test.ts validates every persona against the live question graph and writes oomnik_golden_personas_v1.submissions.json; backend tests run those submissions through the decision engine; the browser journey only replays the same answers by data-question-id. Edit this file, then regenerate with `GOLDEN_PERSONAS_WRITE=1 npx vitest run tests/golden-personas.test.ts`.",
   "defaults": {
+    "medicaidAmountKnown": "Amount not known",
     "assistance": [
       "Help with bathing",
       "Help with dressing",
@@ -341,7 +342,7 @@
         "ageGroup": "70-74",
         "referenceAddress": "Las Vegas",
         "maximumDistanceMiles": "50",
-        "budget": 9900,
+        "budget": 10000,
         "moveTiming": "Planning ahead",
         "continuum": "Required"
       },
@@ -356,7 +357,7 @@
           "INDEPENDENT_LIVING_ONLY",
           "ASSISTED_LIVING_ONLY"
         ],
-        "budget": 9900,
+        "budget": 10000,
         "location": "Las Vegas",
         "distance": "50",
         "futureCare": "Required"

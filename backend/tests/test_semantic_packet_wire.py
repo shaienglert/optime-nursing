@@ -101,6 +101,24 @@ def test_duplicate_fields_fail_instead_of_overwriting_evidence():
         normalize(packet)
 
 
+def test_identical_repeated_entry_is_idempotent_and_audited():
+    packet = wire()
+    entry = {"path": "budget", "value": 6000, "quote": "$6000"}
+    packet["test_entries"] = [entry, copy.deepcopy(entry)]
+    result = normalize(packet)
+    assert result["questionnaire_patch"] == {"budget": 6000}
+    assert result["questionnaire_patch_sources"] == {"budget": "$6000"}
+    assert result["wire_contract"]["identical_repeated_entries"] == ["budget"]
+
+
+def test_equal_value_with_a_different_quote_still_requires_repair():
+    packet = wire()
+    packet["test_entries"] = [{"path": "budget", "value": 6000, "quote": "$6000"},
+                              {"path": "budget", "value": 6000, "quote": "six thousand dollars"}]
+    with pytest.raises(RuntimeError, match="DUPLICATE_FIELD:budget"):
+        normalize(packet)
+
+
 def test_multiple_manual_adl_choices_survive_wire_format():
     value = "Help with bathing, Help with dressing"
     packet = wire()
@@ -312,3 +330,20 @@ def test_empty_narrative_grammar_allows_no_new_fields_but_preserves_button_trace
     _validate_patch_contract(result, "", selected)
     assert result["questionnaire_patch"] == {}
     assert result["statements"][0]["raw_text"] == selected["happinessPreferences"][0]
+
+
+def test_all_trace_roles_share_genuine_source_grammar():
+    text = 'She wants a smoke-free courtyard.'
+    state = {'happinessPreferences': ['Lunar astronomy club', 'Glacier microscopy seminars'],
+             'humanIntelligenceV2': {'socialProfile': {'activityRequirementLevel': 'Preference'}},
+             '__optime_guardian_context': {'instruction': 'Not a client quote'}}
+    schema = provider_schema(_required_output_schema(), family_text=text, questionnaire_state=state)
+    trace_properties = schema['$defs']['Trace']['properties']
+    assert trace_properties['importance']['enum'] == ['MUST', 'NICE', 'CONTEXT', 'UNKNOWN']
+    assert set(trace_properties['raw_text']['enum']) == {text, 'Lunar astronomy club', 'Glacier microscopy seminars', 'Preference'}
+    assert 'Their happiness profile includes Lunar astronomy club.' not in trace_properties['raw_text']['enum']
+    assert 'GroundedNiceTrace' not in schema['$defs']
+    assert schema['properties']['statements']['items'] == {'$ref': '#/$defs/Trace'}
+    empty = provider_schema(_required_output_schema(), family_text='', questionnaire_state={})
+    assert empty['properties']['statements']['maxItems'] == 0
+    assert 'enum' not in provider_schema(_required_output_schema())['$defs']['Trace']['properties']['raw_text']

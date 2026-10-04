@@ -34,6 +34,11 @@ export type QuestionnaireState = {
   moveLossConcerns: string[];
   medicareStatus: string;
   medicaidStatus: string;
+  medicaidAmountKnown?: string;
+  medicaidMonthlyAmount?: number;
+  medicaidBudgetIncludesSupport?: string;
+  medicaidBudgetScenarioChoice?: string;
+  medicaidOriginalBudget?: number;
   moveTiming: string;
   careSearchApproach: string;
   questionnaireCompletion: {
@@ -253,6 +258,9 @@ export const DEFAULT_STATE: QuestionnaireState = {
   moveLossConcerns: [],
   medicareStatus: "",
   medicaidStatus: "",
+  medicaidAmountKnown: "",
+  medicaidMonthlyAmount: 0,
+  medicaidBudgetIncludesSupport: "",
   moveTiming: "",
   careSearchApproach: "",
   questionnaireCompletion: {

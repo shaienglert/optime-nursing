@@ -21,7 +21,7 @@ from typing import Any, Dict, List
 from app.services.ai_candidate_ranking_runtime import attach_nice_coverage, rank_must_eligible_candidates  # compatibility symbol; never called by production pipeline
 from app.services.client_intent_runtime import intent_rank_key
 from app.services.human_intelligence_runtime_verified import person_fit_sort_key
-from app.services.semantic_preference_runtime import build_dynamic_preference_model, verify_dynamic_preferences
+from app.services.semantic_preference_runtime import build_dynamic_preference_model, verify_dynamic_preferences, preference_verification_question
 
 
 def _fallback_key(row: Dict[str, Any]) -> tuple[Any, ...]:
@@ -34,6 +34,24 @@ def _fallback_key(row: Dict[str, Any]) -> tuple[Any, ...]:
 # which belongs to the Regulatory/Quality Evidence Layer and is applied there instead.
 _FAMILY_CRITERIA_LENGTH = 6
 
+# Names describe the exact component order supplied to _layered_rank. They do
+# not add criteria or weights. Snapshot shape validation fails honestly if that
+# comparator later changes without updating its explanation contract.
+_FINAL_BASE_DIMENSIONS = (
+    ("strict_budget_before_expansion", "This option fits the stated monthly budget; the next option uses the permitted budget expansion."),
+    ("community_preference_evidence", "Verified evidence for your community preference distinguishes these options."),
+    ("community_preference_fit", "This option better matches your stated community preference."),
+    ("must_gate", "The recorded requirements gate distinguishes these options."),
+    ("care_setting_fit", "The recorded care setting fit places this option higher."),
+    ("verified_preference_matches", "This option has more verified matches to your stated preferences."),
+    ("verified_preference_mismatches", "This option has fewer verified mismatches to your stated preferences."),
+    ("community_environment_evidence", "Verified evidence for your requested community environment distinguishes these options."),
+    ("community_environment_fit", "This option better matches your requested community environment."),
+    ("nearby_comparison_scope", "The recorded nearby comparison scope distinguishes these options."),
+    ("requested_nearby_fit", "This option has a better recorded fit for the nearby places you requested."),
+    ("requested_nearby_distance", "This option is closer to the nearby places you requested, after the earlier criteria were equal."),
+)
+
 
 def _family_criteria_key(row: Dict[str, Any]) -> tuple[Any, ...]:
     from app.services.nearby_place_service import nearby_rank_key
@@ -44,7 +62,7 @@ def _family_criteria_key(row: Dict[str, Any]) -> tuple[Any, ...]:
 
 def _layered_rank(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     from app.services.regulatory_quality_layer import rank_with_evidence_layer
-    return rank_with_evidence_layer(rows, lambda row: (1 if row.get("budget_exception") else 0, *_family_criteria_key(row)))
+    return rank_with_evidence_layer(rows, lambda row: (1 if row.get("budget_exception") else 0, *_family_criteria_key(row)), base_dimensions=_FINAL_BASE_DIMENSIONS)
 
 
 def _rank_group_key(row: Dict[str, Any]) -> tuple[Any, ...]:
@@ -179,7 +197,7 @@ def _defer_dynamic_preference_verification(
                 "status": "UNKNOWN",
                 "supporting_claim_ids": [],
                 "reason": "Facility-specific preference evidence is still being researched.",
-                "provider_question_if_unknown": f"Please verify whether this community satisfies: {pref.get('semantic_meaning')}",
+                "provider_question_if_unknown": preference_verification_question(pref, dynamic_preferences),
             }
             for pref in preferences
         ]
@@ -407,6 +425,9 @@ def apply_must_ai_nice_pipeline(
     for position, key in enumerate(group_keys, start=1):
         first_position_by_group.setdefault(key, position)
 
+    # Earlier pair explanations can describe a different comparator. Only a
+    # snapshot from the final full-universe comparison can explain this stage.
+    from app.services.regulatory_quality_layer import explain_ranked_pair
     existing_tie_breaks = {
         (
             str(item.get("higher_canonical_facility_id") or ""),
@@ -507,7 +528,16 @@ def apply_must_ai_nice_pipeline(
                     "equal_dimensions": [],
                     "unknown_dimensions": list(ranking.get("information_deficits") or []),
                 })
-            elif pair in existing_tie_breaks:
+            elif (comparison := explain_ranked_pair(row, following, _FINAL_BASE_DIMENSIONS)) is not None:
+                row["tie_break_explanation_vs_next"] = {
+                    "why_ranked_above": comparison["reason"],
+                    "deciding_dimension": comparison["decision_dimension"],
+                    "remained_equal": comparison["equal_dimensions"],
+                    "remaining_unknown": comparison["unknown_dimensions"],
+                    "comparison_evidence": comparison.get("comparison_evidence"),
+                }
+                final_tie_breaks.append({"higher_canonical_facility_id": pair[0], "lower_canonical_facility_id": pair[1], **comparison})
+            elif pair in existing_tie_breaks and not row.get("__rank_comparison_trace"):
                 row["tie_break_explanation_vs_next"] = {
                     "why_ranked_above": existing_tie_breaks[pair].get("reason") or "Ranked by the governed deterministic comparison.",
                     "deciding_dimension": existing_tie_breaks[pair].get("decision_dimension"),

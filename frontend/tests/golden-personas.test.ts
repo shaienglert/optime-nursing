@@ -102,9 +102,9 @@ describe("golden personas against the live intake question graph", () => {
     expect(problems, `\n${problems.join("\n")}\n`).toEqual([]);
   });
 
-  it("budgets sit on the slider's hundred-dollar grid", () => {
-    const off = built.filter(({ persona }) => Number(persona.answers.budget) % 100 !== 0).map(({ persona }) => persona.id);
-    expect(off, "the budget slider moves in $100 steps; an off-grid budget cannot be entered in the browser").toEqual([]);
+  it("budgets sit on the selector's five-hundred-dollar grid", () => {
+    const off = built.filter(({ persona }) => Number(persona.answers.budget) % 500 !== 0).map(({ persona }) => persona.id);
+    expect(off, "golden budgets must be selectable in $500 steps").toEqual([]);
   });
 
   it("the submissions fixture is current", () => {
