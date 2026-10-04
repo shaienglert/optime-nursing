@@ -135,6 +135,7 @@ def _required_output_schema() -> Dict[str, Any]:
 
 def _selected_facility_property_traces(state: Dict[str, Any]) -> list[dict[str, str]]:
     """Declare field/control relationships, never a catalog of property values."""
+    from app.services.semantic_field_contract import canonical_source_path
     def get(path):
         value = state
         for part in path.split("."):
@@ -157,9 +158,10 @@ def _selected_facility_property_traces(state: Dict[str, Any]) -> list[dict[str, 
         if not importance or not isinstance(values, list):
             continue
         for value in values:
-            if not isinstance(value, str) or not value.strip() or (importance, value) in seen:
+            identity = (importance, canonical_source_path(path), value) if isinstance(value, str) else None
+            if not isinstance(value, str) or not value.strip() or identity in seen:
                 continue
-            seen.add((importance, value))
+            seen.add(identity)
             result.append({"path": path, "quote": value, "importance": importance})
     return result
 
@@ -326,7 +328,7 @@ def _default_transport(payload: Dict[str, Any]) -> Dict[str, Any]:
         headers["Authorization"] = f"Bearer {api_key}"
     uses_responses_api = "/responses" in url.lower()
     required_output = _required_output_schema()
-    schema = provider_schema(required_output, family_text=str(payload.get("user_text") or ""))
+    schema = provider_schema(required_output, family_text=str(payload.get("user_text") or ""), questionnaire_state=payload.get("questionnaire_state") or {})
     payload = copy.deepcopy(payload)
     # The record belongs to the caller, never to a previous model packet.
     # Rebuild this view for every request and repair using the same predicates
@@ -339,6 +341,11 @@ def _default_transport(payload: Dict[str, Any]) -> Dict[str, Any]:
     payload.pop("required_output", None)
     payload.pop("field_trace_example", None)
     payload.pop("clarification_trace_example", None)
+    payload.setdefault("response_constraints", {})["questionnaire_patch_rule"] = (
+        "Preserve every explicit new or corrected client fact in questionnaire_patch_fields as one {path,value,quote} entry. "
+        "Existing questionnaire answers stay in their own source traces and need no extraction entry. "
+        "Use the wire schema only; questionnaire_patch and questionnaire_patch_sources are reconstructed by normalization."
+    )
     payload["wire_contract"] = {
         "questionnaire_value_hints": required_output["questionnaire_patch"],
         "instruction": "Return the schema-constrained wire format, not a free-form packet. questionnaire_patch_fields is a sparse array of {path, value, quote} entries. Use the full canonical dotted path, exactly as in statements.mapped_parameters. Include at most one entry per path. Omit paths with no new fact, never emit empty placeholder entries. Multiple assistance selections belong in one assistanceLevel array entry. Every entry must be independently supported by an exact user_text quote. Constraints, facts and concerns are packet metadata, never patch fields. Omit unsupported inferred fields; preserve unsupported requirements in statements/constraints for accounting. Do not infer native language, religion importance or requirement scope merely from language use or dietary preference. Choose the interview variant matching whether a material client question remains. A clarification variant requires one AI-authored question and its unresolved-fact trace. Never invent facts or a source quote to satisfy the schema. These rules apply to all repairs too.",
@@ -642,10 +649,12 @@ def _questionnaire_field_resolved(state: Dict[str, Any], path: str) -> bool:
 
 
 def _client_evidence_context(user_text: str, state: Dict[str, Any]) -> Dict[str, Any]:
-    from app.services.semantic_field_contract import compile_fields
+    from app.services.canonical_structured_profile import SCHEMA_FIELDS
 
     resolved = {}
-    for path in compile_fields(_required_output_schema()["questionnaire_patch"]):
+    # Read authority includes canonical button fields that AI cannot write.
+    # Restricting this index to extraction paths invites related-field guesses.
+    for path in sorted(SCHEMA_FIELDS):
         if not _questionnaire_field_resolved(state, path):
             continue
         value = state
@@ -656,7 +665,7 @@ def _client_evidence_context(user_text: str, state: Dict[str, Any]) -> Dict[str,
         "resolved_questionnaire_fields": resolved,
         "minimum_dimensions": _minimum_dimension_status(user_text, state),
         "prior_adaptive_answers": _adaptive_answer_summary(state),
-        "instruction": "These are existing client answers, not new AI extractions or facility evidence. Preserve them without fabricating source quotes. Unknowns remain unknown; ask only for a material unresolved fact or genuine conflict.",
+        "instruction": "These are existing client answers, not new AI extractions or facility evidence. Each key is the exact canonical source path, including read-only questionnaire fields. Quote its literal value and map that exact key; never substitute a related writable field. Preserve them without fabricating source quotes. Unknowns remain unknown; ask only for a material unresolved fact or genuine conflict.",
     }
 
 
@@ -915,7 +924,7 @@ def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Opti
                 },
                 "prior_packet": {key: value for key, value in prior_packet.items() if key not in {"governance", "learning_center"}},
                 "rejected_wire_packet": getattr(error, "wire_diagnostic", None),
-                "instruction": "Return the complete corrected packet using required_output exactly, including decision_readiness, questionnaire_patch and questionnaire_patch_sources. Preserve explicit client facts and unknowns. Every KNOWN/USED statement mapped to a client profile field must have that field in questionnaire_patch unless already supplied in questionnaire_state. Known medical detail requires its parent medicalCareProfile.needs selection: oxygenUse -> Oxygen, dialysisFrequency/dialysisCenter -> Dialysis, woundCareFrequency -> Wound care. Include the parent selection with its own exact quote; never drop an explicit clinical need to pass validation. Use only allowed enum values and exact nested schema paths. For every new/changed patch leaf, put its full dotted path in questionnaire_patch_sources with a quote copied exactly from original user_text; also account for the fact in statements. Reuse a genuine quote for related fields; never invent quotes, paraphrase them, move fields to the top level, or discard an explicit requirement to pass validation. Omit unsupported inferred fields and duplicate questionnaire defaults. gender must not be inferred from kinship/pronouns; coupleAssistance must be a string. If a material client question remains, include one ASKED MUST/UNKNOWN statement and its identical next_question. Otherwise return READY with statement accounting.",
+                "instruction": "Return the complete corrected schema-constrained wire packet, including questionnaire_patch_fields and interview. Preserve explicit client facts and unknowns. Every KNOWN/USED canonical mapping must have one {path,value,quote} extraction entry unless that exact field is already supplied in questionnaire_state. Existing answers need their own source traces, not duplicate extraction entries. Use genuine original user_text quotes and full canonical paths. Known medical detail requires its explicitly established parent need with its own quote; never drop an explicit clinical need or infer a parent merely to pass validation. Omit unsupported inferred fields. Normalization reconstructs questionnaire_patch, questionnaire_patch_sources and decision_readiness; do not emit those legacy keys. If a material client question remains, put its question and unresolved-fact trace in interview; otherwise use the READY interview variant. Retain every selected property trace during repair.",
             }
             repaired_packet = active_transport(repair_payload)
             try:

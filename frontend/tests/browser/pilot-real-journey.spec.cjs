@@ -87,6 +87,13 @@ async function answerInterview(page, scenario, maxSteps = 120) {
     if (kind === 'multi') {
       for (const option of value) await page.getByRole('button', { name: String(option), exact: true }).click();
     } else {
+      if (id === 'budget') {
+        const budgetChoice = page.getByRole('combobox', { name: 'Monthly budget in dollars', exact: true });
+        await expect(budgetChoice).toBeVisible({ timeout: 30_000 });
+        await budgetChoice.selectOption(String(value));
+        await next.click();
+        continue;
+      }
       const range = page.locator('main input[type="range"]');
       if (kind === 'number' && await range.count()) {
         await range.first().evaluate((el, v) => {
@@ -201,10 +208,30 @@ test.describe('real synthetic-pilot customer journey', () => {
     const dynamicModel = payload.decision_intelligence.dynamic_preference_model;
     expect(dynamicModel.preference_authority, JSON.stringify(payload.decision_intelligence.human_intelligence.semantic_ai)).toBe('QUOTED_STATEMENT_TRACES');
     expect(dynamicModel.preferences.every(pref => pref.source === 'semantic_ai.statements')).toBe(true);
+    expect(dynamicModel.preferences.every(pref => !['Preference', 'Preferred', 'Nice to have', 'No preference'].includes(pref.client_expression))).toBe(true);
+    expect(new Set(dynamicModel.preferences.map(pref => pref.preference_id)).size).toBe(dynamicModel.preferences.length);
+    for (const item of results) {
+      for (const preference of dynamicModel.preferences) {
+        const assessment = item.dynamic_preference_fit.assessments.find(entry => entry.preference_id === preference.preference_id);
+        expect(assessment).toBeDefined();
+        if (assessment.status === 'UNKNOWN') {
+          expect(assessment.provider_question_if_unknown).toContain(preference.client_expression);
+          expect(assessment.provider_question_if_unknown).toContain(preference.semantic_meaning);
+        }
+      }
+    }
     if (scenario.answers.activityImportance === 'Preference') {
       for (const activity of scenario.answers.activities || []) {
-        expect(dynamicModel.preferences.some(pref => pref.client_expression.toLowerCase().includes(activity.toLowerCase())),
-          scenario.id + ': actual activity preference must remain source-traced: ' + activity).toBe(true);
+        expect(dynamicModel.preferences.filter(pref => pref.client_expression === activity).length,
+          scenario.id + ': actual activity preference must have exactly one source obligation: ' + activity
+            + ' | preferences=' + JSON.stringify(dynamicModel.preferences)
+            + ' | statements=' + JSON.stringify(payload.decision_intelligence.human_intelligence.semantic_ai.result?.statements)).toBe(1);
+      }
+    }
+
+    if (scenario.answers.nearbyImportance === 'Nice to have') {
+      for (const place of scenario.answers.nearbyPlaces || []) {
+        expect(dynamicModel.preferences.some(pref => pref.client_expression === place)).toBe(true);
       }
     }
 

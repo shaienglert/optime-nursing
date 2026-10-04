@@ -40,9 +40,14 @@ jobs:
           backend/tests/test_semantic_clarification_contract_repair.py
           backend/tests/test_patient_decision_engine.py
           backend/tests/test_structured_medical_needs_mapping.py
+          backend/tests/test_assistance_shared_authority.py
+      - name: Validate synthetic catalog source integrity
+        run: python scripts/validate_synthetic_pilot_contract.py
       - name: Install frontend dependencies
         working-directory: frontend
         run: npm ci
+      - name: Check generated questionnaire label inventory
+        run: node scripts/generate_intake_label_inventory.cjs --check
       - name: Verify all frontend unit contracts
         working-directory: frontend
         # Browser specs have their own Playwright workflows; run every *.test.ts here.

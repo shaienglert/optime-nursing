@@ -1,6 +1,7 @@
 "use client";
 
 import { updateClientCaseQuestionnaire } from "@/lib/api";
+import { budgetChoices } from "@/lib/budget-choices";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -54,13 +55,15 @@ function AnswerControl({ question, value, onAnswer, priceFloor }: { question: In
   }
   if (question.kind === "number" && question.id === "budget") {
     const knownFloor = priceFloor?.minimum_monthly_price;
-    const min = priceFloor?.minimum_budget_is_binding && knownFloor ? Math.ceil(knownFloor) : 100;
+    const min = priceFloor?.minimum_budget_is_binding && knownFloor ? knownFloor : 100;
     const max = Math.max(15000, min + 10000);
     const current = Number(value) > 0 ? Number(value) : min;
+    const choices = budgetChoices(min, max);
+    const selectedIndex = choices.reduce((best, amount, index) => Math.abs(amount - current) < Math.abs(choices[best] - current) ? index : best, 0);
     return <div className="mt-4">
-      <input aria-label="Monthly budget slider" type="range" min={min} max={max} step="1" value={Math.min(max, Math.max(min, current))} onChange={(event) => onAnswer(Number(event.target.value), false)} className="w-full" />
+      <input aria-label="Monthly budget slider" aria-valuetext={`$${current.toLocaleString()} per month`} type="range" min={0} max={choices.length - 1} step="1" value={selectedIndex} onChange={(event) => onAnswer(choices[Number(event.target.value)], false)} className="w-full" />
       <div className="mt-2 flex justify-between text-sm text-forest"><span>From ${min.toLocaleString()}</span><strong>${current.toLocaleString()} / month</strong><span>${max.toLocaleString()}+</span></div>
-      <label className="mt-3 block text-sm">Monthly budget in dollars<input aria-label="Monthly budget in dollars" type="number" min={min} step="1" value={Number(value) > 0 ? Number(value) : ""} onChange={event => onAnswer(Number(event.target.value), false)} className="ml-3 rounded-xl border p-2" /></label>
+      <label className="mt-3 block text-sm">Monthly budget in dollars<select aria-label="Monthly budget in dollars" value={choices.includes(current) ? current : ""} onChange={event => onAnswer(Number(event.target.value), false)} className="ml-3 rounded-xl border p-2"><option value="" disabled>{Number(value) > 0 ? `$${current.toLocaleString()} (previously entered)` : "Choose a budget"}</option>{choices.map(amount => <option key={amount} value={amount}>${amount.toLocaleString()}</option>)}</select></label>
       {knownFloor ? <p className="mt-3 text-sm">{priceFloor?.synthetic_pilot ? "Synthetic pilot: " : ""}The lowest known starting monthly price in your selected area for the care answers given so far is ${knownFloor.toLocaleString()}.</p> : <p className="mt-3 text-sm">The minimum price for this search has not been verified. Your budget will be kept as stated; affordability still needs evidence.</p>}
       {priceFloor?.funding_pathway === "MEDICAID_COST_REQUIRES_VERIFICATION" ? <p className="mt-2 text-sm">That is a private-pay price, not your Medicaid household cost. Enter what the household can pay; Medicaid coverage and out-of-pocket cost still need verification.</p> : null}
       <p className="mt-2 text-xs text-forest">This is a starting monthly cost, not proof of total affordability. Mandatory fees, one-time entrance fees and any outside care must be checked separately.</p>
@@ -249,6 +252,12 @@ export function StructuredIntake() {
 
             <div className="mt-7">
               {question.note ? <p className="mb-3 text-base leading-7 text-muted">{question.note}</p> : null}
+              {question.id === "medicaidStatus" || question.id === "medicaidAmountKnown" ? <div className="mb-4 text-sm leading-6">
+                <p>Medicaid may cover approved care at home or in Assisted Living, or care and accommodation in a participating nursing facility. Community-based coverage generally does not pay for room and board. A coverage amount is not necessarily money available to add to your housing budget.</p>
+                <p className="mt-2">OOmnik uses the information you provide. We do not process Medicaid applications or determine or guarantee eligibility, coverage or payment. Confirm coverage and your remaining cost with the funding agency and provider before committing.</p>
+                <p className="mt-2 flex flex-wrap gap-x-4"><a className="underline" href="https://www.medicaid.gov/medicaid/long-term-services-supports/institutional-long-term-care/nursing-facilities" target="_blank" rel="noopener noreferrer">Official Medicaid guide</a><a className="underline" href="https://adsd.nv.gov/Programs/Seniors/HCBS_%28FE%29/HCBS_%28FE%29/" target="_blank" rel="noopener noreferrer">Nevada home and Assisted Living support</a><a className="underline" href="https://www.ecfr.gov/current/title-42/chapter-IV/subchapter-C/part-441/subpart-G/section-441.310" target="_blank" rel="noopener noreferrer">Federal regulation: 42 CFR 441.310</a></p>
+                {context.draft.medicaidStatus === "Application pending" ? <p className="mt-2 font-medium">Expected coverage is conditional on approval.</p> : null}
+              </div> : null}
               {onBudget && priceFloorLoading ? <p role="status">Checking starting prices in your selected area for the care answers given so far…</p> : <AnswerControl question={question} value={question.get(context)} onAnswer={answer} priceFloor={priceFloor} />}
               {onBudget && priceFloorError ? <p className="mt-3 text-sm">Price lookup is unavailable. <button type="button" onClick={() => setPriceFloorRetry(value => value + 1)} className="underline">Try price lookup again</button></p> : null}
               {belowKnownFloor ? <p role="alert" className="mt-3 text-sm text-[#a4501f]">Your stated budget is below the known private-pay starting price. I have kept your amount. Choose a budget you can fund, or go back to change the area or funding answer before continuing.</p> : null}

@@ -86,7 +86,7 @@ def _key(required_output):
     return json.dumps(required_output["questionnaire_patch"], sort_keys=True)
 
 
-def provider_schema(required_output, *, family_text: str | None = None):
+def provider_schema(required_output, *, family_text: str | None = None, questionnaire_state: dict | None = None):
     schema = _model(_key(required_output)).model_json_schema()
 
     # Without narrative there is no legal exact source quote for a new field.
@@ -111,6 +111,7 @@ def provider_schema(required_output, *, family_text: str | None = None):
         properties = definition.get("properties", {})
         if "quote" in properties and contracts[properties["path"]["enum"][0]].positive:
             properties["value"]["minimum"] = 1
+    quotes = []
     if family_text and family_text.strip():
         # Grammar chooses source spans; it does not interpret their meaning.
         # The complete narrative remains available when a fact spans sentences.
@@ -133,6 +134,25 @@ def provider_schema(required_output, *, family_text: str | None = None):
             properties["quote"] = {"type": "string", "enum": eligible} if contract.unit else {"$ref": "#/$defs/SourceQuote"}
         alternatives = schema["properties"]["questionnaire_patch_fields"]["items"]["anyOf"]
         alternatives[:] = [item for item in alternatives if item.get("$ref") not in excluded]
+    if family_text is not None:
+        from app.services.canonical_structured_profile import build_structured_profile, in_schema
+        fields = build_structured_profile(questionnaire_state or {})["fields"]
+        selected = []
+        for path, field in fields.items():
+            if not in_schema(path):
+                continue
+            value = field.get("value")
+            selected.extend(value if isinstance(value, list) else [value])
+        preference_quotes = list(dict.fromkeys([*quotes, *[
+            value for value in selected if isinstance(value, str) and value.strip()]]))
+        # One trace grammar for every relevance role. Splitting NICE into a
+        # separate quoted branch lets the decoder choose a role to satisfy
+        # syntax instead of the client's actual requirement.
+        if preference_quotes:
+            schema["$defs"]["Trace"]["properties"]["raw_text"] = {
+                "type": "string", "enum": preference_quotes}
+        else:
+            schema["properties"]["statements"]["maxItems"] = 0
     return schema
 
 
@@ -142,13 +162,19 @@ def normalize_wire(packet: Any, required_output: dict, *, family_text: str | Non
     except ValidationError as exc:
         raise RuntimeError("SEMANTIC_AI_WIRE_CONTRACT:" + json.dumps(exc.errors(include_input=False), default=str)[:1000]) from exc
     result = wire.model_dump(exclude={"wire_version", "questionnaire_patch_fields", "interview"})
-    patch, sources = {}, {}
+    patch, sources, original_entries, repeated_entries = {}, {}, {}, []
     contracts = compile_fields(required_output["questionnaire_patch"])
     for field in wire.questionnaire_patch_fields:
         entry = field.model_dump()
         path = entry["path"]
-        if path in sources:
-            raise RuntimeError(f"SEMANTIC_AI_WIRE_CONTRACT:DUPLICATE_FIELD:{path}")
+        if path in original_entries:
+            if original_entries[path] != entry:
+                raise RuntimeError(f"SEMANTIC_AI_WIRE_CONTRACT:DUPLICATE_FIELD:{path}")
+            # Identical field/value/source content is repetition, not a second
+            # fact. Never collapse different values, representations or quotes.
+            repeated_entries.append(path)
+            continue
+        original_entries[path] = entry
         value, quote = entry["value"], entry["quote"]
         if not quote.strip():
             raise RuntimeError(f"SEMANTIC_AI_WIRE_CONTRACT:EMPTY_QUOTE:{path}")
@@ -175,6 +201,8 @@ def normalize_wire(packet: Any, required_output: dict, *, family_text: str | Non
         trace.update(status="ASKED", clarification_question=wire.interview.next_question, research_task=None)
         result["statements"].append(trace)
     result["wire_contract"] = {"version": WIRE_VERSION, "schema_constrained": True}
+    if repeated_entries:
+        result["wire_contract"]["identical_repeated_entries"] = repeated_entries
     return result
 
 

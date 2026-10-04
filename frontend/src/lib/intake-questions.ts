@@ -1,5 +1,6 @@
 import type { QuestionnaireState } from "@/context/questionnaire-context";
 import { applyCanonicalIdentity } from "@/lib/canonical-intake-state";
+import { applyMedicaidBudgetScenario } from "@/lib/medicaid-budget-scenario";
 
 /**
  * The structured intake as data.
@@ -589,7 +590,30 @@ export const QUESTIONS: IntakeQuestion[] = [
     label: "Medicaid situation",
     visible: () => true,
     get: ({ draft }) => draft.medicaidStatus,
-    set: (context, value) => setDraft(context, { medicaidStatus: text(value) }),
+    set: (context, value) => setDraft(context, { medicaidStatus: text(value), budget: context.draft.medicaidOriginalBudget ?? context.draft.budget, medicaidOriginalBudget: undefined, medicaidBudgetScenarioChoice: "" }),
+  },
+  {
+    id: "medicaidAmountKnown",
+    section: SECTION_TIMING,
+    prompt: "Do you know the monthly Medicaid coverage amount approved or expected?",
+    kind: "single",
+    options: ["Yes", "Amount not known"],
+    required: true,
+    label: "Medicaid coverage amount",
+    visible: ({ draft }) => ["Approved", "Application pending"].includes(draft.medicaidStatus),
+    get: ({ draft }) => draft.medicaidAmountKnown || "",
+    set: (context, value) => setDraft(context, { medicaidAmountKnown: text(value), medicaidMonthlyAmount: text(value) === "Yes" ? context.draft.medicaidMonthlyAmount : 0, medicaidBudgetIncludesSupport: "", budget: context.draft.medicaidOriginalBudget ?? context.draft.budget, medicaidOriginalBudget: undefined, medicaidBudgetScenarioChoice: "" }),
+  },
+  {
+    id: "medicaidMonthlyAmount",
+    section: SECTION_TIMING,
+    prompt: "What is that monthly amount in dollars?",
+    kind: "number",
+    required: true,
+    label: "monthly Medicaid coverage",
+    visible: ({ draft }) => ["Approved", "Application pending"].includes(draft.medicaidStatus) && draft.medicaidAmountKnown === "Yes",
+    get: ({ draft }) => draft.medicaidMonthlyAmount || 0,
+    set: (context, value) => setDraft(context, { medicaidMonthlyAmount: Math.max(0, Number(value) || 0), budget: context.draft.medicaidOriginalBudget ?? context.draft.budget, medicaidOriginalBudget: undefined, medicaidBudgetScenarioChoice: "" }),
   },
   {
     id: "budget",
@@ -601,7 +625,33 @@ export const QUESTIONS: IntakeQuestion[] = [
     label: "monthly budget",
     visible: () => true,
     get: ({ draft }) => draft.budget,
-    set: (context, value) => setDraft(context, { budget: Math.max(0, Number(value) || 0) }),
+    set: (context, value) => setDraft(context, { budget: Math.max(0, Number(value) || 0), medicaidOriginalBudget: undefined, medicaidBudgetScenarioChoice: "" }),
+  },
+  {
+    id: "medicaidBudgetIncludesSupport",
+    section: SECTION_TIMING,
+    prompt: "Does the monthly budget you chose already include that Medicaid amount?",
+    kind: "single",
+    options: ["Already included", "Additional to my budget", "Not sure"],
+    required: true,
+    label: "whether Medicaid is included in the budget",
+    note: "Coverage of specific services is not unrestricted money. We keep it separate until its use and your remaining cost are confirmed.",
+    visible: ({ draft }) => ["Approved", "Application pending"].includes(draft.medicaidStatus) && draft.medicaidAmountKnown === "Yes" && Number(draft.medicaidMonthlyAmount) > 0,
+    get: ({ draft }) => draft.medicaidBudgetIncludesSupport || "",
+    set: (context, value) => setDraft(context, { medicaidBudgetIncludesSupport: text(value), budget: context.draft.medicaidOriginalBudget ?? context.draft.budget, medicaidOriginalBudget: undefined, medicaidBudgetScenarioChoice: "" }),
+  },
+  {
+    id: "medicaidBudgetScenarioChoice",
+    section: SECTION_TIMING,
+    prompt: "Would you like to include that additional support amount in the search budget?",
+    kind: "single",
+    options: ["Include support in my search", "Use my own budget only"],
+    required: true,
+    label: "search budget with support",
+    note: "This is a planning scenario based on the amount you entered. Coverage, permitted use and your remaining payment must be confirmed; pending support depends on approval.",
+    visible: ({ draft }) => ["Approved", "Application pending"].includes(draft.medicaidStatus) && Number(draft.medicaidMonthlyAmount) > 0 && draft.medicaidBudgetIncludesSupport === "Additional to my budget",
+    get: ({ draft }) => draft.medicaidBudgetScenarioChoice || "",
+    set: (context, value) => ({ ...context, draft: applyMedicaidBudgetScenario(context.draft, text(value)) }),
   },
   {
     id: "moveTiming",
@@ -1009,6 +1059,9 @@ export function buildSubmission(context: IntakeContext): QuestionnaireState {
 
   return {
     ...draft,
+    medicaidAmountKnown: ["Approved", "Application pending"].includes(draft.medicaidStatus) ? draft.medicaidAmountKnown : "",
+    medicaidMonthlyAmount: ["Approved", "Application pending"].includes(draft.medicaidStatus) && draft.medicaidAmountKnown === "Yes" ? draft.medicaidMonthlyAmount : 0,
+    medicaidBudgetIncludesSupport: ["Approved", "Application pending"].includes(draft.medicaidStatus) && draft.medicaidAmountKnown === "Yes" ? draft.medicaidBudgetIncludesSupport : "",
     assistanceLevel: extras.assistance.join(", "),
     happinessPreferences: extras.activities,
     nearbyPlaces: [...extras.nearbyPlaces.filter((item) => item !== "Other"), ...(extras.nearbyOther.trim() ? [`Other: ${extras.nearbyOther.trim()}`] : [])],
