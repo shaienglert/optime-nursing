@@ -135,6 +135,8 @@ def _strategy_client_blockers(strategy_context: Dict[str, Any], answered_fact_ke
             "information_gain": "HIGH",
             "reason": str(row.get("why_it_matters") or "Unresolved client fact can materially change the living-and-care strategy."),
             "answer_options": [str(value) for value in row.get("options") or []],
+            # Open-ended facts (no closed options) carry their own approved question text.
+            "fixed_question": str(row.get("question") or "") if not row.get("options") else "",
             "owner": "CLIENT",
             "source": "LIVING_STRATEGY_GUARDIAN",
         })
@@ -272,7 +274,7 @@ def _canonical_fallback_result(base_result: Dict[str, Any], blocker: Dict[str, A
     fact_key = str(blocker.get("fact_key") or "required_information")
     options = [str(value) for value in blocker.get("answer_options") or []]
     readable_fact = fact_key.replace("_", " ")
-    fallback_question = f"Which option best describes {readable_fact}: {', '.join(options)}?"
+    fallback_question = str(blocker.get("fixed_question") or "") or f"Which option best describes {readable_fact}: {', '.join(options)}?"
     return {
         **base_result,
         "decision_readiness": "NEEDS_CLARIFICATION",
@@ -312,7 +314,7 @@ def _apply_canonical_policy_without_ai(
     context["readiness_guardian"]["client_owned_blockers"] = blockers
     context["readiness_guardian"]["ready_veto_active"] = bool(blockers) or bool(gap_policy.get("escalation_required"))
     context["adaptive_questions"] = []
-    if blockers and blockers[0].get("answer_options"):
+    if blockers and (blockers[0].get("answer_options") or blockers[0].get("fixed_question")):
         blocker = blockers[0]
         fallback = _canonical_fallback_result({}, blocker)
         question_text = str(fallback["next_question"])

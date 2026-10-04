@@ -131,3 +131,20 @@ def test_other_language_is_not_a_language_so_it_creates_no_language_obligation(l
 def test_a_named_language_still_creates_its_preference_and_requirement(language):
     assert "PREFERRED_LANGUAGE_SUPPORT" in keys(intent(language_state(language, "Preference")))
     assert "REQUIRED_LANGUAGE_SUPPORT" in keys(intent(language_state(language, "Requirement")))
+
+
+def test_required_other_language_stays_pending_and_asks_which_language():
+    from app.services.living_strategy_runtime import build_living_strategy_context
+
+    state = language_state("Other", "Requirement")
+    intent_result = intent(state)
+    pending = intent_result["pending_clarification_requirements"]
+    assert [row["key"] for row in pending] == ["REQUIRED_LANGUAGE_SUPPORT"]
+    assert pending[0]["status"] == "PENDING_CLARIFICATION"
+    assert pending[0]["question"] == "Which language is required?"
+    assert "REQUIRED_LANGUAGE_SUPPORT" not in {row["key"] for row in intent_result["must_haves"]}
+    asked = {q["question_key"]: q["question"] for q in build_living_strategy_context(state, "")["guardian_clarification_candidates"]}
+    assert asked["required_language"] == "Which language is required?"
+    # A mere preference for "Other" asks nothing.
+    soft = build_living_strategy_context(language_state("Other", "Preference"), "")["guardian_clarification_candidates"]
+    assert "required_language" not in {q["question_key"] for q in soft}

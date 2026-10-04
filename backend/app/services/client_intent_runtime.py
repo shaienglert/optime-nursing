@@ -171,6 +171,17 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
         else:
             add_nice("PREFERRED_LANGUAGE_SUPPORT", f"The resident prefers {preferred_language}; verified language support should rank higher.")
             nice[-1]["value"] = preferred_language
+    pending_clarification: List[Dict[str, Any]] = []
+    if preferred_language and _selection(preferred_language) == "OTHER" and language_scope in _REQUIRED_SELECTIONS:
+        # The family marked a language as required but did not name it. The requirement is
+        # kept (not dropped, not matched against "Other") until the language is clarified.
+        pending_clarification.append({
+            "key": "REQUIRED_LANGUAGE_SUPPORT",
+            "status": "PENDING_CLARIFICATION",
+            "question_key": "required_language",
+            "question": "Which language is required?",
+            "reason": "A required language was marked as Other without naming it.",
+        })
     social_profile = human_profile.get("socialProfile") if isinstance(human_profile.get("socialProfile"), dict) else {}
     activities = [str(x).strip() for x in social_profile.get("hobbyParticipation") or [] if str(x).strip() and _selection(x) not in _NEUTRAL_SELECTIONS]
     if activities and _selection(social_profile.get("activityRequirementLevel")) in _REQUIRED_SELECTIONS:
@@ -259,6 +270,7 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
             (_NEUTRAL_SELECTIONS | _REQUIRED_SELECTIONS | _PREFERRED_SELECTIONS | {"FULL CONTINUUM OF CARE ON ONE CAMPUS"})
         ],
         "must_haves": must,
+        "pending_clarification_requirements": pending_clarification,
         "nice_to_haves": nice,
         "in_house_only_requested": in_house_only_requested,
         "rule": "Client intent first -> verified MUST gate -> NICE-TO-HAVE MATCH/UNKNOWN/MISMATCH ordering -> objective government/regulatory evidence -> public reputation -> relevant evidence completeness.",

@@ -63,3 +63,12 @@ def test_budget_text_that_is_not_one_unambiguous_amount_is_not_guessed(written) 
 def test_budget_normalization_is_idempotent() -> None:
     once = canonicalize_intake_state({"budget": "$7,000"})
     assert canonicalize_intake_state(once) == once
+
+
+def test_unparseable_budget_blocks_readiness_with_numeric_question():
+    from app.services.human_intelligence_runtime_verified import build_human_intelligence_context
+
+    context = build_human_intelligence_context({"budget": "seven thousand"}, "", structured_only=True)
+    assert context["decision_readiness"] == "NEEDS_CLARIFICATION"
+    questions = [q["question"] for q in context["adaptive_questions"]]
+    assert "What is your monthly budget in dollars? Enter a numeric amount, for example 7,000." in questions

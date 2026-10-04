@@ -62,6 +62,20 @@ def _hi(questionnaire: Dict[str, Any]) -> Dict[str, Any]:
     return value if isinstance(value, dict) else {}
 
 
+def _is_blank_budget(value: Any) -> bool:
+    return value is None or (isinstance(value, str) and not value.strip()) or (
+        isinstance(value, (int, float)) and not isinstance(value, bool) and value == 0
+    )
+
+
+def _is_unusable_budget(value: Any) -> bool:
+    if isinstance(value, bool):
+        return True
+    if isinstance(value, (int, float)):
+        return not value > 0
+    return True
+
+
 def _question(key: str, text: str, why: str, options: List[str]) -> Dict[str, Any]:
     return {
         "question_key": key,
@@ -373,7 +387,28 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
             "The strategy can differ between an immediate move and a move after functional recovery.",
             ["Move during recovery", "Finish rehabilitation first", "Flexible", "Not sure"],
         ))
-    if budget in (None, "", 0):
+    language_profile = hi.get("languageProfile") if isinstance(hi.get("languageProfile"), dict) else {}
+    if (
+        _norm(language_profile.get("preferredSpokenLanguage") or language_profile.get("medicalDiscussionLanguage")) == "other"
+        and _norm(language_profile.get("languageNeedScope")) in {"requirement", "required", "must"}
+    ):
+        clarification_candidates.append(_question(
+            "required_language",
+            "Which language is required?",
+            "A required language was marked as Other without naming it, so language support cannot be checked.",
+            [],
+        ))
+    if _is_unusable_budget(budget) and not _is_blank_budget(budget):
+        # A budget that was supplied but could not be parsed is a parse failure,
+        # not an absent fact. Ask for a numeric amount instead of letting every
+        # candidate silently fail the budget check with zero results.
+        clarification_candidates.append(_question(
+            "monthly_budget",
+            "What is your monthly budget in dollars? Enter a numeric amount, for example 7,000.",
+            "The budget entered could not be read as an amount, so cost cannot be checked against it.",
+            [],
+        ))
+    elif _is_blank_budget(budget):
         clarification_candidates.append(_question(
             "monthly_budget",
             "What monthly housing-and-care budget is comfortable?",

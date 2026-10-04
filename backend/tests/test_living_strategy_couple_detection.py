@@ -48,3 +48,16 @@ def test_parents_relationship_alone_does_not_invent_a_couple():
 
 def test_deceased_parents_are_not_a_current_couple():
     assert _household_type("My parents are both deceased. I need housing for myself.") == "SINGLE_OR_UNKNOWN"
+
+
+def test_unparseable_budget_asks_numeric_clarification_instead_of_silent_zero():
+    for raw in ("seven thousand", "about 7000 or 8000", "-5"):
+        keys = {q["question_key"]: q for q in build_living_strategy_context({"budget": raw}, "")["guardian_clarification_candidates"]}
+        assert keys["monthly_budget"]["question"] == "What is your monthly budget in dollars? Enter a numeric amount, for example 7,000."
+
+
+def test_numeric_budget_asks_no_budget_question_and_missing_budget_keeps_band_question():
+    ok = build_living_strategy_context({"budget": 7000}, "")["guardian_clarification_candidates"]
+    assert "monthly_budget" not in {q["question_key"] for q in ok}
+    missing = {q["question_key"]: q for q in build_living_strategy_context({}, "")["guardian_clarification_candidates"]}
+    assert missing["monthly_budget"]["options"]
