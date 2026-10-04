@@ -22,7 +22,7 @@ export function SiteHeader() {
         </nav>
         <FontSizeControl />
         <details className="relative xl:hidden"><summary className="flex min-h-12 cursor-pointer items-center text-lg font-medium">Menu</summary><nav aria-label="Mobile navigation" className="absolute left-0 top-full mt-2 max-h-[65vh] w-[min(19rem,85vw)] overflow-y-auto rounded-xl border border-line bg-white p-3 text-lg shadow-lg"><Link href="/#how-it-works" className="flex min-h-12 items-center rounded-lg px-3 hover:bg-sand">How it works</Link><Link href="/workspace" className="flex min-h-12 items-center rounded-lg px-3 hover:bg-sand">Saved conversations</Link>{SECONDARY_LINKS.map(item => <Link key={item.href} href={item.href} prefetch={item.href === "/admin" ? false : undefined} className="flex min-h-12 items-center rounded-lg px-3 hover:bg-sand">{item.label}</Link>)}</nav></details>
-        <Link href="/#start-search" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-forest px-4 py-3 text-lg font-semibold text-white transition hover:bg-forest-hover">Start here<OomnikMark /></Link>
+        <Link href="/#start-search" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-forest px-4 py-3 text-lg font-semibold text-white transition hover:bg-forest-hover"><OomnikMark />Start here</Link>
       </div>
     </header>
   </>;

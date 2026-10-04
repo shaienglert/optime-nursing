@@ -231,7 +231,14 @@ def create_client_case_endpoint(payload: ClientCaseCreateRequest):
 @app.post("/api/oomniker/advice")
 def oomniker_advice_endpoint(payload: dict):
     from app.services.oomniker_ai import advise_with_ai
-    return advise_with_ai(analysis=payload.get("analysis") or {}, client_context=payload.get("client_context") or {})
+    state = payload.get("questionnaire_state")
+    if not payload.get("decision_id") or not isinstance(state, dict):
+        raise HTTPException(status_code=422, detail="Advice needs the saved decision and its questionnaire.")
+    stored = recall_decision_result(payload["decision_id"], inputs_fingerprint=decision_inputs_fingerprint(
+        state, str(payload.get("natural_language_query") or ""), payload.get("limit", 50)))
+    if stored is None:
+        raise HTTPException(status_code=409, detail="Your decision expired or your answers changed. Run the search again for current advice.")
+    return advise_with_ai(analysis=stored.get("oomniker") or {}, client_context=stored.get("patient_needs_profile") or {})
 
 
 @app.post("/api/market-price-floor")
@@ -836,6 +843,8 @@ class PatientDecisionEngineOut(BaseModel):
     # communities entered, how many left at each stage and why, and which parameter took
     # the result to zero. Declared so it is not dropped in serialisation.
     decision_funnel: Optional[Dict[str, Any]] = None
+    # Governed advisory facts must survive response-model serialization.
+    oomniker: Optional[Dict[str, Any]] = None
     # Opaque handle to the server-held copy of this exact response; a personal report
     # for the same inputs can reuse it instead of re-running the engine.
     decision_id: Optional[str] = None

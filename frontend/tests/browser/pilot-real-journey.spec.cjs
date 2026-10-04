@@ -186,6 +186,15 @@ test.describe('real synthetic-pilot customer journey', () => {
     const response = await recommendationResponse;
     expect(response.status()).toBe(200);
     const payload = await response.json();
+    expect(payload.oomniker, scenario.id + ': governed advice must survive API serialization').toBeTruthy();
+    expect(payload.oomniker.profile_mutated).toBe(false);
+    for (const suggestion of payload.oomniker.suggestions || []) {
+      if (suggestion.action === 'VERIFY_WITH_COMMUNITIES') continue;
+      expect(suggestion.authority).toBe('PREFERENCE');
+      expect(suggestion.new_recommendation_count).toBeGreaterThanOrEqual(2);
+      expect(new Set(suggestion.candidates.map(row => row.canonical_facility_id)).size).toBe(suggestion.new_recommendation_count);
+      expect(suggestion.may_auto_change).toBe(false);
+    }
     fs.mkdirSync(path.join(process.cwd(), 'pilot-results'), { recursive: true });
     fs.writeFileSync(path.join(process.cwd(), 'pilot-results', `${scenario.id}-decision.json`), `${JSON.stringify(payload, null, 2)}\n`);
     const results = payload.results || [];

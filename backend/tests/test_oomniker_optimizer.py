@@ -6,21 +6,16 @@ def test_system_must_is_never_relaxable():
     assert out['system_must_immutable']==['secure_memory']
     assert not out['suggestions']
 
-def test_client_must_requires_explicit_reconsideration():
+def test_client_must_is_not_offered_for_reconsideration():
     profile={'constraints':[{'parameter':'music_lessons','authority':'CLIENT_MUST'}]}
     rows=[{'matched_parameter_ids':['music_lessons']},{'matched_parameter_ids':[]},{'matched_parameter_ids':[]}]
     out=analyze_oomniker(profile,rows)
-    s=out['suggestions'][0]
-    assert s['action']=='ASK_CLIENT_TO_RECONSIDER'
-    assert s['requires_client_approval'] is True
-    assert s['additional_options_if_relaxed']==2
+    assert out['suggestions'] == []
 
-def test_preference_can_be_recommended_but_never_auto_changed():
+def test_legacy_match_absence_cannot_prove_a_preference_gain():
     profile={'constraints':[{'parameter':'music_lessons','authority':'PREFERENCE'}]}
     rows=[{'matched_parameter_ids':['music_lessons']},{'matched_parameter_ids':[]}]
-    s=analyze_oomniker(profile,rows)['suggestions'][0]
-    assert s['action']=='RECOMMEND_TRANSPARENT_ALTERNATIVE'
-    assert s['may_auto_change'] is False
+    assert analyze_oomniker(profile,rows)['suggestions'] == []
 
 # ---- Counterfactual over the full candidate ledger (owner, 2026-10-01) ----------------
 
@@ -40,11 +35,12 @@ def test_counterfactual_never_offers_system_or_care_constraints():
     assert set(out["immutable_constraints_blocking"]) == {"LICENSE_CURRENTLY_VALID", "ADL_SUPPORT_AVAILABLE", "dialysis_arrangements"}
 
 
-def test_client_must_is_only_a_question_and_counts_single_constraint_unlocks():
+def test_client_must_impact_is_explained_without_a_relaxation():
     out = _advise([_item("A", fail=["KOSHER_MEALS"]), _item("B", fail=["KOSHER_MEALS"], price=9000), _item("C")])
-    kosher = next(s for s in out["suggestions"] if s["parameter"] == "KOSHER_MEALS")
-    assert kosher["action"] == "ASK_CLIENT_TO_RECONSIDER" and kosher["requires_client_approval"] and not kosher["may_auto_change"]
-    assert kosher["additional_options_if_relaxed"] == 1  # B also needs budget, so it is not unlocked by kosher alone
+    assert out["suggestions"] == []
+    kosher = next(s for s in out["constraint_impacts"] if s["parameter"] == "KOSHER_MEALS")
+    assert kosher["blocked_count"] == 2 and kosher["sole_verified_blocker_count"] == 1
+    assert kosher["may_relax"] is False
     assert out["recommendable_count"] == 1
 
 

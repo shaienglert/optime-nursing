@@ -515,6 +515,7 @@ def run_decision_pipeline(questionnaire_state: dict[str, Any], natural_language_
             "client_intent": decision.get("client_intent") or {},
             "funnel": result.get("decision_funnel") or {},
             "location_scope": result.get("location_scope") or {},
+            "preference_analysis": result.pop("oomniker_preference_analysis", {}),
         }
     result["oomniker"] = analyze_oomniker(dict(decision_questionnaire), list(result.get("results") or []), decision_context=oomniker_context)
     result = _attach_pipeline_trace(result)

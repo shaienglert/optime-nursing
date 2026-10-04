@@ -26,6 +26,7 @@ sys.path.insert(0, str(HERE))
 
 from cases import CASES  # noqa: E402
 from diff_snaps import walk  # noqa: E402
+from advisory_contract import is_declared_advisory_change  # noqa: E402
 
 
 def _warm_cache(backend: Path) -> None:
@@ -79,10 +80,10 @@ def compare(baseline: str, candidate: str, show: int = 12) -> int:
         diffs: list = []
         walk(json.loads(a.read_text()), json.loads(b.read_text()), "$", diffs)
         total += len(diffs)
-        # Owner-approved additive contract fields from the authority integration.
-        # Changed values and removals still fail; only absent -> present is exempt.
+        # Owner-directed advisor presentation and additive authority/provenance fields.
+        # Existing decision, ranking, requirement and evidence fields still match exactly.
         allowed += sum(
-            kind == "added" and (
+            is_declared_advisory_change(path, kind) or kind == "added" and (
                 path == "$.http_recommendations.body.decision_id"
                 or path == "$.db_side_effects.decision_artifacts"
                 # Additive intake-reuse contract. Existing signals, decisions,
@@ -107,7 +108,7 @@ def compare(baseline: str, candidate: str, show: int = 12) -> int:
         for path, kind, x, y in diffs[:show]:
             print(f"    {path} [{kind}] {json.dumps(x, default=str)[:100]} -> {json.dumps(y, default=str)[:100]}")
     print(f"TOTAL_DIFFERENCES={total}")
-    print(f"ALLOWED_ADDITIONS={allowed}")
+    print(f"DECLARED_CONTRACT_DIFFERENCES={allowed}")
     print(f"UNEXPECTED_DIFFERENCES={total - allowed}")
     return 1 if total > allowed else 0
 
