@@ -422,6 +422,7 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
             "Does the resident wander, or need a secured unit for safety?",
             "A secured (locked) unit is required only for a confirmed safety need; memory difficulty alone does not establish it.",
             ["Yes", "No", "Not sure"],
+            exact_wording=True,
         ))
     if _is_unusable_budget(budget) and not _is_blank_budget(budget):
         # A budget that was supplied but could not be parsed is a parse failure,

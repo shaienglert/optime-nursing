@@ -35,3 +35,13 @@ def test_explicit_safety_need_requires_confirmed_secured_memory_care(path):
     state = {"memoryStatus": "Significant memory issues", "humanIntelligenceV2": {path[0]: {path[1]: "Yes"}}}
     must, _ = _must(state)
     assert "SECURE_MEMORY_CARE_CONFIRMED" in must
+
+
+def test_safety_question_is_asked_in_the_approved_words_even_without_semantic_wording():
+    from app.services.human_intelligence_runtime_verified import build_human_intelligence_context
+
+    context = build_human_intelligence_context(
+        {"budget": 7000, "memoryStatus": "Significant memory issues", "assistanceLevel": "Help with bathing"}, "", structured_only=True)
+    question = context["adaptive_questions"][0]
+    assert question["question"] == "Does the resident wander, or need a secured unit for safety?"
+    assert question["target_fact_key"] == "memory_safety_need"
