@@ -212,12 +212,50 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
         add_must("CONTINUUM_OF_CARE_REQUIRED", "The client marked future care continuity as required.", "verified life-plan care continuum")
     elif (
         continuum_selections & _PREFERRED_SELECTIONS
+        or "FULL CONTINUUM OF CARE ON ONE CAMPUS" in continuum_selections
         or (not continuum_selections and any(token in query for token in ("continuum of care", "continuing care", "life plan", "ccrc")))
     ):
         add_nice("CONTINUUM_OF_CARE", "The client wants future care levels available without another move.")
 
+    # Record sources at the deterministic consumer, separately from semantic
+    # interpretation and actual comparator effects. Only active intent keys are
+    # linked; arbitrary narrative mentions cannot credit a questionnaire answer.
+    source_links = []
+    from app.services.questionnaire_answer_accounting import _at
+    source_paths = {
+        "BUDGET_FIT": ("budget",),
+        "REQUIRED_ACTIVITIES": ("humanIntelligenceV2.socialProfile.hobbyParticipation", "humanIntelligenceV2.socialProfile.activityRequirementLevel"),
+        "PREFERRED_LANGUAGE_SUPPORT": ("humanIntelligenceV2.languageProfile.preferredLanguage", "humanIntelligenceV2.languageProfile.medicalDiscussionLanguage", "humanIntelligenceV2.languageProfile.languageNeedScope"),
+        "REQUIRED_LANGUAGE_SUPPORT": ("humanIntelligenceV2.languageProfile.preferredLanguage", "humanIntelligenceV2.languageProfile.medicalDiscussionLanguage", "humanIntelligenceV2.languageProfile.languageNeedScope"),
+        "CONTINUUM_OF_CARE": ("futureCarePreference", "humanIntelligenceV2.futureCareProfile.avoidFutureMovesPreference", "humanIntelligenceV2.futureCareProfile.continuumOfCarePreference"),
+        "CONTINUUM_OF_CARE_REQUIRED": ("futureCarePreference", "humanIntelligenceV2.futureCareProfile.avoidFutureMovesPreference", "humanIntelligenceV2.futureCareProfile.continuumOfCarePreference"),
+    }
+    for item in must + nice:
+        for path in source_paths.get(item["key"], ()):
+            value = _at(questionnaire_state, path)
+            values = list(enumerate(value)) if isinstance(value, list) else [(None, value)]
+            for index, answer in values:
+                if answer is None or answer == "" or _selection(answer) in _NEUTRAL_SELECTIONS:
+                    continue
+                if item["key"].startswith("CONTINUUM_OF_CARE") and _selection(answer) not in (_REQUIRED_SELECTIONS | _PREFERRED_SELECTIONS | {"FULL CONTINUUM OF CARE ON ONE CAMPUS"}):
+                    continue
+                # The fallback language field is read only without a preferred language.
+                if path.endswith("medicalDiscussionLanguage") and language_profile.get("preferredLanguage"):
+                    continue
+                source_links.append({"answer_path": path, "selection_index": index,
+                                     "answer": answer, "intent_key": item["key"]})
     return {
         "version": "client-intent-runtime-v1.6",
+        "answer_source_links": source_links,
+        "unrecognized_controls": [
+            {"answer_path": path, "answer": value, "status": "UNRECOGNIZED_CONTROL_VALUE"}
+            for path, value in (
+                ("futureCarePreference", questionnaire_state.get("futureCarePreference")),
+                ("humanIntelligenceV2.futureCareProfile.avoidFutureMovesPreference", future_profile.get("avoidFutureMovesPreference")),
+                ("humanIntelligenceV2.futureCareProfile.continuumOfCarePreference", future_profile.get("continuumOfCarePreference")),
+            ) if _selection(value) and _selection(value) not in
+            (_NEUTRAL_SELECTIONS | _REQUIRED_SELECTIONS | _PREFERRED_SELECTIONS | {"FULL CONTINUUM OF CARE ON ONE CAMPUS"})
+        ],
         "must_haves": must,
         "nice_to_haves": nice,
         "in_house_only_requested": in_house_only_requested,

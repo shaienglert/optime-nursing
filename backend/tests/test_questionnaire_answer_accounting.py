@@ -125,3 +125,49 @@ def test_pipeline_completion_boundary_attaches_original_answer_audit(monkeypatch
     monkeypatch.setitem(sys.modules, "app.services.decision_pipeline_trace", module)
     result = _attach_pipeline_trace(packet(), {"newQuestion": "Original answer"})
     assert result["questionnaire_answer_accounting"]["unaccounted_count"] == 1
+
+
+def test_transport_strips_private_fields_recursively_after_accounting(monkeypatch):
+    from app.services.decision_pipeline import _attach_pipeline_trace
+    module = ModuleType("app.services.decision_pipeline_trace")
+    module.attach_decision_pipeline_trace = lambda result: result
+    monkeypatch.setitem(sys.modules, "app.services.decision_pipeline_trace", module)
+    original = {"results": [{"__rank_comparison_trace": {"secret": 1}, "public": {"__hidden": 2, "visible": 3}}],
+                "research": [{"__private": 4}]}
+    public = _attach_pipeline_trace(original, {})
+    assert public["results"] == [{"public": {"visible": 3}}]
+    assert public["research"] == [{}]
+    assert "__rank_comparison_trace" in original["results"][0]
+
+
+def test_exact_nearby_answer_is_credited_only_when_final_key_differs():
+    from app.services.must_ai_nice_pipeline import _layered_rank
+    state = {"nearbyPlaces": ["Shopping", "Library"]}
+    result = packet(state)
+    candidates = []
+    for distance in (1., 2.):
+        candidates.append({"nearby_place_fit": {"status": "KNOWN", "importance": "Important",
+                                                "fit_band": 2, "average_distance_miles": distance},
+                           "__ranking_answer_sources": [{"answer_path": "nearbyPlaces", "selection_index": 0,
+                                "answer": "Shopping", "dimensions": ["requested_nearby_distance"]}]})
+    result["results"] = _layered_rank(candidates)
+    rows = build_questionnaire_answer_accounting(state, result)["answers"]
+    assert rows[0]["status"] == "RANKING_EFFECT_TRACED"
+    assert rows[1]["status"] == "PRESERVED_NOT_TRACED"
+    candidates[1]["nearby_place_fit"]["average_distance_miles"] = 1.
+    result["results"] = _layered_rank(candidates)
+    assert build_questionnaire_answer_accounting(state, result)["answers"][0]["status"] == "PRESERVED_NOT_TRACED"
+
+
+def test_deterministic_activity_and_continuity_consumers_link_exact_inputs():
+    from app.services.client_intent_runtime import build_client_intent
+    state = {"futureCarePreference": "Preferred", "humanIntelligenceV2": {
+        "socialProfile": {"hobbyParticipation": ["Pottery", "Library"], "activityRequirementLevel": "Required"},
+        "futureCareProfile": {"continuumOfCarePreference": "Somewhat important"}}}
+    result = packet(state)
+    result["decision_intelligence"]["client_intent"] = build_client_intent(state, "", {}, {})
+    rows = build_questionnaire_answer_accounting(state, result)["answers"]
+    assert [r["status"] for r in rows[:4]] == ["INTENT_LINKED"] * 4
+    assert rows[-1]["status"] == "PRESERVED_NOT_TRACED"
+    assert rows[-1]["control_diagnostics"] == ["UNRECOGNIZED_CONTROL_VALUE"]
+    assert all(not r["ranking_effect_dimensions"] for r in rows)

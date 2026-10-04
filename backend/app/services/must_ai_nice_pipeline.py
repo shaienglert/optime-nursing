@@ -62,7 +62,7 @@ def _family_criteria_key(row: Dict[str, Any]) -> tuple[Any, ...]:
 
 def _layered_rank(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     from app.services.regulatory_quality_layer import rank_with_evidence_layer
-    return rank_with_evidence_layer(rows, lambda row: (1 if row.get("budget_exception") else 0, *_family_criteria_key(row)))
+    return rank_with_evidence_layer(rows, lambda row: (1 if row.get("budget_exception") else 0, *_family_criteria_key(row)), base_dimensions=_FINAL_BASE_DIMENSIONS)
 
 
 def _rank_group_key(row: Dict[str, Any]) -> tuple[Any, ...]:

@@ -114,7 +114,7 @@ export function SimpleResultsPageClient() {
       if (/community.*large|large community/.test(lower)) next.humanIntelligenceV2.personalityProfile.communitySizePreference = "Large";
       if (/parking.*(?:not|no longer).*(?:need|required)|(?:remove|drop).*parking/.test(lower)) next.parkingRequirement = "No";
       if (/parking.*(?:need|required|important)/.test(lower) && !/(?:not|no longer)/.test(lower)) next.parkingRequirement = "Yes";
-      if (/future care.*(?:important|required)|avoid another move/.test(lower)) next.futureCarePreference = "Yes";
+      if (/future care.*(?:important|required)|avoid another move/.test(lower)) next.futureCarePreference = /future care.*required/.test(lower) ? "Required" : "Preferred";
       if (/future care.*(?:not|no longer).*(?:important|required)|(?:remove|drop).*future care/.test(lower)) next.futureCarePreference = "No preference";
       next.questionnaireCompletion.clientSummaryConfirmed = true;
       next.questionnaireCompletion.confirmedAt = new Date().toISOString();

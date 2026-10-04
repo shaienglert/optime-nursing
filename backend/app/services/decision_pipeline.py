@@ -414,7 +414,19 @@ def _attach_pipeline_trace(result: dict[str, Any], questionnaire_state: dict[str
     if questionnaire_state is not None:
         from app.services.questionnaire_answer_accounting import attach_questionnaire_answer_accounting
         attach_questionnaire_answer_accounting(result, questionnaire_state)
-    return attach_decision_pipeline_trace(result)
+    result = attach_decision_pipeline_trace(result)
+    # Final transport boundary, after all consumers of private ranking snapshots.
+    # Apply recursively to audit/research copies as well as displayed facilities.
+    def public(value):
+        if isinstance(value, dict):
+            return {key: public(child) for key, child in value.items()
+                    if not str(key).startswith("__")}
+        if isinstance(value, list):
+            return [public(child) for child in value]
+        if isinstance(value, tuple):
+            return tuple(public(child) for child in value)
+        return value
+    return public(result)
 
 
 def run_decision_pipeline(questionnaire_state: dict[str, Any], natural_language_query: str, limit: int, *, profile_builder: Callable, runner: Callable, prepared_profile: dict[str, Any] | None = None):

@@ -59,6 +59,25 @@ def build_questionnaire_answer_accounting(questionnaire: dict, result: dict) -> 
     strict = (semantic.get("wire_contract") or {}).get("schema_constrained") is True
     statements = semantic.get("statements") or [] if strict else []
     rows = []
+    # Only a decisive final-comparator explanation establishes a ranking effect.
+    # Source records are created where the actual questionnaire inputs are read.
+    from app.services.regulatory_quality_layer import explain_ranked_pair
+    ranked = result.get("results") or []
+    ranking_sources = []
+    for higher, lower in zip(ranked, ranked[1:]):
+        snapshot = higher.get("__rank_comparison_trace") or {}
+        dimensions = snapshot.get("base_dimensions")
+        comparison = explain_ranked_pair(higher, lower, dimensions) if dimensions else None
+        if not comparison:
+            continue
+        dimension = comparison["decision_dimension"]
+        for candidate in (higher, lower):
+            fit = candidate.get("nearby_place_fit") or {}
+            if fit.get("status") != "KNOWN":
+                continue
+            for source in candidate.get("__ranking_answer_sources") or []:
+                if dimension in source.get("dimensions", []):
+                    ranking_sources.append({**source, "decision_dimension": dimension})
     for path, selection_index, answer in _answers(questionnaire):
         canonical_value = _at(canonical, path)
         # bool/int equality in Python is unsuitable for evidence identity.
@@ -83,10 +102,24 @@ def build_questionnaire_answer_accounting(questionnaire: dict, result: dict) -> 
         needs = [str(need.get("parameter_id")) for need in profile.get("needs") or []
                  if selection_index is None and preserved and isinstance(need, dict)
                  and _source_path(need.get("user_evidence_source")) == path]
-        status = "NEED_LINKED" if needs else "SOURCE_TRACED" if traces else "PRESERVED_NOT_TRACED" if preserved else "UNACCOUNTED"
+        effects = sorted({source["decision_dimension"] for source in ranking_sources
+                          if source.get("answer_path") == path
+                          and source.get("selection_index") == selection_index
+                          and same(source.get("answer"), answer)}) if preserved else []
+        control_diagnostics = [item["status"] for item in (decision.get("client_intent") or {}).get("unrecognized_controls", [])
+                               if item.get("answer_path") == path and same(item.get("answer"), answer)]
+        intent = decision.get("client_intent") or {}
+        active_keys = {item.get("key") for item in (intent.get("must_haves") or []) + (intent.get("nice_to_haves") or [])}
+        intent_keys = sorted({source["intent_key"] for source in intent.get("answer_source_links") or []
+                             if source.get("intent_key") in active_keys and source.get("answer_path") == path
+                             and source.get("selection_index") == selection_index
+                             and same(source.get("answer"), answer)}) if preserved else []
+        status = "RANKING_EFFECT_TRACED" if effects else "NEED_LINKED" if needs else "INTENT_LINKED" if intent_keys else "SOURCE_TRACED" if traces else "PRESERVED_NOT_TRACED" if preserved else "UNACCOUNTED"
         rows.append({"answer_path": path, "selection_index": selection_index, "answer": answer,
                      "canonical_preserved": preserved, "semantic_traces": traces,
-                     "need_parameter_ids": needs, "status": status})
+                     "need_parameter_ids": needs, "ranking_effect_dimensions": effects,
+                     "intent_keys": intent_keys,
+                     "control_diagnostics": control_diagnostics, "status": status})
     counts = Counter(row["status"] for row in rows)
     return {"version": "questionnaire-answer-accounting-v1", "answers": rows,
             "answer_count": len(rows), "status_counts": dict(sorted(counts.items())),

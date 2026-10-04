@@ -96,3 +96,14 @@ def test_declining_continuity_does_not_penalize_independent_community():
         assert not row["client_intent_fit"]["nice_mismatch"]
         assert not row["client_intent_fit"]["nice_match"]
     assert intent_rank_key(independent) == intent_rank_key(continuing)
+
+
+def test_legacy_explicit_continuum_label_retains_preference():
+    assert "CONTINUUM_OF_CARE" in keys(intent({"futureCarePreference": "Full continuum of care on one campus"}))
+
+
+def test_unknown_positive_control_is_observable_without_inventing_intent():
+    result = intent({"futureCarePreference": "Somewhat important"})
+    assert "CONTINUUM_OF_CARE" not in keys(result)
+    assert result["unrecognized_controls"] == [{"answer_path": "futureCarePreference",
+        "answer": "Somewhat important", "status": "UNRECOGNIZED_CONTROL_VALUE"}]

@@ -110,7 +110,7 @@ def _split(group: List[Dict[str, Any]], start: int, path: Tuple[Any, ...], out: 
         out.append((path, row, list(used)))
 
 
-def rank_with_evidence_layer(rows: Sequence[Dict[str, Any]], base_key: Callable[[Dict[str, Any]], Tuple[Any, ...]]) -> List[Dict[str, Any]]:
+def rank_with_evidence_layer(rows: Sequence[Dict[str, Any]], base_key: Callable[[Dict[str, Any]], Tuple[Any, ...]], *, base_dimensions=None) -> List[Dict[str, Any]]:
     """Order rows by base_key (the family's own criteria), then separate base-equal groups
     with the layer. Sets row["rank_group_signature"]: rows sharing it are a true tie."""
     groups: Dict[Tuple[Any, ...], List[Dict[str, Any]]] = {}
@@ -126,6 +126,7 @@ def rank_with_evidence_layer(rows: Sequence[Dict[str, Any]], base_key: Callable[
             # universe. Later evidence refreshes must not rewrite its rationale.
             row["__rank_comparison_trace"] = {
                 "base_values": base,
+                "base_dimensions": tuple(base_dimensions) if base_dimensions is not None else None,
                 "evidence_path": path,
                 "evidence_measures": list(used),
                 "measure_values": measure_values(row),
@@ -149,6 +150,9 @@ def explain_ranked_pair(higher: Dict[str, Any], lower: Dict[str, Any], base_dime
     right = lower.get("__rank_comparison_trace") or {}
     if not left or not right:
         return None
+    for snapshot in (left, right):
+        if snapshot.get("base_dimensions") is not None and tuple(snapshot["base_dimensions"]) != tuple(base_dimensions):
+            return None
     left_base, right_base = tuple(left["base_values"]), tuple(right["base_values"])
     equal = []
     if len(left_base) != len(right_base) or len(left_base) != len(base_dimensions):

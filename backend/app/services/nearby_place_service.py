@@ -125,6 +125,14 @@ def attach_nearby_place_fit(rows: list[dict[str, Any]], questionnaire_state: dic
     # External POI lookup is intentionally bounded to the strongest pre-ranked candidates.
     # Calling a remote provider serially for thousands of survivors would make the recommendation path unusable.
     for position, row in enumerate(rows):
+        row["__ranking_answer_sources"] = [
+            {"answer_path": "nearbyPlaces", "selection_index": index, "answer": value,
+             "dimensions": ["requested_nearby_fit", "requested_nearby_distance"]}
+            for index, value in enumerate(questionnaire_state.get("nearbyPlaces") or [])
+            if str(value) in CATEGORY_TAGS
+        ] + [{"answer_path": "nearbyPlacesImportance", "selection_index": None,
+              "answer": questionnaire_state.get("nearbyPlacesImportance"),
+              "dimensions": ["requested_nearby_fit"]}]
         if position >= max_candidates and not row.get("synthetic_pilot"):
             row["nearby_place_fit"] = {"status": "NOT_EVALUATED", "reason": "outside POI shortlist", "importance": importance}
             continue

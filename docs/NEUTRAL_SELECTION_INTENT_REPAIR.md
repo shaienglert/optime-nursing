@@ -96,3 +96,33 @@ instructions now describe the actual questionnaire_patch_fields/interview wire
 format, rather than competing reconstructed legacy keys. Repair count and strict
 source validation remain unchanged. Browser diagnostics retain the failing
 source model; its exactly-one-obligation assertions remain strict.
+
+## PR 439 review follow-up
+
+Classification A/B. Relevant principles PR-002, PR-003, PR-005, PR-006, PR-009.
+Principle change: NO. Owner approval required: NO.
+
+The final response boundary removes private `__*` keys recursively after audit
+consumers have finished. Comparator snapshots retain their dimension identity;
+reordered same-length explanations fail closed. A regression pins all twelve
+final key components to their actual meanings, rather than testing length alone.
+Nearby-answer source identity is recorded at the input consumer and credited as
+RANKING_EFFECT_TRACED only when a final adjacent comparison proves a difference,
+with KNOWN nearby evidence and exact preserved path/index/value. This is an
+observation, not a new eligibility gate. It does not assert comprehensive usage
+for other unlinked inputs. Unknown continuity control values remain visible as
+diagnostics without producing a preference. The explicit legacy continuum label
+retains its positive meaning, and Oomniker sends canonical Required/Preferred
+values instead of the ineffective Yes value.
+
+Deterministic intent consumers also retain exact input path/selection/value links
+for budget, required activities, requested language and continuity. INTENT_LINKED
+means the answer generated an active intent, not that it decided the final order.
+No link is assigned to declined, unrecognized continuity or unused fallback
+language controls. The accounting remains observation-only.
+
+Validation: 194 targeted backend tests passed (including final comparator,
+source accounting, neutral selection, ranking oracle, explicit explanations,
+nearby neutrality, response contract, intent, Oomniker and affordability).
+Frontend TypeScript validation and nine results/ranking tests passed.
+These are local checks; no production journey or final-head CI result is claimed.
