@@ -101,6 +101,19 @@ def test_mixed_size_and_other_narrative_cannot_be_silently_dropped():
                               "mapped_parameters": ["humanIntelligenceV2.personalityProfile.communitySizePreference"]}]}
     assert not analyze(pool(), dynamic_preference_count=1, dynamic_preferences=model)["suggestions"]
 
+@pytest.mark.parametrize("value", ["Not important", "No preference", "None", ""])
+def test_neutral_source_is_not_an_advisor_preference_even_if_legacy_intent_says_nice(value):
+    intent = deepcopy(INTENT)
+    intent["nice_to_haves"].append({"key": "CONTINUUM_OF_CARE"})
+    profile = deepcopy(PROFILE)
+    profile["humanIntelligenceV2"]["futureCareProfile"] = {"continuumOfCarePreference": value}
+    rows = pool()
+    before = deepcopy(rows)
+    out = analyze_preferences(rows, intent, profile, _layered_rank)
+    assert out["ignored_neutral_parameters"] == ["CONTINUUM_OF_CARE"]
+    assert not any(item["parameter"] == "CONTINUUM_OF_CARE" for item in out["parameters"] + out["suggestions"])
+    assert rows == before
+
 def test_quality_does_not_cherry_pick_after_worse_inspection_rating():
     rows = pool()
     for item in rows[5:]:

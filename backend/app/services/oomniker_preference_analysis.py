@@ -87,6 +87,15 @@ def analyze_preferences(rows: list[dict], intent: dict, profile: dict,
     baseline_ids = {_identity(row) for row in baseline}
     musts = {str(item.get("key") or "") for item in intent.get("must_haves") or []}
     nice_keys = {str(item.get("key") or "") for item in intent.get("nice_to_haves") or []}
+    ignored_neutral = []
+    future_paths = ["humanIntelligenceV2.futureCareProfile.continuumOfCarePreference",
+                    "humanIntelligenceV2.futureCareProfile.avoidFutureMovesPreference", "futureCarePreference"]
+    if "CONTINUUM_OF_CARE" in nice_keys and not any(
+            str(_get(profile, path) or "").strip().lower() in {"preferred", "important", "yes"} for path in future_paths):
+        # Legacy intent may contain "important" inside "not important". The advisor
+        # cannot offer a preference change the family has already declined.
+        nice_keys.remove("CONTINUUM_OF_CARE")
+        ignored_neutral.append("CONTINUUM_OF_CARE")
     parameters, suggestions = [], []
     for key in sorted(nice_keys - _IMPLICIT - {""}):
         diagnostic = {"parameter": key, "excluded_by_preference_count": 0,
@@ -186,4 +195,5 @@ def analyze_preferences(rows: list[dict], intent: dict, profile: dict,
     suggestions.sort(key=lambda item: (-item["new_recommendation_count"], item["parameter"], item["alternative_value"]))
     parameters.sort(key=lambda item: (-item["new_recommendation_count"], item["parameter"]))
     return {"status": "MEASURED_PREFERENCE_SENSITIVITY", "eligible_candidate_count": len(eligible),
-            "display_limit": window, "profile_mutated": False, "parameters": parameters, "suggestions": suggestions}
+            "display_limit": window, "profile_mutated": False, "parameters": parameters, "suggestions": suggestions,
+            "ignored_neutral_parameters": ignored_neutral}
