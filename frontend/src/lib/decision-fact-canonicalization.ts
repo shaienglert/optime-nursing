@@ -60,6 +60,23 @@ export function canonicalizeAdaptiveFact(state: QuestionnaireState, targetFactKe
       next.budget = parsed.budget ?? 0;
       break;
     }
+    case "memory_safety_need": {
+      // "Does the resident wander, or need a secured unit for safety?" A yes/no/not-sure
+      // answer is stored as the wandering/safety fact; any other text is kept as an
+      // acknowledged unknown (the answer signal already closes the question).
+      const value = normalized === "yes" ? "Yes" : normalized === "no" ? "No" : normalized === "not sure" ? "Not sure" : "";
+      if (value) next.humanIntelligenceV2.transitionRiskProfile.wanderingConcerns = value;
+      break;
+    }
+    case "required_language": {
+      // "Which language is required?" A named language replaces the unnamed "Other";
+      // "Other"/"Not sure" leaves the requirement pending (never silently dropped).
+      const value = answer.trim();
+      if (value && !["other", "not sure", "unknown"].includes(normalized)) {
+        next.humanIntelligenceV2.languageProfile.preferredSpokenLanguage = value;
+      }
+      break;
+    }
     case "community_size_preference":
       next.humanIntelligenceV2.personalityProfile.communitySizePreference = answer;
       break;

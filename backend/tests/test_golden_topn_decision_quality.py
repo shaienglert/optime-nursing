@@ -122,40 +122,72 @@ def test_golden_ongoing_adl_client_top5_is_assisted_living_primary_fit():
 
 
 _MEMORY_STORY = (
-    "My mother is 82, has diagnosed dementia with wandering risk, and needs memory-care supervision and daily assistance. "
+    "My mother is 82, has diagnosed dementia and needs memory-care supervision and daily assistance. "
     "We need an appropriate memory care setting in Las Vegas. Her monthly budget is $9,000."
 )
 _MEMORY_CLIENT = {
     "relationship": "My mother",
     "ageGroup": "80-84",
     "assistanceLevel": "Needs supervision and daily assistance",
-    "memoryStatus": "Dementia",
+    # The intake's own enum value; the legacy free label "Dementia" never created the
+    # memory-care need in the engine.
+    "memoryStatus": "Significant memory issues",
     "budget": 9000,
     "locationCity": "Las Vegas",
 }
 
 
+def _memory_client(wandering=None):
+    client = dict(_MEMORY_CLIENT)
+    if wandering is not None:
+        client["humanIntelligenceV2"] = {"transitionRiskProfile": {"wanderingConcerns": wandering}}
+    return client
+
+
+def _must_keys(result):
+    return {item["key"] for item in result["decision_intelligence"]["client_intent"]["must_haves"]}
+
+
 def test_golden_memory_label_alone_asks_the_safety_question_instead_of_assuming_a_secured_unit():
     # Owner decision: a memory label never creates a secured-unit MUST by itself. With the
     # wandering/security question unanswered the interview asks it and withholds results.
-    result = _run_ready(dict(_MEMORY_CLIENT), _MEMORY_STORY)
-    intelligence = result["decision_intelligence"]
-    keys = {item["key"] for item in intelligence["client_intent"]["must_haves"]}
-    assert "SECURE_MEMORY_CARE_CONFIRMED" not in keys
-    assert "memory_safety_need" in {q["question_key"] for q in intelligence["living_strategy"]["guardian_clarification_candidates"]}
+    result = _run_ready(_memory_client(), _MEMORY_STORY)
+    state = result["decision_intelligence"]["canonical_decision_state"]
+    assert state["next_action"] == "ASK_CLIENT" and state["client"] == "INCOMPLETE"
+    assert not {"SECURE_MEMORY_CARE_CONFIRMED", "SECURED_UNIT_AVAILABLE"} & _must_keys(result)
+    assert "memory_safety_need" in {q["question_key"] for q in result["decision_intelligence"]["living_strategy"]["guardian_clarification_candidates"]}
     assert result["result_count"] == 0
 
 
-def test_golden_confirmed_wandering_requires_confirmed_memory_care_and_never_fails_open():
-    client = dict(_MEMORY_CLIENT, humanIntelligenceV2={"transitionRiskProfile": {"wanderingConcerns": "Yes"}})
-    result = _run_ready(client, _MEMORY_STORY)
-    keys = {item["key"] for item in result["decision_intelligence"]["client_intent"]["must_haves"]}
-    assert {"SECURE_MEMORY_CARE_CONFIRMED", "SECURED_UNIT_AVAILABLE"} <= keys
-    # Every row that is shown must have passed the confirmed-memory-care gate; when the
-    # evidence is missing the correct outcome is no row, not an unconfirmed one.
-    for row in result.get("results") or []:
-        assert (row.get("client_intent_fit") or {}).get("hard_gate") != "FAIL"
-        assert str(row.get("memory_care_classification") or "").upper() == "CONFIRMED"
+@pytest.mark.parametrize("answer", ["No", "Not sure"])
+def test_golden_memory_client_with_answered_safety_question_gets_results(answer):
+    # After the question is answered (even "Not sure") the client progresses and receives
+    # results: no secured-unit MUST and only communities with confirmed memory care.
+    result = _run_ready(_memory_client(answer), _MEMORY_STORY)
+    rows = result.get("results") or []
+    assert rows, result["decision_intelligence"]["canonical_decision_state"]
+    assert not {"SECURE_MEMORY_CARE_CONFIRMED", "SECURED_UNIT_AVAILABLE"} & _must_keys(result)
+    assert all((row.get("client_intent_fit") or {}).get("hard_gate") != "FAIL" for row in rows)
+    assert all((row.get("care_setting_fit") or {}).get("status") == "PRIMARY_FIT" for row in rows)
+    # The memory-care need itself is evaluated against each community's official evidence.
+    assert all(str(row.get("memory_care_classification") or "").upper() == "CONFIRMED" for row in rows), [
+        (row.get("facility_name"), row.get("memory_care_classification")) for row in rows
+    ]
+    assert all({"memory_care", "dementia_alz_programs"} <= {n["parameter_id"] for n in row.get("matched_needs") or []} for row in rows)
+
+
+def test_golden_confirmed_wandering_is_pending_evidence_not_silent_zero_and_never_unconfirmed():
+    result = _run_ready(_memory_client("Yes"), _MEMORY_STORY)
+    assert {"SECURE_MEMORY_CARE_CONFIRMED", "SECURED_UNIT_AVAILABLE"} <= _must_keys(result)
+    state = result["decision_intelligence"]["canonical_decision_state"]
+    assert state["client"] == "COMPLETE"
+    # The Las Vegas dataset has no verified secured-unit evidence for any community
+    # (181 pass the memory-care classification but are unverified for a secured unit):
+    # the outcome must be an explicit evidence-pending state, never an unconfirmed row.
+    assert result["result_count"] == 0
+    assert state["next_action"] == "RESEARCH_PROVIDER_EVIDENCE"
+    stage = {item["stage"]: item for item in result["decision_funnel"]["stages"]}["MUST_EVIDENCE_UNKNOWN"]
+    assert stage["zeroing_parameter"] == "SECURED_UNIT_AVAILABLE"
 
 
 def test_golden_skilled_nursing_client_does_not_surface_residential_only_settings():

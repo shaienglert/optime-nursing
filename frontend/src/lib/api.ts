@@ -302,6 +302,15 @@ export type PatientNeedsProfile = {
   decision_intelligence?: Record<string, unknown>;
 };
 
+export type FundingExplanation = {
+  pathway: "PRIVATE_PAY" | "MEDICAID";
+  monthly: { amount: number | null; basis: string; budget: number | null; included_in_budget: boolean | null };
+  one_time: { amount: number; available_capital: number | null; status: "CAPITAL_NOT_PROVIDED" | "FEE_WITHIN_STATED_CAPITAL" | "FEE_EXCEEDS_STATED_CAPITAL"; provider_confirmation_required: boolean } | null;
+  medicaid: { state: "APPROVED" | "APPLICATION_PENDING" | "MAY_QUALIFY" | "NOT_ELIGIBLE" | "UNKNOWN"; acceptance_evidence: string; coverage_promised: boolean };
+  links: string[];
+  explanation: string;
+};
+
 export type DecisionEngineRecommendation = {
   canonical_facility_id: string;
   facility_name: string;
@@ -320,6 +329,7 @@ export type DecisionEngineRecommendation = {
   second_resident_monthly_fee?: number | null;
   single_resident_starting_monthly_price?: number | null;
   entrance_fee?: number | null;
+  funding_explanation?: FundingExplanation | null;
   nice_to_have_coverage?: { unresolved?: string[] };
   structured_nice_to_have_coverage?: { unresolved?: string[] };
   combined_care_solution?: {

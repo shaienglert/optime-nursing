@@ -12,6 +12,7 @@ import { isFinalRecommendation, isPendingRecommendation } from "@/lib/recommenda
 import { applyAdaptiveAnswer } from "@/lib/adaptive-answer";
 import { resultsClientState } from "@/lib/results-client-state";
 import { parseOomnikerQuantities } from "@/lib/oomniker-quantity";
+import { fundingLines, fundingLinks } from "@/lib/funding-display";
 import { DistanceScope } from "./distance-scope";
 
 const TOP_COUNT = 5;
@@ -372,6 +373,19 @@ export function SimpleResultsPageClient() {
                       {personalDistances.length > 0 || nearbyDistances.length > 0 ? <div className="mt-4 rounded-2xl bg-[#f5f8f6] p-4">{personalDistances.length > 0 ? <><p className="text-sm font-semibold uppercase tracking-[0.12em] text-[#437667]">Close to the people and places that matter</p><ul className="mt-2 grid gap-x-6 gap-y-1 text-base sm:grid-cols-2">{personalDistances.map((place, destinationIndex) => <li key={`${place.label}-${destinationIndex}`}><strong>{place.label}</strong>: {place.driving_distance_miles != null || place.distance_miles != null ? `${Number(place.driving_distance_miles ?? place.distance_miles).toFixed(1)} mi` : "distance unavailable"}{place.driving_time_minutes ? ` · ${place.driving_time_minutes} min drive` : place.status === "UNKNOWN" ? "" : " · estimated"}</li>)}</ul></> : null}{nearbyDistances.length > 0 ? <><p className="text-sm font-semibold uppercase tracking-[0.12em] text-[#437667]">Distances that matter to you</p><ul className="mt-2 grid gap-x-6 gap-y-1 text-base sm:grid-cols-2">{nearbyDistances.map(([category, place]) => <li key={category}><strong>{category}</strong>: {Number(place.driving_distance_miles ?? place.distance_miles).toFixed(1)} mi{place.driving_time_minutes ? ` · ${place.driving_time_minutes} min drive` : ""}{place.name && place.name !== category ? ` · ${place.name}` : ""}</li>)}</ul><p className="mt-2 text-xs text-[#68766f]">Based on the preferences you selected. Driving distance and time are shown when routing is available; otherwise OOmnik shows straight-line proximity and labels it as an estimate.</p></> : null}</div> : null}
                       {item.synthetic_pilot && item.monthly_rate_includes_verified_care ? <p className="mt-2 text-base text-[#334b42]">{item.monthly_price_basis === "TWO_RESIDENT_TOTAL" ? `Pilot monthly total for two residents, including verified care and the $${Number(item.second_resident_monthly_fee || 0).toLocaleString()} second-resident fee.` : "Pilot monthly rate includes the care services verified for this community."}</p> : null}
                       {typeof item.entrance_fee === "number" && item.entrance_fee > 0 ? <div className="mt-2 rounded-xl border border-amber-300 bg-amber-50 p-3 text-base text-[#684d19]"><p>One-time entrance fee: ${item.entrance_fee.toLocaleString()}, separate from the monthly rate.</p><p className="mt-2">One-time affordability is not confirmed. Can the household fund this amount separately? The community must also confirm whether this fee applies to the specific care program and admission contract.</p></div> : null}
+                      {fundingLines(item.funding_explanation, Boolean((state as { medicaidStatus?: string }).medicaidStatus)).length > 0 ? (
+                        <div data-testid="funding-explanation" className="mt-3 rounded-xl border border-[#cfe3da] bg-[#f7fbf9] px-4 py-3 text-sm leading-6 text-[#40564e]">
+                          <p className="font-semibold">How this would be paid for</p>
+                          <ul className="mt-1 space-y-1">
+                            {fundingLines(item.funding_explanation, Boolean((state as { medicaidStatus?: string }).medicaidStatus)).map((line) => (
+                              <li key={line.label}><strong>{line.label}:</strong> {line.text}</li>
+                            ))}
+                          </ul>
+                          {fundingLinks(item.funding_explanation).map((link) => (
+                            <a key={link} href={link} target="_blank" rel="noreferrer" className="mt-1 block underline">Source</a>
+                          ))}
+                        </div>
+                      ) : null}
                       {(item.nice_to_have_coverage?.unresolved || []).length > 0 || (item.structured_nice_to_have_coverage?.unresolved || []).length > 0 ? <p className="mt-3 text-sm text-[#684d19]">Some of your personal preferences still need facility-specific evidence. Verified care does not prove every lifestyle preference.</p> : null}
                       {state.budget > 0 && !(item.synthetic_pilot && item.monthly_rate_includes_verified_care && (state.relationship !== "Couple" || item.monthly_price_basis === "TWO_RESIDENT_TOTAL")) && (state.relationship === "Couple" || (response?.patient_needs_profile?.needs || []).some((need) => ["adl_support", "medication_support", "transfer_assistance", "memory_care", "nursing_24_7"].includes(need.parameter_id) && ["REQUIRED", "HIGH"].includes(need.requirement_level))) ? (
                         <p className="mt-3 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm leading-6 text-[#684d19]">
