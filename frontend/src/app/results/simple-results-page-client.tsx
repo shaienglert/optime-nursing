@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { OomnikMark } from "@/components/brand/oomnik-mark";
 import Image from "next/image";
+import { PilotPhoto } from "@/components/facility/pilot-photo";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -324,7 +325,7 @@ export function SimpleResultsPageClient() {
     <main className="min-h-screen bg-canvas px-5 py-8 text-ink sm:px-8 lg:px-12">
       <div className="mx-auto max-w-4xl">
         <section className="py-7 sm:py-10">
-          {syntheticPilot ? <div className="mb-6 rounded-xl border-2 border-amber-500 bg-amber-50 p-4 text-lg font-semibold text-amber-950">Pilot mode: every community, price, availability value and image on this page is synthetic test data—not a real facility.</div> : null}
+          {syntheticPilot ? <div className="mb-6 rounded-xl border-2 border-amber-500 bg-amber-50 p-4 text-lg font-semibold text-amber-950">Pilot mode: every community, price and availability value on this page is synthetic test data—not a real facility. Photos are illustrations, not community photographs.</div> : null}
           <p className="text-base font-semibold uppercase tracking-[0.14em] text-[#934b38]">A little closer to your next chapter</p>
           <h1 data-testid="personal-results-heading" className="mt-3 text-4xl font-semibold leading-tight sm:text-5xl">Let’s find a place that feels right for {relationship}</h1>
           <div className="mt-5 max-w-4xl"><PersonalNarrative state={state} query={naturalLanguageQuery} decisionId={response.decision_id || undefined} fallback={resultsIntroduction(state, top.length)} /></div>
@@ -387,7 +388,7 @@ export function SimpleResultsPageClient() {
               const nearbyDistances = Object.entries(nearbyFit?.nearest || {}).filter(([, place]) => Number.isFinite(place?.driving_distance_miles ?? place?.distance_miles)).sort((a, b) => Number(a[1]?.driving_distance_miles ?? a[1]?.distance_miles ?? 999) - Number(b[1]?.driving_distance_miles ?? b[1]?.distance_miles ?? 999));
               return (
                 <article key={item.canonical_facility_id} className="border-t border-line py-10 sm:py-12">
-                  {item.visual_media?.hero?.url ? <div className="mb-6 overflow-hidden rounded-xl border border-line bg-sand"><Image src={item.visual_media.hero.url} alt={`Synthetic illustration for ${item.facility_name}`} width={1200} height={700} className="h-64 w-full object-cover" /><p className="px-4 py-2 text-sm text-muted">{item.visual_media.hero.source_note || "Synthetic pilot illustration—not a real facility"}</p></div> : null}
+                  {item.synthetic_pilot ? <PilotPhoto facilityId={item.canonical_facility_id} /> : item.visual_media?.hero?.url ? <div className="mb-6 overflow-hidden rounded-xl border border-line bg-sand"><Image src={item.visual_media.hero.url} alt={`Synthetic illustration for ${item.facility_name}`} width={1200} height={700} className="h-64 w-full object-cover" /><p className="px-4 py-2 text-sm text-muted">{item.visual_media.hero.source_note || "Synthetic pilot illustration—not a real facility"}</p></div> : null}
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                       <p className="text-lg font-semibold text-forest">{index === 0 ? "Let’s start here" : "Another place to consider"}</p>
@@ -488,3 +489,4 @@ export function SimpleResultsPageClient() {
     </main>
   );
 }
+
