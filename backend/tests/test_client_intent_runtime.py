@@ -76,7 +76,7 @@ def test_memory_need_becomes_an_explicit_client_intent_must():
     intent = build_client_intent(
         {},
         "My mother has Alzheimer's and wanders at night. She needs secure memory care.",
-        {"signals": {"memory_care_needed": True}, "household": {}},
+        {"signals": {"memory_care_needed": True, "secure_memory_required": True}, "household": {}},
         {},
     )
     keys = {item["key"] for item in intent["must_haves"]}

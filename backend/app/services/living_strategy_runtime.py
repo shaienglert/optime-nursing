@@ -144,6 +144,19 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
         )
     )
 
+    # A secured unit is a safety requirement, not a severity label: it needs an explicit
+    # security/wandering answer (or statement), never "Significant memory issues" alone.
+    wandering_answer = _norm(transition.get("wanderingConcerns"))
+    secure_unit_answer = _norm(future.get("secureMemoryNeighborhoodNeed"))
+    secure_memory_required = (
+        wandering_answer == "yes" or secure_unit_answer == "yes"
+        or (not no_dementia and _contains(memory_query, "wandering", "secure memory", "secured unit", "locked memory", "elopement"))
+    )
+    secure_memory_safety_unanswered = (
+        memory_care_needed and not secure_memory_required
+        and wandering_answer == "" and secure_unit_answer == ""
+    )
+
     procedure_status = _norm(transition.get("recentProcedure"))
     procedure_type = _norm(transition.get("procedureType"))
     surgery = procedure_status == "yes"
@@ -403,6 +416,13 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
             [],
             exact_wording=True,
         ))
+    if secure_memory_safety_unanswered:
+        clarification_candidates.append(_question(
+            "memory_safety_need",
+            "Does the resident wander, or need a secured unit for safety?",
+            "A secured (locked) unit is required only for a confirmed safety need; memory difficulty alone does not establish it.",
+            ["Yes", "No", "Not sure"],
+        ))
     if _is_unusable_budget(budget) and not _is_blank_budget(budget):
         # A budget that was supplied but could not be parsed is a parse failure,
         # not an absent fact. Ask for a numeric amount instead of letting every
@@ -444,6 +464,7 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
             "adl_support_needed": adl,
             "medication_support_needed": medication,
             "memory_care_needed": memory_care_needed,
+            "secure_memory_required": secure_memory_required,
             "high_social_culture_priority": high_social,
             "no_dementia": no_dementia,
             "explicit_independence": explicit_independence,

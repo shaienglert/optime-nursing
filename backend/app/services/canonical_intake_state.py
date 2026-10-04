@@ -92,8 +92,10 @@ def canonicalize_intake_state(questionnaire_state: Mapping[str, Any] | None) -> 
     elif relationship_gender:
         state["gender"] = relationship_gender
 
-    amount = _budget_amount(state.get("budget"))
-    if amount is not None:
-        state["budget"] = amount
+    # availableCapital (one-time funds) is a separate fact from the monthly budget.
+    for money_field in ("budget", "availableCapital"):
+        amount = _budget_amount(state.get(money_field))
+        if amount is not None:
+            state[money_field] = amount
 
     return state

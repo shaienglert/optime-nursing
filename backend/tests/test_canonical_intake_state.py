@@ -72,3 +72,10 @@ def test_unparseable_budget_blocks_readiness_with_numeric_question():
     assert context["decision_readiness"] == "NEEDS_CLARIFICATION"
     questions = [q["question"] for q in context["adaptive_questions"]]
     assert "What is your monthly budget in dollars? Enter a numeric amount, for example 7,000." in questions
+
+
+def test_available_capital_text_is_parsed_separately_from_budget():
+    from app.services.canonical_intake_state import canonicalize_intake_state
+
+    out = canonicalize_intake_state({"budget": "$7,000", "availableCapital": "$120,000"})
+    assert out["budget"] == 7000 and out["availableCapital"] == 120000

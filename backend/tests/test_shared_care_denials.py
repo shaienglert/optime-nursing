@@ -119,7 +119,9 @@ def test_positive_needs_are_preserved_including_other_partner(story, questionnai
     assert {'adl_support', 'medication_support', 'memory_care'} <= {n['parameter_id'] for n in p['needs']}
     assert p['care_delivery_signals']['adl_support_needed'] is True
     assert p['care_delivery_signals']['medication_support_needed'] is True
-    assert {'ADL_SUPPORT_AVAILABLE', 'MEDICATION_SUPPORT_AVAILABLE', 'SECURE_MEMORY_CARE_CONFIRMED'} <= musts(p)
+    assert {'ADL_SUPPORT_AVAILABLE', 'MEDICATION_SUPPORT_AVAILABLE'} <= musts(p)
+    # Owner decision: a memory label alone never requires a secured unit.
+    assert 'SECURE_MEMORY_CARE_CONFIRMED' not in musts(p)
 
 
 @pytest.mark.parametrize('story', [case[0] for case in POSITIVE_CASES])

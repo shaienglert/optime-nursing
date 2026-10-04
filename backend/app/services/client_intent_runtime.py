@@ -110,10 +110,10 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
     if signals.get("medication_support_needed"):
         add_must("MEDICATION_SUPPORT_AVAILABLE", "The resident explicitly needs medication-management support; a facility cannot be called eligible until this capability is verified.", "verified medication-support evidence")
 
-    if signals.get("memory_care_needed"):
+    if signals.get("secure_memory_required"):
         add_must(
             "SECURE_MEMORY_CARE_CONFIRMED",
-            "The resident has a stated dementia/wandering safety need and requires an officially confirmed memory-care setting; ordinary assisted or independent living is not sufficient.",
+            "The resident has a stated wandering/security safety need and requires an officially confirmed memory-care setting; ordinary assisted or independent living is not sufficient.",
             "Nevada official-detail memory-care classification",
         )
 
@@ -183,6 +183,13 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
             "reason": "A required language was marked as Other without naming it.",
         })
     social_profile = human_profile.get("socialProfile") if isinstance(human_profile.get("socialProfile"), dict) else {}
+    social_frequency = str(social_profile.get("socialInteractionFrequency") or "").strip()
+    if social_frequency and _selection(social_frequency) not in _NEUTRAL_SELECTIONS:
+        # The stated pace of social life (from "Very little" to "Daily") is a preference to
+        # check against relevant evidence. No verified evidence of a community's social pace
+        # exists, so it stays UNKNOWN -- visible, never a match or a mismatch by default.
+        add_nice("SOCIAL_FREQUENCY_MATCH", f"The client prefers a social pace of '{social_frequency}'; this stays unverified until relevant evidence exists.")
+        nice[-1]["value"] = social_frequency
     activities = [str(x).strip() for x in social_profile.get("hobbyParticipation") or [] if str(x).strip() and _selection(x) not in _NEUTRAL_SELECTIONS]
     if activities and _selection(social_profile.get("activityRequirementLevel")) in _REQUIRED_SELECTIONS:
         add_must("REQUIRED_ACTIVITIES", "The family explicitly marked the selected activities as required.", "verified activities/programming evidence")
@@ -237,6 +244,7 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
     from app.services.questionnaire_answer_accounting import _at
     source_paths = {
         "BUDGET_FIT": ("budget",),
+        "SOCIAL_FREQUENCY_MATCH": ("humanIntelligenceV2.socialProfile.socialInteractionFrequency",),
         "REQUIRED_ACTIVITIES": ("humanIntelligenceV2.socialProfile.hobbyParticipation", "humanIntelligenceV2.socialProfile.activityRequirementLevel"),
         "PREFERRED_LANGUAGE_SUPPORT": ("humanIntelligenceV2.languageProfile.preferredLanguage", "humanIntelligenceV2.languageProfile.medicalDiscussionLanguage", "humanIntelligenceV2.languageProfile.languageNeedScope"),
         "REQUIRED_LANGUAGE_SUPPORT": ("humanIntelligenceV2.languageProfile.preferredLanguage", "humanIntelligenceV2.languageProfile.medicalDiscussionLanguage", "humanIntelligenceV2.languageProfile.languageNeedScope"),
@@ -512,6 +520,9 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
                     nice_mismatch.append(key)
             else:
                 nice_unknown.append(key)
+        elif key == "SOCIAL_FREQUENCY_MATCH":
+            # No verified social-pace evidence exists: missing evidence is uncertainty, not a mismatch.
+            nice_unknown.append(key)
         elif key == "TRANSPORTATION_AND_OUTINGS":
             if any(p.get("transportation_verified") is True for p in payloads):
                 nice_match.append(key)

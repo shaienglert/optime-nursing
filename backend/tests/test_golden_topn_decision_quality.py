@@ -121,30 +121,41 @@ def test_golden_ongoing_adl_client_top5_is_assisted_living_primary_fit():
     assert all((row.get("client_intent_fit") or {}).get("hard_gate") != "FAIL" for row in rows)
 
 
-def test_golden_memory_care_client_top5_requires_confirmed_memory_fit():
-    result = _run_ready(
-        {
-            "relationship": "My mother",
-            "ageGroup": "80-84",
-            "assistanceLevel": "Needs supervision and daily assistance",
-            "memoryStatus": "Dementia",
-            "budget": 9000,
-            "locationCity": "Las Vegas",
-        },
-        (
-            "My mother is 82, has diagnosed dementia with wandering risk, and needs memory-care supervision and daily assistance. "
-            "We need an appropriate memory care setting in Las Vegas. Her monthly budget is $9,000."
-        ),
-    )
-    rows = result.get("results") or []
-    assert rows, result
-    assert all((row.get("client_intent_fit") or {}).get("hard_gate") != "FAIL" for row in rows)
-    assert all((row.get("care_setting_fit") or {}).get("status") == "PRIMARY_FIT" for row in rows), [
-        (row.get("facility_name"), row.get("care_setting_fit"), row.get("memory_care_classification")) for row in rows
-    ]
-    assert all(str(row.get("memory_care_classification") or "").upper() == "CONFIRMED" for row in rows), [
-        (row.get("facility_name"), row.get("memory_care_classification")) for row in rows
-    ]
+_MEMORY_STORY = (
+    "My mother is 82, has diagnosed dementia with wandering risk, and needs memory-care supervision and daily assistance. "
+    "We need an appropriate memory care setting in Las Vegas. Her monthly budget is $9,000."
+)
+_MEMORY_CLIENT = {
+    "relationship": "My mother",
+    "ageGroup": "80-84",
+    "assistanceLevel": "Needs supervision and daily assistance",
+    "memoryStatus": "Dementia",
+    "budget": 9000,
+    "locationCity": "Las Vegas",
+}
+
+
+def test_golden_memory_label_alone_asks_the_safety_question_instead_of_assuming_a_secured_unit():
+    # Owner decision: a memory label never creates a secured-unit MUST by itself. With the
+    # wandering/security question unanswered the interview asks it and withholds results.
+    result = _run_ready(dict(_MEMORY_CLIENT), _MEMORY_STORY)
+    intelligence = result["decision_intelligence"]
+    keys = {item["key"] for item in intelligence["client_intent"]["must_haves"]}
+    assert "SECURE_MEMORY_CARE_CONFIRMED" not in keys
+    assert "memory_safety_need" in {q["question_key"] for q in intelligence["living_strategy"]["guardian_clarification_candidates"]}
+    assert result["result_count"] == 0
+
+
+def test_golden_confirmed_wandering_requires_confirmed_memory_care_and_never_fails_open():
+    client = dict(_MEMORY_CLIENT, humanIntelligenceV2={"transitionRiskProfile": {"wanderingConcerns": "Yes"}})
+    result = _run_ready(client, _MEMORY_STORY)
+    keys = {item["key"] for item in result["decision_intelligence"]["client_intent"]["must_haves"]}
+    assert {"SECURE_MEMORY_CARE_CONFIRMED", "SECURED_UNIT_AVAILABLE"} <= keys
+    # Every row that is shown must have passed the confirmed-memory-care gate; when the
+    # evidence is missing the correct outcome is no row, not an unconfirmed one.
+    for row in result.get("results") or []:
+        assert (row.get("client_intent_fit") or {}).get("hard_gate") != "FAIL"
+        assert str(row.get("memory_care_classification") or "").upper() == "CONFIRMED"
 
 
 def test_golden_skilled_nursing_client_does_not_surface_residential_only_settings():
