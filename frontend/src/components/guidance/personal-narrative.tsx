@@ -49,11 +49,11 @@ export function PersonalNarrative({ state, intakeProfileId, decisionId, facility
   }, [fullText, ready, reducedMotion]);
 
   const displayed = ready && !reducedMotion ? fullText.slice(0, visible.key === fullText ? visible.count : 0) : fullText;
-  return <div className="space-y-4 text-xl leading-9 text-[#1a1d20]">
-    {!data && (intakeProfileId || decisionId) ? <p role="status" className="text-base text-[#284b38]">I’m bringing the details together for you…</p> : null}
+  return <div className="space-y-4 text-xl leading-9 text-ink">
+    {!data && (intakeProfileId || decisionId) ? <p role="status" className="text-base text-forest">I’m bringing the details together for you…</p> : null}
     <div aria-hidden={ready && displayed !== fullText} className="space-y-4">{displayed.split("\n\n").map((text, index) => <p key={index} className="whitespace-pre-wrap break-words">{text}</p>)}</div>
     {ready && displayed !== fullText ? <p className="sr-only">{fullText}</p> : null}
-    {data?.status === "AI_UNAVAILABLE" ? <p className="text-base text-[#284b38]">This explanation is based on your recorded answers and the matching evidence we have.</p> : null}
+    {data?.status === "AI_UNAVAILABLE" ? <p className="text-base text-forest">This explanation is based on your recorded answers and the matching evidence we have.</p> : null}
     {ready ? <details className="text-base"><summary className="cursor-pointer underline underline-offset-4">What this explanation is based on</summary><ul className="mt-3 space-y-2">{[...new Set(data.paragraphs.flatMap(p => p.source_ids))].map(id => <li key={id}>{data.sources[id]}</li>)}</ul></details> : null}
   </div>;
 }

@@ -4,7 +4,8 @@
   --background: #fdfbf7;
   --foreground: #1a1d20;
   --surface: #ffffff;
-  --surface-alt: #f6fbff;
+  --surface-alt: #f1f0e8;
+  --border: #e4ded4;
   --muted: #565d54;
   --primary: #284b38;
   --primary-contrast: #ffffff;
@@ -14,6 +15,15 @@
 }
 
 @theme inline {
+  --color-canvas: #fdfbf7;
+  --color-surface: #ffffff;
+  --color-sand: #f1f0e8;
+  --color-ink: #1a1d20;
+  --color-muted: #565d54;
+  --color-forest: #284b38;
+  --color-forest-hover: #1c3527;
+  --color-line: #e4ded4;
+  --color-coral: #e07a5f;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
@@ -88,28 +98,30 @@ html[data-font-scale="x-large"] { font-size: 125%; }
   animation: optime-arrow-flash 1.3s ease-in-out infinite;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #1a1d20;
-    --foreground: #fdfbf7;
-    --surface: #24282d;
-    --surface-alt: #30363d;
-    --muted: #c9d0d7;
-    --primary: #bfcfb6;
-    --primary-contrast: #1a1d20;
-    --accent: #f2a48e;
-    --danger: #f0a59b;
-    --ring: #bfcfb6;
-  }
-}
 
 @media (prefers-contrast: more) {
   :root {
-    --ring: #0b5fff;
+    --ring: #1c3527;
   }
 }
 
 html { scroll-padding-top: 10rem; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+
+/* A single warm canvas across family, community and operations screens. */
+@layer base {
+  :root { color-scheme: light; }
+  body { font-size: 1.125rem; line-height: 1.65; }
+  main { min-width: 0; }
+  main h1, main h2, main h3 { text-wrap: balance; overflow-wrap: anywhere; }
+  main p { text-wrap: pretty; }
+  main button, main input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), main select { min-height: 3rem; }
+  main input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), main select, main textarea { background-color: var(--surface); border-color: #a89f90; color: var(--foreground); }
+  main input[type="checkbox"], main input[type="radio"], main input[type="range"] { accent-color: var(--primary); }
+  main button, main a { touch-action: manipulation; }
+}
+@layer components {
+  .oomnik-panel { border: 1px solid var(--border); border-radius: 1.5rem; background: var(--surface); box-shadow: 0 8px 28px -20px rgb(40 75 56 / 0.3); }
 }

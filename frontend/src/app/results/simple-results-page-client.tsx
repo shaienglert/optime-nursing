@@ -255,11 +255,11 @@ export function SimpleResultsPageClient() {
   const personalReportHref = `/results/personal-report${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
 
   if (loading) {
-    return <main className="min-h-screen bg-[#f7fbfd] px-5 py-16 text-[#1a1d20]"><div className="mx-auto max-w-3xl"><p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#934b38]">OOmnik is working for you</p><h1 className="mt-3 text-4xl font-semibold">I’m looking for the places that fit the decision — not just the search.</h1><div className="mt-10 space-y-4 text-xl leading-8"><p className={searchStage>=0?"text-[#1a1d20]":"text-[#284b38]"}>✓ Starting with the things that can’t be compromised: care, mobility and safety.</p><p className={searchStage>=1?"text-[#1a1d20]":"text-[#284b38]"}>{searchStage>=1?"✓":"○"} Checking budget, location and timing.</p><p className={searchStage>=2?"text-[#1a1d20]":"text-[#284b38]"}>{searchStage>=2?"✓":"○"} Looking beyond eligibility: independence, lifestyle, activities and future care.</p><p className={searchStage>=3?"text-[#1a1d20]":"text-[#284b38]"}>{searchStage>=3?"✓":"○"} Separating what is verified from what still needs confirmation.</p></div><p className="mt-10 text-lg italic text-[#527083]">I’ll keep uncertainty visible rather than hide it.</p></div></main>;
+    return <main className="min-h-screen bg-canvas px-5 py-16 text-ink"><div className="mx-auto max-w-3xl"><p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#934b38]">OOmnik is working for you</p><h1 className="mt-3 text-4xl font-semibold">I’m looking for the places that fit the decision — not just the search.</h1><div className="mt-10 space-y-4 text-xl leading-8"><p className={searchStage>=0?"text-ink":"text-forest"}>✓ Starting with the things that can’t be compromised: care, mobility and safety.</p><p className={searchStage>=1?"text-ink":"text-forest"}>{searchStage>=1?"✓":"○"} Checking budget, location and timing.</p><p className={searchStage>=2?"text-ink":"text-forest"}>{searchStage>=2?"✓":"○"} Looking beyond eligibility: independence, lifestyle, activities and future care.</p><p className={searchStage>=3?"text-ink":"text-forest"}>{searchStage>=3?"✓":"○"} Separating what is verified from what still needs confirmation.</p></div><p className="mt-10 text-lg italic text-muted">I’ll keep uncertainty visible rather than hide it.</p></div></main>;
   }
 
   if (error || !response) {
-    return <main className="min-h-screen bg-[#fdfbf7] px-5 py-12 text-[#1a1d20]"><div className="mx-auto max-w-5xl rounded-xl border border-rose-200 bg-white p-8 text-lg">{error || "No results are available yet."}<Link href="/intake-confirmation?next=%2Fresults" className="mt-5 block underline">Review and confirm your profile</Link></div></main>;
+    return <main className="min-h-screen bg-canvas px-5 py-12 text-ink"><div className="mx-auto max-w-5xl rounded-xl border border-rose-200 bg-white p-8 text-lg">{error || "No results are available yet."}<Link href="/intake-confirmation?next=%2Fresults" className="mt-5 block underline">Review and confirm your profile</Link></div></main>;
   }
 
   const clientState = resultsClientState(response);
@@ -275,9 +275,9 @@ export function SimpleResultsPageClient() {
       setState(next);
       router.push("/adaptive-interview?next=%2Fresults");
     };
-    return <main className="min-h-screen bg-[#fdfbf7] px-5 py-12 text-[#1a1d20]">
+    return <main className="min-h-screen bg-canvas px-5 py-12 text-ink">
       <section className="mx-auto max-w-3xl rounded-xl bg-white p-8">
-        <p className="text-base font-semibold text-[#284b38]">OOmnik</p>
+        <p className="text-base font-semibold text-forest">OOmnik</p>
         <h1 className="mt-3 text-3xl font-semibold">{clientState.blocked ? "Your search needs another check" : "One more detail before we recommend places"}</h1>
         {question ? <>
           <p className="mt-6 text-2xl leading-9">{question.question}</p>
@@ -287,18 +287,18 @@ export function SimpleResultsPageClient() {
           <form className="mt-5" onSubmit={event => { event.preventDefault(); submitFollowUp(followUpAnswer); }}>
             <label htmlFor="results-follow-up" className="block text-lg">Your answer</label>
             <textarea id="results-follow-up" value={followUpAnswer} onChange={event => setFollowUpAnswer(event.target.value)} disabled={continuingInterview} rows={3} className="mt-2 w-full rounded-xl border p-4 text-lg" />
-            <button type="submit" disabled={continuingInterview || !followUpAnswer.trim()} className="mt-4 rounded-xl bg-[#284b38] px-7 py-4 text-xl text-white disabled:opacity-50">{continuingInterview ? "Using your answer…" : "Continue"}</button>
+            <button type="submit" disabled={continuingInterview || !followUpAnswer.trim()} className="mt-4 rounded-xl bg-forest px-7 py-4 text-xl text-white disabled:opacity-50">{continuingInterview ? "Using your answer…" : "Continue"}</button>
           </form>
         </> : <>
           <p className="mt-5 text-xl">Your answers are saved. We need to check our understanding before showing recommendations.</p>
-          <Link href="/adaptive-interview?next=%2Fresults" className="mt-6 inline-block rounded-xl bg-[#284b38] px-6 py-4 text-lg text-white">Continue our conversation</Link>
+          <Link href="/adaptive-interview?next=%2Fresults" className="mt-6 inline-block rounded-xl bg-forest px-6 py-4 text-lg text-white">Continue our conversation</Link>
         </>}
       </section>
     </main>;
   }
 
   return (
-    <main className="min-h-screen bg-[#fdfbf7] px-5 py-8 text-[#1a1d20] sm:px-8 lg:px-12">
+    <main className="min-h-screen bg-canvas px-5 py-8 text-ink sm:px-8 lg:px-12">
       <div className="mx-auto max-w-4xl">
         <section className="py-7 sm:py-10">
           {syntheticPilot ? <div className="mb-6 rounded-xl border-2 border-amber-500 bg-amber-50 p-4 text-lg font-semibold text-amber-950">Pilot mode: every community, price, availability value and image on this page is synthetic test data—not a real facility.</div> : null}
@@ -306,7 +306,7 @@ export function SimpleResultsPageClient() {
           <h1 data-testid="personal-results-heading" className="mt-3 text-4xl font-semibold leading-tight sm:text-5xl">Let’s find a place that feels right for {relationship}</h1>
           <div className="mt-5 max-w-4xl"><PersonalNarrative state={state} query={naturalLanguageQuery} decisionId={response.decision_id || undefined} fallback={resultsIntroduction(state, top.length)} /></div>
           {top.length === 0 ? (
-            <div className="mt-7 rounded-xl bg-[#fff5df] p-5 text-xl leading-8 text-[#6d5426]">
+            <div className="mt-7 rounded-xl bg-sand p-5 text-xl leading-8 text-[#6d5426]">
               {pending.length > 0
                 ? "Some communities still need important details verified before I can recommend them."
                 : "No community is ready to recommend from this search. You can review your answers or return to the conversation."}
@@ -322,14 +322,14 @@ export function SimpleResultsPageClient() {
           <details className="mt-6 text-lg"><summary className="cursor-pointer underline underline-offset-4">Keep our conversation for later</summary><div className="mt-4">
             {savedCaseToken ? <p className="text-lg"><strong>Your OOmnik case is saved.</strong> Your questionnaire and future activity can now stay together under one case.</p> : <>
               <p className="text-lg font-semibold">Want to save this case or have OOmnik help with the next steps?</p>
-              <p className="mt-1 text-base text-[#284b38]">Add contact details to save the case, keep your report, and track communities, referrals, tours and follow-ups.</p>
-              <button type="button" onClick={() => setSaveCaseOpen(true)} className="mt-3 rounded-xl bg-[#284b38] px-6 py-3 font-semibold text-white">Save my case</button>
+              <p className="mt-1 text-base text-forest">Add contact details to save the case, keep your report, and track communities, referrals, tours and follow-ups.</p>
+              <button type="button" onClick={() => setSaveCaseOpen(true)} className="mt-3 rounded-xl bg-forest px-6 py-3 font-semibold text-white">Save my case</button>
             </>}
           </div></details>
-          {saveCaseOpen ? <div className="mt-4 rounded-xl border border-[#e4ded4] bg-white p-5"><h2 className="text-2xl font-semibold">Save your OOmnik case</h2><div className="mt-4 grid gap-3 sm:grid-cols-3"><input aria-label="Name" placeholder="Name" value={caseContact.name} onChange={e=>setCaseContact(v=>({...v,name:e.target.value}))} className="rounded-xl border p-3"/><input aria-label="Email" placeholder="Email" value={caseContact.email} onChange={e=>setCaseContact(v=>({...v,email:e.target.value}))} className="rounded-xl border p-3"/><input aria-label="Phone" placeholder="Phone" value={caseContact.phone} onChange={e=>setCaseContact(v=>({...v,phone:e.target.value}))} className="rounded-xl border p-3"/></div><label className="mt-4 flex gap-3"><input type="checkbox" checked={caseContact.terms} onChange={e=>setCaseContact(v=>({...v,terms:e.target.checked}))}/><span>I agree to the Terms of Use and allow OOmnik to save this case and contact me about it.</span></label><div className="mt-4 flex gap-3"><button type="button" disabled={savingCase || !caseContact.terms || (!caseContact.email.trim() && !caseContact.phone.trim())} onClick={saveClientCase} className="rounded-xl bg-[#284b38] px-6 py-3 font-semibold text-white disabled:opacity-40">{savingCase?"Saving…":"Save case"}</button><button type="button" onClick={()=>setSaveCaseOpen(false)} className="rounded-xl border px-6 py-3">Cancel</button></div></div> : null}
-          <p className="mt-5 text-lg leading-8 text-[#284b38]">Confirm current pricing and availability before any move.</p>
+          {saveCaseOpen ? <div className="mt-4 rounded-xl border border-line bg-white p-5"><h2 className="text-2xl font-semibold">Save your OOmnik case</h2><div className="mt-4 grid gap-3 sm:grid-cols-3"><input aria-label="Name" placeholder="Name" value={caseContact.name} onChange={e=>setCaseContact(v=>({...v,name:e.target.value}))} className="rounded-xl border p-3"/><input aria-label="Email" placeholder="Email" value={caseContact.email} onChange={e=>setCaseContact(v=>({...v,email:e.target.value}))} className="rounded-xl border p-3"/><input aria-label="Phone" placeholder="Phone" value={caseContact.phone} onChange={e=>setCaseContact(v=>({...v,phone:e.target.value}))} className="rounded-xl border p-3"/></div><label className="mt-4 flex gap-3"><input type="checkbox" checked={caseContact.terms} onChange={e=>setCaseContact(v=>({...v,terms:e.target.checked}))}/><span>I agree to the Terms of Use and allow OOmnik to save this case and contact me about it.</span></label><div className="mt-4 flex gap-3"><button type="button" disabled={savingCase || !caseContact.terms || (!caseContact.email.trim() && !caseContact.phone.trim())} onClick={saveClientCase} className="rounded-xl bg-forest px-6 py-3 font-semibold text-white disabled:opacity-40">{savingCase?"Saving…":"Save case"}</button><button type="button" onClick={()=>setSaveCaseOpen(false)} className="rounded-xl border px-6 py-3">Cancel</button></div></div> : null}
+          <p className="mt-5 text-lg leading-8 text-forest">Confirm current pricing and availability before any move.</p>
           <DistanceScope scope={response.location_scope} onWiden={acceptRadiusExpansion} />
-          {/medicaid/i.test(naturalLanguageQuery) ? <p className="mt-2 text-lg leading-8 text-[#284b38]">Medicaid eligibility and each community’s participation must be confirmed separately.</p> : null}
+          {/medicaid/i.test(naturalLanguageQuery) ? <p className="mt-2 text-lg leading-8 text-forest">Medicaid eligibility and each community’s participation must be confirmed separately.</p> : null}
         </section>
 
         {(response.price_research_candidates || []).length > 0 ? (
@@ -362,18 +362,18 @@ export function SimpleResultsPageClient() {
               const personalDistances = nearbyFit?.personal_destinations || [];
               const nearbyDistances = Object.entries(nearbyFit?.nearest || {}).filter(([, place]) => Number.isFinite(place?.driving_distance_miles ?? place?.distance_miles)).sort((a, b) => Number(a[1]?.driving_distance_miles ?? a[1]?.distance_miles ?? 999) - Number(b[1]?.driving_distance_miles ?? b[1]?.distance_miles ?? 999));
               return (
-                <article key={item.canonical_facility_id} className="border-t border-[#e4ded4] py-10 sm:py-12">
-                  {item.visual_media?.hero?.url ? <div className="mb-6 overflow-hidden rounded-xl border border-[#ded6c9] bg-[#f4f0e8]"><Image src={item.visual_media.hero.url} alt={`Synthetic illustration for ${item.facility_name}`} width={1200} height={700} className="h-64 w-full object-cover" /><p className="px-4 py-2 text-sm text-[#6b6257]">{item.visual_media.hero.source_note || "Synthetic pilot illustration—not a real facility"}</p></div> : null}
+                <article key={item.canonical_facility_id} className="border-t border-line py-10 sm:py-12">
+                  {item.visual_media?.hero?.url ? <div className="mb-6 overflow-hidden rounded-xl border border-line bg-sand"><Image src={item.visual_media.hero.url} alt={`Synthetic illustration for ${item.facility_name}`} width={1200} height={700} className="h-64 w-full object-cover" /><p className="px-4 py-2 text-sm text-muted">{item.visual_media.hero.source_note || "Synthetic pilot illustration—not a real facility"}</p></div> : null}
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                      <p className="text-lg font-semibold text-[#284b38]">{index === 0 ? "Let’s start here" : "Another place to consider"}</p>
+                      <p className="text-lg font-semibold text-forest">{index === 0 ? "Let’s start here" : "Another place to consider"}</p>
                       <h2 className="mt-1 text-3xl font-semibold leading-tight sm:text-4xl">{item.facility_name}</h2>
-                      <p className="mt-2 text-lg text-[#284b38]">{[item.city, item.state].filter(Boolean).join(", ")}</p>
+                      <p className="mt-2 text-lg text-forest">{[item.city, item.state].filter(Boolean).join(", ")}</p>
                       <details className="mt-4 text-base"><summary className="cursor-pointer underline underline-offset-4">Practical details and the places that matter to you</summary>
-                      <p className="mt-2 text-lg font-semibold text-[#1a1d20]">{item.starting_monthly_price ? `Starting at $${item.starting_monthly_price.toLocaleString("en-US")} / month` : "Price not provided"}{(item as any).budget_exception ? ` · ${Math.abs(Number((item as any).budget_variance_pct || 0)).toFixed(1)}% above your requested budget` : ""} · Availability: {item.availability_status === "YES" ? "available" : item.availability_status === "LIMITED" ? "limited / waitlist" : item.availability_status === "NO" ? "not currently available" : "needs confirmation"}</p>
+                      <p className="mt-2 text-lg font-semibold text-ink">{item.starting_monthly_price ? `Starting at $${item.starting_monthly_price.toLocaleString("en-US")} / month` : "Price not provided"}{(item as any).budget_exception ? ` · ${Math.abs(Number((item as any).budget_variance_pct || 0)).toFixed(1)}% above your requested budget` : ""} · Availability: {item.availability_status === "YES" ? "available" : item.availability_status === "LIMITED" ? "limited / waitlist" : item.availability_status === "NO" ? "not currently available" : "needs confirmation"}</p>
                       <p className="mt-2 text-base text-[#684d19]">{item.availability_status === "NO" ? "No space is currently recorded. Ask whether a suitable opening is expected by your move date." : "Confirm a suitable room and admission date directly with the community."} Care compatibility does not confirm readiness to move.</p>
-                      {personalDistances.length > 0 || nearbyDistances.length > 0 ? <div className="mt-4 rounded-xl bg-[#f1f0e8] p-4">{personalDistances.length > 0 ? <><p className="text-sm font-semibold uppercase tracking-[0.12em] text-[#284b38]">Close to the people and places that matter</p><ul className="mt-2 grid gap-x-6 gap-y-1 text-base sm:grid-cols-2">{personalDistances.map((place, destinationIndex) => <li key={`${place.label}-${destinationIndex}`}><strong>{place.label}</strong>: {place.driving_distance_miles != null || place.distance_miles != null ? `${Number(place.driving_distance_miles ?? place.distance_miles).toFixed(1)} mi` : "distance unavailable"}{place.driving_time_minutes ? ` · ${place.driving_time_minutes} min drive` : place.status === "UNKNOWN" ? "" : " · estimated"}</li>)}</ul></> : null}{nearbyDistances.length > 0 ? <><p className="text-sm font-semibold uppercase tracking-[0.12em] text-[#284b38]">Distances that matter to you</p><ul className="mt-2 grid gap-x-6 gap-y-1 text-base sm:grid-cols-2">{nearbyDistances.map(([category, place]) => <li key={category}><strong>{category}</strong>: {Number(place.driving_distance_miles ?? place.distance_miles).toFixed(1)} mi{place.driving_time_minutes ? ` · ${place.driving_time_minutes} min drive` : ""}{place.name && place.name !== category ? ` · ${place.name}` : ""}</li>)}</ul><p className="mt-2 text-xs text-[#284b38]">Based on the preferences you selected. Driving distance and time are shown when routing is available; otherwise OOmnik shows straight-line proximity and labels it as an estimate.</p></> : null}</div> : null}
-                      {item.synthetic_pilot && item.monthly_rate_includes_verified_care ? <p className="mt-2 text-base text-[#1a1d20]">{item.monthly_price_basis === "TWO_RESIDENT_TOTAL" ? `Pilot monthly total for two residents, including verified care and the $${Number(item.second_resident_monthly_fee || 0).toLocaleString()} second-resident fee.` : "Pilot monthly rate includes the care services verified for this community."}</p> : null}
+                      {personalDistances.length > 0 || nearbyDistances.length > 0 ? <div className="mt-4 rounded-xl bg-sand p-4">{personalDistances.length > 0 ? <><p className="text-sm font-semibold uppercase tracking-[0.12em] text-forest">Close to the people and places that matter</p><ul className="mt-2 grid gap-x-6 gap-y-1 text-base sm:grid-cols-2">{personalDistances.map((place, destinationIndex) => <li key={`${place.label}-${destinationIndex}`}><strong>{place.label}</strong>: {place.driving_distance_miles != null || place.distance_miles != null ? `${Number(place.driving_distance_miles ?? place.distance_miles).toFixed(1)} mi` : "distance unavailable"}{place.driving_time_minutes ? ` · ${place.driving_time_minutes} min drive` : place.status === "UNKNOWN" ? "" : " · estimated"}</li>)}</ul></> : null}{nearbyDistances.length > 0 ? <><p className="text-sm font-semibold uppercase tracking-[0.12em] text-forest">Distances that matter to you</p><ul className="mt-2 grid gap-x-6 gap-y-1 text-base sm:grid-cols-2">{nearbyDistances.map(([category, place]) => <li key={category}><strong>{category}</strong>: {Number(place.driving_distance_miles ?? place.distance_miles).toFixed(1)} mi{place.driving_time_minutes ? ` · ${place.driving_time_minutes} min drive` : ""}{place.name && place.name !== category ? ` · ${place.name}` : ""}</li>)}</ul><p className="mt-2 text-xs text-forest">Based on the preferences you selected. Driving distance and time are shown when routing is available; otherwise OOmnik shows straight-line proximity and labels it as an estimate.</p></> : null}</div> : null}
+                      {item.synthetic_pilot && item.monthly_rate_includes_verified_care ? <p className="mt-2 text-base text-ink">{item.monthly_price_basis === "TWO_RESIDENT_TOTAL" ? `Pilot monthly total for two residents, including verified care and the $${Number(item.second_resident_monthly_fee || 0).toLocaleString()} second-resident fee.` : "Pilot monthly rate includes the care services verified for this community."}</p> : null}
                       {typeof item.entrance_fee === "number" && item.entrance_fee > 0 ? <div className="mt-2 rounded-xl border border-amber-300 bg-amber-50 p-3 text-base text-[#684d19]"><p>One-time entrance fee: ${item.entrance_fee.toLocaleString()}, separate from the monthly rate.</p><p className="mt-2">One-time affordability is not confirmed. Can the household fund this amount separately? The community must also confirm whether this fee applies to the specific care program and admission contract.</p></div> : null}
                       {(item.nice_to_have_coverage?.unresolved || []).length > 0 || (item.structured_nice_to_have_coverage?.unresolved || []).length > 0 ? <p className="mt-3 text-sm text-[#684d19]">Some of your personal preferences still need facility-specific evidence. Verified care does not prove every lifestyle preference.</p> : null}
                       </details>
@@ -381,7 +381,7 @@ export function SimpleResultsPageClient() {
                     <div className="flex flex-col items-start gap-2 sm:items-end">
                       <Link
                         href={`/facility/canonical?canonical=${encodeURIComponent(item.canonical_facility_id)}&back=${encodeURIComponent(`/results${searchParams.toString() ? `?${searchParams.toString()}` : ""}`)}`}
-                        className="rounded-xl border border-[#284b38] px-4 py-2 text-base font-semibold text-[#284b38] hover:bg-[#f1f0e8]"
+                        className="rounded-xl border border-forest px-4 py-2 text-base font-semibold text-forest hover:bg-sand"
                       >
                         Get to know this place →
                       </Link>
@@ -415,33 +415,33 @@ export function SimpleResultsPageClient() {
         ) : null}
 
         {pending.length > 0 ? (
-          <section className="mt-8 rounded-xl border border-[#ead9b4] bg-[#fffaf0] p-7 sm:p-9">
+          <section className="mt-8 rounded-xl border border-line bg-sand p-7 sm:p-9">
             <h2 className="text-3xl font-semibold">Other promising places we are still checking</h2>
-            <p className="mt-3 text-xl leading-8 text-[#655a45]">
+            <p className="mt-3 text-xl leading-8 text-muted">
               I’m keeping these places in view, but I’m not asking you to rely on them yet. One or more details that matter to this decision still need verification.
             </p>
             <div className="mt-5 flex flex-wrap gap-3">
               {pending.slice(0, 8).map((item) => (
-                <span key={item.canonical_facility_id} className="rounded-xl border border-[#ddcda9] bg-white px-4 py-2 text-lg">{item.facility_name}</span>
+                <span key={item.canonical_facility_id} className="rounded-xl border border-line bg-white px-4 py-2 text-lg">{item.facility_name}</span>
               ))}
             </div>
           </section>
         ) : null}
 
-        <section className="mt-8 rounded-xl bg-[#f1f0e8] p-7 sm:p-9">
+        <section className="mt-8 rounded-xl bg-sand p-7 sm:p-9">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div><p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#934b38]">OOMNIKER</p><h2 className="mt-2 text-3xl font-semibold">We can think this through together</h2><p className="mt-3 max-w-3xl text-lg leading-8 text-[#284b38]">How do these places feel to you? If something isn’t quite right, tell me what you would like to be different. We can explore your preferences together and keep the essential support you need in place.</p></div>
-            <button type="button" onClick={() => setOOmnikerOpen((v) => !v)} className="rounded-xl bg-[#284b38] px-5 py-3 font-semibold text-white">{oomnikerOpen ? "Close conversation" : "Talk it through"}</button>
+            <div><p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#934b38]">OOMNIKER</p><h2 className="mt-2 text-3xl font-semibold">We can think this through together</h2><p className="mt-3 max-w-3xl text-lg leading-8 text-forest">How do these places feel to you? If something isn’t quite right, tell me what you would like to be different. We can explore your preferences together and keep the essential support you need in place.</p></div>
+            <button type="button" onClick={() => setOOmnikerOpen((v) => !v)} className="rounded-xl bg-forest px-5 py-3 font-semibold text-white">{oomnikerOpen ? "Close conversation" : "Talk it through"}</button>
           </div>
           <div className="mt-5 space-y-4 text-xl leading-9">{preferenceAdvice(response).map(text => <p key={text}>{text}</p>)}</div><details className="mt-5"><summary className="cursor-pointer underline underline-offset-4">The preferences guiding our conversation</summary><p className="mt-3 text-lg leading-8">{activeCriteria.map(([label, value]) => `${label}: ${value}`).join(". ")}.</p></details>
-          {oomnikerNotice ? <div className="mt-4 rounded-xl bg-white p-4 text-base text-[#284b38]">{oomnikerNotice}{oomnikerDiff ? <p className="mt-2 font-medium">{oomnikerDiff}</p> : null} {oomnikerHistory.current.length > 0 ? <button type="button" onClick={() => { const previous = oomnikerHistory.current.pop(); if (previous) { setState(previous); setOOmnikerNotice("Done. I’ve put the previous preference back and I’m reassessing the earlier search."); } }} className="ml-2 font-semibold underline underline-offset-4">Undo last change</button> : null}</div> : null}
-          {oomnikerOpen ? <div className="mt-6"><label htmlFor="oomniker-message" className="mb-3 block text-lg">What would you like me to consider?</label><textarea id="oomniker-message" value={oomnikerText} onChange={(e) => setOOmnikerText(e.target.value)} rows={3} placeholder="For example: I’d like to consider a medium community, or search within 30 miles." className="w-full rounded-xl border border-[#bcd9e7] bg-white px-5 py-4 text-lg outline-none focus:border-[#284b38]" /><button type="button" onClick={applyOOmnikerChange} disabled={!oomnikerText.trim()} className="mt-3 rounded-xl bg-[#284b38] px-6 py-3 font-semibold text-white disabled:opacity-40">Update results</button></div> : null}
+          {oomnikerNotice ? <div className="mt-4 rounded-xl bg-white p-4 text-base text-forest">{oomnikerNotice}{oomnikerDiff ? <p className="mt-2 font-medium">{oomnikerDiff}</p> : null} {oomnikerHistory.current.length > 0 ? <button type="button" onClick={() => { const previous = oomnikerHistory.current.pop(); if (previous) { setState(previous); setOOmnikerNotice("Done. I’ve put the previous preference back and I’m reassessing the earlier search."); } }} className="ml-2 font-semibold underline underline-offset-4">Undo last change</button> : null}</div> : null}
+          {oomnikerOpen ? <div className="mt-6"><label htmlFor="oomniker-message" className="mb-3 block text-lg">What would you like me to consider?</label><textarea id="oomniker-message" value={oomnikerText} onChange={(e) => setOOmnikerText(e.target.value)} rows={3} placeholder="For example: I’d like to consider a medium community, or search within 30 miles." className="w-full rounded-xl border border-line bg-white px-5 py-4 text-lg outline-none focus:border-forest" /><button type="button" onClick={applyOOmnikerChange} disabled={!oomnikerText.trim()} className="mt-3 rounded-xl bg-forest px-6 py-3 font-semibold text-white disabled:opacity-40">Update results</button></div> : null}
         </section>
 
         <section className="mt-8 flex flex-wrap gap-4 pb-10">
-          <Link href={detailsHref} className="rounded-xl border-2 border-[#284b38] px-6 py-4 text-xl font-semibold text-[#284b38]">See detailed comparison</Link>
-          <Link href={personalReportHref} className="rounded-xl border-2 border-[#284b38] px-6 py-4 text-xl font-semibold text-[#284b38]">See your personal report</Link>
-          <Link href="/adaptive-interview?review=1&next=/results" className="rounded-xl border border-[#cfc6b7] bg-white px-6 py-4 text-xl font-semibold">Change answers</Link>
+          <Link href={detailsHref} className="rounded-xl border-2 border-forest px-6 py-4 text-xl font-semibold text-forest">See detailed comparison</Link>
+          <Link href={personalReportHref} className="rounded-xl border-2 border-forest px-6 py-4 text-xl font-semibold text-forest">See your personal report</Link>
+          <Link href="/adaptive-interview?review=1&next=/results" className="rounded-xl border border-line bg-white px-6 py-4 text-xl font-semibold">Change answers</Link>
         </section>
       </div>
     </main>

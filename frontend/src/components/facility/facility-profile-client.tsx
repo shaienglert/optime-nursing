@@ -88,11 +88,11 @@ function useFacilityRecommendation(
 
 function badgeRow(title: string, values: string[]) {
   return (
-    <section className="rounded-2xl border border-[#e3d8c8] bg-white p-4">
-      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#5f7f6b]">{title}</p>
+    <section className="rounded-3xl border border-line bg-white p-4 oomnik-panel">
+      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-forest">{title}</p>
       <div className="mt-2 flex flex-wrap gap-2">
         {values.map((value) => (
-          <span key={`${title}-${value}`} className="rounded-full border border-[#d7e5e2] bg-[#f4fbfa] px-3 py-1 text-sm font-semibold text-[#2f5f5a]">
+          <span key={`${title}-${value}`} className="rounded-full border border-line bg-sand px-3 py-1 text-sm font-semibold text-forest">
             {value}
           </span>
         ))}
@@ -185,14 +185,14 @@ export function FacilityProfileClient({ facilityId, backHref, backLabel }: Facil
     : "Pricing shown here comes from the backend facility evidence record and is not a final facility quote.";
 
   if (isLoading) {
-    return <main className="min-h-screen bg-[#fffdf8] px-6 py-12 text-[#5d5548]">Loading facility profile...</main>;
+    return <main className="min-h-screen bg-canvas px-6 py-12 text-muted">We’re bringing the details of this community together…</main>;
   }
 
   if (error || !facility) {
     return (
-      <main className="min-h-screen bg-[#fffdf8] px-6 py-12">
+      <main className="min-h-screen bg-canvas px-6 py-12">
         <p className="text-[#8b3d2e]">{error || "Facility not found."}</p>
-        <Link href={backHref} className="mt-4 inline-flex rounded-full border border-[#d9cfbf] bg-white px-4 py-2 text-sm font-semibold text-[#5b5245]">
+        <Link href={backHref} className="mt-4 inline-flex rounded-full border border-line bg-white px-4 py-2 text-sm font-semibold text-muted">
           {backLabel}
         </Link>
       </main>
@@ -200,16 +200,16 @@ export function FacilityProfileClient({ facilityId, backHref, backLabel }: Facil
   }
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,#fffdf8_0%,#f8f5ec_22%,#ffffff_45%)] px-4 py-6 sm:px-8 lg:px-12">
+    <main className="min-h-screen bg-canvas px-4 py-6 sm:px-8 lg:px-12">
       <section className="mx-auto max-w-6xl space-y-6">
-        <header className="rounded-3xl border border-[#e9dfce] bg-white/90 p-6 shadow-[0_22px_80px_-42px_rgba(82,65,42,0.4)]">
+        <header className="rounded-3xl border border-line bg-white/90 p-6 shadow-[0_22px_80px_-42px_rgba(82,65,42,0.4)] oomnik-panel">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#5f7f6b]">Facility Intelligence Profile</p>
-              <h1 className="mt-2 text-3xl font-semibold text-[#2f2a24]">{facility.name}</h1>
-              <p className="mt-1 text-[#6d655b]">{facility.city}, {facility.state}</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-forest">Facility Intelligence Profile</p>
+              <h1 className="mt-2 text-3xl font-semibold text-ink">{facility.name}</h1>
+              <p className="mt-1 text-muted">{facility.city}, {facility.state}</p>
             </div>
-            <Link href={backHref} className="rounded-full border border-[#d9cfbf] bg-white px-4 py-2 text-sm font-semibold text-[#5b5245] hover:bg-[#f5eee2]">
+            <Link href={backHref} className="rounded-full border border-line bg-white px-4 py-2 text-sm font-semibold text-muted hover:bg-sand">
               {backLabel}
             </Link>
           </div>
@@ -218,8 +218,8 @@ export function FacilityProfileClient({ facilityId, backHref, backLabel }: Facil
         {canonicalFacilityId ? <FacilityPersonalFit facilityId={String(canonicalFacilityId)} facilityName={facility.name} backHref={backHref} /> : null}
 
         <section className="grid gap-6 lg:grid-cols-[360px,1fr]">
-          <div className="rounded-3xl border border-[#e8ddcc] bg-white p-5 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.45)]">
-            <div className="overflow-hidden rounded-2xl border border-[#e3d8c8] bg-[#f7f2e8]">
+          <div className="rounded-3xl border border-line bg-white p-5 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.45)] oomnik-panel">
+            <div className="overflow-hidden rounded-2xl border border-line bg-sand">
               <img
                 src={imageTruth?.url || "/cms-placeholder.svg"}
                 alt={`${facility.name} facility image`}
@@ -228,54 +228,54 @@ export function FacilityProfileClient({ facilityId, backHref, backLabel }: Facil
                   event.currentTarget.src = "/cms-placeholder.svg";
                 }}
               />
-              <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#e3d8c8] bg-white px-3 py-2 text-xs text-[#6b6257]">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line bg-white px-3 py-2 text-xs text-muted">
                 <span>Image source: {imageTruth?.sourceLabel || "Placeholder"}</span>
                 <span>{imageTruth?.isPlaceholder ? "Compact neutral placeholder" : "Governed public image"}</span>
               </div>
             </div>
 
-            <div className="mt-4 space-y-2 text-sm text-[#4f473d]">
-              <p><span className="font-semibold text-[#2f2a24]">Profile link:</span> {canonicalFacilityId ? "Confirmed" : "Not available"}</p>
-              <p><span className="font-semibold text-[#2f2a24]">Record status:</span> {identity === "CANONICAL_BACKEND_IDENTITY" ? "Confirmed facility record" : "Under review"}</p>
-              <p><span className="font-semibold text-[#2f2a24]">Website:</span> {facility.website ? <a className="text-[#5f7f6b] underline" href={facility.website} target="_blank" rel="noreferrer">Verified website</a> : "Not verified"}</p>
-              <p><span className="font-semibold text-[#2f2a24]">Phone:</span> {facility.phone || "Not verified"}</p>
-              <p><span className="font-semibold text-[#2f2a24]">Price estimate:</span> {priceLine}</p>
-              <p className="text-xs text-[#6f6148]">{priceDisclosure}</p>
+            <div className="mt-4 space-y-2 text-sm text-muted">
+              <p><span className="font-semibold text-ink">Profile link:</span> {canonicalFacilityId ? "Confirmed" : "Not available"}</p>
+              <p><span className="font-semibold text-ink">Record status:</span> {identity === "CANONICAL_BACKEND_IDENTITY" ? "Confirmed facility record" : "Under review"}</p>
+              <p><span className="font-semibold text-ink">Website:</span> {facility.website ? <a className="text-forest underline" href={facility.website} target="_blank" rel="noreferrer">Verified website</a> : "Not verified"}</p>
+              <p><span className="font-semibold text-ink">Phone:</span> {facility.phone || "Not verified"}</p>
+              <p><span className="font-semibold text-ink">Price estimate:</span> {priceLine}</p>
+              <p className="text-xs text-muted">{priceDisclosure}</p>
             </div>
           </div>
 
           <div className="space-y-6">
-            <section className="rounded-3xl border border-[#e8ddcc] bg-white p-5 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.45)]">
+            <section className="rounded-3xl border border-line bg-white p-5 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.45)] oomnik-panel">
               {recommendation ? (
                 <>
-                  <p className="mt-2 text-xl font-semibold text-[#2f2a24]">Fit assessment for {person}</p>
-                  {whySelected ? <p className="mt-3 text-sm leading-6 text-[#5f5548]">{whySelected}</p> : null}
-                  {rankReason ? <p className="mt-2 text-sm leading-6 text-[#5f5548]">{rankReason}</p> : null}
+                  <p className="mt-2 text-xl font-semibold text-ink">Fit assessment for {person}</p>
+                  {whySelected ? <p className="mt-3 text-sm leading-6 text-muted">{whySelected}</p> : null}
+                  {rankReason ? <p className="mt-2 text-sm leading-6 text-muted">{rankReason}</p> : null}
                 </>
               ) : (
                 <>
-                  <p className="mt-2 text-xl font-semibold text-[#2f2a24]">Facility profile</p>
-                  <p className="mt-3 text-sm leading-6 text-[#5f5548]">No personalized assessment is available for this facility.</p>
-                  <Link href="/intake" className="mt-2 inline-block text-[#5f7f6b] underline">Complete and confirm your questionnaire to explore your options</Link>
+                  <p className="mt-2 text-xl font-semibold text-ink">Facility profile</p>
+                  <p className="mt-3 text-sm leading-6 text-muted">No personalized assessment is available for this facility.</p>
+                  <Link href="/intake" className="mt-2 inline-block text-forest underline">Complete and confirm your questionnaire to explore your options</Link>
                 </>
               )}
             </section>
 
             <div className="grid gap-4 md:grid-cols-2">
-              <section className="rounded-2xl border border-[#cde2d2] bg-[#f3fbf5] p-4">
-                <p className="font-semibold text-[#2f6d3e]">Strong matches</p>
+              <section className="rounded-3xl border border-line bg-sand p-4">
+                <p className="font-semibold text-forest">Strong matches</p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {sectionItems(verifiedItems.slice(0, 6).map((item) => item.label), "No verified matches yet").map((item) => (
-                    <span key={`yes-${item}`} className="rounded-full border border-[#bcd9c0] bg-[#eef8f1] px-3 py-1 text-xs font-medium text-[#2f6d3e]">OK {item}</span>
+                    <span key={`yes-${item}`} className="rounded-full border border-line bg-sand px-3 py-1 text-xs font-medium text-forest">OK {item}</span>
                   ))}
                 </div>
               </section>
 
-              <section className="rounded-2xl border border-[#f0c9bf] bg-[#fff3ef] p-4">
+              <section className="rounded-3xl border border-line bg-sand p-4">
                 <p className="font-semibold text-[#8b4f3f]">Potential concerns</p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {sectionItems(noItems.slice(0, 4).map((item) => item.label), "No confirmed negative items yet").map((item) => (
-                    <span key={`no-${item}`} className="rounded-full border border-[#e9c5bc] bg-[#fff7f4] px-3 py-1 text-xs font-medium text-[#8b4f3f]">Gap {item}</span>
+                    <span key={`no-${item}`} className="rounded-full border border-line bg-sand px-3 py-1 text-xs font-medium text-[#8b4f3f]">Gap {item}</span>
                   ))}
                 </div>
                 <p className="mt-2 text-xs text-[#8b5f53]">{mustFailed.length > 0 ? mustFailed.join("; ") : "No governed MUST failure is currently confirmed."}</p>
@@ -283,28 +283,28 @@ export function FacilityProfileClient({ facilityId, backHref, backLabel }: Facil
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
-              <section className="rounded-2xl border border-[#f0d9b0] bg-[#fff8ea] p-4">
+              <section className="rounded-3xl border border-line bg-sand p-4">
                 <p className="font-semibold text-[#8a6a2f]">Still unknown</p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {sectionItems(unknownItems.slice(0, 6).map((item) => item.label), recommendation ? "No unknowns currently surfaced" : "Personal requirements have not been assessed").map((item) => (
-                    <span key={`unknown-${item}`} className="rounded-full border border-[#e3d2a6] bg-[#fffdf4] px-3 py-1 text-xs font-medium text-[#7a6847]">Verify {item}</span>
+                    <span key={`unknown-${item}`} className="rounded-full border border-line bg-sand px-3 py-1 text-xs font-medium text-[#7a6847]">Verify {item}</span>
                   ))}
                 </div>
                 <p className="mt-2 text-xs text-[#7a6847]">{mustUnknown.length > 0 ? mustUnknown.join("; ") : "Unknown is preserved where evidence is incomplete."}</p>
               </section>
 
-              <section className="rounded-2xl border border-[#d9e3ec] bg-[#f8fbff] p-4">
-                <p className="font-semibold text-[#24425e]">Questions to ask this facility</p>
+              <section className="rounded-3xl border border-line bg-sand p-4">
+                <p className="font-semibold text-muted">Questions to ask this facility</p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {sectionItems(questions.slice(0, 6), "No unanswered questions currently surfaced").map((item) => (
-                    <span key={`q-${item}`} className="rounded-full border border-[#d5e1ea] bg-white px-3 py-1 text-xs font-medium text-[#24425e]">{item}</span>
+                    <span key={`q-${item}`} className="rounded-full border border-line bg-white px-3 py-1 text-xs font-medium text-muted">{item}</span>
                   ))}
                 </div>
               </section>
             </div>
 
-            <section className="rounded-3xl border border-[#e8ddcc] bg-white p-5 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.45)]">
-              <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#5f7f6b]">Facility data sections</p>
+            <section className="rounded-3xl border border-line bg-white p-5 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.45)] oomnik-panel">
+              <p className="text-sm font-semibold uppercase tracking-[0.14em] text-forest">Facility data sections</p>
               <div className="mt-4 grid gap-3 md:grid-cols-2">
                 {facility.careTypes.length > 0 ? badgeRow("Care & services", facility.careTypes) : null}
                 {facility.rehabilitationCapabilities.length > 0 ? badgeRow("Rehabilitation", facility.rehabilitationCapabilities) : null}
@@ -317,44 +317,44 @@ export function FacilityProfileClient({ facilityId, backHref, backLabel }: Facil
               </div>
             </section>
 
-            <section className="rounded-3xl border border-[#e8ddcc] bg-white p-5 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.45)]">
-              <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#5f7f6b]">Location, quality, and evidence</p>
-                            <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#5f7f6b]">Location, quality, and evidence</p>
+            <section className="rounded-3xl border border-line bg-white p-5 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.45)] oomnik-panel">
+              <p className="text-sm font-semibold uppercase tracking-[0.14em] text-forest">Location, quality, and evidence</p>
+                            <p className="text-sm font-semibold uppercase tracking-[0.14em] text-forest">Location, quality, and evidence</p>
               <div className="mt-4 grid gap-4 md:grid-cols-2">
-                <div className="rounded-2xl border border-[#d9e3ec] bg-[#f8fbff] p-4 text-sm text-[#4f473d]">
-                  <p className="font-semibold text-[#24425e]">Quality snapshot</p>
+                <div className="rounded-2xl border border-line bg-sand p-4 text-sm text-muted">
+                  <p className="font-semibold text-muted">Quality snapshot</p>
                   <p className="mt-2">Overall: {qualityLabel(facility.overall_rating ?? null)}</p>
                   <p>Staffing: {qualityLabel(facility.staffing_rating ?? null)}</p>
                   <p>Inspection: {qualityLabel(facility.inspection_rating ?? null)}</p>
                   <p>Score breakdown categories: {facility.scoreBreakdown?.length || 0}</p>
                   <p>{facility.scoreBreakdown?.length ? `Score breakdown available for ${facility.scoreBreakdown.length} categories` : "Score breakdown not available"}</p>
-                  <p className="mt-1 text-xs text-[#6b6257]">{(facility.scoreBreakdown || []).slice(0, 3).map((item) => `${item.category}: ${breakdownLabel(item.score)}`).join(" · ") || "No score breakdown available"}</p>
+                  <p className="mt-1 text-xs text-muted">{(facility.scoreBreakdown || []).slice(0, 3).map((item) => `${item.category}: ${breakdownLabel(item.score)}`).join(" · ") || "No score breakdown available"}</p>
                 </div>
-                <div className="rounded-2xl border border-[#d9e3ec] bg-[#f8fbff] p-4 text-sm text-[#4f473d]">
-                  <p className="font-semibold text-[#24425e]">Location</p>
+                <div className="rounded-2xl border border-line bg-sand p-4 text-sm text-muted">
+                  <p className="font-semibold text-muted">Location</p>
                   <p className="mt-2">{facility.address}</p>
                   <p>{facility.city}, {facility.state} {facility.zip_code}</p>
-                  <p className="mt-2"><a className="text-[#5f7f6b] underline" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${facility.name} ${facility.city}`)}`} target="_blank" rel="noreferrer">Open in maps</a></p>
+                  <p className="mt-2"><a className="text-forest underline" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${facility.name} ${facility.city}`)}`} target="_blank" rel="noreferrer">Open in maps</a></p>
                 </div>
               </div>
             </section>
 
-            <section className="rounded-3xl border border-[#e8ddcc] bg-white p-5 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.45)]">
-              <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#5f7f6b]">Sources & evidence</p>
+            <section className="rounded-3xl border border-line bg-white p-5 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.45)] oomnik-panel">
+              <p className="text-sm font-semibold uppercase tracking-[0.14em] text-forest">Sources & evidence</p>
               <div className="mt-4 grid gap-4 md:grid-cols-2">
-                <div className="rounded-2xl border border-[#d9e3ec] bg-[#f8fbff] p-4 text-sm text-[#4f473d]">
-                  <p className="font-semibold text-[#24425e]">Governed evidence</p>
+                <div className="rounded-2xl border border-line bg-sand p-4 text-sm text-muted">
+                  <p className="font-semibold text-muted">Governed evidence</p>
                   <p className="mt-2">{facility.intelligenceSnapshot ? `Confidence: ${facility.intelligenceSnapshot.intelligence_confidence}` : "No facility intelligence snapshot available."}</p>
                   <p className="mt-2">{describeEvidenceConfidence(facility.intelligenceSnapshot ? `Evidence confidence: ${facility.intelligenceSnapshot.intelligence_confidence}` : "No facility evidence snapshot is currently available.")}</p>
                   <p>{facility.intelligenceSnapshot?.sources_used?.length ? "Source details available" : "No source details currently available."}</p>
                 </div>
-                <div className="rounded-2xl border border-[#d9e3ec] bg-[#f8fbff] p-4 text-sm text-[#4f473d]">
-                  <p className="font-semibold text-[#24425e]">Source details</p>
-                  <ul className="mt-2 space-y-1 text-xs text-[#5b5b5b]">
+                <div className="rounded-2xl border border-line bg-sand p-4 text-sm text-muted">
+                  <p className="font-semibold text-muted">Source details</p>
+                  <ul className="mt-2 space-y-1 text-xs text-muted">
                     {(facility.intelligenceSnapshot?.signal_details || []).slice(0, 6).map((detail, index) => (
                       <li key={`${detail.source}-${index}`}>
                         {detail.source} · {detail.provenance} · {detail.collection_timestamp}
-                        {detail.raw_url ? <a className="ml-2 text-[#5f7f6b] underline" href={detail.raw_url} target="_blank" rel="noreferrer">source</a> : null}
+                        {detail.raw_url ? <a className="ml-2 text-forest underline" href={detail.raw_url} target="_blank" rel="noreferrer">source</a> : null}
                       </li>
                     ))}
                   </ul>
@@ -362,29 +362,29 @@ export function FacilityProfileClient({ facilityId, backHref, backLabel }: Facil
               </div>
             </section>
 
-            <section className="rounded-3xl border border-[#e8ddcc] bg-white p-5 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.45)]">
-              <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#5f7f6b]">Personalized fit summary</p>
+            <section className="rounded-3xl border border-line bg-white p-5 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.45)] oomnik-panel">
+              <p className="text-sm font-semibold uppercase tracking-[0.14em] text-forest">Personalized fit summary</p>
               <div className="mt-3 grid gap-3 md:grid-cols-3">
-                <div className="rounded-2xl border border-[#e3d8c8] bg-[#fffaf2] p-4 text-sm text-[#4f473d]">
-                  <p className="font-semibold text-[#2f2a24]">Fit status</p>
+                <div className="rounded-2xl border border-line bg-canvas p-4 text-sm text-muted">
+                  <p className="font-semibold text-ink">Fit status</p>
                   <p className="mt-1">{recommendation ? "Included in current governed recommendation set" : "Under review"}</p>
                 </div>
-                <div className="rounded-2xl border border-[#e3d8c8] bg-[#fffaf2] p-4 text-sm text-[#4f473d]">
-                  <p className="font-semibold text-[#2f2a24]">Confidence</p>
-                  <p className="font-semibold text-[#2f2a24]">Confidence</p>
+                <div className="rounded-2xl border border-line bg-canvas p-4 text-sm text-muted">
+                  <p className="font-semibold text-ink">Confidence</p>
+                  <p className="font-semibold text-ink">Confidence</p>
                   <p className="mt-1">{recommendation ? `${recommendation.match_score}% governed match score; ${unknownItems.length} item${unknownItems.length === 1 ? "" : "s"} still require verification.` : "Governed confidence not yet available."}</p>
                 </div>
-                <div className="rounded-2xl border border-[#e3d8c8] bg-[#fffaf2] p-4 text-sm text-[#4f473d]">
-                  <p className="font-semibold text-[#2f2a24]">Next step</p>
+                <div className="rounded-2xl border border-line bg-canvas p-4 text-sm text-muted">
+                  <p className="font-semibold text-ink">Next step</p>
                   <p className="mt-1">{unknownItems.length ? "Verify the unresolved items with the facility before proceeding." : "Review the current facility facts and confirm availability directly with the facility."}</p>
                 </div>
               </div>
             </section>
 
-            <section className="rounded-3xl border border-[#d9e3ec] bg-[#f6fbff] p-5 shadow-[0_16px_50px_-34px_rgba(53,82,112,0.3)]">
+            <section className="rounded-3xl border border-line bg-sand p-5 shadow-[0_16px_50px_-34px_rgba(53,82,112,0.3)]">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#24425e]">Full governed parameter table</p>
-                <p className="text-xs text-[#4a6076]">{parameterTable ? `${parameterTable.rows.length} rows` : "Canonical mapping required"}</p>
+                <p className="text-sm font-semibold uppercase tracking-[0.14em] text-muted">Full governed parameter table</p>
+                <p className="text-xs text-muted">{parameterTable ? `${parameterTable.rows.length} rows` : "Canonical mapping required"}</p>
               </div>
 
               {parameterTable ? (
@@ -392,30 +392,30 @@ export function FacilityProfileClient({ facilityId, backHref, backLabel }: Facil
                   <table className="min-w-full border-collapse text-xs">
                     <thead>
                       <tr>
-                        <th className="border border-[#d9e3ec] bg-white px-2 py-2 text-left">Category</th>
-                        <th className="border border-[#d9e3ec] bg-white px-2 py-2 text-left">Parameter</th>
-                        <th className="border border-[#d9e3ec] bg-white px-2 py-2 text-left">Status / Value</th>
-                        <th className="border border-[#d9e3ec] bg-white px-2 py-2 text-left">Detail / Scope</th>
-                        <th className="border border-[#d9e3ec] bg-white px-2 py-2 text-left">Source</th>
-                        <th className="border border-[#d9e3ec] bg-white px-2 py-2 text-left">Last verified</th>
+                        <th className="border border-line bg-white px-2 py-2 text-left">Category</th>
+                        <th className="border border-line bg-white px-2 py-2 text-left">Parameter</th>
+                        <th className="border border-line bg-white px-2 py-2 text-left">Status / Value</th>
+                        <th className="border border-line bg-white px-2 py-2 text-left">Detail / Scope</th>
+                        <th className="border border-line bg-white px-2 py-2 text-left">Source</th>
+                        <th className="border border-line bg-white px-2 py-2 text-left">Last verified</th>
                       </tr>
                     </thead>
                     <tbody>
                       {parameterTable.rows.map((row) => (
                         <tr key={`${row.parameter_id}-${row.scope_name || "global"}`}>
-                          <td className="border border-[#d9e3ec] bg-white px-2 py-2 text-[#24425e]">{row.category}</td>
-                          <td className="border border-[#d9e3ec] bg-white px-2 py-2 text-[#2f2a24]">{row.parameter}</td>
-                          <td className="border border-[#d9e3ec] bg-white px-2 py-2 text-[#2f2a24]">{formatStatusValue(row.status_value)}</td>
-                          <td className="border border-[#d9e3ec] bg-white px-2 py-2 text-[#4a6076]">{row.detail_scope}{row.scope_name ? ` / ${row.scope_name}` : ""}</td>
-                          <td className="border border-[#d9e3ec] bg-white px-2 py-2 text-[#4a6076]">{row.source}</td>
-                          <td className="border border-[#d9e3ec] bg-white px-2 py-2 text-[#4a6076]">{formatLastVerified(row.last_verified)}</td>
+                          <td className="border border-line bg-white px-2 py-2 text-muted">{row.category}</td>
+                          <td className="border border-line bg-white px-2 py-2 text-ink">{row.parameter}</td>
+                          <td className="border border-line bg-white px-2 py-2 text-ink">{formatStatusValue(row.status_value)}</td>
+                          <td className="border border-line bg-white px-2 py-2 text-muted">{row.detail_scope}{row.scope_name ? ` / ${row.scope_name}` : ""}</td>
+                          <td className="border border-line bg-white px-2 py-2 text-muted">{row.source}</td>
+                          <td className="border border-line bg-white px-2 py-2 text-muted">{formatLastVerified(row.last_verified)}</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
               ) : (
-                <p className="mt-3 text-sm text-[#4a6076]">Full parameter table is unavailable for this route unless a canonical facility ID is resolved.</p>
+                <p className="mt-3 text-sm text-muted">Full parameter table is unavailable for this route unless a canonical facility ID is resolved.</p>
               )}
             </section>
           </div>
