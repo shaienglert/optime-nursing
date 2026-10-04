@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useQuestionnaire } from "@/context/questionnaire-context";
-import { createClientCase, DecisionEngineResponse, fetchPatientDecisionRecommendations } from "@/lib/api";
+import { createClientCase, DecisionEngineResponse, fetchPatientDecisionRecommendations, type OOmnikerPreferenceSuggestion } from "@/lib/api";
 import { loadDecisionResponseCache, saveDecisionResponseCache, saveSessionJson, QUESTIONNAIRE_SESSION_KEY } from "@/lib/search-session";
 import { isFinalRecommendation, isPendingRecommendation } from "@/lib/recommendation-eligibility";
 import { applyAdaptiveAnswer } from "@/lib/adaptive-answer";
@@ -14,6 +14,13 @@ import { resultsClientState } from "@/lib/results-client-state";
 import { DistanceScope } from "./distance-scope";
 
 const TOP_COUNT = 5;
+
+const adviceLabels: Record<string, string> = {
+  COMMUNITY_ENVIRONMENT_MATCH: "Community size", PREFERRED_LANGUAGE_SUPPORT: "Preferred language", CONTINUUM_OF_CARE: "Future care continuity",
+  inspection_rating: "Inspection rating", deficiency_count: "Inspection deficiencies", total_nurse_hours_per_resident_day: "Nursing hours per resident per day",
+  rn_hours_per_resident_day: "Registered nurse hours per resident per day", staffing_turnover: "Staff turnover (%)",
+  public_rating: "Public review rating", public_review_count: "Public review count", alis_latest_grade: "Regulatory grade", alis_disciplinary_action: "Regulatory disciplinary record",
+};
 
 const missingEvidenceLabels: Record<string, string> = {
   SEMANTIC_BUDGET_VERIFICATION: "a current price within your budget",
@@ -94,7 +101,7 @@ export function SimpleResultsPageClient() {
     const text = oomnikerText.trim();
     if (!text) return;
     const lower = text.toLowerCase();
-    beforeOOmnikerIds.current = (response?.results || []).filter(isFinalRecommendation).map((item) => item.canonical_facility_id);
+    beforeOOmnikerIds.current = (response?.results || []).filter(isFinalRecommendation).slice(0, TOP_COUNT).map((item) => item.canonical_facility_id);
     setOOmnikerDiff("");
     setState((current) => {
       oomnikerHistory.current.push(JSON.parse(JSON.stringify(current)));
@@ -125,10 +132,24 @@ export function SimpleResultsPageClient() {
     setOOmnikerOpen(false);
   }
 
+  function acceptCommunitySizeAdvice(suggestion: OOmnikerPreferenceSuggestion) {
+    if (suggestion.parameter !== "COMMUNITY_ENVIRONMENT_MATCH" || suggestion.new_recommendation_count < 2
+      || suggestion.may_auto_change || !suggestion.requires_client_approval
+      || !["Medium", "Large and active"].includes(suggestion.alternative_value)) return;
+    beforeOOmnikerIds.current = (response?.results || []).filter(isFinalRecommendation).slice(0, TOP_COUNT).map(item => item.canonical_facility_id);
+    setOOmnikerDiff("");
+    setState(current => {
+      oomnikerHistory.current.push(JSON.parse(JSON.stringify(current)));
+      return { ...current, humanIntelligenceV2: { ...current.humanIntelligenceV2,
+        personalityProfile: { ...current.humanIntelligenceV2.personalityProfile, communitySizePreference: suggestion.alternative_value } } };
+    });
+    setOOmnikerNotice(`You chose ${suggestion.alternative_value.toLowerCase()}. I’m running the search again with that community size preference.`);
+  }
+
   // Widening waits for the family: the engine only counts who fits a little further out,
   // and this is the one place that radius is accepted. It is undoable like any OOMNIKER change.
   function acceptRadiusExpansion(miles: number) {
-    beforeOOmnikerIds.current = (response?.results || []).filter(isFinalRecommendation).map((item) => item.canonical_facility_id);
+    beforeOOmnikerIds.current = (response?.results || []).filter(isFinalRecommendation).slice(0, TOP_COUNT).map((item) => item.canonical_facility_id);
     setOOmnikerDiff("");
     setState((current) => {
       oomnikerHistory.current.push(JSON.parse(JSON.stringify(current)));
@@ -209,15 +230,15 @@ export function SimpleResultsPageClient() {
   useEffect(() => {
     if (loading || beforeOOmnikerIds.current.length === 0 || !response) return;
     const before = beforeOOmnikerIds.current;
-    const afterItems = (response.results || []).filter(isFinalRecommendation);
+    const afterItems = (response.results || []).filter(isFinalRecommendation).slice(0, TOP_COUNT);
     const after = afterItems.map((item) => item.canonical_facility_id);
     const added = after.filter((id) => !before.includes(id));
     const removed = before.filter((id) => !after.includes(id));
     const oldLeader = before[0];
     const newLeader = after[0];
     const parts: string[] = [];
-    if (added.length) parts.push(`${added.length} new communit${added.length === 1 ? "y now qualifies" : "ies now qualify"}`);
-    if (removed.length) parts.push(`${removed.length} previous option${removed.length === 1 ? " no longer qualifies" : "s no longer qualify"}`);
+    if (added.length) parts.push(`${added.length} additional communit${added.length === 1 ? "y enters" : "ies enter"} the first five recommendations`);
+    if (removed.length) parts.push(`${removed.length} previous option${removed.length === 1 ? " moves" : "s move"} outside the first five recommendations`);
     if (oldLeader && newLeader && oldLeader !== newLeader) {
       const leader = afterItems.find((item) => item.canonical_facility_id === newLeader);
       parts.push(`${leader?.facility_name || "A different community"} now comes first based on the updated priorities`);
@@ -236,6 +257,8 @@ export function SimpleResultsPageClient() {
     [response],
   );
   const top = eligible.slice(0, TOP_COUNT);
+  const preferenceAdvice = (response?.oomniker?.suggestions || []).filter((item): item is OOmnikerPreferenceSuggestion =>
+    item.action === "OFFER_PREFERENCE_ALTERNATIVE" && item.authority === "PREFERENCE" && item.new_recommendation_count >= 2);
   const pendingEvidence = response?.pending_evidence_summary;
   const missingEvidence = [...new Set(pendingEvidence?.unresolved_requirements || [])]
     .map((key) => missingEvidenceLabels[key] || "another required facility detail");
@@ -442,6 +465,22 @@ export function SimpleResultsPageClient() {
             <button type="button" onClick={() => setOOmnikerOpen((v) => !v)} className="rounded-full bg-[#079ff2] px-5 py-3 font-semibold text-white">{oomnikerOpen ? "Close" : "Open OOMNIKER"}</button>
           </div>
           <div className="mt-5 flex flex-wrap gap-2">{activeCriteria.map(([label,value]) => <span key={label} className="rounded-full border border-[#bcd9e7] bg-white px-4 py-2 text-sm"><strong>{label}:</strong> {value}</span>)}</div>
+          {preferenceAdvice.map(suggestion => <article key={`${suggestion.parameter}-${suggestion.alternative_value}`} className="mt-5 rounded-2xl border border-[#bcd9e7] bg-white p-5">
+            <h3 className="text-xl font-semibold">An alternative for your {adviceLabels[suggestion.parameter]?.toLowerCase() || "preference"}</h3>
+            <p className="mt-3 leading-7">{suggestion.message}</p>
+            <ul className="mt-3 space-y-3">{suggestion.candidates.map(candidate => <li key={candidate.canonical_facility_id}>
+              <strong>{candidate.facility_name || "Community"}</strong>: {adviceLabels[candidate.quality_advantage.parameter] || "Verified quality measure"}: {String(candidate.quality_advantage.value)}, compared with {String(candidate.quality_advantage.compared_value)} for a current option ({candidate.quality_advantage.source_family}).
+              {candidate.unresolved_preferences.length ? <p>Still to verify: {candidate.unresolved_preferences.map(key => adviceLabels[key] || missingEvidenceLabels[key] || "another preference").join(", ")}.</p> : null}
+              {typeof candidate.entrance_fee === "number" && candidate.entrance_fee > 0 ? <p>Entrance fee: ${candidate.entrance_fee.toLocaleString("en-US")}. One-time affordability and contract details still need confirmation.</p> : null}
+            </li>)}</ul>
+            {suggestion.parameter === "COMMUNITY_ENVIRONMENT_MATCH" ? <button type="button" onClick={() => acceptCommunitySizeAdvice(suggestion)} className="mt-4 rounded-full bg-[#234f63] px-5 py-3 font-semibold text-white">Try {suggestion.alternative_value.toLowerCase()}</button> : <Link href="/adaptive-interview?review=1&next=/results" className="mt-4 inline-block font-semibold underline">Review this preference</Link>}
+          </article>)}
+          {(response.oomniker?.preference_analysis?.parameters || []).filter(item => item.eligible_below_display_count > 0 || item.unknown_count > 0).slice(0, 3).map(item => <p key={item.parameter} className="mt-4 text-base leading-7">
+            <strong>{adviceLabels[item.parameter] || "Another preference"}:</strong> {item.eligible_below_display_count} eligible communities outside the first five have a verified mismatch; {item.unknown_count} need more evidence. This preference does not exclude them.
+          </p>)}
+          {(response.oomniker?.constraint_impacts || []).slice(0, 3).map(item => <p key={item.parameter} className="mt-3 text-base leading-7">
+            <strong>{missingEvidenceLabels[item.parameter] || "A required condition"}:</strong> {item.blocked_count} communities have a confirmed blocker; for {item.sole_verified_blocker_count}, it is the only confirmed blocker with no pending evidence. Your requirements stay in force. Counts may overlap across conditions.
+          </p>)}
           {oomnikerNotice ? <div className="mt-4 rounded-2xl bg-white p-4 text-base text-[#315f53]">{oomnikerNotice}{oomnikerDiff ? <p className="mt-2 font-medium">{oomnikerDiff}</p> : null} {oomnikerHistory.current.length > 0 ? <button type="button" onClick={() => { const previous = oomnikerHistory.current.pop(); if (previous) { setState(previous); setOOmnikerNotice("Done. I’ve put the previous preference back and I’m reassessing the earlier search."); } }} className="ml-2 font-semibold underline underline-offset-4">Undo last change</button> : null}</div> : null}
           {oomnikerOpen ? <div className="mt-6"><textarea value={oomnikerText} onChange={(e) => setOOmnikerText(e.target.value)} rows={3} placeholder="Try: Change the distance to 30 miles, or budget can go to $8,000…" className="w-full rounded-2xl border border-[#bcd9e7] bg-white px-5 py-4 text-lg outline-none focus:border-[#079ff2]" /><button type="button" onClick={applyOOmnikerChange} disabled={!oomnikerText.trim()} className="mt-3 rounded-full bg-[#234f63] px-6 py-3 font-semibold text-white disabled:opacity-40">Update results</button></div> : null}
         </section>

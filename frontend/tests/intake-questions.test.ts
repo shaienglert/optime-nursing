@@ -70,6 +70,22 @@ const FULL_CASE: Record<string, string | string[] | number> = {
   maximumDistanceMiles: "20",
 };
 
+describe("region and nearby amenities", () => {
+  it("puts personal proximity guidance in the initial region choice", () => {
+    expect(QUESTIONS.find(item => item.id === "referenceAddress")?.note).toMatch(/family, friends, regular classes/);
+    expect(QUESTIONS.find(item => item.id === "nearbyPlaces")?.options).not.toContain("Family or friends");
+  });
+  it("does not ask a personal destination again, including for saved answers", () => {
+    let context = answer(ctx(), "personalDestinationLabel", "Daughter");
+    context = answer(context, "personalDestinationAddress", "89052");
+    const ids = visibleQuestions(context).map(item => item.id);
+    expect(ids).not.toContain("personalDestinationLabel");
+    expect(ids).not.toContain("personalDestinationAddress");
+    expect(missingQuestions(context).map(item => item.id)).not.toContain("personalDestinationAddress");
+    expect(context.extras.personalDestinationAddress).toBe("89052");
+  });
+});
+
 describe("intake question list", () => {
   it("has unique ids and a prompt for every question", () => {
     const ids = QUESTIONS.map((question) => question.id);
