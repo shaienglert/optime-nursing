@@ -9,3 +9,5 @@ The original comparator, weights, requirements, geographic limits and funding ga
 Each offer needs at least two promoted, MUST-passing facilities, verified evidence for the changed preference and matched remaining explicit preferences. Unknown is not mismatch. No invented good/excellent rating: use the governed evidence values and disclose remaining uncertainties. Unsupported preference levers remain diagnostic rather than speculative offers. Suggestions are ordered by their measured effect. Changes require a family action, followed by a new ordinary engine run.
 
 The initial region prompt mentions family, friends and established routines. New interviews do not ask a personal destination again or offer family/friends in the nearby amenities list. Historic saved destinations remain readable.
+
+API serialization explicitly preserves the governed advisor analysis. AI advice reads the saved server decision matched to the questionnaire fingerprint; browser-supplied analysis and capability claims have no advisory authority. The ten browser journeys assert this end-to-end contract.
