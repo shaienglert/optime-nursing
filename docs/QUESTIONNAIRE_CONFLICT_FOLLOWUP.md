@@ -58,3 +58,41 @@ ranking checks are recorded separately when complete. No production run claimed.
 
 Final local checks: 174 ADL/medical/intent/oracle/Oomniker/accounting/neutral
 backend tests plus four catalog corruption tests passed (178 total).
+
+## Concrete semantic proposal for owner review (NOT IMPLEMENTED)
+
+Current principle: client MUST is deterministic and cannot be relaxed by AI;
+missing family facts require a focused clarification and missing provider facts
+require provider/source verification. Unknown is never negative evidence.
+
+Current behavior: some selected services and preferences are preserved without
+an explicit deterministic intent/evidence mapping. The proposed roles below
+are new mappings (D), not merely source-accounting labels. No change is active.
+
+| Selected family answer | Proposed role and clarification | Required facility proof |
+| --- | --- | --- |
+| Cane / Walker / Wheelchair / Mostly in bed | Context; clarify actual layout/access/assistance requirements before creating MUST. Do not infer nursing/PT/OT. | Proof of the specific confirmed accessibility/support requirement at facility/unit level |
+| One person / Two people / Mechanical lift | MUST for the explicitly selected transfer support; Not sure remains unknown and is clarified if material | Evidence of the exact staffing/transfer method, including scope and any delivery restrictions |
+| One / More than one fall | Context and focused safety/support clarification; no automatic service inference | Evidence only for the subsequently confirmed requirement |
+| Several times weekly / Weekly / Occasionally / Very little | NICE for the stated desired social frequency, with no automatic “more social is better” rule | Programming/delivery that matches that frequency; absence remains unknown |
+| Quiet | NICE for a quiet environment; not a proxy for community size | Case-relevant quiet-environment evidence; no invented fit from size alone |
+| Halal / Vegetarian / Vegan / Low sodium / Diabetic / Gluten free / Other | Clarify MUST vs preference and any medical/allergy severity once unless already stated in structured controls or narrative | Exact dietary capability, scope, limitations and safeguards for confirmed requirements |
+| Regular / Accessible / Covered parking | Clarify MUST vs preference once unless explicit; accessible parking does not alone imply all accessibility needs | Exact parking type and, if material, capacity for the requested number of vehicles |
+| Pet = Yes | Clarify whether bringing a pet is a MUST, and species/size restrictions if material | Pet policy for the selected unit and actual pet; no generic yes substitute |
+| Religious community = Yes and selected religious services | Clarify MUST vs preference and exact service; do not infer faith from language/kosher | Proof for the selected service and denomination if explicitly required |
+| Move-loss concerns and biggest fear | Dialogue/context by default; map to an existing confirmed intent or ask a focused question, without generating duplicate MUSTs | Evidence only for the clarified concrete requirement |
+| Medicare | Funding context; do not treat insurance coverage as proof that long-term residential rent is covered | Case-specific covered service/eligibility and billing evidence |
+
+User impact: confirmed requirements can move candidates into provider research
+instead of recommendations when exact capability proof is missing. Preferences
+can affect governed ranking only with relevant evidence. Context alone does not
+raise/lower rank. These effects must be tested against actual pilot facts.
+
+Risks: declaring ambiguous choices MUST without clarification can incorrectly
+exclude communities; declaring them NICE can weaken true requirements. Generic
+facility flags may not prove a specific service. Alternative: keep them context
+and visibly pending until clarified (recommended for ambiguous answers).
+
+Approval required under AGENTS.md: “Owner approval required before semantic
+implementation: C, D, E”. The inventory contains every original option, so no
+new option can be silently assigned a role after approval of this proposal.
