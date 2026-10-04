@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { PilotPhoto } from "./pilot-photo";
 import { FacilityPersonalFit } from "@/components/guidance/facility-personal-fit";
 import { useEffect, useMemo, useState } from "react";
 
@@ -168,6 +169,8 @@ export function CanonicalFacilityProfileClient({ canonicalFacilityId, backHref, 
             <Link href={backHref} className="rounded-xl border border-line bg-white px-4 py-2 text-sm font-semibold text-muted hover:bg-sand">{backLabel}</Link>
           </div>
         </header>
+
+        {/^(?:PILOT-NV)-\d+$/.test(canonicalFacilityId) ? <PilotPhoto facilityId={canonicalFacilityId} gallery /> : null}
 
         {canonicalFacilityId ? <FacilityPersonalFit facilityId={canonicalFacilityId} facilityName={table.facility_name} backHref={backHref} /> : null}
 
