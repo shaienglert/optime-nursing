@@ -162,9 +162,14 @@ export function PersonalReportPageClient() {
                     </div>
                     <div className="flex flex-col items-start gap-2 sm:items-end">
                       {candidate.match_score !== null ? (
-                        <span className="w-fit rounded-full bg-sand px-4 py-2 text-lg font-semibold text-forest">
-                          {candidate.match_band ? candidate.match_band.replace(/_/g, " ") : "Match"} · {Math.round(candidate.match_score)}%
-                        </span>
+                        <div className="max-w-sm sm:text-right">
+                          <span className="inline-block rounded-full bg-sand px-4 py-2 text-lg font-semibold text-forest">
+                            Evidence-weighted score · {Math.round(candidate.match_score)}%
+                          </span>
+                          <p className="mt-2 text-base leading-6 text-muted">
+                            This score combines recorded fit and evidence strength. It is not the percentage of your needs met or a guarantee of suitability.
+                          </p>
+                        </div>
                       ) : null}
                       <Link
                         href={`/facility/canonical?canonical=${encodeURIComponent(candidate.canonical_facility_id)}&back=${encodeURIComponent(`/results/personal-report${searchParams.toString() ? `?${searchParams.toString()}` : ""}`)}`}
@@ -194,7 +199,10 @@ export function PersonalReportPageClient() {
                     </div>
 
                     <div className="rounded-2xl bg-sand p-6">
-                      <h3 className="text-2xl font-semibold">We don&apos;t know yet</h3>
+                      <h3 className="text-2xl font-semibold">Confirm directly with the community</h3>
+                      <p className="mt-3 text-xl leading-8">
+                        Before deciding, confirm the final monthly price, all fees and availability for your move date. Any additional open items are listed below.
+                      </p>
                       {stillUnknown.length ? (
                         <ul className="mt-3 space-y-3 text-xl leading-8">
                           {stillUnknown.map((claim) => (
@@ -202,7 +210,7 @@ export function PersonalReportPageClient() {
                           ))}
                         </ul>
                       ) : (
-                        <p className="mt-3 text-xl leading-8">No open verification items are currently flagged for this option.</p>
+                        <p className="mt-3 text-xl leading-8">No additional open verification items are currently flagged for this option.</p>
                       )}
                     </div>
                   </div>
