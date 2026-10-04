@@ -107,3 +107,27 @@ def test_unknown_positive_control_is_observable_without_inventing_intent():
     assert "CONTINUUM_OF_CARE" not in keys(result)
     assert result["unrecognized_controls"] == [{"answer_path": "futureCarePreference",
         "answer": "Somewhat important", "status": "UNRECOGNIZED_CONTROL_VALUE"}]
+
+
+LANGUAGE = "humanIntelligenceV2.languageProfile"
+
+
+def language_state(language, scope):
+    state = state_at(f"{LANGUAGE}.preferredSpokenLanguage", language)
+    state["humanIntelligenceV2"]["languageProfile"]["languageNeedScope"] = scope
+    return state
+
+
+@pytest.mark.parametrize("scope", ["Preference", "Requirement"])
+@pytest.mark.parametrize("language", ["Other", "other", " OTHER "])
+def test_other_language_is_not_a_language_so_it_creates_no_language_obligation(language, scope):
+    # "Other" names no language; comparing it with facility language lists could only
+    # produce a false mismatch (or exclude every community when it is a requirement).
+    # The family's unnamed language stays unknown instead.
+    assert keys(intent(language_state(language, scope))) == {"LICENSE_CURRENTLY_VALID"}
+
+
+@pytest.mark.parametrize("language", ["Spanish", "Hebrew", "Arabic"])
+def test_a_named_language_still_creates_its_preference_and_requirement(language):
+    assert "PREFERRED_LANGUAGE_SUPPORT" in keys(intent(language_state(language, "Preference")))
+    assert "REQUIRED_LANGUAGE_SUPPORT" in keys(intent(language_state(language, "Requirement")))

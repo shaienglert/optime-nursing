@@ -161,7 +161,9 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
     language_profile = human_profile.get("languageProfile") if isinstance(human_profile.get("languageProfile"), dict) else {}
     preferred_language = str(language_profile.get("preferredSpokenLanguage") or language_profile.get("medicalDiscussionLanguage") or "").strip()
     language_scope = _selection(language_profile.get("languageNeedScope"))
-    if preferred_language and _selection(preferred_language) not in _NEUTRAL_SELECTIONS | {"ENGLISH"} and language_scope not in _NEUTRAL_SELECTIONS:
+    # "Other" names no language: it cannot be matched against a facility language list, so it
+    # would only create a false mismatch (or, as a requirement, exclude every community).
+    if preferred_language and _selection(preferred_language) not in _NEUTRAL_SELECTIONS | {"ENGLISH", "OTHER"} and language_scope not in _NEUTRAL_SELECTIONS:
         language_required = language_scope in _REQUIRED_SELECTIONS
         if language_required:
             add_must("REQUIRED_LANGUAGE_SUPPORT", f"The resident explicitly requires {preferred_language} language support.", "verified language capability")
