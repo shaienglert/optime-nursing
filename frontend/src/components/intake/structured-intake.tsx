@@ -25,7 +25,7 @@ function toggle(values: string[], value: string): string[] {
 
 function Choice({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
   return (
-    <button type="button" aria-pressed={active} onClick={onClick} className={`rounded-xl border min-h-12 px-4 py-3 text-left text-xl font-semibold transition ${active ? "border-forest bg-forest text-white" : "border-line bg-white text-muted hover:border-forest"}`}>
+    <button type="button" aria-pressed={active} aria-label={label} onClick={onClick} className={`rounded-xl border min-h-12 px-4 py-3 text-left text-xl font-semibold transition ${active ? "border-forest bg-forest text-white" : "border-line bg-white text-muted hover:border-forest"}`}>
       {active ? "✓ " : ""}{label}
     </button>
   );

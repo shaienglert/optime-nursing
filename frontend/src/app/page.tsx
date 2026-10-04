@@ -46,7 +46,7 @@ function ChoiceLink({
     <button
       type="button"
       onClick={onClick}
-      aria-pressed={selected}
+      aria-pressed={selected} aria-label={label}
       className={`group relative inline-flex min-h-12 max-w-full items-center rounded-xl border px-4 py-3 text-left text-xl font-medium transition ${
         selected ? "border-forest bg-forest text-white" : "border-line bg-white text-ink hover:border-forest hover:bg-sand"
       }`}

@@ -309,7 +309,7 @@ export function SimpleResultsPageClient() {
         {question ? <>
           <p className="mt-6 text-2xl leading-9">{question.question}</p>
           <div className="mt-5 flex flex-wrap gap-3">{(question.answer_options || []).map(option =>
-            <button key={option} type="button" aria-pressed={followUpAnswer === option} disabled={continuingInterview} onClick={() => { setFollowUpAnswer(option); setContinuingInterview(true); followUpTimer.current = setTimeout(() => submitFollowUp(option), 450); }} className={`rounded-xl border px-5 py-3 text-lg ${followUpAnswer === option ? "border-forest bg-forest text-white" : "border-line bg-white text-ink disabled:opacity-50"}`}>{followUpAnswer === option ? "✓ " : ""}{option}</button>
+            <button key={option} type="button" aria-pressed={followUpAnswer === option} aria-label={option} disabled={continuingInterview} onClick={() => { setFollowUpAnswer(option); setContinuingInterview(true); followUpTimer.current = setTimeout(() => submitFollowUp(option), 450); }} className={`rounded-xl border px-5 py-3 text-lg ${followUpAnswer === option ? "border-forest bg-forest text-white" : "border-line bg-white text-ink disabled:opacity-50"}`}>{followUpAnswer === option ? "✓ " : ""}{option}</button>
           )}</div>
           <form className="mt-5" onSubmit={event => { event.preventDefault(); submitFollowUp(followUpAnswer); }}>
             <label htmlFor="results-follow-up" className="block text-lg">Your answer</label>

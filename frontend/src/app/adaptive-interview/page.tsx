@@ -303,7 +303,7 @@ export default function AdaptiveInterviewPage() {
             {options.length > 0 ? (
               <div className="ml-12 mt-5 flex flex-wrap gap-3">
                 {options.map((option) => (
-                  <button key={option} type="button" aria-pressed={answer === option} disabled={busy} onClick={() => void submitAnswer(option)} className={`rounded-xl border px-5 py-3 text-left text-lg font-medium shadow-sm ${answer === option ? "border-forest bg-forest text-white" : "border-line bg-white text-muted hover:border-forest hover:bg-sand disabled:opacity-50"}`}>{answer === option ? "✓ " : ""}{option}</button>
+                  <button key={option} type="button" aria-pressed={answer === option} aria-label={option} disabled={busy} onClick={() => void submitAnswer(option)} className={`rounded-xl border px-5 py-3 text-left text-lg font-medium shadow-sm ${answer === option ? "border-forest bg-forest text-white" : "border-line bg-white text-muted hover:border-forest hover:bg-sand disabled:opacity-50"}`}>{answer === option ? "✓ " : ""}{option}</button>
                 ))}
               </div>
             ) : (
