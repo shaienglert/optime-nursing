@@ -104,7 +104,7 @@ function IntakeConfirmationContent() {
     <main className="min-h-screen bg-[#f6f3ed] px-4 py-10 text-[#26352f] sm:px-8">
       <section className="mx-auto max-w-5xl">
         <p className="text-sm font-semibold uppercase tracking-[0.15em] text-[#397a69]">Your next chapter starts here</p>
-        <h1 className="mt-3 text-4xl font-semibold tracking-[-0.04em] sm:text-6xl">Here’s what matters for your next home.</h1>
+        <h1 data-testid="intake-personal-summary-heading" className="mt-3 text-4xl font-semibold tracking-[-0.04em] sm:text-6xl">Here’s what matters for your next home.</h1>
         <p className="mt-5 max-w-3xl text-lg leading-8 text-[#5c665f]">Before we look at communities, let’s make sure we understand the person, the priorities and what would make this move feel right.</p>
         {narrativeUnprocessed ? <div role="status" className="mt-6 rounded-2xl border border-amber-300 bg-amber-50 p-5 text-lg leading-7">OOmnik could not read the free-text story right now. Your structured answers below are still usable and will be the only information used for matching. The story will not affect recommendations unless it is successfully interpreted and you approve the updated profile.</div> : null}
         {reviewError ? <div role="alert" className="mt-6 rounded-2xl bg-amber-50 p-5 text-lg">{reviewError} <button type="button" onClick={() => { setReviewed(null); setRetry(value => value + 1); }} className="ml-3 underline">Try again</button> <button type="button" onClick={() => router.push("/adaptive-interview?next=%2Fresults")} className="ml-3 underline">Continue our conversation</button></div>
@@ -144,7 +144,7 @@ function IntakeConfirmationContent() {
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
           <button type="button" onClick={() => router.push("/intake")} className="rounded-full border border-[#76958a] bg-white px-7 py-4 text-base font-semibold text-[#315f53]">Change answers</button>
-          <button type="button" onClick={confirm} disabled={!!reviewError || reviewed?.key !== inputKey || confirmationRequested} className="inline-flex items-center gap-2 rounded-full bg-[#397a69] px-7 py-4 text-base font-semibold text-white hover:bg-[#2f6759] disabled:opacity-40"><OOmnikMark size={16} /> Yes, you understood me — find my options</button>
+          <button data-testid="confirm-understanding" type="button" onClick={confirm} disabled={!!reviewError || reviewed?.key !== inputKey || confirmationRequested} className="inline-flex items-center gap-2 rounded-full bg-[#397a69] px-7 py-4 text-base font-semibold text-white hover:bg-[#2f6759] disabled:opacity-40"><OOmnikMark size={16} /> Yes, you understood me — find my options</button>
         </div>
       </section>
     </main>

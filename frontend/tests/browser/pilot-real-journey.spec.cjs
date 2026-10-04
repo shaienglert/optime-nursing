@@ -137,7 +137,7 @@ test.describe('real synthetic-pilot customer journey', () => {
       await page.waitForLoadState('domcontentloaded');
       const adaptivePrompt = await page.locator('main').innerText().catch(() => '');
       console.log('OOMNIK_ADAPTIVE_TURN', JSON.stringify({ scenario_id: scenario.id, turn, url: page.url(), prompt: adaptivePrompt.slice(0, 1200) }));
-      const finalConfirmation = page.getByRole('button', { name: /I confirm—show recommendations/i });
+      const finalConfirmation = page.getByTestId('confirm-understanding');
       const continueReview = page.getByRole('button', { name: 'Continue our conversation', exact: true });
       let phase = 'LOADING';
       await expect.poll(async () => {
@@ -172,8 +172,8 @@ test.describe('real synthetic-pilot customer journey', () => {
       await page.waitForTimeout(500);
     }
 
-    await expect(page.getByRole('heading', { name: /Please confirm what Oomnik understood/i })).toBeVisible({ timeout: 300_000 });
-    const confirmRecommendations = page.getByRole('button', { name: /I confirm—show recommendations/i });
+    await expect(page.getByTestId('intake-personal-summary-heading')).toBeVisible({ timeout: 300_000 });
+    const confirmRecommendations = page.getByTestId('confirm-understanding');
     await expect(confirmRecommendations, 'Needs profile must finish loading before confirmation').toBeEnabled({ timeout: 300_000 });
     const recommendationResponse = page.waitForResponse(
       (response) => response.url().includes('/decision-engine/recommendations')

@@ -33,12 +33,12 @@ if (!interview.includes('I’ll use everything you’ve already told me, so I wo
 for (const token of ['medicalCareProfile', 'moveLossConcerns', 'parkingRequirement', 'clientSummaryConfirmed: false', 'Continue our conversation']) {
   if (!intakeContract.includes(token)) throw new Error(`Mandatory structured intake contract missing: ${token}`);
 }
-for (const token of ['Please confirm what OOmnik understood.', 'clientSummaryConfirmed: true', 'I confirm—show recommendations']) {
+for (const token of ['data-testid="intake-personal-summary-heading"', 'clientSummaryConfirmed: true', 'data-testid="confirm-understanding"', 'onClick={confirm}']) {
   if (!confirmation.includes(token)) throw new Error(`Client confirmation contract missing: ${token}`);
 }
 
 if (!resultsPage.includes('SimpleResultsPageClient')) throw new Error('Senior-readable results summary must be the default results surface.');
-for (const token of ['Verified care capabilities', 'What gives me pause', 'See detailed comparison', 'Other promising places we are still checking']) {
+for (const token of ['Verified care capabilities', 'What we’ll check for you next', 'Important considerations', 'PersonalNarrative', 'CommunityNextStep', 'See detailed comparison', 'Other promising places we are still checking']) {
   if (!simpleResults.includes(token)) throw new Error(`Senior-readable result contract missing: ${token}`);
 }
 const eligibility = fs.readFileSync('frontend/src/lib/recommendation-eligibility.ts', 'utf8');

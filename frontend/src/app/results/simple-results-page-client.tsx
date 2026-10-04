@@ -298,7 +298,7 @@ export function SimpleResultsPageClient() {
         <section className="rounded-[2rem] border border-[#e1d8c9] bg-white p-7 shadow-sm sm:p-10">
           {syntheticPilot ? <div className="mb-6 rounded-2xl border-2 border-amber-500 bg-amber-50 p-4 text-lg font-semibold text-amber-950">Pilot mode: every community, price, availability value and image on this page is synthetic test data—not a real facility.</div> : null}
           <p className="text-base font-semibold uppercase tracking-[0.14em] text-[#437667]">OOmnik results</p>
-          <h1 className="mt-3 text-4xl font-semibold leading-tight sm:text-5xl">Let’s explore the next home for {relationship}</h1>
+          <h1 data-testid="personal-results-heading" className="mt-3 text-4xl font-semibold leading-tight sm:text-5xl">Let’s explore the next home for {relationship}</h1>
           <div className="mt-5 max-w-4xl"><PersonalNarrative state={state} query={naturalLanguageQuery} decisionId={response.decision_id || undefined} fallback={resultsIntroduction(state, top.length)} /></div>
           {top.length > 0 ? (
             <div className="mt-7 rounded-2xl bg-[#eef7f2] p-5 text-xl leading-8 text-[#214d40]">

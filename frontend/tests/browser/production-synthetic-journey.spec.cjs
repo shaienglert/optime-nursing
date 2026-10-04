@@ -47,7 +47,7 @@ test.describe('production synthetic journey', () => {
       if (/\/results/.test(page.url())) break;
 
       if (/\/intake-confirmation/.test(page.url())) {
-        const confirm = page.getByRole('button', { name: /I confirm.*show recommendations/i });
+        const confirm = page.getByTestId('confirm-understanding');
         await expect(confirm).toBeEnabled({ timeout: 90_000 });
         await confirm.click();
         await expect(page).toHaveURL(/\/results/, { timeout: 90_000 });
