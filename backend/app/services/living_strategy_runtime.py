@@ -76,8 +76,8 @@ def _is_unusable_budget(value: Any) -> bool:
     return True
 
 
-def _question(key: str, text: str, why: str, options: List[str]) -> Dict[str, Any]:
-    return {
+def _question(key: str, text: str, why: str, options: List[str], *, exact_wording: bool = False) -> Dict[str, Any]:
+    question = {
         "question_key": key,
         "question": text,
         "why_it_matters": why,
@@ -85,6 +85,10 @@ def _question(key: str, text: str, why: str, options: List[str]) -> Dict[str, An
         "source": "living_strategy_runtime_v1",
         "role": "GUARDIAN_CLARIFICATION_CANDIDATE_ONLY",
     }
+    if exact_wording:
+        # Owner-approved product wording: asked verbatim when semantic wording is unavailable.
+        question["exact_wording"] = True
+    return question
 
 
 def _duration_months(text: str) -> int | None:
@@ -397,6 +401,7 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
             "Which language is required?",
             "A required language was marked as Other without naming it, so language support cannot be checked.",
             [],
+            exact_wording=True,
         ))
     if _is_unusable_budget(budget) and not _is_blank_budget(budget):
         # A budget that was supplied but could not be parsed is a parse failure,
@@ -407,6 +412,7 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
             "What is your monthly budget in dollars? Enter a numeric amount, for example 7,000.",
             "The budget entered could not be read as an amount, so cost cannot be checked against it.",
             [],
+            exact_wording=True,
         ))
     elif _is_blank_budget(budget):
         clarification_candidates.append(_question(

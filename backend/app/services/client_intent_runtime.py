@@ -257,7 +257,7 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
                     continue
                 source_links.append({"answer_path": path, "selection_index": index,
                                      "answer": answer, "intent_key": item["key"]})
-    return {
+    result = {
         "version": "client-intent-runtime-v1.6",
         "answer_source_links": source_links,
         "unrecognized_controls": [
@@ -270,13 +270,16 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
             (_NEUTRAL_SELECTIONS | _REQUIRED_SELECTIONS | _PREFERRED_SELECTIONS | {"FULL CONTINUUM OF CARE ON ONE CAMPUS"})
         ],
         "must_haves": must,
-        "pending_clarification_requirements": pending_clarification,
         "nice_to_haves": nice,
         "in_house_only_requested": in_house_only_requested,
         "rule": "Client intent first -> verified MUST gate -> NICE-TO-HAVE MATCH/UNKNOWN/MISMATCH ordering -> objective government/regulatory evidence -> public reputation -> relevant evidence completeness.",
         "unknown_policy": "A material MUST with UNKNOWN evidence is not a pass or a fail; it triggers clarification or research and prevents finality. A specific NICE preference remains unresolved until evidence verifies that exact preference; known poor fit is MISMATCH, not UNKNOWN, and a broader category cannot silently satisfy it.",
         "external_care_policy": "A care-delivery MUST (e.g. medication management, ADL support) is satisfied by a verified in-house capability or a verified external-agency pathway as a complementary product; it is not restricted to in-house delivery unless the client explicitly asked for in-house-only care. External-vs-in-house delivery affects ranking and must be disclosed to the user, never used to silently exclude a facility.",
     }
+    # Additive only when present, so intents without a pending requirement are unchanged.
+    if pending_clarification:
+        result["pending_clarification_requirements"] = pending_clarification
+    return result
 
 
 def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Dict[str, Any]:

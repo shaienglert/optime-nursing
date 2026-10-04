@@ -135,10 +135,10 @@ def _strategy_client_blockers(strategy_context: Dict[str, Any], answered_fact_ke
             "information_gain": "HIGH",
             "reason": str(row.get("why_it_matters") or "Unresolved client fact can materially change the living-and-care strategy."),
             "answer_options": [str(value) for value in row.get("options") or []],
-            # Open-ended facts (no closed options) carry their own approved question text.
-            "fixed_question": str(row.get("question") or "") if not row.get("options") else "",
             "owner": "CLIENT",
             "source": "LIVING_STRATEGY_GUARDIAN",
+            # Questions with owner-approved wording carry it (additive only when present).
+            **({"fixed_question": str(row.get("question") or "")} if row.get("exact_wording") else {}),
         })
     return unresolved
 
