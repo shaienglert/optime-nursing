@@ -8,8 +8,7 @@ import { flushSync } from "react-dom";
 import { useQuestionnaire } from "@/context/questionnaire-context";
 import { LAS_VEGAS_MARKET_FACTS } from "@/content/public-market-content";
 import { QUESTIONNAIRE_SESSION_KEY, clearCompareSelection, clearFavoriteFacilities, clearSearchSession, saveSessionJson } from "@/lib/search-session";
-import { OptimeStaticLogo } from "@/components/brand/optime-static-logo";
-import { OomnikMark as OOmnikMark } from "@/components/brand/oomnik-mark";
+import { JourneyIcon } from "@/components/brand/journey-icon";
 
 const RELATIONSHIP_OPTIONS = [
   { label: "me", value: "Myself" },
@@ -46,11 +45,11 @@ function ChoiceLink({
       type="button"
       onClick={onClick}
       aria-pressed={selected}
-      className={`group relative mr-4 mt-4 inline-flex min-h-12 max-w-full items-center text-left text-2xl font-medium transition sm:mr-7 sm:mt-5 sm:min-h-14 sm:text-4xl ${
-        selected ? "text-[#302940]" : "text-[#675088] hover:text-[#302940]"
+      className={`group relative inline-flex min-h-12 max-w-full items-center rounded-xl border px-4 py-3 text-left text-xl font-medium transition ${
+        selected ? "border-[#0f52ba] bg-[#edf3fc] text-[#0f52ba]" : "border-[#d9dde1] bg-white text-[#1a1d20] hover:border-[#0f52ba] hover:bg-[#edf3fc]"
       }`}
     >
-      <span className={`border-b pb-1 transition ${selected ? "border-[#302940]" : "border-[#816d96] group-hover:border-[#675088]"}`}>
+      <span>
         {selected ? "✓ " : ""}{label}
       </span>
     </button>
@@ -102,86 +101,41 @@ export default function HomePage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f8f5ef] text-[#302940]">
-      <section className="relative overflow-hidden border-b border-[#e4d8e8] bg-[radial-gradient(circle_at_12%_8%,rgba(219,239,229,0.88),transparent_33%),radial-gradient(circle_at_90%_0%,rgba(255,232,202,0.72),transparent_36%),linear-gradient(180deg,#fbfaf7_0%,#f7f4ee_100%)]">
-        <div className="mx-auto w-full max-w-[1600px] px-5 pb-24 pt-6 sm:px-10 lg:px-16 lg:pb-32">
-          <nav className="flex items-center justify-end" aria-label="Main navigation">
-            <div className="flex max-w-full items-center gap-2 text-base font-medium sm:gap-5 sm:text-2xl">
-              <Link href="/workspace" className="hidden px-3 py-2 text-[#675088] hover:text-[#302940] md:inline-flex">My workspace</Link>
-              <Link href="/intake" className="max-w-[80vw] border-b border-[#816d96] px-1 py-2 text-right text-[#675088] transition hover:border-[#302940] hover:text-[#302940] sm:max-w-none">Continue where I left off</Link>
-            </div>
-          </nav>
-
-          <div className="pt-10 sm:pt-14">
-            <p className="text-4xl font-semibold tracking-[-0.03em] text-[#302940] sm:text-5xl">Welcome</p>
-            <h1 className="mt-5 max-w-none text-[2.25rem] font-semibold leading-[1.12] tracking-[-0.05em] text-[#302940] sm:text-[3.5rem] lg:text-[4.4rem]">
-              A difficult decision deserves time, care, and the right guidance.
-            </h1>
-            <div className="flex w-full justify-center overflow-visible py-10 sm:py-16"><div className="flex w-full justify-center sm:hidden"><OptimeStaticLogo variant="primary" height={64} className="items-center" /></div><div className="hidden justify-center sm:flex"><OptimeStaticLogo variant="primary" height={112} className="items-center" /></div></div>
-            <p className="max-w-none text-3xl font-medium leading-tight tracking-[-0.04em] text-[#675088] sm:text-4xl">
-              Choosing senior living has many important dimensions. Answer a few questions, and <span className="whitespace-nowrap"><span>OOmn</span><span className="relative inline-block">ı<span aria-hidden="true" className="absolute left-1/2 -translate-x-1/2 rounded-full bg-orange-500" style={{ width: "0.18em", height: "0.18em", top: "0.30em" }} /></span><span>k</span></span> will understand the case, research the options, explain what is still unknown, and help you move forward with confidence.
-            </p>
-
-            <div className="mt-14 max-w-none">
-              {heroStep === "relationship" && (
-                <div>
-                  <p className="text-3xl font-medium text-[#675088]">Let&apos;s begin naturally. A few simple answers will help us understand the person before we compare any community.</p>
-                  <h2 className="mt-5 text-4xl font-semibold tracking-[-0.04em] text-[#302940] sm:text-6xl">First, tell us who this decision is for.</h2>
-                  <p className="mt-5 text-4xl font-medium text-[#675088]">Who are you looking for?</p>
-                  <div className="mt-3">
-                    {RELATIONSHIP_OPTIONS.map((option) => (
-                      <ChoiceLink key={option.label} label={option.label} onClick={() => chooseRelationship(option.label, option.value)} />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {heroStep === "age" && (
-                <div>
-                  <button type="button" onClick={() => setHeroStep("relationship")} className="text-sm text-[#675088] hover:text-[#675088]">← Change who this is for</button>
-                  <h2 className="mt-4 text-4xl font-semibold tracking-[-0.04em] text-[#302940] sm:text-6xl">Thanks. About how old is {relationshipLabel}?</h2>
-                  <div className="mt-3">
-                    {AGE_OPTIONS.map((option) => <ChoiceLink key={option} label={option} onClick={() => chooseAge(option)} />)}
-                  </div>
-                </div>
-              )}
-
-            </div>
-            <p className="mt-12 max-w-none text-3xl font-medium leading-tight tracking-[-0.04em] text-[#302940] sm:text-4xl">No paid placement determines your recommendation. Uncertainty is shown, not hidden.</p>
-          </div>
+    <main className="min-h-screen bg-[#f5f5f3] text-[#1a1d20]">
+      <section className="mx-auto grid max-w-6xl gap-10 px-5 py-12 sm:px-8 sm:py-20 lg:grid-cols-[1fr_1.05fr] lg:items-center lg:gap-16">
+        <div>
+          <p className="text-lg font-semibold text-[#934b38]">Welcome</p>
+          <h1 className="mt-4 text-[2.65rem] font-semibold leading-[1.1] tracking-[-0.04em] sm:text-6xl">A new chapter.<br />A place that feels right.</h1>
+          <p className="mt-6 text-xl leading-8 text-[#525960]">Tell us about the person, the life they want and the support they need. We’ll help you understand the choices and take the next step at your own pace.</p>
+          <p className="mt-5 text-lg leading-8 text-[#525960]">Starting in the Las Vegas Valley. Your needs guide the recommendations.</p>
         </div>
-      </section>\n\n      <section className="border-y border-[#e4d8e8] bg-[#f6edf4]">
-        <div className="mx-auto max-w-6xl px-5 py-16 sm:px-8 lg:px-12">
-          <div className="max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#675088]">Las Vegas market transparency</p>
-            <h2 className="mt-4 text-4xl font-semibold tracking-[-0.04em] text-[#302940] sm:text-5xl">Know the market. Then find the right fit.</h2>
-            <p className="mt-5 text-lg leading-8 text-[#675088]">We publish the evidence-backed market facts we have, with definitions and sources. Market data is context — it never replaces a person-specific recommendation.</p>
-          </div>
-          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {[...LAS_VEGAS_MARKET_FACTS.supply, ...LAS_VEGAS_MARKET_FACTS.skilledNursing.slice(0, 2)].map((fact) => (
-              <div key={fact.label} className="rounded-3xl border border-[#e4d8e8] bg-white p-6">
-                <p className="text-3xl font-semibold tracking-[-0.04em] text-[#302940]">{fact.value}</p>
-                <p className="mt-2 text-sm font-medium leading-6 text-[#302940]">{fact.label}</p>
-              </div>
-            ))}
-          </div>
-          <div className="mt-8 flex flex-wrap gap-5 text-sm font-semibold">
-            <Link href="/las-vegas-senior-living" className="text-[#675088] underline underline-offset-4">See definitions and sources →</Link>
-            <Link href="/guides" className="text-[#675088] underline underline-offset-4">Read family research guides →</Link>
-          </div>
+        <div id="start-search" className="scroll-mt-40 rounded-xl border border-[#e0e2e4] bg-white p-6 shadow-[0_12px_36px_-20px_rgba(26,29,32,0.24)] sm:p-8">
+          <p className="text-base font-medium text-[#525960]">Let’s start with the person · {heroStep === "relationship" ? "1" : "2"} of 2</p>
+          {heroStep === "relationship" ? <>
+            <h2 className="mt-4 text-3xl font-semibold leading-tight">Who are you looking for?</h2>
+            <p className="mt-3 text-xl leading-8 text-[#525960]">A few simple answers will help us get to know what matters.</p>
+            <div className="mt-6 flex flex-wrap gap-3">{RELATIONSHIP_OPTIONS.map(option => <ChoiceLink key={option.label} label={option.label} onClick={() => chooseRelationship(option.label, option.value)} />)}</div>
+          </> : <>
+            <button type="button" onClick={() => setHeroStep("relationship")} className="mt-2 inline-flex min-h-12 items-center gap-2 text-lg font-medium text-[#0f52ba]"><JourneyIcon kind="back" />Change who this is for</button>
+            <h2 className="mt-4 text-3xl font-semibold leading-tight">Thanks. About how old is {relationshipLabel}?</h2>
+            <div className="mt-6 flex flex-wrap gap-3">{AGE_OPTIONS.map(option => <ChoiceLink key={option} label={option} onClick={() => chooseAge(option)} />)}</div>
+          </>}
+          <Link href="/intake" className="mt-7 inline-flex min-h-12 items-center text-lg font-medium text-[#0f52ba] underline underline-offset-4">Continue where I left off</Link>
         </div>
       </section>
-
-      <footer className="bg-[#f4f1eb]">
-        <div className="mx-auto flex max-w-6xl flex-col gap-4 px-5 py-8 text-sm text-[#675088] sm:px-8 md:flex-row md:items-center md:justify-between lg:px-12">
-          <p>© {new Date().getFullYear()} OOmnik. Finding You the Right Way.</p>
-          <div className="flex flex-wrap gap-5">
-            <Link href="/workspace" className="hover:text-[#302940]">Workspace</Link>
-            <Link href="/profiles" className="hover:text-[#302940]">Saved profiles</Link>
-            <Link href="/admin" prefetch={false} className="hover:text-[#302940]">Admin</Link>
-          </div>
+      <section id="how-it-works" className="mx-auto max-w-6xl scroll-mt-40 px-5 pb-14 sm:px-8 sm:pb-20">
+        <h2 className="text-3xl font-semibold tracking-tight">A little clarity, one step at a time</h2>
+        <div className="mt-7 grid gap-5 md:grid-cols-3">
+          {[
+            { kind: "conversation" as const, title: "Tell us what matters", text: "We’ll talk about everyday life, support, location and the budget you feel comfortable with." },
+            { kind: "home" as const, title: "Understand your choices", text: "See why each place is in your search, what the evidence supports and what still needs checking." },
+            { kind: "forward" as const, title: "Choose your next step", text: "Explore a visit or a complete price plan when you feel ready. Dates and services need the community’s confirmation." },
+          ].map(step => <article key={step.title} className="rounded-xl border border-[#e0e2e4] bg-white p-7 shadow-[0_8px_24px_-18px_rgba(26,29,32,0.2)]"><JourneyIcon kind={step.kind} size={40} /><h3 className="mt-5 text-2xl font-semibold">{step.title}</h3><p className="mt-3 text-xl leading-8 text-[#525960]">{step.text}</p></article>)}
         </div>
-      </footer>
+        <div className="mt-8 rounded-xl border-l-4 border-[#e07a5f] bg-[#f8eae4] p-7 sm:p-9"><p className="text-2xl font-semibold leading-9">Your life. Your choice. Guidance you can understand.</p><p className="mt-3 text-xl leading-8">No paid placement determines your recommendation. We explain what we know and what still needs checking, so you can decide with confidence.</p></div>
+        <details className="mt-8 text-lg"><summary className="inline-flex min-h-12 cursor-pointer items-center font-medium text-[#0f52ba] underline underline-offset-4">Explore the Las Vegas market evidence</summary><p className="mt-3 leading-8 text-[#525960]">Market facts give context; your personal needs guide the match.</p><div className="mt-5 grid gap-4 sm:grid-cols-2">{LAS_VEGAS_MARKET_FACTS.supply.map(fact => <p key={fact.label} className="rounded-xl border border-[#e0e2e4] bg-white p-5"><strong className="block text-2xl">{fact.value}</strong>{fact.label}</p>)}</div><Link href="/las-vegas-senior-living" className="mt-4 inline-flex min-h-12 items-center underline">Read definitions and sources</Link></details>
+      </section>
+      <footer className="bg-[#1a1d20] text-white"><div className="mx-auto flex max-w-6xl flex-col gap-5 px-5 py-9 sm:px-8 md:flex-row md:items-center md:justify-between"><p className="text-lg">© {new Date().getFullYear()} OOmnik. Finding You the Right Way.</p><div className="flex flex-wrap gap-x-6 gap-y-2 text-lg"><Link href="/guides" className="inline-flex min-h-12 items-center underline underline-offset-4">Family guides</Link><Link href="/workspace" className="inline-flex min-h-12 items-center underline underline-offset-4">Saved conversations</Link><Link href="/admin" prefetch={false} className="inline-flex min-h-12 items-center underline underline-offset-4">Admin</Link></div></div></footer>
     </main>
   );
 }

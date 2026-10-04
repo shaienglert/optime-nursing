@@ -32,11 +32,11 @@ export function FacilityPersonalFit({ facilityId, facilityName, backHref }: { fa
     if (cached.requestKey === requestKey) decision = cached.response;
   } catch { /* No current search is saved in this session. */ }
   const item = state.questionnaireCompletion.clientSummaryConfirmed ? recommendationFromDecision(decision, facilityId) : null;
-  return <section className="rounded-3xl border border-[#e4d8e8] bg-white p-5 sm:p-8">
-    <h2 className="text-3xl font-semibold text-[#302940]">{item ? "Why this place fits your search" : "Explore this community"}</h2>
+  return <section className="rounded-xl border border-[#e0e2e4] bg-white p-5 sm:p-8">
+    <h2 className="text-3xl font-semibold text-[#1a1d20]">{item ? "Why this place fits your search" : "Explore this community"}</h2>
     {item ? <div className="mt-4"><PersonalNarrative state={state} decisionId={decision?.decision_id || undefined} facilityId={facilityId} query={query} fallback={facilityExplanation(item, decision?.patient_needs_profile?.needs)} />
       <details className="mt-4 text-base"><summary className="cursor-pointer underline underline-offset-4">The matching facts behind this explanation</summary>{item.explanation?.why_matches.map(text => <p key={text} className="mt-2 leading-7">{text}</p>)}</details>
-      {(item.explanation?.concerns || []).filter(text => !isOutsideCareConcern(text)).length ? <div className="mt-5 rounded-2xl bg-amber-50 p-5 text-lg leading-8"><h3 className="font-semibold">Something I want you to know</h3>{item.explanation.concerns.filter(text => !isOutsideCareConcern(text)).map(text => <p key={text}>{text}</p>)}</div> : null}
+      {(item.explanation?.concerns || []).filter(text => !isOutsideCareConcern(text)).length ? <div className="mt-5 rounded-xl bg-amber-50 p-5 text-lg leading-8"><h3 className="font-semibold">Something I want you to know</h3>{item.explanation.concerns.filter(text => !isOutsideCareConcern(text)).map(text => <p key={text}>{text}</p>)}</div> : null}
       {(item.explanation?.needs_verification || []).length ? <div className="mt-5 text-lg leading-8"><h3 className="font-semibold">Before you decide</h3>{item.explanation.needs_verification.map(text => <p key={text}>{text}</p>)}</div> : null}
     </div> : <p className="mt-4 text-lg leading-8">A personal recommendation is available after you complete and confirm your questionnaire. The details below describe the evidence we have for this community.</p>}
     {item ? <ServiceBudgetPlan item={item} budget={state.budget} couple={state.relationship === "Couple"} needs={decision?.patient_needs_profile?.needs} options={decision?.care_partner_options} /> : null}

@@ -1,16 +1,16 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fffaf2;
-  --foreground: #302940;
+  --background: #f5f5f3;
+  --foreground: #1a1d20;
   --surface: #ffffff;
   --surface-alt: #f6fbff;
-  --muted: #65596e;
-  --primary: #675088;
+  --muted: #525960;
+  --primary: #0f52ba;
   --primary-contrast: #ffffff;
-  --accent: #a94727;
+  --accent: #e07a5f;
   --danger: #9a3f35;
-  --ring: #816d96;
+  --ring: #0f52ba;
 }
 
 @theme inline {
@@ -31,8 +31,8 @@ html[data-font-scale="large"] { font-size: 112.5%; }
 html[data-font-scale="x-large"] { font-size: 125%; }
 
 ::selection {
-  background: #f4dbc7;
-  color: #2f2a24;
+  background: #f8eae4;
+  color: #1a1d20;
 }
 
 :focus-visible {
@@ -90,16 +90,16 @@ html[data-font-scale="x-large"] { font-size: 125%; }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #201b29;
-    --foreground: #faf1e9;
-    --surface: #2b2435;
-    --surface-alt: #352d41;
-    --muted: #d4c7dc;
-    --primary: #c5a8df;
-    --primary-contrast: #201b29;
-    --accent: #ffc195;
+    --background: #1a1d20;
+    --foreground: #f5f5f3;
+    --surface: #24282d;
+    --surface-alt: #30363d;
+    --muted: #c9d0d7;
+    --primary: #9fc4ff;
+    --primary-contrast: #1a1d20;
+    --accent: #f2a48e;
     --danger: #f0a59b;
-    --ring: #d6b9ee;
+    --ring: #9fc4ff;
   }
 }
 
@@ -107,4 +107,9 @@ html[data-font-scale="x-large"] { font-size: 125%; }
   :root {
     --ring: #0b5fff;
   }
+}
+
+html { scroll-padding-top: 10rem; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }

@@ -35,10 +35,10 @@ export function FontSizeControl() {
   }
 
   return (
-    <div className="inline-flex items-center rounded-full border border-[#e4d8e8] bg-white p-1 shadow-sm" aria-label="Text size">
-      <button type="button" onClick={() => update("normal")} aria-pressed={scale === "normal"} className={`min-h-10 min-w-10 rounded-full px-2 text-sm font-semibold ${scale === "normal" ? "bg-[#f6edf4] text-[#302940]" : "text-[#675088] hover:bg-[#f6edf4]"}`}>A−</button>
-      <button type="button" onClick={() => update("large")} aria-pressed={scale === "large"} className={`min-h-10 min-w-10 rounded-full px-2 text-base font-semibold ${scale === "large" ? "bg-[#f6edf4] text-[#302940]" : "text-[#675088] hover:bg-[#f6edf4]"}`}>A</button>
-      <button type="button" onClick={() => update("x-large")} aria-pressed={scale === "x-large"} className={`min-h-10 min-w-10 rounded-full px-2 text-lg font-semibold ${scale === "x-large" ? "bg-[#f6edf4] text-[#302940]" : "text-[#675088] hover:bg-[#f6edf4]"}`}>A+</button>
+    <div className="inline-flex items-center rounded-xl border border-[#e0e2e4] bg-white p-1 shadow-sm" aria-label="Text size">
+      <button type="button" onClick={() => update("normal")} aria-pressed={scale === "normal"} className={`min-h-12 min-w-12 rounded-xl px-2 text-sm font-semibold ${scale === "normal" ? "bg-[#edf3fc] text-[#1a1d20]" : "text-[#0f52ba] hover:bg-[#edf3fc]"}`}>A−</button>
+      <button type="button" onClick={() => update("large")} aria-pressed={scale === "large"} className={`min-h-12 min-w-12 rounded-xl px-2 text-base font-semibold ${scale === "large" ? "bg-[#edf3fc] text-[#1a1d20]" : "text-[#0f52ba] hover:bg-[#edf3fc]"}`}>A</button>
+      <button type="button" onClick={() => update("x-large")} aria-pressed={scale === "x-large"} className={`min-h-12 min-w-12 rounded-xl px-2 text-lg font-semibold ${scale === "x-large" ? "bg-[#edf3fc] text-[#1a1d20]" : "text-[#0f52ba] hover:bg-[#edf3fc]"}`}>A+</button>
     </div>
   );
 }
