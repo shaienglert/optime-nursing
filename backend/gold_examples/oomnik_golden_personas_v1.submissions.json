@@ -157,12 +157,6 @@
           "answer": "Nice to have"
         },
         {
-          "id": "personalDestinationLabel",
-          "kind": "single",
-          "required": true,
-          "answer": "No specific destination"
-        },
-        {
           "id": "moveLossConcerns",
           "kind": "multi",
           "required": true,
@@ -603,12 +597,6 @@
           "kind": "single",
           "required": true,
           "answer": "Nice to have"
-        },
-        {
-          "id": "personalDestinationLabel",
-          "kind": "single",
-          "required": true,
-          "answer": "No specific destination"
         },
         {
           "id": "moveLossConcerns",
@@ -1064,12 +1052,6 @@
           "kind": "single",
           "required": true,
           "answer": "Nice to have"
-        },
-        {
-          "id": "personalDestinationLabel",
-          "kind": "single",
-          "required": true,
-          "answer": "No specific destination"
         },
         {
           "id": "moveLossConcerns",
@@ -1560,12 +1542,6 @@
           "answer": "Nice to have"
         },
         {
-          "id": "personalDestinationLabel",
-          "kind": "single",
-          "required": true,
-          "answer": "No specific destination"
-        },
-        {
           "id": "moveLossConcerns",
           "kind": "multi",
           "required": true,
@@ -2008,12 +1984,6 @@
           "kind": "single",
           "required": true,
           "answer": "Nice to have"
-        },
-        {
-          "id": "personalDestinationLabel",
-          "kind": "single",
-          "required": true,
-          "answer": "No specific destination"
         },
         {
           "id": "moveLossConcerns",
@@ -2459,12 +2429,6 @@
           "answer": "Nice to have"
         },
         {
-          "id": "personalDestinationLabel",
-          "kind": "single",
-          "required": true,
-          "answer": "No specific destination"
-        },
-        {
           "id": "moveLossConcerns",
           "kind": "multi",
           "required": true,
@@ -2907,12 +2871,6 @@
           "kind": "single",
           "required": true,
           "answer": "Nice to have"
-        },
-        {
-          "id": "personalDestinationLabel",
-          "kind": "single",
-          "required": true,
-          "answer": "No specific destination"
         },
         {
           "id": "moveLossConcerns",
@@ -3375,12 +3333,6 @@
           "kind": "single",
           "required": true,
           "answer": "Nice to have"
-        },
-        {
-          "id": "personalDestinationLabel",
-          "kind": "single",
-          "required": true,
-          "answer": "No specific destination"
         },
         {
           "id": "moveLossConcerns",
@@ -3864,12 +3816,6 @@
           "answer": "Nice to have"
         },
         {
-          "id": "personalDestinationLabel",
-          "kind": "single",
-          "required": true,
-          "answer": "No specific destination"
-        },
-        {
           "id": "moveLossConcerns",
           "kind": "multi",
           "required": true,
@@ -4315,12 +4261,6 @@
           "kind": "single",
           "required": true,
           "answer": "Nice to have"
-        },
-        {
-          "id": "personalDestinationLabel",
-          "kind": "single",
-          "required": true,
-          "answer": "No specific destination"
         },
         {
           "id": "moveLossConcerns",

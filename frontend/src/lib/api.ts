@@ -420,7 +420,30 @@ export type LocationScope = {
   client_action?: "CONFIRM_EXPANSION" | "CONFIRM_LOCATION" | null;
 };
 
+export type OOmnikerPreferenceSuggestion = {
+  parameter: string;
+  authority: "PREFERENCE";
+  action: "OFFER_PREFERENCE_ALTERNATIVE";
+  alternative_value: string;
+  message: string;
+  new_recommendation_count: number;
+  requires_client_approval: boolean;
+  may_auto_change: boolean;
+  candidates: Array<{
+    canonical_facility_id: string;
+    facility_name?: string;
+    unresolved_preferences: string[];
+    entrance_fee?: number | null;
+    quality_advantage: { parameter: string; source_family: string; value: number | number[]; compared_value: number | number[]; compared_facility_id: string; direction: string };
+  }>;
+};
+
 export type DecisionEngineResponse = {
+  oomniker?: {
+    suggestions?: Array<OOmnikerPreferenceSuggestion | { action: "VERIFY_WITH_COMMUNITIES"; parameter: string }>;
+    constraint_impacts?: Array<{ parameter: string; authority: string; blocked_count: number; sole_verified_blocker_count: number }>;
+    preference_analysis?: { eligible_candidate_count?: number; parameters?: Array<{ parameter: string; verified_mismatch_count: number; unknown_count: number; eligible_below_display_count: number; new_recommendation_count: number }> };
+  };
   pending_evidence_summary?: {
     candidate_count: number;
     unresolved_requirements: string[];

@@ -651,6 +651,13 @@ def apply_must_ai_nice_pipeline(
             "presentation": "DEGRADED_UNRANKED_ELIGIBLE_SET",
             "rule": "AI ranking failure may remove AI ordering, but it may not erase the deterministic MUST-qualified candidate set.",
         }
+    from app.services.oomniker_preference_analysis import analyze_preferences
+    result["oomniker_preference_analysis"] = analyze_preferences(
+        rankable, client_intent, questionnaire_state, _layered_rank,
+        display_limit=min(5, max(0, int(limit))),
+        dynamic_preference_count=int(dynamic_preferences.get("preference_count") or 0),
+        dynamic_preferences=dynamic_preferences,
+    )
     result["decision_intelligence"] = decision
     return result
 
