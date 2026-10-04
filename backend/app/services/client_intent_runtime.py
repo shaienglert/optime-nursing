@@ -219,11 +219,8 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
     move_timing = str(questionnaire_state.get("moveTiming") or "").strip()
     if move_timing.lower() in URGENT_MOVE_TIMINGS:
         add_must(URGENT_AVAILABILITY_KEY, f"The family needs to move {move_timing.lower()}; current availability must be confirmed.", "current availability YES/LIMITED from governed evidence or direct confirmation")
-    if move_timing and move_timing.lower() not in {"not sure", "planning ahead"}:
-        # Owner decision (2026-10-04): availability is never required beyond the urgent-move
-        # MUST above. A community that publishes vacancies is relevant; FULL (YES) ranks above
-        # LIMITED, and a recorded NO ranks lowest without excluding a later move.
-        add_nice("AVAILABILITY_FIT", "A community that publishes current vacancies is more relevant; full availability ranks above limited.")
+    elif move_timing and move_timing.lower() not in {"not sure", "planning ahead"}:
+        add_nice("AVAILABILITY_FIT", "Verified availability should fit the client's requested move timing.")
 
     future_profile = human_profile.get("futureCareProfile") if isinstance(human_profile.get("futureCareProfile"), dict) else {}
     continuum_selections = {
@@ -564,21 +561,8 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
                 nice_fit_scores[key] = 0.0
             else:
                 nice_unknown.append(key)
-        elif key == "AVAILABILITY_FIT":
-            recorded = _upper((row.get("verified_capabilities") or {}).get("current_availability"))
-            if recorded == "YES":
-                nice_match.append(key)
-                nice_fit_scores[key] = 100.0
-            elif recorded == "LIMITED":
-                nice_match.append(key)
-                nice_fit_scores[key] = 50.0
-            elif recorded == "NO":
-                nice_mismatch.append(key)
-                nice_fit_scores[key] = 0.0
-            else:
-                nice_unknown.append(key)
-        elif key == "BUDGET_FIT":
-            parameter_id = "current_price"
+        elif key in {"BUDGET_FIT", "AVAILABILITY_FIT"}:
+            parameter_id = "current_price" if key == "BUDGET_FIT" else "current_availability"
             matched = {str(item.get("parameter_id") or "") for item in row.get("matched_needs") or []}
             gaps = {str(item.get("parameter_id") or "") for item in row.get("unmet_verified_needs") or []}
             if parameter_id in matched:
