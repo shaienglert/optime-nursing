@@ -23,6 +23,7 @@ from app.services.canonical_gap_policy import normalize_gap_key
 from app.services.semantic_packet_wire import normalize_wire, parse_wire_json, provider_schema
 
 SEMANTIC_AI_SYSTEM_RULES = [
+    "Owner policy: insurance, Medicare and Medicaid coverage are outside the search. Do not ask coverage questions or use coverage to create MUST/NICE, readiness blockers, research tasks or budget additions. Preserve volunteered coverage only as context to settle directly with the facility. Compare the client monthly budget with the published starting monthly price; final care fees and coverage are confirmed with the facility.",
     "Existing questionnaire selections are client evidence, separate from new narrative extraction. For each selected facility property, a statement may quote its exact existing questionnaire value and map its existing canonical path; do not emit questionnaire_patch_fields for unchanged selections. Only new/corrected fields need a user_text quote. When user_text is empty, emit no new patch fields. Preserve requested values as MUST/NICE traces using their separate requirement control.",
     "When requested property values have a separate Requirement/Preference control, enumerate each actual requested value in its own quoted MUST/NICE statement according to that control. This applies to arbitrary selected activities and other property lists. The control value itself is CONTEXT; absence-of-preference choices are CONTEXT. Do not leave requested values only in an advisory summary or transition context.",
     "The preferences string array is advisory metadata, never an independent decision source. Preserve every actual desired facility property, including arbitrary open-ended activities, in a quoted NICE statement trace. Do not leave a genuine facility preference only in preferences or classify its trace CONTEXT. Absence of preference and control values stay CONTEXT. Repairs must preserve these source traces.",
@@ -80,8 +81,6 @@ def _required_output_schema() -> Dict[str, Any]:
             "assistanceLevel": "Fully independent|Light assistance|Help with bathing|Help with dressing|Help with toileting|Help with medications|Daytime supervision|24/7 support required|Skilled nursing care",
             "memoryStatus": "No|Occasionally forgetful|Mild memory issues|Significant memory issues|Not sure",
             "budget": "positive monthly integer",
-            "medicaidStatus": "Approved|Application pending|May qualify|Not eligible|Not sure",
-            "medicareStatus": "Original Medicare|Medicare Advantage|No Medicare|Not sure",
             "moveTiming": "Immediately|Within 30 days|1-3 months|3-6 months|Planning ahead|Not sure",
             "coupleAssistance": "ONE STRING describing each partner's explicit assistance needs; never a dictionary or list",
             "referenceLocationValue": "explicit city/market string",

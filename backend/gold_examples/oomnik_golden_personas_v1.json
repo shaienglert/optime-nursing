@@ -2,7 +2,6 @@
   "schema_version": "oomnik-golden-personas/1",
   "about": "The ten golden browser personas, as answers keyed by intake question id (frontend/src/lib/intake-questions.ts QUESTIONS[].id) -- never by prompt wording. The intake's own set() functions turn them into a QuestionnaireState, which is the Structured Profile's BUTTON layer. frontend/tests/golden-personas.test.ts validates every persona against the live question graph and writes oomnik_golden_personas_v1.submissions.json; backend tests run those submissions through the decision engine; the browser journey only replays the same answers by data-question-id. Edit this file, then regenerate with `GOLDEN_PERSONAS_WRITE=1 npx vitest run tests/golden-personas.test.ts`.",
   "defaults": {
-    "medicaidAmountKnown": "Amount not known",
     "assistance": [
       "Help with bathing",
       "Help with dressing",
@@ -14,7 +13,6 @@
     "memoryStatus": "No",
     "hasOngoingMedicalNeeds": "No",
     "recentHospitalization": "No",
-    "medicaidStatus": "Not eligible",
     "moveTiming": "1-3 months",
     "moveAttitude": "Cautious but open",
     "socialFrequency": "Weekly",
@@ -153,7 +151,6 @@
         "recentHospitalization": "Yes",
         "hospitalTiming": "Within 30 days",
         "rehabNeed": "Yes",
-        "medicareStatus": "Original Medicare",
         "recentProcedure": "No"
       },
       "oracle": {
@@ -201,15 +198,14 @@
     },
     {
       "id": "pilot-006",
-      "title": "Very low budget, Medicaid application pending",
+      "title": "Limited monthly starting-price budget",
       "answers": {
         "relationship": "Mom",
         "ageGroup": "80-84",
         "referenceAddress": "Las Vegas",
         "maximumDistanceMiles": "30",
-        "budget": 3000,
-        "moveTiming": "Within 30 days",
-        "medicaidStatus": "Application pending"
+        "budget": 4000,
+        "moveTiming": "Within 30 days"
       },
       "oracle": {
         "care": [
@@ -217,14 +213,11 @@
           "SMALL_GROUP_HOME"
         ],
         "required": [
-          "adl_support",
-          "medicaid_pathway"
+          "adl_support"
         ],
-        "budget": 3000,
+        "budget": 4000,
         "location": "Las Vegas",
-        "distance": "30",
-        "medicaid": "REQUIRED",
-        "zero_result": "EVIDENCE_PENDING"
+        "distance": "30"
       }
     },
     {

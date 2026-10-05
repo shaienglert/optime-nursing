@@ -364,6 +364,9 @@ def _run_prepared_decision(questionnaire_state: Dict[str, Any], natural_language
     patient_profile["client_intent"] = client_intent
 
     rows = list(core.get("results") or [])
+    from app.services.decision_pipeline import _attach_room_pricing_truth, _refresh_starting_price_need
+    _attach_room_pricing_truth(rows)
+    _refresh_starting_price_need(rows, questionnaire_state.get("budget"))
     attach_provider_housing_evidence(rows)
     _stage_started = _mark("attach_provider_housing_evidence_ms", _stage_started)
     attach_human_person_fit(rows, human_context)

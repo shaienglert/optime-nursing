@@ -1,25 +1,10 @@
-"""Affordability floor and the Medicaid pathway CLIENT MUST.
-
-Business rule (owner, 2026-10-01):
-
-* The affordability floor of a search is the lowest starting monthly price among the
-  communities of THAT search's candidate universe (same market, same location scope) that
-  have already passed the SYSTEM MUSTs and the family's required care needs. It is computed
-  after SYSTEM MUST/care and before any budget or Medicaid gate, so neither can shape it.
-* When the stated budget is below that floor and Medicaid is Approved or Application
-  pending, private pay cannot fund any community that meets the care needs, so the Medicaid
-  pathway becomes a CLIENT MUST.
-* UNKNOWN Medicaid acceptance is never PASS; it is a verification item.
-* OOMNIKER may explain that the MUST narrows supply and suggest funding alternatives, but
-  may not remove a CLIENT MUST without family approval.
-
-Nothing here knows a price, a persona, or a particular care combination: the floor is read
-off the rows the search produced, and "care" is the family's own HIGH/REQUIRED needs plus
-the care MUSTs in their client intent.
+"""Monthly starting-price filtering. Owner 2026-10-05: insurance is outside search.
+See docs/MONTHLY_STARTING_PRICE_POLICY.md; legacy wire helpers retain names only.
 """
 from __future__ import annotations
 
 from typing import Any, Dict, Iterable, List, Optional
+from math import isfinite
 
 MEDICAID_PATHWAY_KEY = "MEDICAID_PATHWAY_REQUIRED"
 MEDICAID_PURSUING_STATUSES = {"approved", "application pending"}
@@ -139,57 +124,10 @@ def apply_medicaid_affordability_rule(
     The caller must re-evaluate client intent fit when ``promoted`` is True.
     """
     floor = compute_affordability_floor(rows, client_intent, patient_profile)
-    medicaid_status = str(questionnaire_state.get("medicaidStatus") or "").strip().lower()
-    budget = _budget(questionnaire_state)
-    floor_price = floor["floor_monthly_price"]
-    already = any(str(m.get("key") or "") == MEDICAID_PATHWAY_KEY for m in client_intent.get("must_haves") or [])
-    pursuing = medicaid_status in MEDICAID_PURSUING_STATUSES
-    below_floor = budget is not None and floor_price is not None and budget < floor_price
-
-    if not pursuing:
-        outcome = "NOT_APPLICABLE_MEDICAID_NOT_PURSUED"
-    elif budget is None:
-        outcome = "NOT_DETERMINED_NO_BUDGET"
-    elif floor_price is None:
-        # No community in this search has passed the care needs with a known price, so
-        # affordability cannot be compared. Not a reason to invent a MUST; it is a gap the
-        # explanation layer must state.
-        outcome = "NOT_DETERMINED_NO_QUALIFIED_PRICE"
-    elif below_floor:
-        outcome = "MEDICAID_PATHWAY_CLIENT_MUST"
-    else:
-        outcome = "PRIVATE_PAY_REACHABLE"
-
-    promoted = outcome == "MEDICAID_PATHWAY_CLIENT_MUST" and not already
-    record = {
-        **floor,
-        "budget": budget,
-        "medicaid_status": questionnaire_state.get("medicaidStatus"),
-        "outcome": outcome,
-        "medicaid_pathway_client_must": outcome == "MEDICAID_PATHWAY_CLIENT_MUST",
-        "removal_policy": "A CLIENT MUST may be explained and alternatives suggested; it is removed only with family approval.",
-    }
-    if promoted:
-        client_intent.setdefault("must_haves", []).append({
-            "key": MEDICAID_PATHWAY_KEY,
-            "reason": (
-                f"The ${budget:,.0f} budget is below ${floor_price:,.0f}, the lowest price among communities "
-                "in this search that meet the care needs, and Medicaid is "
-                f"{str(questionnaire_state.get('medicaidStatus') or '').lower()}; only a Medicaid pathway can fund a placement."
-            ),
-            "verification": "verified Medicaid acceptance (waiver/HCBS or Medicaid-certified bed); UNKNOWN is not a pass",
-            "origin": "AFFORDABILITY_FLOOR_RULE",
-            "client_must": True,
-            "removable_only_with_family_approval": True,
-        })
-        for need in patient_profile.get("needs") or []:
-            if need.get("parameter_id") == "medicaid_attributes":
-                need["requirement_level"] = "HIGH"
-                need["acceptable_values"] = ["YES"]
-                need["need_text"] = "Medicaid pathway is a CLIENT MUST: the budget is below the care-qualified price floor of this search"
-                need["promoted_by"] = "AFFORDABILITY_FLOOR_RULE"
+    client_intent["must_haves"] = [m for m in client_intent.get("must_haves", []) if m.get("key") != MEDICAID_PATHWAY_KEY]
+    record = {**floor, "budget": _budget(questionnaire_state), "outcome": "INSURANCE_OUTSIDE_SEARCH", "medicaid_pathway_client_must": False}
     client_intent["affordability_floor"] = record
-    return {**record, "promoted": promoted}
+    return {**record, "promoted": False}
 
 
 # ---- Funding pathway (owner, 2026-10-01) ------------------------------------------------
@@ -210,31 +148,24 @@ def _money(value: Any) -> Optional[float]:
         number = float(value)
     except (TypeError, ValueError):
         return None
-    return number if number >= 0 else None
+    return number if isfinite(number) and number >= 0 else None
 
 
 def apply_funding_pathway(rows: List[Dict[str, Any]], client_intent: Dict[str, Any]) -> str:
-    keys = {str(m.get("key") or "") for m in client_intent.get("must_haves") or []}
-    pathway = "MEDICAID" if MEDICAID_PATHWAY_KEY in keys else "PRIVATE_PAY"
+    pathway = "PRIVATE_PAY"  # monthly starting-price search only
     client_intent["funding_pathway"] = pathway
     for row in rows:
         row["funding_pathway"] = pathway
-        if pathway == "MEDICAID":
-            row["relevant_monthly_cost"] = _money((row.get("verified_capabilities") or {}).get(MEDICAID_OOP_PARAMETER))
-            row["relevant_cost_basis"] = "MEDICAID_HOUSEHOLD_OUT_OF_POCKET"
-        else:
-            row["relevant_monthly_cost"] = _money(row.get("starting_monthly_price"))
-            row["relevant_cost_basis"] = "PRIVATE_PAY_PRICE"
+        row["relevant_monthly_cost"] = relevant_monthly_cost(row)
+        row["relevant_cost_basis"] = "MONTHLY_STARTING_PRICE"
     return pathway
 
 
 def relevant_monthly_cost(row: Dict[str, Any]) -> Optional[float]:
     """The cost the budget is compared with for this row (see apply_funding_pathway)."""
-    if row.get("funding_pathway") == "MEDICAID":
-        return row.get("relevant_monthly_cost")
-    # Private pay: always the current price (later stages may complete it, e.g. a couple's
-    # second-resident fee), never a stale copy.
-    return _money(row.get("starting_monthly_price"))
+    rooms = [room.get("base_price") for room in row.get("room_pricing_options") or [] if isinstance(room, dict)]
+    prices = [price for value in rooms if (price := _money(value)) is not None and price > 0]
+    return min(prices) if prices else _money(row.get("starting_monthly_price"))
 
 
 __all__ = [

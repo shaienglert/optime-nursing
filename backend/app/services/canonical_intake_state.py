@@ -53,6 +53,7 @@ def canonicalize_intake_state(questionnaire_state: Mapping[str, Any] | None) -> 
     """Return an idempotent copy with explicit identity vocabulary normalized."""
 
     state: Dict[str, Any] = deepcopy(dict(questionnaire_state or {}))
+    state = without_insurance(state)
     raw_relationship = str(state.get("relationship") or "").strip()
     raw_gender = str(state.get("gender") or "").strip()
 
@@ -70,3 +71,20 @@ def canonicalize_intake_state(questionnaire_state: Mapping[str, Any] | None) -> 
         state["gender"] = relationship_gender
 
     return state
+
+
+INSURANCE_FIELDS = frozenset({"medicaidStatus", "medicareStatus", "medicaidAmountKnown", "medicaidMonthlyAmount", "medicaidBudgetIncludesSupport", "medicaidBudgetScenarioChoice", "medicaidOriginalBudget"})
+
+def without_insurance(state: Mapping[str, Any]) -> Dict[str, Any]:
+    """Owner 2026-10-05: insurance is settled with providers, never a search input."""
+    out = deepcopy(dict(state))
+    original = out.get("medicaidOriginalBudget")
+    if out.get("medicaidBudgetScenarioChoice") == "Include support in my search" and isinstance(original, (int, float)) and not isinstance(original, bool):
+        out["budget"] = original
+    def clean(value):
+        if isinstance(value, dict):
+            return {key: clean(item) for key, item in value.items() if key not in INSURANCE_FIELDS}
+        if isinstance(value, list):
+            return [clean(item) for item in value]
+        return value
+    return clean(out)

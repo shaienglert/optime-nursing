@@ -21,14 +21,14 @@ describe("explicit narrative facts reach confirmation", () => {
     initial.humanIntelligenceV2.scoringEngine = { adaptiveSignals: [{ answer: "Not sure", impactExplanation: "Target fact: monthly_budget" }] } as never;
     expect(applySemanticQuestionnairePatch(initial, { budget: 7000 }).budget).toBe(0);
   });
-  it("retains coverage, timing, exact address and a non-preset radius", () => {
+  it("ignores coverage while retaining timing, exact address and radius", () => {
     const initial = blankState();
     const result = applySemanticQuestionnairePatch(initial, {
       medicareStatus: "Original Medicare", moveTiming: "Within 30 days", budget: 2500,
       referenceAddress: "333 S Valley View Blvd, Las Vegas NV 89107", maximumDistanceMiles: "15", locationImportant: "Yes",
       humanIntelligenceV2: { transitionRiskProfile: { attitudeTowardMove: "Cautious but open" }, culturalProfile: { religionImportance: "No" } },
     });
-    expect(result.medicareStatus).toBe("Original Medicare");
+    expect(result.medicareStatus).toBe("");
     expect(result.moveTiming).toBe("Within 30 days");
     expect(result.budget).toBe(2500);
     expect(result.maximumDistanceMiles).toBe("15");

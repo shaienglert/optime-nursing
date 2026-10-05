@@ -428,23 +428,6 @@ def _map_financial(questionnaire: Dict[str, Any], needs_by_id: Dict[str, Any]) -
             0.9,
             "Current or near-term availability is preferred",
         )
-    medicaid_status = _normalize(questionnaire.get("medicaidStatus"))
-    if medicaid_status in {"approved", "application pending", "may qualify", "not sure"}:
-        # Whether Medicaid is a CLIENT MUST depends on the affordability floor of the
-        # search -- the lowest price among candidates that passed SYSTEM MUST and the care
-        # needs -- which this stage cannot know. The runtime decides it after the MUST/care
-        # gate (app/services/affordability_floor.py) and promotes this need there.
-        _add_need(
-            needs_by_id,
-            "medicaid_attributes",
-            "PREFERENCE",
-            "YES",
-            ["YES", "UNKNOWN"],
-            "FACILITY",
-            "questionnaire.medicaidStatus",
-            1.0,
-            "Medicaid/payment pathway should be confirmed",
-        )
 
 
 # Explicit denials that the phrase list below misses, e.g. "Neither has dementia",
@@ -534,27 +517,6 @@ def _map_natural_language(text: str, needs_by_id: Dict[str, NeedItem], *, care_d
             "Current pricing must be checked against the stated budget",
         )
         extraction_meta["recognized_tokens"].append("budget")
-
-    medicaid_negated = bool(
-        re.search(
-            r"\b(?:no|not|without|does\s+not|doesn't|will\s+not|won't)\b[^.!?\n]{0,50}\bmedicaid\b"
-            r"|\bmedicaid\b[^.!?\n]{0,40}\b(?:not\s+(?:needed|required|applicable)|isn't\s+(?:needed|required|applicable))\b",
-            normalized,
-        )
-    )
-    if "medicaid" in normalized and not medicaid_negated:
-        _add_need(
-            needs_by_id,
-            "medicaid_attributes",
-            "PREFERENCE",
-            "YES",
-            ["YES", "UNKNOWN"],
-            "FACILITY",
-            "natural_language.medicaid",
-            1.0,
-            "Medicaid/payment pathway must be confirmed",
-        )
-        extraction_meta["recognized_tokens"].append("medicaid")
 
     def present(token: str) -> bool:
         token = token.lower()

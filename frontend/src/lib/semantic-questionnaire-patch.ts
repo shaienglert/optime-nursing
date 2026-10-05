@@ -5,7 +5,7 @@ export function applySemanticQuestionnairePatch(state: QuestionnaireState, patch
   let next = JSON.parse(JSON.stringify(state)) as QuestionnaireState;
   const stringKeys: Array<keyof QuestionnaireState> = [
     "ageGroup", "assistanceLevel", "memoryStatus",
-    "medicaidStatus", "medicareStatus", "moveTiming", "referenceLocationValue",
+    "moveTiming", "referenceLocationValue",
     "referenceAddress", "locationImportant", "maximumDistanceMiles", "coupleAssistance",
     "parkingRequirement", "parkingVehicleCount",
   ];

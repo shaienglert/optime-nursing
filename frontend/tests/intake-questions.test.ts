@@ -227,16 +227,6 @@ describe("submission", () => {
     expect(submitted.medicalCareProfile.physicianCoordination).toBe("");
   });
 
-  it("drops Medicare when there was no recent hospitalization", () => {
-    let context = ctx();
-    context = answer(context, "recentHospitalization", "Yes");
-    context = answer(context, "rehabNeed", "Yes");
-    context = answer(context, "medicareStatus", "Original Medicare");
-    expect(buildSubmission(context).medicareStatus).toBe("Original Medicare");
-
-    context = answer(context, "rehabNeed", "No");
-    expect(buildSubmission(context).medicareStatus).toBe("");
-  });
 
   it("keeps memory-safety answers only while a memory concern stands", () => {
     let context = ctx();
@@ -252,52 +242,19 @@ describe("submission", () => {
   });
 });
 
-describe("Medicaid amount intake", () => {
-  it("keeps stated coverage separate from budget and clears stale amounts", () => {
-    let context = ctx();
-    context = answer(context, "medicaidStatus", "Application pending");
-    context = answer(context, "medicaidAmountKnown", "Yes");
-    context = answer(context, "medicaidMonthlyAmount", 3000);
-    context = answer(context, "budget", 5000);
-    context = answer(context, "medicaidBudgetIncludesSupport", "Additional to my budget");
-    const submitted = buildSubmission(context);
-    expect(submitted.budget).toBe(5000);
-    expect(submitted.medicaidMonthlyAmount).toBe(3000);
-    expect(submitted.medicaidBudgetIncludesSupport).toBe("Additional to my budget");
-    context = answer(context, "medicaidStatus", "Not eligible");
-    expect(buildSubmission(context).medicaidMonthlyAmount).toBe(0);
-    expect(buildSubmission(context).medicaidBudgetIncludesSupport).toBe("");
-  });
-  it("allows an unknown amount without requiring a fabricated number", () => {
-    let context = answer(ctx(), "medicaidStatus", "Approved");
-    context = answer(context, "medicaidAmountKnown", "Amount not known");
-    expect(visibleQuestions(context).map(question => question.id)).not.toContain("medicaidMonthlyAmount");
-    expect(visibleQuestions(context).map(question => question.id)).not.toContain("medicaidBudgetIncludesSupport");
-  });
-});
 
-describe("funding scenario through questionnaire", () => {
-  it("submits the family-selected search budget and restores it when support changes", () => {
-    let context = answer(ctx(), "medicaidStatus", "Application pending");
-    context = answer(context, "medicaidAmountKnown", "Yes");
-    context = answer(context, "medicaidMonthlyAmount", 3000);
-    context = answer(context, "budget", 5000);
-    context = answer(context, "medicaidBudgetIncludesSupport", "Additional to my budget");
-    context = answer(context, "medicaidBudgetScenarioChoice", "Include support in my search");
-    expect(buildSubmission(context).budget).toBe(8000);
-    context = answer(context, "medicaidMonthlyAmount", 2000);
-    expect(buildSubmission(context).budget).toBe(5000);
-    expect(context.draft.medicaidBudgetScenarioChoice).toBe("");
-  });
-  it("does not leave an expanded budget when eligibility is withdrawn", () => {
-    let context = answer(ctx(), "medicaidStatus", "Approved");
-    context = answer(context, "medicaidAmountKnown", "Yes");
-    context = answer(context, "medicaidMonthlyAmount", 3000);
-    context = answer(context, "budget", 5000);
-    context = answer(context, "medicaidBudgetIncludesSupport", "Additional to my budget");
-    context = answer(context, "medicaidBudgetScenarioChoice", "Include support in my search");
-    context = answer(context, "medicaidStatus", "Not eligible");
-    expect(buildSubmission(context).budget).toBe(5000);
-    expect(buildSubmission(context).medicaidMonthlyAmount).toBe(0);
+describe("monthly price search without insurance", () => {
+  it("never asks insurance even for rehabilitation and saved approved coverage", () => {
+    let context = ctx();
+    context.draft.medicaidStatus = "Approved";
+    context.draft.medicaidMonthlyAmount = 3000;
+    context = answer(context, "recentHospitalization", "Yes");
+    context = answer(context, "rehabNeed", "Yes");
+    expect(visibleQuestions(context).map(q => q.id).filter(id => /medicaid|medicare/i.test(id))).toEqual([]);
+    const submitted = buildSubmission(context);
+    expect(submitted.medicaidStatus).toBe("");
+    expect(submitted.medicareStatus).toBe("");
+    expect(submitted.medicaidMonthlyAmount).toBe(0);
+    expect(submitted.humanIntelligenceV2.transitionRiskProfile.postHospitalRehabNeed).toBe("Yes");
   });
 });

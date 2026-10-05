@@ -13,7 +13,6 @@ import { loadDecisionResponseCache, saveDecisionResponseCache, saveSessionJson, 
 import { isFinalRecommendation, isPendingRecommendation } from "@/lib/recommendation-eligibility";
 import { applyAdaptiveAnswer } from "@/lib/adaptive-answer";
 import { resultsClientState } from "@/lib/results-client-state";
-import { medicaidBudgetIsConditional } from "@/lib/medicaid-budget-scenario";
 import { startingPriceDisplay } from "@/lib/starting-price-display";
 import { DistanceScope } from "./distance-scope";
 import { applyMeasuredPreferenceAdvice, askMeasuredAdvisor, type AdvisorReply, type AdvisorTurn } from "@/lib/oomniker-advice";
@@ -353,7 +352,6 @@ export function SimpleResultsPageClient() {
               </p> : null}
               {response.market_coverage_notice ? <p className="mt-3 text-base leading-7">{response.market_coverage_notice}</p> : null}
               {(response.results || []).some((item) => item.budget_exception === true) ? <p className="mt-3 text-base leading-7">We did not find enough otherwise suitable communities within the budget you requested, so OOmnik is also showing suitable options up to 10% above it. The budget difference lowers their ranking and is marked on the relevant option. OOmniker can discuss measured preference changes below. To change your budget or required conditions, review your answers.</p> : null}
-              {medicaidBudgetIsConditional(state) ? <p className="mt-3 text-base leading-7">Your search budget is ${state.budget.toLocaleString()} per month and includes ${Number(state.medicaidMonthlyAmount).toLocaleString()} in Medicaid support you reported. {state.medicaidStatus === "Application pending" ? "That support is pending approval. " : ""}These options depend on that support being usable for the quoted services. OOmnik has not verified coverage or the amount you will personally pay; confirm both with the funding agency and community before committing.</p> : null}
             </div>
           ) : null}
           <details className="mt-6 text-lg"><summary className="cursor-pointer underline underline-offset-4">Keep our conversation for later</summary><div className="mt-4">
@@ -366,7 +364,6 @@ export function SimpleResultsPageClient() {
           {saveCaseOpen ? <div className="mt-4 rounded-xl border border-line bg-white p-5"><h2 className="text-2xl font-semibold">Save your OOmnik case</h2><div className="mt-4 grid gap-3 sm:grid-cols-3"><input aria-label="Name" placeholder="Name" value={caseContact.name} onChange={e=>setCaseContact(v=>({...v,name:e.target.value}))} className="rounded-xl border p-3"/><input aria-label="Email" placeholder="Email" value={caseContact.email} onChange={e=>setCaseContact(v=>({...v,email:e.target.value}))} className="rounded-xl border p-3"/><input aria-label="Phone" placeholder="Phone" value={caseContact.phone} onChange={e=>setCaseContact(v=>({...v,phone:e.target.value}))} className="rounded-xl border p-3"/></div><label className="mt-4 flex gap-3"><input type="checkbox" checked={caseContact.terms} onChange={e=>setCaseContact(v=>({...v,terms:e.target.checked}))}/><span>I agree to the Terms of Use and allow OOmnik to save this case and contact me about it.</span></label><div className="mt-4 flex gap-3"><button type="button" disabled={savingCase || !caseContact.terms || (!caseContact.email.trim() && !caseContact.phone.trim())} onClick={saveClientCase} className="rounded-xl bg-forest px-6 py-3 font-semibold text-white disabled:opacity-40">{savingCase?"Saving…":"Save case"}</button><button type="button" onClick={()=>setSaveCaseOpen(false)} className="rounded-xl border px-6 py-3">Cancel</button></div></div> : null}
           <p className="mt-5 text-lg leading-8 text-forest">Confirm current pricing and availability before any move.</p>
           <DistanceScope scope={response.location_scope} onWiden={acceptRadiusExpansion} />
-          {/medicaid/i.test(naturalLanguageQuery) ? <p className="mt-2 text-lg leading-8 text-forest">Medicaid eligibility and each community’s participation must be confirmed separately.</p> : null}
         </section>
 
         {(response.price_research_candidates || []).length > 0 ? (
