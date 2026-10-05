@@ -19,6 +19,7 @@ consent to anything else.
 
 import json
 import os
+import threading
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
@@ -29,6 +30,8 @@ from app.models.deferred_report import DeferredDecisionReport, DeferredReportSta
 # A search is only worth re-running while the family could still act on it. Past this the
 # row is abandoned rather than retried forever against a decision that has been made.
 MAX_AGE_DAYS = 14
+_MARKET_ENV_LOCK = threading.Lock()
+
 MAX_ATTEMPTS = 24
 
 
@@ -162,21 +165,26 @@ def process_pending_reports(db: Session, limit: int = 25) -> Dict[str, Any]:
             failed += 1
             continue
 
-        previous_market = os.environ.get("OPTIME_CANONICAL_MARKET")
-        if row.market:
-            os.environ["OPTIME_CANONICAL_MARKET"] = row.market
         try:
-            result = run_patient_decision_engine(questionnaire, row.query_text, limit=row.result_limit)
+            # OPTIME_CANONICAL_MARKET is process-global legacy configuration. Serialize
+            # the temporary override so concurrent deferred jobs cannot search each
+            # other's market. Long term the engine should receive market explicitly.
+            with _MARKET_ENV_LOCK:
+                previous_market = os.environ.get("OPTIME_CANONICAL_MARKET")
+                if row.market:
+                    os.environ["OPTIME_CANONICAL_MARKET"] = row.market
+                try:
+                    result = run_patient_decision_engine(questionnaire, row.query_text, limit=row.result_limit)
+                finally:
+                    if row.market:
+                        if previous_market is None:
+                            os.environ.pop("OPTIME_CANONICAL_MARKET", None)
+                        else:
+                            os.environ["OPTIME_CANONICAL_MARKET"] = previous_market
         except Exception as error:  # noqa: BLE001 -- a failed retry is a retry, not a lost request
             row.last_error = f"{type(error).__name__}: {error}"
             failed += 1
             continue
-        finally:
-            if row.market:
-                if previous_market is None:
-                    os.environ.pop("OPTIME_CANONICAL_MARKET", None)
-                else:
-                    os.environ["OPTIME_CANONICAL_MARKET"] = previous_market
 
         from app.services.canonical_decision_state import canonical_state_payload
         canonical = canonical_state_payload(result)
