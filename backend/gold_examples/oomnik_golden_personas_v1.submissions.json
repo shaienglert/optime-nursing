@@ -2269,7 +2269,7 @@
         "required": [
           "adl_support"
         ],
-        "budget": 4000,
+        "budget": 4500,
         "location": "Las Vegas",
         "distance": "30"
       },
@@ -2348,7 +2348,7 @@
           "id": "budget",
           "kind": "number",
           "required": true,
-          "answer": 4000
+          "answer": 4500
         },
         {
           "id": "moveTiming",
@@ -2486,7 +2486,7 @@
         ],
         "nearbyPlacesImportance": "Nice to have",
         "personalDestinations": [],
-        "budget": 4000,
+        "budget": 4500,
         "distanceFromFamily": "",
         "referenceLocationType": "",
         "referenceLocationValue": "Las Vegas",

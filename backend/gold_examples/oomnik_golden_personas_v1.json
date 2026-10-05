@@ -204,7 +204,7 @@
         "ageGroup": "80-84",
         "referenceAddress": "Las Vegas",
         "maximumDistanceMiles": "30",
-        "budget": 4000,
+        "budget": 4500,
         "moveTiming": "Within 30 days"
       },
       "oracle": {
@@ -215,7 +215,7 @@
         "required": [
           "adl_support"
         ],
-        "budget": 4000,
+        "budget": 4500,
         "location": "Las Vegas",
         "distance": "30"
       }
