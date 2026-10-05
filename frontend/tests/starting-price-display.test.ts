@@ -3,6 +3,17 @@ import { startingPriceDisplay } from "../src/lib/starting-price-display";
 import type { DecisionEngineRecommendation } from "../src/lib/api";
 const row = (fields: Partial<DecisionEngineRecommendation>) => fields as DecisionEngineRecommendation;
 describe("starting-price display", () => {
+  it("preserves the two-resident total instead of relabeling it as a base price", () => {
+    const text = startingPriceDisplay(row({starting_monthly_price: 5509, single_resident_starting_monthly_price: 4759, monthly_price_basis: "TWO_RESIDENT_TOTAL", monthly_rate_includes_verified_care: true, synthetic_pilot: true}), 5000);
+    expect(text).toContain("$5,509"); expect(text).not.toContain("$4,759");
+    expect(text).toContain("two residents, including the second-resident fee");
+    expect(text).toContain("verified care included"); expect(text).toContain("recorded monthly total above");
+    expect(text).not.toContain("base price");
+  });
+  it("does not infer a room base from an unscoped starting amount", () => {
+    const text = startingPriceDisplay(row({starting_monthly_price: 6000}), 7000);
+    expect(text).toContain("recorded starting price within"); expect(text).not.toContain("base price");
+  });
   it("uses the base room price without confusing it with the all-in total", () => {
     const text = startingPriceDisplay(row({starting_monthly_price: 7000, room_pricing_options: [{room_type: "Studio", base_price: 4395, price_source: "OFFICIAL_WEBSITE"}]}), 5500);
     expect(text).toContain("$4,395"); expect(text).toContain("base price within");
