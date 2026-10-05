@@ -334,6 +334,8 @@ export type DecisionEngineRecommendation = {
   facility_profile_id?: number | null;
   synthetic_pilot?: boolean;
   starting_monthly_price?: number | null;
+  price_source?: string | null;
+  room_pricing_options?: Array<{ room_type: string; base_price: number; price_source?: string | null }>;
   monthly_price_basis?: "SINGLE_RESIDENT" | "TWO_RESIDENT_TOTAL";
   monthly_rate_includes_verified_care?: boolean;
   second_resident_monthly_fee?: number | null;
