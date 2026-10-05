@@ -304,7 +304,7 @@ export type PatientNeedsProfile = {
 
 export type FundingExplanation = {
   pathway: "PRIVATE_PAY" | "MEDICAID";
-  monthly: { amount: number | null; basis: string; budget: number | null; included_in_budget: boolean | null };
+  monthly: { amount: number | null; basis: string; budget: number | null; included_in_budget: boolean | null; price_source?: string | null };
   one_time: { amount: number; available_capital: number | null; status: "CAPITAL_NOT_PROVIDED" | "FEE_WITHIN_STATED_CAPITAL" | "FEE_EXCEEDS_STATED_CAPITAL"; provider_confirmation_required: boolean } | null;
   medicaid: { state: "APPROVED" | "APPLICATION_PENDING" | "MAY_QUALIFY" | "NOT_ELIGIBLE" | "UNKNOWN"; acceptance_evidence: string; coverage_promised: boolean };
   links: string[];

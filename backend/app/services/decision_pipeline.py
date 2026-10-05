@@ -145,13 +145,14 @@ def _attach_room_pricing_truth(rows: list[dict[str, Any]]) -> None:
                 if room.monthly_price_cents is None: continue
                 total=(room.monthly_price_cents or 0)+(room.care_fee_cents or 0)+(room.mandatory_monthly_fees_cents or 0)
                 complete=room.care_fee_cents is not None and room.mandatory_monthly_fees_cents is not None
-                priced.append({"room_type":room.room_type_name,"base_price":room.monthly_price_cents/100,"total_known_monthly_cost":total/100,"total_affordability_status":"KNOWN" if complete else "PENDING","pricing_qualifier":room.pricing_qualifier or "UNKNOWN","availability_status":room.availability_status,"final_availability_status":"REQUIRES_DIRECT_VERIFICATION"})
+                priced.append({"room_type":room.room_type_name,"base_price":room.monthly_price_cents/100,"total_known_monthly_cost":total/100,"total_affordability_status":"KNOWN" if complete else "PENDING","pricing_qualifier":room.pricing_qualifier or "UNKNOWN","price_source":getattr(room,"source",None),"availability_status":room.availability_status,"final_availability_status":"REQUIRES_DIRECT_VERIFICATION"})
             row["room_pricing_options"]=priced
             known=[x for x in priced if x["total_affordability_status"]=="KNOWN"]
             if known:
                 best=min(known,key=lambda x:x["total_known_monthly_cost"])
                 row["starting_monthly_price"]=best["total_known_monthly_cost"]
                 row["price_truth_basis"]="ROOM_TOTAL_KNOWN_MONTHLY_COST"
+                row["price_source"]=best.get("price_source")
                 row["total_affordability_status"]="KNOWN"
             elif priced:
                 row["price_truth_basis"]="ROOM_BASE_ONLY_TOTAL_PENDING"

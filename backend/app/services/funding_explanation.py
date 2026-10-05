@@ -81,7 +81,7 @@ def build_funding_explanation(row: Dict[str, Any], questionnaire_state: Dict[str
                         else "Medicaid acceptance for this community is not confirmed; coverage is not promised."))
     return {
         "pathway": pathway,
-        "monthly": {"amount": amount, "basis": basis, "budget": budget, "included_in_budget": included},
+        "monthly": {"amount": amount, "basis": basis, "budget": budget, "included_in_budget": included, "price_source": row.get("price_source")},
         "one_time": one_time,
         "medicaid": medicaid,
         "links": _links(row),

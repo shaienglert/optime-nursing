@@ -14,24 +14,24 @@ const base: FundingExplanation = {
 };
 
 describe("funding display", () => {
-  it("shows monthly and one-time as separate lines and never sums them", () => {
-    const lines = fundingLines(base, true);
-    expect(lines.map((l) => l.label)).toEqual(["Monthly cost", "One-time fee (separate from monthly)", "Medicaid"]);
+  it("shows only the facility starting-at price with its source, no one-time or Medicaid lines", () => {
+    const lines = fundingLines({ ...base, monthly: { ...base.monthly, price_source: "OUTREACH" } }, true);
+    expect(lines.map((l) => l.label)).toEqual(["Starting at"]);
     expect(lines[0].text).toContain("$6,000");
-    expect(lines[0].text).not.toContain("96,000");
-    expect(lines[1].text).toContain("not assessed");
+    expect(lines[0].text).toContain("received from the facility");
+    expect(lines[0].text).not.toMatch(/one-time|medicaid|insurance|90,000/i);
   });
 
-  it("states Medicaid state and never promises coverage without evidence", () => {
-    const text = fundingLines(base, true)[2].text;
-    expect(text).toContain("Application pending");
-    expect(text).toContain("Coverage is not promised");
+  it("does not claim facility confirmation when the source is unknown", () => {
+    const text = fundingLines(base, false)[0].text;
+    expect(text).toContain("source not confirmed");
+    expect(text).not.toContain("received from the facility");
   });
 
   it("states unknown cost as unknown, not as a fit", () => {
-    const lines = fundingLines({ ...base, monthly: { ...base.monthly, amount: null, included_in_budget: null }, one_time: null }, false);
+    const lines = fundingLines({ ...base, monthly: { ...base.monthly, amount: null, included_in_budget: null } }, false);
     expect(lines).toHaveLength(1);
-    expect(lines[0].text).toContain("Not verified");
+    expect(lines[0].text).toContain("Not received");
   });
 
   it("only exposes http(s) links", () => {
@@ -43,15 +43,5 @@ describe("funding display", () => {
     const page = readFileSync("src/app/results/simple-results-page-client.tsx", "utf8");
     expect(page).toContain('data-testid="funding-explanation"');
     expect(page).toContain("fundingLines(item.funding_explanation");
-  });
-});
-
-describe("verified participation is not mistaken for the family's own approval", () => {
-  it("separates the family's Medicaid state from the community's participation", () => {
-    const verified = { ...base, medicaid: { ...base.medicaid, acceptance_evidence: "YES" as const } };
-    const text = fundingLines(verified, true)[2].text;
-    expect(text).toContain("Your status: Application pending");
-    expect(text).toContain("participation: verified");
-    expect(text).toContain("Coverage is not promised");
   });
 });
