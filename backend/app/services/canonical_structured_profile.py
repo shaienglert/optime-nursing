@@ -13,7 +13,8 @@ def _flatten(data: Dict[str,Any], prefix: str = "") -> Dict[str,Any]:
         path=f"{prefix}.{key}" if prefix else str(key)
         if isinstance(value,dict): out.update(_flatten(value,path))
         elif value not in ("",None,[],{}): out[path]=value
-    return out
+    from app.services.canonical_intake_state import without_insurance
+    return without_insurance(out)
 
 
 def _canonical_value(key: str, value: Any) -> Any:
@@ -45,7 +46,7 @@ def _compatible_values(key: str, button: Any, ai: Any) -> bool:
 # interpreter may write only these paths; anything else is OUT_OF_SCHEMA with zero weight.
 SCHEMA_FIELDS = frozenset({
     "relationship", "gender", "ageGroup", "coupleAssistance", "moveTiming", "careSearchApproach",
-    "assistanceLevel", "memoryStatus", "budget", "medicareStatus", "medicaidStatus",
+    "assistanceLevel", "memoryStatus", "budget",
     "searchState", "locationImportant", "referenceLocationType", "referenceLocationValue", "referenceAddress",
     "maximumDistanceMiles", "customDistanceMiles", "approvedSearchRadiusMiles", "distanceFromFamily",
     "nearbyPlaces", "nearbyPlacesImportance", "personalDestinations", "futureCarePreference",
@@ -80,6 +81,8 @@ def _normalized_text(text: Any) -> str:
 def build_structured_profile(questionnaire_state: Dict[str,Any], semantic_result: Dict[str,Any]|None=None, family_text: str|None=None) -> Dict[str,Any]:
     """family_text: the family's own words the interpreter read. When given, an
     AI_EXTRACTED field must carry an exact quote found in it (contract rule)."""
+    from app.services.canonical_intake_state import without_insurance
+    questionnaire_state = without_insurance(questionnaire_state)
     semantic_result=semantic_result or {}
     fields: Dict[str,Any]={}
     raw_patch=semantic_result.get("questionnaire_patch") if isinstance(semantic_result.get("questionnaire_patch"),dict) else {}

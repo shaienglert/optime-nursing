@@ -1,5 +1,6 @@
 "use client";
 
+import { withoutInsurance } from "@/lib/monthly-price-policy";
 import { createContext, useCallback, useContext, useMemo, useState, type Dispatch, type SetStateAction } from "react";
 
 import { QUESTIONNAIRE_SESSION_KEY, loadSessionJson, removeSessionKey, saveSessionJson } from "@/lib/search-session";
@@ -466,14 +467,14 @@ function mergeSavedState<T>(base: T, saved: unknown): T {
 
 export function restoreQuestionnaireState(): QuestionnaireState {
   const saved = loadSessionJson<Partial<QuestionnaireState>>(QUESTIONNAIRE_SESSION_KEY);
-  return saved ? mergeSavedState(DEFAULT_STATE, saved) : DEFAULT_STATE;
+  return withoutInsurance(saved ? mergeSavedState(DEFAULT_STATE, saved) : DEFAULT_STATE);
 }
 
 export function QuestionnaireProvider({ children }: { children: React.ReactNode }) {
   const [state, setStateInternal] = useState<QuestionnaireState>(restoreQuestionnaireState);
   const setState = useCallback<Dispatch<SetStateAction<QuestionnaireState>>>((update) => {
     setStateInternal((previous) => {
-      const next = typeof update === "function" ? update(previous) : update;
+      const next = withoutInsurance(typeof update === "function" ? update(previous) : update);
       saveSessionJson(QUESTIONNAIRE_SESSION_KEY, next);
       return next;
     });

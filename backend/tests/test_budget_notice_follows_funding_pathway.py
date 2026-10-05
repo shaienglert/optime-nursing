@@ -46,7 +46,7 @@ def test_private_pay_notice_is_unchanged():
     assert result["market_coverage_notice"] == PRIVATE
 
 
-@pytest.mark.parametrize("persona_id,expect_medicaid", [("pilot-006", True), ("pilot-001", False)])
+@pytest.mark.parametrize("persona_id,expect_medicaid", [("pilot-006", False), ("pilot-001", False)])
 def test_engine_notice_matches_the_pathway(persona_id, expect_medicaid):
     import sys
     sys.path.insert(0, os.path.join(os.path.dirname(__file__)))

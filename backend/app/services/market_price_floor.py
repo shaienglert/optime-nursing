@@ -30,10 +30,10 @@ def minimum_price_for_questionnaire(questionnaire:dict[str,Any])->dict[str,Any]:
     from app.services import decision_engine_evidence
     from app.services.client_intent_runtime import attach_client_intent_fit
     from app.services.provider_housing_runtime import attach_provider_housing_evidence
-    from app.services.affordability_floor import compute_affordability_floor, MEDICAID_PURSUING_STATUSES
-    state=deepcopy(questionnaire)
+    from app.services.affordability_floor import compute_affordability_floor
+    from app.services.canonical_intake_state import without_insurance
+    state=without_insurance(deepcopy(questionnaire))
     state["budget"]=0
-    state["medicaidStatus"]=""
     profile=build_patient_needs_profile(state, structured_only=True)
     state=profile["canonical_decision_questionnaire"]
     core=decision_engine_evidence.run_patient_decision_engine(
@@ -42,6 +42,8 @@ def minimum_price_for_questionnaire(questionnaire:dict[str,Any])->dict[str,Any]:
     attach_provider_housing_evidence(rows)
     intent=profile["client_intent"]
     attach_client_intent_fit(rows, intent)
+    from app.services.decision_pipeline import _attach_room_pricing_truth
+    _attach_room_pricing_truth(rows)
     floor=compute_affordability_floor(rows, intent, profile)
     private_care_floor=deepcopy(floor)
     couple=str(questionnaire.get("relationship") or "").strip().lower()=="couple"
@@ -55,7 +57,7 @@ def minimum_price_for_questionnaire(questionnaire:dict[str,Any])->dict[str,Any]:
     scope=core.get("location_scope") or {}
     unresolved=scope.get("reason")=="REFERENCE_POINT_NOT_GEOCODED"
     price=None if unresolved else floor["floor_monthly_price"]
-    pursuing=str(questionnaire.get("medicaidStatus") or "").strip().lower() in MEDICAID_PURSUING_STATUSES
+    pursuing=False  # insurance is outside the search (owner 2026-10-05)
     return {
         "minimum_monthly_price":price,
         "canonical_facility_id":floor["floor_canonical_facility_id"] if price is not None else None,
@@ -68,5 +70,5 @@ def minimum_price_for_questionnaire(questionnaire:dict[str,Any])->dict[str,Any]:
         "funding_pathway":"MEDICAID_COST_REQUIRES_VERIFICATION" if pursuing else "PRIVATE_PAY",
         "minimum_budget_is_binding":price is not None and not pursuing,
         "synthetic_pilot":any(row.get("synthetic_pilot") is True for row in rows),
-        "rule":"Known starting monthly price for the selected area and care answers so far; not proof of capital affordability or Medicaid household cost.",
+        "rule":"Known starting monthly price for the selected area and care answers so far; final care, fees and coverage are confirmed with the facility.",
     }

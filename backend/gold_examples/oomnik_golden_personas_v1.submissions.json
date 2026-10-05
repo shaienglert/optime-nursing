@@ -92,12 +92,6 @@
           "answer": "No"
         },
         {
-          "id": "medicaidStatus",
-          "kind": "single",
-          "required": true,
-          "answer": "Not eligible"
-        },
-        {
           "id": "budget",
           "kind": "number",
           "required": true,
@@ -258,7 +252,7 @@
           "Daily routine"
         ],
         "medicareStatus": "",
-        "medicaidStatus": "Not eligible",
+        "medicaidStatus": "",
         "medicaidAmountKnown": "",
         "medicaidMonthlyAmount": 0,
         "medicaidBudgetIncludesSupport": "",
@@ -538,12 +532,6 @@
           "answer": "No"
         },
         {
-          "id": "medicaidStatus",
-          "kind": "single",
-          "required": true,
-          "answer": "Not eligible"
-        },
-        {
           "id": "budget",
           "kind": "number",
           "required": true,
@@ -704,7 +692,7 @@
           "Daily routine"
         ],
         "medicareStatus": "",
-        "medicaidStatus": "Not eligible",
+        "medicaidStatus": "",
         "medicaidAmountKnown": "",
         "medicaidMonthlyAmount": 0,
         "medicaidBudgetIncludesSupport": "",
@@ -997,12 +985,6 @@
           "answer": "No"
         },
         {
-          "id": "medicaidStatus",
-          "kind": "single",
-          "required": true,
-          "answer": "Not eligible"
-        },
-        {
           "id": "budget",
           "kind": "number",
           "required": true,
@@ -1163,7 +1145,7 @@
           "Daily routine"
         ],
         "medicareStatus": "",
-        "medicaidStatus": "Not eligible",
+        "medicaidStatus": "",
         "medicaidAmountKnown": "",
         "medicaidMonthlyAmount": 0,
         "medicaidBudgetIncludesSupport": "",
@@ -1483,18 +1465,6 @@
           "answer": "Yes"
         },
         {
-          "id": "medicareStatus",
-          "kind": "single",
-          "required": true,
-          "answer": "Original Medicare"
-        },
-        {
-          "id": "medicaidStatus",
-          "kind": "single",
-          "required": true,
-          "answer": "Not eligible"
-        },
-        {
           "id": "budget",
           "kind": "number",
           "required": true,
@@ -1654,8 +1624,8 @@
           "Independence",
           "Daily routine"
         ],
-        "medicareStatus": "Original Medicare",
-        "medicaidStatus": "Not eligible",
+        "medicareStatus": "",
+        "medicaidStatus": "",
         "medicaidAmountKnown": "",
         "medicaidMonthlyAmount": 0,
         "medicaidBudgetIncludesSupport": "",
@@ -1937,12 +1907,6 @@
           "answer": "No"
         },
         {
-          "id": "medicaidStatus",
-          "kind": "single",
-          "required": true,
-          "answer": "Not eligible"
-        },
-        {
           "id": "budget",
           "kind": "number",
           "required": true,
@@ -2103,7 +2067,7 @@
           "Daily routine"
         ],
         "medicareStatus": "",
-        "medicaidStatus": "Not eligible",
+        "medicaidStatus": "",
         "medicaidAmountKnown": "",
         "medicaidMonthlyAmount": 0,
         "medicaidBudgetIncludesSupport": "",
@@ -2296,21 +2260,18 @@
     },
     {
       "id": "pilot-006",
-      "title": "Very low budget, Medicaid application pending",
+      "title": "Limited monthly starting-price budget",
       "oracle": {
         "care": [
           "ASSISTED_LIVING",
           "SMALL_GROUP_HOME"
         ],
         "required": [
-          "adl_support",
-          "medicaid_pathway"
+          "adl_support"
         ],
-        "budget": 3000,
+        "budget": 4000,
         "location": "Las Vegas",
-        "distance": "30",
-        "medicaid": "REQUIRED",
-        "zero_result": "EVIDENCE_PENDING"
+        "distance": "30"
       },
       "steps": [
         {
@@ -2384,22 +2345,10 @@
           "answer": "No"
         },
         {
-          "id": "medicaidStatus",
-          "kind": "single",
-          "required": true,
-          "answer": "Application pending"
-        },
-        {
-          "id": "medicaidAmountKnown",
-          "kind": "single",
-          "required": true,
-          "answer": "Amount not known"
-        },
-        {
           "id": "budget",
           "kind": "number",
           "required": true,
-          "answer": 3000
+          "answer": 4000
         },
         {
           "id": "moveTiming",
@@ -2537,7 +2486,7 @@
         ],
         "nearbyPlacesImportance": "Nice to have",
         "personalDestinations": [],
-        "budget": 3000,
+        "budget": 4000,
         "distanceFromFamily": "",
         "referenceLocationType": "",
         "referenceLocationValue": "Las Vegas",
@@ -2556,8 +2505,8 @@
           "Daily routine"
         ],
         "medicareStatus": "",
-        "medicaidStatus": "Application pending",
-        "medicaidAmountKnown": "Amount not known",
+        "medicaidStatus": "",
+        "medicaidAmountKnown": "",
         "medicaidMonthlyAmount": 0,
         "medicaidBudgetIncludesSupport": "",
         "moveTiming": "Within 30 days",
@@ -2838,12 +2787,6 @@
           "answer": "No"
         },
         {
-          "id": "medicaidStatus",
-          "kind": "single",
-          "required": true,
-          "answer": "Not eligible"
-        },
-        {
           "id": "budget",
           "kind": "number",
           "required": true,
@@ -3022,7 +2965,7 @@
           "Daily routine"
         ],
         "medicareStatus": "",
-        "medicaidStatus": "Not eligible",
+        "medicaidStatus": "",
         "medicaidAmountKnown": "",
         "medicaidMonthlyAmount": 0,
         "medicaidBudgetIncludesSupport": "",
@@ -3304,12 +3247,6 @@
           "answer": "No"
         },
         {
-          "id": "medicaidStatus",
-          "kind": "single",
-          "required": true,
-          "answer": "Not eligible"
-        },
-        {
           "id": "budget",
           "kind": "number",
           "required": true,
@@ -3470,7 +3407,7 @@
           "Daily routine"
         ],
         "medicareStatus": "",
-        "medicaidStatus": "Not eligible",
+        "medicaidStatus": "",
         "medicaidAmountKnown": "",
         "medicaidMonthlyAmount": 0,
         "medicaidBudgetIncludesSupport": "",
@@ -3789,12 +3726,6 @@
           "answer": "No"
         },
         {
-          "id": "medicaidStatus",
-          "kind": "single",
-          "required": true,
-          "answer": "Not eligible"
-        },
-        {
           "id": "budget",
           "kind": "number",
           "required": true,
@@ -3955,7 +3886,7 @@
           "Daily routine"
         ],
         "medicareStatus": "",
-        "medicaidStatus": "Not eligible",
+        "medicaidStatus": "",
         "medicaidAmountKnown": "",
         "medicaidMonthlyAmount": 0,
         "medicaidBudgetIncludesSupport": "",
@@ -4240,12 +4171,6 @@
           "answer": "No"
         },
         {
-          "id": "medicaidStatus",
-          "kind": "single",
-          "required": true,
-          "answer": "Not eligible"
-        },
-        {
           "id": "budget",
           "kind": "number",
           "required": true,
@@ -4406,7 +4331,7 @@
           "Daily routine"
         ],
         "medicareStatus": "",
-        "medicaidStatus": "Not eligible",
+        "medicaidStatus": "",
         "medicaidAmountKnown": "",
         "medicaidMonthlyAmount": 0,
         "medicaidBudgetIncludesSupport": "",

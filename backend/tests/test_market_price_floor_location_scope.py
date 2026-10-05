@@ -37,8 +37,8 @@ def test_budget_and_medicaid_cannot_shape_the_private_care_floor():
               for budget, funding in [(1, "Not eligible"), (3000, "Application pending"), (100000, "Approved")]]
     assert len({v["minimum_monthly_price"] for v in values}) == 1
     assert values[0]["minimum_budget_is_binding"] is True
-    assert all(not v["minimum_budget_is_binding"] for v in values[1:])
-    assert values[1]["funding_pathway"] == "MEDICAID_COST_REQUIRES_VERIFICATION"
+    assert all(v["minimum_budget_is_binding"] for v in values[1:])
+    assert values[1]["funding_pathway"] == "PRIVATE_PAY"
 
 def test_empty_radius_does_not_fall_back_to_the_whole_database():
     result = minimum_price_for_questionnaire({**PERSONAS[0]["questionnaire_state"], "referenceLatitude": 40, "referenceLongitude": -110})

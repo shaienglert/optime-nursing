@@ -69,13 +69,13 @@ def test_floor_counts_only_candidates_that_passed_system_and_care():
 
 
 @pytest.mark.parametrize("status,budget,expect_must,outcome", [
-    ("Application pending", 3000, True, "MEDICAID_PATHWAY_CLIENT_MUST"),
-    ("Approved", 4099, True, "MEDICAID_PATHWAY_CLIENT_MUST"),
-    ("Approved", 4100, False, "PRIVATE_PAY_REACHABLE"),
-    ("May qualify", 3000, False, "NOT_APPLICABLE_MEDICAID_NOT_PURSUED"),
-    ("Not sure", 3000, False, "NOT_APPLICABLE_MEDICAID_NOT_PURSUED"),
-    ("Not eligible", 3000, False, "NOT_APPLICABLE_MEDICAID_NOT_PURSUED"),
-    ("Application pending", None, False, "NOT_DETERMINED_NO_BUDGET"),
+    ("Application pending", 3000, False, "INSURANCE_OUTSIDE_SEARCH"),
+    ("Approved", 4099, False, "INSURANCE_OUTSIDE_SEARCH"),
+    ("Approved", 4100, False, "INSURANCE_OUTSIDE_SEARCH"),
+    ("May qualify", 3000, False, "INSURANCE_OUTSIDE_SEARCH"),
+    ("Not sure", 3000, False, "INSURANCE_OUTSIDE_SEARCH"),
+    ("Not eligible", 3000, False, "INSURANCE_OUTSIDE_SEARCH"),
+    ("Application pending", None, False, "INSURANCE_OUTSIDE_SEARCH"),
 ])
 def test_rule_promotes_medicaid_only_below_the_floor_when_pursued(status, budget, expect_must, outcome):
     rows = [_row("a", 4100, must_pass=CARE_OK, matched=("wound_care",)), _row("b", 900)]
@@ -92,7 +92,7 @@ def test_rule_promotes_medicaid_only_below_the_floor_when_pursued(status, budget
 def test_no_qualified_price_never_invents_a_must():
     intent = copy.deepcopy(INTENT)
     record = apply_medicaid_affordability_rule([_row("x", 900)], intent, {"medicaidStatus": "Approved", "budget": 500}, copy.deepcopy(PROFILE))
-    assert record["outcome"] == "NOT_DETERMINED_NO_QUALIFIED_PRICE"
+    assert record["outcome"] == "INSURANCE_OUTSIDE_SEARCH"
     assert MEDICAID_PATHWAY_KEY not in [m["key"] for m in intent["must_haves"]]
 
 
@@ -103,7 +103,7 @@ def test_rule_is_idempotent():
     apply_medicaid_affordability_rule(rows, intent, state, profile)
     second = apply_medicaid_affordability_rule(rows, intent, state, profile)
     assert second["promoted"] is False
-    assert [m["key"] for m in intent["must_haves"]].count(MEDICAID_PATHWAY_KEY) == 1
+    assert [m["key"] for m in intent["must_haves"]].count(MEDICAID_PATHWAY_KEY) == 0
 
 
 def test_unknown_medicaid_acceptance_is_pending_never_pass_or_fail():
@@ -168,7 +168,7 @@ def test_floor_is_a_property_of_the_care_universe_not_of_budget_or_funding(perso
     floor_price = next(iter(records.values()))[0]
     # 2. The MUST appears exactly when funding is pursued and the budget is below the floor.
     for (status, budget), has_must in musts.items():
-        expected = status == "Application pending" and floor_price is not None and budget < floor_price
+        expected = False  # insurance no longer creates a client MUST
         assert has_must is expected, (status, budget, floor_price)
 
 
@@ -182,12 +182,12 @@ def test_medicaid_pathway_compares_budget_with_household_cost_never_private_pric
     known_in = {"starting_monthly_price": 6000, "verified_capabilities": {"medicaid_household_out_of_pocket": "2800"}}
     known_over = {"starting_monthly_price": 2000, "verified_capabilities": {"medicaid_household_out_of_pocket": "3600"}}
     unknown = {"starting_monthly_price": 2000, "verified_capabilities": {}}
-    assert apply_funding_pathway([known_in, known_over, unknown], intent) == "MEDICAID"
+    assert apply_funding_pathway([known_in, known_over, unknown], intent) == "PRIVATE_PAY"
     state = {"budget": 3000}
-    assert relevant_monthly_cost(known_in) == 2800 and _row_budget_verdict(known_in, state) is True
-    assert _row_budget_verdict(known_over, state) is False
+    assert relevant_monthly_cost(known_in) == 6000 and _row_budget_verdict(known_in, state) is False
+    assert _row_budget_verdict(known_over, state) is True
     # A private price inside the budget proves nothing about the Medicaid household cost.
-    assert relevant_monthly_cost(unknown) is None and _row_budget_verdict(unknown, state) is None
+    assert relevant_monthly_cost(unknown) == 2000 and _row_budget_verdict(unknown, state) is True
 
 
 def test_private_pay_pathway_keeps_the_current_private_price():

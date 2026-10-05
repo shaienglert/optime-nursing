@@ -147,24 +147,40 @@ def _attach_room_pricing_truth(rows: list[dict[str, Any]]) -> None:
                 complete=room.care_fee_cents is not None and room.mandatory_monthly_fees_cents is not None
                 priced.append({"room_type":room.room_type_name,"base_price":room.monthly_price_cents/100,"total_known_monthly_cost":total/100,"total_affordability_status":"KNOWN" if complete else "PENDING","pricing_qualifier":room.pricing_qualifier or "UNKNOWN","price_source":getattr(room,"source",None),"availability_status":room.availability_status,"final_availability_status":"REQUIRES_DIRECT_VERIFICATION"})
             row["room_pricing_options"]=priced
-            known=[x for x in priced if x["total_affordability_status"]=="KNOWN"]
-            if known:
-                best=min(known,key=lambda x:x["total_known_monthly_cost"])
-                row["starting_monthly_price"]=best["total_known_monthly_cost"]
-                row["price_truth_basis"]="ROOM_TOTAL_KNOWN_MONTHLY_COST"
-                row["total_affordability_status"]="KNOWN"
-            elif priced:
-                row["price_truth_basis"]="ROOM_BASE_ONLY_TOTAL_PENDING"
-                row["total_affordability_status"]="PENDING"
+            if priced:
+                best=min(priced,key=lambda x:x["base_price"])
+                row["starting_monthly_price"]=best["base_price"]
+                row["price_source"]=best["price_source"]
+                row["price_truth_basis"]="ROOM_STARTING_MONTHLY_PRICE"
+                row["total_affordability_status"]="KNOWN" if best["total_affordability_status"] == "KNOWN" else "PENDING"
+                row["known_total_monthly_cost"]=best["total_known_monthly_cost"] if best["total_affordability_status"] == "KNOWN" else None
+
     finally:
         db.close()
+
+def _refresh_starting_price_need(rows: list[dict[str, Any]], budget: Any) -> None:
+    """The budget preference must use the same starting price as the final gate."""
+    if not isinstance(budget, (int, float)) or isinstance(budget, bool) or budget <= 0:
+        return
+    from app.services.decision_engine_core import _evaluate_need
+    for row in rows:
+        if not row.get("room_pricing_options"):
+            continue
+        price = row.get("starting_monthly_price")
+        status, reason = _evaluate_need({"parameter_id": "current_price", "desired_value": budget}, {"current_price": {"raw_value": price}})
+        evidence = next((dict(item) for key in ("matched_needs", "unmet_verified_needs", "unknown_critical_needs") for item in row.get(key, []) if item.get("parameter_id") == "current_price"), None)
+        if evidence is None:
+            continue
+        for key in ("matched_needs", "unmet_verified_needs", "unknown_critical_needs"):
+            row[key] = [item for item in row.get(key, []) if item.get("parameter_id") != "current_price"]
+        evidence.update(status=status, reason=reason)
+        row["matched_needs" if status == "MATCH" else "unmet_verified_needs" if status == "GAP" else "unknown_critical_needs"].append(evidence)
 
 def _apply_combined_care_layer(result: dict[str, Any], questionnaire_state: dict[str, Any], natural_language_query: str, limit: int) -> dict[str, Any]:
     from app.services.client_intent_runtime import intent_rank_key
     from app.services.combined_care_solution_runtime import attach_combined_care_solutions
 
     rows = list(result.get("results") or [])
-    _attach_room_pricing_truth(rows)
     for row in rows:
         row["external_care_agency_matches"] = _agency_matches_for_row(row, result)
     profile = result.get("patient_needs_profile") or {}
@@ -440,6 +456,10 @@ def run_decision_pipeline(questionnaire_state: dict[str, Any], natural_language_
         stage_timings[stage_name] = round((now - previous) * 1000, 1)
         return now
 
+    from app.services.canonical_intake_state import canonicalize_intake_state
+    questionnaire_state = canonicalize_intake_state(questionnaire_state)
+    if prepared_profile is not None and (any(n.get("parameter_id") in {"medicaid_attributes", "medicare_attributes"} for n in prepared_profile.get("needs", [])) or any(m.get("key") == "MEDICAID_PATHWAY_REQUIRED" for m in prepared_profile.get("client_intent", {}).get("must_haves", []))):
+        prepared_profile = None
     profile = prepared_profile if prepared_profile is not None else profile_builder(questionnaire_state=questionnaire_state, natural_language_query=natural_language_query)
     stage_started = _mark("build_patient_needs_profile_ms", stage_started)
     profile_readiness = "UNKNOWN"

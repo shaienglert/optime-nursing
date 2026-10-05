@@ -56,3 +56,6 @@ When a principle changes with explicit approval:
 - update implementation and test references
 
 Do not overwrite historical entries.
+## Owner-approved 2026-10-05: monthly starting-price search
+
+ACTIVE: `MONTHLY_STARTING_PRICE_POLICY.md`. Insurance funding-pathway gates and final-total search verification are superseded for the family search. Insurance is settled with facilities; budget uses starting prices, retaining the existing tolerance and all care/safety requirements.

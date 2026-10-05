@@ -352,8 +352,6 @@ def _row_verifies_budget(row: Dict[str, Any], questionnaire_state: Dict[str, Any
     # Owner-approved single budget rule: verified total price is acceptable up to
     # +10%. Ranking, not eligibility, keeps at/below-budget options ahead of this band.
     # A room base price whose total affordability is pending cannot prove affordability.
-    if row.get("total_affordability_status") == "PENDING" and row.get("price_truth_basis") == "ROOM_BASE_ONLY_TOTAL_PENDING":
-        return False
     return price <= budget * 1.10
 
 

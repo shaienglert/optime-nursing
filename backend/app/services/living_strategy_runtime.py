@@ -204,7 +204,6 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
 
     move_timing = _norm(transition.get("moveTiming") or questionnaire_state.get("moveTiming"))
     budget = _first_known(questionnaire_state, "budget", "monthlyBudget")
-    medicare = _norm(finance.get("medicareStatus") or questionnaire_state.get("medicareStatus"))
     entrance_fee = _norm(finance.get("entranceFeeTolerance") or questionnaire_state.get("entranceFeeTolerance"))
 
     household = {
@@ -358,13 +357,6 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
             "Does the surgeon or rehabilitation team say the resident needs skilled rehabilitation/physical or occupational therapy, or only help with daily tasks such as bathing and dressing?",
             "This can materially change the care strategy.",
             ["Skilled PT/OT or rehabilitation", "Only personal-care help", "Both", "Not sure"],
-        ))
-    if (surgery or rehab) and medicare in {"", "unknown", "not sure", "unsure"}:
-        clarification_candidates.append(_question(
-            "medicare_status",
-            "Does the resident have Medicare, and if so is it Original Medicare or Medicare Advantage?",
-            "Coverage and network rules can materially change post-acute rehabilitation and home-health options.",
-            ["Original Medicare", "Medicare Advantage", "No Medicare", "Not sure"],
         ))
     if expected_recovery and not move_timing:
         clarification_candidates.append(_question(

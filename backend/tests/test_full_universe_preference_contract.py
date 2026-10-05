@@ -83,7 +83,8 @@ def test_complete_pool_room_prices_use_one_query_and_preserve_total_truth():
     with patch('app.database.SessionLocal', return_value=db):
         _attach_room_pricing_truth(rows)
     assert db.query.call_count == 1
-    assert rows[-1]['starting_monthly_price'] == 4600
+    assert rows[-1]['starting_monthly_price'] == 4000
+    assert rows[-1]['known_total_monthly_cost'] == 4600
     assert rows[-1]['total_affordability_status'] == 'KNOWN'
     assert rows[-1]['room_pricing_options'][0]['final_availability_status'] == 'REQUIRES_DIRECT_VERIFICATION'
     db.close.assert_called_once()
