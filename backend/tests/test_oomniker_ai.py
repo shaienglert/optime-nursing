@@ -91,3 +91,16 @@ def test_tradeoff_explains_only_the_selected_measured_preference():
         transport=lambda _: {"mode": "EXPLAIN_TRADEOFF", "proposals": [{"parameter": "DINING_EXPERIENCE"}]})
     assert "Dining experience would stop influencing the recommendation order" in out["message"]
     assert "required conditions stay in force" in out["message"]
+
+
+def test_resolved_lever_explains_other_unknown_preferences_without_promising_a_gain():
+    analysis = {"suggestions": [], "preference_analysis": {"parameters": [
+        {"parameter": "COMMUNITY_ENVIRONMENT_MATCH", "label": "Community size", "unknown_count": 0,
+         "new_recommendation_count": 3, "unresolved_other_preferences": ["Low sodium", "Familiar routines"],
+         "proposal_blockers": ["OTHER_DYNAMIC_PREFERENCES_UNRESOLVED"]}]}}
+    out = advise_with_ai(analysis=analysis, client_context={}, client_message="Can a bigger place help?",
+        transport=lambda _: {"mode": "EXPLAIN_EVIDENCE", "discussion_parameters": ["COMMUNITY_ENVIRONMENT_MATCH"], "proposals": []})
+    assert "Low sodium" in out["message"] and "Familiar routines" in out["message"]
+    assert "0 communities still need evidence" not in out["message"]
+    assert "3 additional" not in out["message"]
+    assert not out["proposals"] and not out["profile_mutated"]

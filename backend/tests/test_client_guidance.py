@@ -44,6 +44,24 @@ class ClientGuidanceTests(unittest.TestCase):
         result = self.run_guidance(lambda _: {"paragraphs": [{"text": "Your budget is $6,000 per month.", "source_ids": ["client:budget"]}]})
         self.assertEqual(result["status"], "AI_READY")
 
+    def test_later_card_keeps_global_shortlist_count_and_its_real_position(self):
+        self.decision["results"].append({"canonical_facility_id": "c", "facility_name": "Second", "must_eligibility": "MUST_ELIGIBLE", "availability_status": "NO", "client_intent_fit": {"nice_mismatch": ["CONTINUUM_OF_CARE"]}})
+        def transport(payload):
+            facts = payload["facts"]
+            self.assertEqual(facts["search:options"], "2 options displayed in authoritative order: First, Second")
+            self.assertIn("position is 2", facts["search:card_scope"])
+            self.assertIn("NO", facts["facility:c:availability"])
+            self.assertIn("CONTINUUM_OF_CARE", facts["facility:c:nice_mismatch"])
+            self.assertNotIn("facility:a:name", facts)
+            return {"paragraphs": [{"text": "Second is another option.", "source_ids": ["facility:c:name"]}]}
+        self.assertEqual(self.run_guidance(transport, decision=self.decision, facility_id="c")["status"], "AI_READY")
+
+    def test_later_card_cannot_claim_first_or_only_even_with_a_valid_citation(self):
+        self.decision["results"].append({"canonical_facility_id": "c", "facility_name": "Second", "must_eligibility": "MUST_ELIGIBLE"})
+        for text in ("This is the only option.", "This community is placed first."):
+            result = self.run_guidance(lambda _: {"paragraphs": [{"text": text, "source_ids": ["facility:c:name"]}]}, decision=self.decision, facility_id="c")
+            self.assertEqual(result["status"], "AI_UNAVAILABLE")
+
     def test_pending_facility_cannot_get_personal_recommendation(self):
         def never(_):
             self.fail("AI must not be called for pending recommendation")

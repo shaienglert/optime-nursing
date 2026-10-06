@@ -62,11 +62,14 @@ def build_guidance(*, state: dict, profile: dict, query: str, decision: dict | N
     if decision is not None:
         selected = [row for row in decision.get("results", []) if
                     (row.get("must_eligibility") == "MUST_ELIGIBLE" if row.get("must_eligibility") else row.get("eligibility_status") == "ELIGIBLE")]
+        displayed = selected[:5]
+        facts["search:options"] = f"{len(displayed)} options displayed in authoritative order: " + ", ".join(row["facility_name"] for row in displayed)
         if facility_id:
+            position = next((index + 1 for index, row in enumerate(selected) if row.get("canonical_facility_id") == facility_id), None)
             selected = [row for row in selected if row.get("canonical_facility_id") == facility_id]
             if not selected:
                 return {"status": "NO_RECOMMENDATION", "paragraphs": [], "sources": {}}
-        facts["search:options"] = f"{min(5, len(selected))} options displayed in authoritative order: " + ", ".join(row["facility_name"] for row in selected[:5])
+            facts["search:card_scope"] = f"This card describes one community in a larger shortlist; its position is {position}. It is not the only option. Do not call it the first option unless its position is 1."
         for row in selected[:5]:
             fid = row["canonical_facility_id"]
             facts[f"facility:{fid}:name"] = row["facility_name"]
@@ -75,6 +78,11 @@ def build_guidance(*, state: dict, profile: dict, query: str, decision: dict | N
                 "All required care, outside services, fees and any second resident need a complete written quote. "
                 "No real household quote or facility-specific provider approval is supplied in this guidance."
             )
+            facts[f"facility:{fid}:availability"] = f"Recorded availability: {row.get('availability_status') or 'UNKNOWN'}. NO means no space is currently recorded, not available now. UNKNOWN means no verified availability information. Final room and date require direct confirmation."
+            fit = row.get("client_intent_fit") or {}
+            for kind in ("nice_match", "nice_mismatch", "nice_unknown"):
+                if fit.get(kind):
+                    facts[f"facility:{fid}:{kind}"] = json.dumps(fit[kind], ensure_ascii=False)
             for kind in ("why_matches", "needs_verification", "concerns"):
                 for index, value in enumerate((row.get("explanation") or {}).get(kind) or []):
                     facts[f"facility:{fid}:{kind}:{index}"] = str(value)
@@ -89,7 +97,7 @@ def build_guidance(*, state: dict, profile: dict, query: str, decision: dict | N
                 facts[f"facility:{fid}:distances"] = json.dumps(row["explanation"]["nearby_place_fit"], ensure_ascii=False)
     try:
         packet = transport({"stage": "facility" if facility_id else "results" if decision is not None else "summary", "facts": facts,
-                            "instructions": "For a summary reflect what the client wants and their own story. For results introduce the supplied options in their existing order, without claiming a superior match unless the supplied comparison explains it. For a facility connect supported match facts to the person's priorities. An empty shortlist means no recommendation is ready."})
+                            "instructions": "For a summary reflect what the client wants and their own story. For results introduce the supplied options in their existing order, without claiming a superior match unless the supplied comparison explains it. For a facility describe this specific card at its supplied position, keeping the overall shortlist count separate. Connect supported match facts to the person's priorities. Disclose recorded NO availability and verified NICE mismatches; UNKNOWN is not a mismatch. Never describe a later card as the first or only option. An empty shortlist means no recommendation is ready."})
         if not isinstance(packet, dict):
             raise ValueError("Invalid guidance packet")
         paragraphs = packet.get("paragraphs")
@@ -101,6 +109,12 @@ def build_guidance(*, state: dict, profile: dict, query: str, decision: dict | N
             refs = paragraph.get("source_ids")
             if not isinstance(refs, list) or not refs or any(not isinstance(ref, str) or ref not in facts for ref in refs):
                 raise ValueError("Uncited narrative")
+            if facility_id:
+                text = paragraph["text"].casefold()
+                if len(displayed) > 1 and re.search(r"\bonly (?:option|community|place|recommendation)\b", text):
+                    raise ValueError("Incorrect single-option scope")
+                if position != 1 and re.search(r"\b(?:ranked|placed|listed|comes|stands) first\b|\bfirst (?:choice|option|recommendation)\b", text):
+                    raise ValueError("Incorrect card position")
             supported = " ".join(facts[ref] for ref in refs)
             # Numerical claims require an identical value in the cited facts, not
             # merely a different fact elsewhere in the prompt.

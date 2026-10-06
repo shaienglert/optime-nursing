@@ -116,7 +116,7 @@ def analyze_preferences(rows: list[dict], intent: dict, profile: dict,
                       "verified_mismatch_count": sum(_mismatches(row, key) for row in eligible),
                       "unknown_count": sum(not _matches(row, key) and not _mismatches(row, key) for row in eligible),
                       "eligible_below_display_count": sum(_mismatches(row, key) and _identity(row) not in baseline_ids for row in eligible),
-                      "new_recommendation_count": 0}
+                      "new_recommendation_count": 0, "unresolved_other_preferences": [], "proposal_blockers": []}
         parameters.append(diagnostic)
         if key not in safe_keys:
             diagnostic["status"] = "NO_SAFE_CANONICAL_LEVER"
@@ -181,29 +181,40 @@ def analyze_preferences(rows: list[dict], intent: dict, profile: dict,
             diagnostic["new_recommendation_count"] = max(diagnostic["new_recommendation_count"], len(promoted))
             displaced = [row for row in baseline if _identity(row) not in {_identity(r) for r in reranked}]
             proven = []
+            blockers = set()
+            unresolved = set(diagnostic["unresolved_other_preferences"])
             for row in promoted:
                 fit = _fit(row)
                 signature = row.get("rank_group_signature")
                 if signature is not None and any(other.get("rank_group_signature") == signature for other in full_after[window:]):
+                    blockers.add("TIED_DISPLAY_ORDER_ONLY")
                     continue  # A display-order change inside a true tie is not a rank gain.
                 assessments = {str(a.get("preference_id")): a.get("status") for a in (row.get("dynamic_preference_fit") or {}).get("assessments") or []}
-                if any(assessments.get(pref_id) not in {"MATCH", "NOT_APPLICABLE"} for pref_id in remaining_dynamic):
+                unknown_ids = [pref_id for pref_id in remaining_dynamic if assessments.get(pref_id) not in {"MATCH", "NOT_APPLICABLE"}]
+                if unknown_ids:
+                    blockers.add("OTHER_DYNAMIC_PREFERENCES_UNRESOLVED")
+                    unresolved.update(str(pref.get("client_expression") or pref.get("semantic_meaning") or pref.get("preference_id")) for pref in (dynamic_preferences or {}).get("preferences") or [] if str(pref.get("preference_id")) in unknown_ids)
                     continue
                 if dynamic_preference_count and dynamic_preferences is None and (row.get("dynamic_preference_fit") or {}).get("status") != "NICE_COMPLETE":
                     continue
                 remaining = nice_keys - _IMPLICIT - {key}
                 if not all(_matches(row, other) for other in remaining):
+                    blockers.add("OTHER_STRUCTURED_PREFERENCES_NOT_MATCHED")
+                    unresolved.update(LABELS.get(other, other.replace("_", " ").title()) for other in remaining if not _matches(row, other))
                     continue  # Cannot say all other explicit preferences fit when unresolved.
                 if size_preference and size_preference != "WAIVE" and key not in (fit.get("nice_match") or []):
                     continue
                 advantage = _quality_advantage(row, displaced)
                 if not advantage:
+                    blockers.add("NO_VERIFIED_QUALITY_ADVANTAGE")
                     continue
                 proven.append({"canonical_facility_id": _identity(row), "facility_name": row.get("facility_name"),
                                "quality_advantage": advantage, "remaining_preference_matches": sorted(remaining),
                                "unresolved_preferences": list(fit.get("nice_unknown") or []),
                                "entrance_fee": row.get("entrance_fee"),
                                "synthetic_pilot": row.get("synthetic_pilot") is True})
+            diagnostic["unresolved_other_preferences"] = sorted(unresolved)
+            diagnostic["proposal_blockers"] = sorted(set(diagnostic["proposal_blockers"]) | blockers)
             if len(proven) < 2:
                 continue
             suggestions.append({"parameter": key, "authority": "PREFERENCE",

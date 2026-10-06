@@ -13,6 +13,7 @@ import { loadDecisionResponseCache, saveDecisionResponseCache, saveSessionJson, 
 import { isFinalRecommendation, isPendingRecommendation } from "@/lib/recommendation-eligibility";
 import { applyAdaptiveAnswer } from "@/lib/adaptive-answer";
 import { resultsClientState } from "@/lib/results-client-state";
+import { hasSeparateRecoveryEpisode } from "@/lib/recovery-scope";
 import { startingPriceDisplay } from "@/lib/starting-price-display";
 import { DistanceScope } from "./distance-scope";
 import { applyMeasuredPreferenceAdvice, askMeasuredAdvisor, type AdvisorReply, type AdvisorTurn } from "@/lib/oomniker-advice";
@@ -154,20 +155,20 @@ export function SimpleResultsPageClient() {
     beforeOOmnikerIds.current = (response?.results || []).filter(isFinalRecommendation).slice(0, TOP_COUNT).map(item => item.canonical_facility_id);
     setOOmnikerDiff("");
     oomnikerHistory.current.push(structuredClone(state));
-    setState(next);
-    setOOmnikerNotice(`You chose ${suggestion.alternative_value.toLowerCase()}. I’m running the search again. Your required conditions remain in force.`);
+    setState({ ...next, questionnaireCompletion: { ...next.questionnaireCompletion, clientSummaryConfirmed: false } });
+    setOOmnikerNotice(`You chose ${suggestion.alternative_value.toLowerCase()}. Please confirm the updated summary before the search runs again. Your required conditions remain in force.`);
   }
 
-  // Widening waits for the family: the engine only counts who fits a little further out,
+  // Widening waits for the family: the engine counts communities in the wider area,
   // and this is the one place that radius is accepted. It is undoable like any OOMNIKER change.
   function acceptRadiusExpansion(miles: number) {
     beforeOOmnikerIds.current = (response?.results || []).filter(isFinalRecommendation).slice(0, TOP_COUNT).map((item) => item.canonical_facility_id);
     setOOmnikerDiff("");
     setState((current) => {
       oomnikerHistory.current.push(JSON.parse(JSON.stringify(current)));
-      return { ...JSON.parse(JSON.stringify(current)), approvedSearchRadiusMiles: String(miles) };
+      return { ...JSON.parse(JSON.stringify(current)), approvedSearchRadiusMiles: String(miles), questionnaireCompletion: { ...current.questionnaireCompletion, clientSummaryConfirmed: false } };
     });
-    setOOmnikerNotice(`Got it. I’m widening the search to ${miles} miles and leaving everything else as we agreed.`);
+    setOOmnikerNotice(`You chose a search radius of ${miles} miles. Please confirm the updated summary; all other answers remain as we agreed.`);
   }
 
   const activeCriteria = [
@@ -383,6 +384,8 @@ export function SimpleResultsPageClient() {
           </section>
         ) : null}
 
+        {hasSeparateRecoveryEpisode(response.decision_intelligence) ? <p data-testid="recovery-scope" className="mt-6 rounded-xl bg-sand p-5 text-lg leading-8">Your answers identify a recovery episode as well as a longer-term living decision. Confirm the rehabilitation and discharge plan with the care team; a community’s care capabilities do not determine how long rehabilitation is needed or where to live after recovery.</p> : null}
+
         {top.length > 0 ? (
           <section className="mt-8 grid gap-6">
             {top.map((item, index) => {
@@ -404,6 +407,9 @@ export function SimpleResultsPageClient() {
                       <h2 className="mt-1 text-3xl font-semibold leading-tight sm:text-4xl">{item.facility_name}</h2>
                       <p className="mt-2 text-lg text-forest">{[item.city, item.state].filter(Boolean).join(", ")}</p>
                       <p data-testid="starting-price" className="mt-2 text-lg font-semibold text-ink">{startingPriceDisplay(item, state.budget)}</p>
+                      <p data-testid="availability-status" className="mt-2 text-base text-[#684d19]">Availability: {item.availability_status === "NO" ? "no space currently recorded — ask about an opening by your move date" : item.availability_status === "LIMITED" ? "limited availability / waitlist — confirm a suitable room and date" : item.availability_status === "YES" ? "recorded as available — confirm a suitable room and date" : "not verified — confirm with the community"}.</p>
+                      {(item.client_intent_fit?.nice_mismatch || []).length > 0 ? <p data-testid="preference-gaps" className="mt-2 text-base text-[#684d19]">Preferences not met: {(item.client_intent_fit?.nice_mismatch || []).map(key => adviceLabels[key] || key.toLowerCase().replaceAll("_", " ")).join(", ")}. These are preferences, not required care conditions.</p> : null}
+                      {(item.client_intent_fit?.nice_unknown || []).filter(key => key !== "AVAILABILITY_FIT").length > 0 ? <p className="mt-2 text-base text-[#684d19]">Still to verify: {(item.client_intent_fit?.nice_unknown || []).filter(key => key !== "AVAILABILITY_FIT").map(key => adviceLabels[key] || key.toLowerCase().replaceAll("_", " ")).join(", ")}. Missing information is not a confirmed mismatch.</p> : null}
                       <details className="mt-4 text-base"><summary className="cursor-pointer underline underline-offset-4">Practical details and the places that matter to you</summary>
                       <p className="mt-2 text-base">Availability: {item.availability_status === "YES" ? "recorded as available" : item.availability_status === "LIMITED" ? "limited / waitlist" : item.availability_status === "NO" ? "not currently available" : "needs confirmation"}</p>
                       <p className="mt-2 text-base text-[#684d19]">{item.availability_status === "NO" ? "No space is currently recorded. Ask whether a suitable opening is expected by your move date." : "Confirm a suitable room and admission date directly with the community."} Care compatibility does not confirm readiness to move.</p>
@@ -484,7 +490,7 @@ export function SimpleResultsPageClient() {
           {(response.oomniker?.constraint_impacts || []).slice(0, 3).map(item => <p key={item.parameter} className="mt-3 text-base leading-7">
             <strong>{missingEvidenceLabels[item.parameter] || "A required condition"}:</strong> {item.blocked_count} communities have a confirmed blocker; for {item.sole_verified_blocker_count}, it is the only confirmed blocker with no pending evidence. Your requirements stay in force. Counts may overlap across conditions.
           </p>)}
-          {oomnikerNotice ? <div className="mt-4 rounded-xl bg-white p-4 text-base text-forest"><LiveText paragraphs={[oomnikerNotice, ...(oomnikerDiff ? [oomnikerDiff] : [])]} /> {oomnikerHistory.current.length > 0 ? <button type="button" onClick={() => { const previous = oomnikerHistory.current.pop(); if (previous) { setState(previous); setOOmnikerNotice("Done. I’ve put the previous preference back and I’m reassessing the earlier search."); } }} className="ml-2 font-semibold underline underline-offset-4">Undo last change</button> : null}</div> : null}
+          {oomnikerNotice ? <div className="mt-4 rounded-xl bg-white p-4 text-base text-forest"><LiveText paragraphs={[oomnikerNotice, ...(oomnikerDiff ? [oomnikerDiff] : [])]} /> {oomnikerHistory.current.length > 0 ? <button type="button" onClick={() => { const previous = oomnikerHistory.current.pop(); if (previous) { setState({ ...previous, questionnaireCompletion: { ...previous.questionnaireCompletion, clientSummaryConfirmed: false } }); setOOmnikerNotice("Done. I’ve put the previous preference back. Please confirm the restored summary before the search runs again."); } }} className="ml-2 font-semibold underline underline-offset-4">Undo last change</button> : null}</div> : null}
           {oomnikerOpen ? <div className="mt-6">
             <div aria-live="polite" className="space-y-3">{advisorConversation.map((turn, index) => <div key={index} className="rounded-xl bg-white p-4"><strong>{turn.role === "user" ? "You" : "OOmniker"}:</strong> <LiveText paragraphs={[turn.content]} /></div>)}{advisorBusy ? <p>Reviewing your question and the evidence…</p> : null}</div>
             <label className="mt-4 block font-semibold" htmlFor="oomniker-question">Discuss your options</label>
