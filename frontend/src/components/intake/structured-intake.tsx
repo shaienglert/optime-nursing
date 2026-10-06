@@ -33,7 +33,9 @@ function Choice({ label, active, onClick }: { label: string; active: boolean; on
 
 type PriceFloor = { minimum_monthly_price: number | null; minimum_budget_is_binding: boolean; funding_pathway: string; status: string; synthetic_pilot?: boolean };
 
-function AnswerControl({ question, value, onAnswer, priceFloor }: { question: IntakeQuestion; value: IntakeAnswer; onAnswer: (value: IntakeAnswer, advance: boolean) => void; priceFloor: PriceFloor | null }) {
+type AnswerUpdate = IntakeAnswer | ((previous: IntakeAnswer) => IntakeAnswer);
+
+function AnswerControl({ question, value, onAnswer, priceFloor }: { question: IntakeQuestion; value: IntakeAnswer; onAnswer: (value: AnswerUpdate, advance: boolean) => void; priceFloor: PriceFloor | null }) {
   if (question.kind === "single") {
     return (
       <div className="mt-4 flex flex-wrap gap-2">
@@ -48,7 +50,7 @@ function AnswerControl({ question, value, onAnswer, priceFloor }: { question: In
     return (
       <div className="mt-4 flex flex-wrap gap-2">
         {(question.options || []).map((option) => (
-          <Choice key={option} label={option} active={values.includes(option)} onClick={() => onAnswer(toggle(values, option), false)} />
+          <Choice key={option} label={option} active={values.includes(option)} onClick={() => onAnswer(previous => toggle(Array.isArray(previous) ? previous : [], option), false)} />
         ))}
       </div>
     );
@@ -186,9 +188,17 @@ export function StructuredIntake() {
     setStepId(questions[Math.max(0, nextIndex)].id);
   }
 
-  function answer(value: IntakeAnswer, advance: boolean) {
+  function answer(value: AnswerUpdate, advance: boolean) {
     cancelAdvance();
     if (!question) return;
+    if (typeof value === "function") {
+      // React may batch clicks before the next render. Read the answer from the
+      // queued context, rather than replacing it with a captured selection.
+      setContext(previous => question.set(previous, value(question.get(previous))));
+      setConfirmed(false);
+      setShowError(false);
+      return;
+    }
     const next = question.set(context, value);
     setContext(next);
     // Any change after confirming means the confirmation no longer reflects the answers.
