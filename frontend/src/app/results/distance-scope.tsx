@@ -53,7 +53,7 @@ export function DistanceScope({ scope, onWiden }: { scope?: LocationScope | null
       {offer ? (
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <p className="text-base">
-            {communities(offer.additional_count)} more {offer.additional_count === 1 ? "fits" : "fit"} within {offer.miles} miles (the nearest is {offer.nearest_excluded_miles} miles away).
+            {communities(offer.additional_count)} more in the wider area within {offer.miles} miles (the nearest is {offer.nearest_excluded_miles} miles away). These still need to pass your care requirements and budget checks.
           </p>
           <button type="button" onClick={() => onWiden(offer.miles)} className="rounded-xl bg-forest px-5 py-2 font-semibold text-white">
             Include up to {offer.miles} miles

@@ -402,6 +402,8 @@ def _run_prepared_decision(questionnaire_state: Dict[str, Any], natural_language
     from app.services.semantic_facility_requirements import _apply_pilot_monthly_cost
     for row in rows:
         _apply_pilot_monthly_cost(row)
+    # Household cost must be reflected in every price field, not only the card.
+    apply_funding_pathway(rows, client_intent)
     core["decision_funnel_ledger"] = ledger_rows(rows)
     survivors = [row for row in rows if _is_rankable_candidate(row)]
     nearby_importance = str(questionnaire_state.get("nearbyPlacesImportance") or "No preference")

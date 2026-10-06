@@ -26,7 +26,7 @@ class LaunchPracticalConstraintContractTests(unittest.TestCase):
     BUDGET_MEDICAID_TEXT = "Her budget is $5,000 per month and Medicaid eligibility is pending."
     NEGATED_MEDICAID_TEXT = "He has Medicare and is not applying for Medicaid."
 
-    def test_budget_and_pending_medicaid_survive_the_production_profile(self) -> None:
+    def test_budget_survives_while_insurance_is_removed_from_the_production_profile(self) -> None:
         packet = interpreter_packet(
             {"budget": 5000, "medicaidStatus": "Application pending"},
             [statement(self.BUDGET_MEDICAID_TEXT, ["budget", "medicaidStatus"])],
@@ -35,10 +35,10 @@ class LaunchPracticalConstraintContractTests(unittest.TestCase):
             profile = production_runtime.build_patient_needs_profile({}, self.BUDGET_MEDICAID_TEXT)
         needs = {item["parameter_id"]: item for item in profile["needs"]}
         self.assertIn("published_rates", needs)
-        self.assertIn("medicaid_attributes", needs)
+        self.assertNotIn("medicaid_attributes", needs)
         fields = profile["canonical_structured_profile"]["fields"]
         self.assertEqual("AI_EXTRACTED", fields["budget"]["provenance"])
-        self.assertEqual("AI_EXTRACTED", fields["medicaidStatus"]["provenance"])
+        self.assertNotIn("medicaidStatus", profile["canonical_decision_questionnaire"])
         self.assertEqual("RAW_NARRATIVE_NOT_DECISION_INPUT", profile["natural_language_mapping"]["status"])
 
     def test_budget_and_medicaid_text_without_the_interpreter_changes_no_decision_fact(self) -> None:
@@ -59,7 +59,7 @@ class LaunchPracticalConstraintContractTests(unittest.TestCase):
             profile = production_runtime.build_patient_needs_profile({"medicaidStatus": "Not eligible"}, self.NEGATED_MEDICAID_TEXT)
         needs = {item["parameter_id"]: item for item in profile["needs"]}
         self.assertNotIn("medicaid_attributes", needs)
-        self.assertEqual("Not eligible", profile["canonical_decision_questionnaire"]["medicaidStatus"])
+        self.assertNotIn("medicaidStatus", profile["canonical_decision_questionnaire"])
 
     def test_negated_medicaid_text_without_the_interpreter_changes_no_decision_fact(self) -> None:
         # Negation handling inside the regex reader is now the Live Golden Interpreter
@@ -71,13 +71,14 @@ class LaunchPracticalConstraintContractTests(unittest.TestCase):
         self.assertEqual(baseline, decision_facts(profile))
         self.assertNotIn("medicaid_attributes", {item["parameter_id"] for item in profile["needs"]})
 
-    def test_structured_medicaid_status_survives_without_keyword_in_story(self) -> None:
+    def test_legacy_structured_insurance_never_changes_the_search(self) -> None:
         profile = production_runtime.build_patient_needs_profile(
             {"medicaidStatus": "Application pending"},
             "She needs help finding an appropriate community.",
         )
         needs = {item["parameter_id"]: item for item in profile["needs"]}
-        self.assertEqual("questionnaire.medicaidStatus", needs["medicaid_attributes"]["user_evidence_source"])
+        self.assertNotIn("medicaid_attributes", needs)
+        self.assertNotIn("medicaidStatus", profile["canonical_decision_questionnaire"])
 
     def test_practical_gaps_are_visible_without_becoming_safety_failures(self) -> None:
         needs = [

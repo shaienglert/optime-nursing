@@ -102,8 +102,19 @@ def advise_with_ai(*, analysis: dict[str, Any], client_context: dict[str, Any], 
             if item is None or str(key) in discussed or len(discussed) >= 3:
                 continue
             discussed.append(str(key))
-            message += f" {item.get('label') or 'Your preference'}: {int(item.get('unknown_count') or 0)} communities still need evidence."
-            message += " Missing evidence is not a confirmed mismatch."
+            unknown = int(item.get("unknown_count") or 0)
+            label = item.get("label") or "Your preference"
+            if unknown:
+                message += f" {label}: {unknown} communities still need evidence for this preference. Missing evidence is not a confirmed mismatch."
+            else:
+                message += f" {label}: the evidence for this preference is resolved in the eligible set."
+            unresolved = item.get("unresolved_other_preferences") or []
+            if unresolved:
+                message += " A change still cannot be substantiated because other preferences lack a verified match: " + ", ".join(str(value) for value in unresolved[:8]) + "."
+            if "NO_VERIFIED_QUALITY_ADVANTAGE" in (item.get("proposal_blockers") or []):
+                message += " A verified quality advantage for the alternative has not been established."
+            if "TIED_DISPLAY_ORDER_ONLY" in (item.get("proposal_blockers") or []):
+                message += " Some changes only move communities within an existing tie; that is not evidence of a better recommendation."
         if mode == "EXPLAIN_REQUIREMENTS":
             message += " Your care, safety and other required conditions stay in force in every alternative."
         if mode == "EXPLAIN_TRADEOFF":

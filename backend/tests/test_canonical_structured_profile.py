@@ -30,9 +30,9 @@ def test_unknown_ai_field_is_out_of_schema_and_never_decision_input():
 
 
 def test_ai_field_without_an_exact_quote_is_unclear_and_not_materialized():
-    profile=build_structured_profile({},{"questionnaire_patch":{"medicaidStatus":"Approved"},"statements":[{"raw_text":"she was approved for medicaid","mapped_parameters":["medicaidStatus"],"knowledge_state":"KNOWN"}]},family_text="We are still waiting to hear about Medicaid.")
-    assert profile["fields"]["medicaidStatus"]["state"]=="UNCLEAR"
-    assert "medicaidStatus" not in materialize_questionnaire(profile)
+    profile=build_structured_profile({},{"questionnaire_patch":{"budget":6000},"statements":[{"raw_text":"her monthly budget is 6000","mapped_parameters":["budget"],"knowledge_state":"KNOWN"}]},family_text="We have not settled on a monthly budget.")
+    assert profile["fields"]["budget"]["state"]=="UNCLEAR"
+    assert "budget" not in materialize_questionnaire(profile)
     unquoted=build_structured_profile({"memoryStatus":"No"},{"questionnaire_patch":{"memoryStatus":"Dementia diagnosed"},"statements":[]})
     assert unquoted["fields"]["memoryStatus"]["provenance"]=="BUTTON" and not unquoted["conflicts"]
 

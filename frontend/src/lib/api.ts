@@ -343,6 +343,7 @@ export type DecisionEngineRecommendation = {
   entrance_fee?: number | null;
   nice_to_have_coverage?: { unresolved?: string[] };
   structured_nice_to_have_coverage?: { unresolved?: string[] };
+  client_intent_fit?: { nice_match?: string[]; nice_mismatch?: string[]; nice_unknown?: string[] };
   combined_care_solution?: {
     delivery_model?: string;
     care_component?: { delivery_model?: string; adl_required?: boolean; external_care_allowed?: boolean | string };

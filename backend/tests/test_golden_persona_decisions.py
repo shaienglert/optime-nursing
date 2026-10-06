@@ -197,6 +197,8 @@ def _violations(persona: Dict[str, Any], decision: Dict[str, Any]) -> List[str]:
     for row in results:
         fid = row.get("canonical_facility_id")
         facts, record = FACTS.get(fid, {}), index.get(fid, {})
+        if row.get("monthly_price_basis") == "TWO_RESIDENT_TOTAL" and row.get("relevant_monthly_cost") != row.get("starting_monthly_price"):
+            problems.append(f"{fid} household monthly cost disagrees with the starting price")
         # The budget is compared with the cost under the funding pathway: private-pay
         # price, or the household out-of-pocket under Medicaid (never the private price).
         price = row.get("relevant_monthly_cost") if row.get("funding_pathway") == "MEDICAID" else row.get("starting_monthly_price")
