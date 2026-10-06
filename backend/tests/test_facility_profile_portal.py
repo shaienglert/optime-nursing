@@ -5,7 +5,9 @@ import unittest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-import app.main  # noqa: F401 -- registers every model so Base.metadata.create_all resolves all FKs
+from app.models.facility_questionnaire import FACILITY_QUESTIONNAIRE_V1, facility_questionnaire_v1_flat
+
+QUESTION_COUNT = len(facility_questionnaire_v1_flat())
 from app.database import Base
 from app.models.facility import (
     AnswerState,
@@ -110,8 +112,8 @@ class FacilityProfilePortalTests(unittest.TestCase):
     def test_snapshot_starts_every_question_unknown_and_carries_public_record(self) -> None:
         snapshot = facility_profile_snapshot(self.db, self.facility.id)
 
-        self.assertEqual(snapshot["completeness"]["total_questions"], 33)
-        self.assertEqual(snapshot["completeness"]["unanswered_count"], 33)
+        self.assertEqual(snapshot["completeness"]["total_questions"], QUESTION_COUNT)
+        self.assertEqual(snapshot["completeness"]["unanswered_count"], QUESTION_COUNT)
         self.assertEqual(snapshot["completeness"]["overall"], 0.0)
 
         values = {
@@ -130,8 +132,8 @@ class FacilityProfilePortalTests(unittest.TestCase):
 
     def test_snapshot_reports_seven_sections_covering_every_question(self) -> None:
         snapshot = facility_profile_snapshot(self.db, self.facility.id)
-        self.assertEqual(len(snapshot["sections"]), 7)
-        self.assertEqual(sum(s["total"] for s in snapshot["sections"]), 33)
+        self.assertEqual(len(snapshot["sections"]), len(FACILITY_QUESTIONNAIRE_V1))
+        self.assertEqual(sum(s["total"] for s in snapshot["sections"]), QUESTION_COUNT)
 
     def test_missing_facility_is_a_value_error(self) -> None:
         with self.assertRaises(ValueError):
@@ -197,7 +199,7 @@ class FacilityProfilePortalTests(unittest.TestCase):
         completeness = recompute_completeness(self.db, self.facility.id)
         # UNKNOWN is a legitimate answer to store -- the provider may genuinely not know --
         # but it must not be counted as coverage.
-        self.assertEqual(completeness["unanswered_count"], 32)
+        self.assertEqual(completeness["unanswered_count"], QUESTION_COUNT - 1)
 
     def test_unknown_capability_key_is_rejected(self) -> None:
         with self.assertRaises(ValueError):
@@ -312,7 +314,7 @@ class FacilityProfilePortalTests(unittest.TestCase):
         completeness = recompute_completeness(self.db, self.facility.id)
         self.assertEqual(completeness["dining"], 1.0)
         self.assertEqual(completeness["medical"], 0.0)
-        self.assertEqual(completeness["unanswered_count"], 29)
+        self.assertEqual(completeness["unanswered_count"], QUESTION_COUNT - 4)
         # One of five buckets full.
         self.assertEqual(completeness["overall"], 0.2)
 

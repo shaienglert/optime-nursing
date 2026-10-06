@@ -7,6 +7,7 @@ import {
   AnswerState,
   Completeness,
   ProfileSnapshot,
+  QuestionnaireDetails,
   addFacilityPhoto,
   ensureOpticareDemo,
   fetchProfileSnapshot,
@@ -67,6 +68,7 @@ export default function ProviderProfilePage({
 
   const [snapshot, setSnapshot] = useState<ProfileSnapshot | null>(null);
   const [draft, setDraft] = useState<Record<string, AnswerState>>({});
+  const [detailDraft, setDetailDraft] = useState<Record<string, QuestionnaireDetails>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -92,6 +94,7 @@ export default function ProviderProfilePage({
         if (isMounted) {
           setSnapshot(next);
           setDraft({});
+          setDetailDraft({});
         }
       } catch (err) {
         if (isMounted) {
@@ -122,7 +125,10 @@ export default function ProviderProfilePage({
     setError(null);
     setNotice(null);
     try {
-      const result = await saveCapabilities(facilityId, userId, draft);
+      const result = await saveCapabilities(facilityId, userId, draft, Object.fromEntries(Object.keys(draft).map((key) => {
+        const saved = snapshot?.sections.flatMap((section) => section.questions).find((question) => question.key === key);
+        return [key, detailDraft[key] ?? saved?.details ?? {}];
+      })));
       setNotice(
         result.updated === 0
           ? "Nothing changed — those answers were already recorded."
@@ -206,7 +212,7 @@ export default function ProviderProfilePage({
             <p className="mt-5 max-w-2xl text-xl leading-8 text-muted">We will verify a work email before anyone can update the public listing. Every change remains linked to the person who made it.</p>
             <div className="mt-8 rounded-2xl border border-line bg-white/85 p-5 text-base leading-7 text-muted oomnik-panel">
               <p className="font-semibold text-ink">What happens next</p>
-              <p className="mt-2">After email verification, a short questionnaire helps place the community accurately. Information you enter is clearly labelled as provider-supplied and does not improve organic ranking by itself.</p>
+              <p className="mt-2">After email verification, complete your profile section by section so families can understand which needs your community supports. Information you enter is clearly labelled as provider-supplied and does not improve organic ranking by itself.</p>
             </div>
             {snapshot.is_demo ? (
               <div className="mt-8 rounded-2xl border border-line bg-sand p-5">
@@ -272,7 +278,7 @@ export default function ProviderProfilePage({
         </h2>
         <p className="mt-1 max-w-2xl text-sm text-muted">
           &ldquo;Not sure&rdquo; is a real answer and costs you nothing in ranking. It just
-          cannot match a family who asked for that thing.
+          cannot prove that you meet a family’s request. Describe conditions, service delivery and supporting sources so we can check the specific need.
         </p>
         {snapshot.sections.some((section) => section.prefilled_from_public_record > 0) ? (
           <p className="mt-2 max-w-2xl text-sm text-muted">
@@ -282,10 +288,10 @@ export default function ProviderProfilePage({
           </p>
         ) : null}
 
-        <div className="mt-6 space-y-8">
+        <fieldset disabled={isSaving} className="mt-6 space-y-8">
           {snapshot.sections.map((section) => (
-            <div key={section.section}>
-              <div className="flex items-baseline justify-between border-b border-line pb-2">
+            <details key={section.section} className="rounded-xl border border-line p-4">
+              <summary className="flex items-baseline justify-between border-b border-line pb-2">
                 <h3 className="font-semibold text-ink">{section.section}</h3>
                 <span className="text-xs text-muted">
                   {section.answered}/{section.total}
@@ -293,11 +299,16 @@ export default function ProviderProfilePage({
                     ? ` · ${section.prefilled_from_public_record} from public record`
                     : ""}
                 </span>
-              </div>
+              </summary>
               <ul className="mt-2 divide-y divide-line">
                 {section.questions.map((question) => {
                   const current = answerOf(question.key, question.value);
                   const isDirty = draft[question.key] !== undefined;
+                  const details = detailDraft[question.key] ?? question.details ?? {};
+                  const editDetail = (field: keyof QuestionnaireDetails, value: string) => {
+                    setDraft((previous) => ({ ...previous, [question.key]: current }));
+                    setDetailDraft((previous) => ({ ...previous, [question.key]: { ...details, [field]: value } }));
+                  };
                   return (
                     <li
                       key={question.key}
@@ -322,13 +333,13 @@ export default function ProviderProfilePage({
                             <button
                               key={choice.value}
                               type="button"
-                              disabled={!canEdit}
+                              disabled={!canEdit || isSaving}
                               aria-pressed={selected}
                               onClick={() =>
                                 setDraft((previous) => ({ ...previous, [question.key]: choice.value }))
                               }
                               className={[
-                                "rounded border px-2.5 py-1 text-xs font-medium transition",
+                                "min-h-11 rounded border px-3 py-2 text-sm font-medium transition",
                                 selected
                                   ? "border-forest bg-forest text-white"
                                   : "border-line bg-white text-muted hover:border-line",
@@ -340,13 +351,58 @@ export default function ProviderProfilePage({
                           );
                         })}
                       </div>
+                      <div className="w-full space-y-2">
+                        {question.hint ? <p className="text-sm text-muted">{question.hint}</p> : null}
+                        {question.response_kind && question.response_kind !== "state" && (current === "YES" || current === "LIMITED") ? (
+                          <label className="block text-sm text-muted">
+                            Value
+                            <input type={question.response_kind === "number" ? "number" : question.response_kind === "date" ? "date" : "text"}
+                              min={question.response_kind === "number" ? 0 : undefined}
+                              step={question.response_kind === "number" ? "any" : undefined}
+                              maxLength={4000}
+                              value={details.value ?? ""}
+                              onChange={(event) => editDetail("value", event.target.value)}
+                              className="mt-1 block min-h-11 w-full rounded border border-line bg-white px-3 text-ink" />
+                          </label>
+                        ) : null}
+                        <details className="text-sm">
+                          <summary className="cursor-pointer text-forest">Conditions and supporting information{current === "LIMITED" ? " (required)" : ""}</summary>
+                          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                            <label className="sm:col-span-2">Conditions, limitations and relevant unit or program
+                              <textarea maxLength={4000} value={details.conditions ?? ""} onChange={(event) => editDetail("conditions", event.target.value)}
+                                className="mt-1 block w-full rounded border border-line bg-white p-3" />
+                            </label>
+                            <label>Applies to
+                              <select value={details.scope ?? ""} onChange={(event) => editDetail("scope", event.target.value)} className="mt-1 block min-h-11 w-full rounded border border-line bg-white px-3">
+                                <option value="">Not specified</option>
+                                <option value="FACILITY">Whole community</option><option value="UNIT">Specific unit</option>
+                                <option value="PROGRAM">Specific program</option><option value="SERVICE">Specific service</option>
+                              </select>
+                            </label>
+                            <label>Service delivery
+                              <select value={details.delivery ?? ""} onChange={(event) => editDetail("delivery", event.target.value)} className="mt-1 block min-h-11 w-full rounded border border-line bg-white px-3">
+                                <option value="">Not specified</option><option value="ON_SITE">On site</option>
+                                <option value="THIRD_PARTY">External provider</option><option value="TRANSPORT">Transport to service</option>
+                                <option value="UNKNOWN">Not sure</option>
+                              </select>
+                            </label>
+                            <label>Supporting policy or source URL
+                              <input type="url" maxLength={4000} value={details.evidence_url ?? ""} onChange={(event) => editDetail("evidence_url", event.target.value)} className="mt-1 block min-h-11 w-full rounded border border-line bg-white px-3" />
+                            </label>
+                            <label>Date information was checked
+                              <input type="date" value={details.observed_on ?? ""} onChange={(event) => editDetail("observed_on", event.target.value)} className="mt-1 block min-h-11 w-full rounded border border-line bg-white px-3" />
+                            </label>
+                          </div>
+                          <p className="mt-2 text-xs text-muted">Recorded as information supplied by your community. Supporting information is reviewed separately.</p>
+                        </details>
+                      </div>
                     </li>
                   );
                 })}
               </ul>
-            </div>
+            </details>
           ))}
-        </div>
+        </fieldset>
 
         {canEdit ? (
           <div className="sticky bottom-4 mt-8 flex items-center justify-between rounded-md border border-line bg-white px-4 py-3 shadow-sm">
