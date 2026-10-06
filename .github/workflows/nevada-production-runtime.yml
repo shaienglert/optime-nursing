@@ -348,7 +348,9 @@ jobs:
           couple_blocked = run_patient_decision_engine(couple_state, couple_query, limit=5)
           couple_human = couple_blocked['decision_intelligence']['human_intelligence']
           unknowns = set(couple_human['living_strategy_guardian']['material_unknowns'])
-          for required in ('rehab_level_needed', 'medicare_status', 'move_timing_vs_rehab', 'monthly_budget', 'ccrc_entrance_fee_tolerance'):
+          # Insurance is settled with the facility and cannot block family intake.
+          assert 'medicare_status' not in unknowns, unknowns
+          for required in ('rehab_level_needed', 'move_timing_vs_rehab', 'monthly_budget', 'ccrc_entrance_fee_tolerance'):
               assert required in unknowns, (required, unknowns)
           assert couple_blocked['decision_intelligence']['recommendation_execution_allowed'] is False
           assert couple_blocked['results'] == []
@@ -359,7 +361,6 @@ jobs:
           couple_ready = deepcopy(couple_state)
           couple_ready.update({
               'budget': 8000,
-              'medicareStatus': 'Original Medicare',
               'moveTiming': 'Move during recovery',
               'entranceFeeTolerance': 'No',
           })
@@ -368,7 +369,7 @@ jobs:
           hi_runtime.interpret_client_intent_with_ai = lambda **kwargs: with_facts({
               'decision_readiness': 'READY', 'next_question': None, 'statements': [],
           }, CURRENT_FACTS)
-          couple = run_patient_decision_engine(couple_ready, couple_query + ' The clinical team says only personal-care help is needed, not skilled rehab. Our budget is $8,000 monthly; he has Original Medicare; we want to move during recovery and do not want a CCRC entrance fee.', limit=5)
+          couple = run_patient_decision_engine(couple_ready, couple_query + ' The clinical team says only personal-care help is needed, not skilled rehab. Our budget is $8,000 monthly; we want to move during recovery and do not want a CCRC entrance fee.', limit=5)
           assert couple['decision_intelligence']['recommendation_execution_allowed'] is True
           assert len(couple['results']) == couple['decision_intelligence']['facility_selection_pipeline']['must_eligible_count'] == 1
           strategy = couple['decision_intelligence']['living_strategy']
