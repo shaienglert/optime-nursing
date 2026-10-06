@@ -399,6 +399,8 @@ def apply_must_ai_nice_pipeline(
     from app.services.funding_explanation import build_funding_explanation
     for row in selected:
         row["funding_explanation"] = build_funding_explanation(row, questionnaire_state)
+    from app.services.public_quality_display import attach_public_quality
+    attach_public_quality(selected)
     decision["financial_review"] = {"status": "PENDING_ONE_TIME_COST_CONFIRMATION" if capital_review else "NO_KNOWN_ONE_TIME_COST_REVIEW",
                                     "candidate_ids": capital_review}
     if _env_true("OPTIME_LIVE_PREFERENCE_VERIFICATION"):

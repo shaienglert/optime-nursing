@@ -302,6 +302,11 @@ export type PatientNeedsProfile = {
   decision_intelligence?: Record<string, unknown>;
 };
 
+export type PublicQuality =
+  | { kind: "NV_STATE_INSPECTION"; source_label: string; latest_grade: "A" | "B" | "C" | "D" | null; latest_grade_date: string | null; graded_inspections: number; inspections_on_record: number; grades_below_a: Record<string, number>; disciplinary_action_on_record: boolean; source_url?: string | null; caveat: string }
+  | { kind: "CMS_FIVE_STAR"; source_label: string; overall: number | null; health_inspection: number | null; staffing: number | null; quality_measures: number | null; as_of: string | null; source_url?: string | null; caveat: string }
+  | { kind: "NONE"; statement: string };
+
 export type FundingExplanation = {
   pathway: "PRIVATE_PAY" | "MEDICAID";
   monthly: { amount: number | null; basis: string; budget: number | null; included_in_budget: boolean | null; price_source?: string | null };
@@ -330,6 +335,7 @@ export type DecisionEngineRecommendation = {
   single_resident_starting_monthly_price?: number | null;
   entrance_fee?: number | null;
   funding_explanation?: FundingExplanation | null;
+  public_quality?: PublicQuality | null;
   nice_to_have_coverage?: { unresolved?: string[] };
   structured_nice_to_have_coverage?: { unresolved?: string[] };
   combined_care_solution?: {
