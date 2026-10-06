@@ -1,4 +1,5 @@
 const { test, expect } = require('@playwright/test');
+// Verification branch: trigger the governed ten-scenario AI browser journey.
 const fs = require('node:fs');
 const path = require('node:path');
 const zlib = require('node:zlib');
