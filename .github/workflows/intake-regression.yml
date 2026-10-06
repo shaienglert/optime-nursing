@@ -50,8 +50,8 @@ jobs:
         run: node scripts/generate_intake_label_inventory.cjs --check
       - name: Verify all frontend unit contracts
         working-directory: frontend
-        # Browser specs have their own Playwright workflows; run every *.test.ts here.
-        run: npx vitest run tests/*.test.ts
+        # Browser specs have their own Playwright workflows; run the TypeScript unit tests here.
+        run: npx vitest run tests/*.test.ts tests/*.test.tsx
       - name: Verify frontend types
         working-directory: frontend
         run: npm run typecheck
