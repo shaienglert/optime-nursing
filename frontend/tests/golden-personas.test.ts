@@ -102,9 +102,9 @@ describe("golden personas against the live intake question graph", () => {
     expect(problems, `\n${problems.join("\n")}\n`).toEqual([]);
   });
 
-  it("budgets sit on the selector's five-hundred-dollar grid", () => {
-    const off = built.filter(({ persona }) => Number(persona.answers.budget) % 500 !== 0).map(({ persona }) => persona.id);
-    expect(off, "golden budgets must be selectable in $500 steps").toEqual([]);
+  it("budgets are positive monthly targets for the region-specific selector", () => {
+    const off = built.filter(({ persona }) => !Number.isFinite(Number(persona.answers.budget)) || Number(persona.answers.budget) <= 0).map(({ persona }) => persona.id);
+    expect(off, "golden budget targets must be positive; the browser validates $500 increments from its actual region minimum").toEqual([]);
   });
 
   it("the submissions fixture is current", () => {

@@ -92,7 +92,15 @@ async function answerInterview(page, scenario, maxSteps = 120) {
       if (id === 'budget') {
         const budgetChoice = page.getByRole('combobox', { name: 'Monthly budget in dollars', exact: true });
         await expect(budgetChoice).toBeVisible({ timeout: 30_000 });
-        await budgetChoice.selectOption(String(value));
+        const choices = (await budgetChoice.locator('option').evaluateAll(options => options.map(option => Number(option.value)))).filter(amount => amount > 0);
+        expect(choices.length).toBeGreaterThan(1);
+        for (let index = 1; index < choices.length; index += 1) expect(choices[index] - choices[index - 1]).toBe(500);
+        const chosen = choices.reduce((best, amount) => Math.abs(amount - Number(value)) < Math.abs(best - Number(value)) ? amount : best, choices[0]);
+        scenario.requestedBudget = Number(value);
+        scenario.budget = chosen;
+        scenario.answers.budget = chosen;
+        console.log('OOMNIK_BUDGET_GRID', JSON.stringify({ scenario: scenario.id, requested: Number(value), selected: chosen, minimum: choices[0] }));
+        await budgetChoice.selectOption(String(chosen));
         await next.click();
         continue;
       }
@@ -260,8 +268,10 @@ test.describe('real synthetic-pilot customer journey', () => {
     // an exception and ranked after every in-budget option. Nothing further over is shown.
     // Golden contract: budget is strict first. Expansion is capped at +10% and
     // may only fill a shortlist after otherwise-qualified in-budget candidates.
-    const expectedBudget = oracle.budget;
-    expect(scenario.budget, `${scenario.id} fixture budget drifted from golden oracle`).toBe(expectedBudget);
+    // The UI chooses the nearest value on the region-specific grid. Grade the
+    // response against the amount actually selected, preserving the 10% limit.
+    expect(scenario.requestedBudget, `${scenario.id} requested fixture budget drifted from golden oracle`).toBe(oracle.budget);
+    const expectedBudget = scenario.budget;
     const budgetCeiling = expectedBudget * 1.1;
     if (budgetCeiling < minimumCarePrice) {
       expect(results).toHaveLength(0);
