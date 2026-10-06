@@ -228,11 +228,12 @@ class MainDecisionRuntimeContractTests(unittest.TestCase):
         human = profile["decision_intelligence"]["human_intelligence"]
         strategy_guardian = human["living_strategy_guardian"]
         unknowns = set(strategy_guardian["material_unknowns"])
-        for required in ("medicare_status", "move_timing_vs_rehab", "monthly_budget", "ccrc_entrance_fee_tolerance"):
+        for required in ("move_timing_vs_rehab", "monthly_budget", "ccrc_entrance_fee_tolerance"):
             self.assertIn(required, unknowns)
         self.assertEqual("NEEDS_CLARIFICATION", human["decision_readiness"])
         self.assertEqual(1, len(human["adaptive_questions"]))
-        self.assertEqual("medicare_status", human["adaptive_questions"][0]["target_fact_key"])
+        self.assertIn(human["adaptive_questions"][0]["target_fact_key"], unknowns)
+        self.assertFalse({"medicare_status", "medicaid_status"} & unknowns)
         self.assertEqual(
             "DETERMINISTIC_CANONICAL_FALLBACK",
             human["readiness_guardian"]["question_target_repair_resolution"],
