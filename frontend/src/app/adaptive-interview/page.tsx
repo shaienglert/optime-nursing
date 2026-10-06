@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { restoreQuestionnaireState, type QuestionnaireState, useQuestionnaire } from "@/context/questionnaire-context";
 import { fetchPatientNeedsProfile, persistAdaptiveQuestionSignal, type PatientNeedsProfile } from "@/lib/api";
 import { applyAdaptiveAnswer, type AdaptiveQuestion } from "@/lib/adaptive-answer";
+import { checkOpenAnswer, explicitUnknownAnswer, unknownChoiceLabel } from "@/lib/open-answer";
 import { applyCanonicalIdentity } from "@/lib/canonical-intake-state";
 import { canonicalRecoveryQuestion, hasUnresolvedSemanticConflict, semanticConflictQuestion, semanticIntakeFailure } from "@/lib/semantic-conflict";
 import { OomnikMark } from "@/components/brand/oomnik-mark";
@@ -155,6 +156,7 @@ export default function AdaptiveInterviewPage() {
   const { state, setState } = useQuestionnaire();
   const [question, setQuestion] = useState<AdaptiveQuestion | null>(null);
   const [answer, setAnswer] = useState("");
+  const [answerError, setAnswerError] = useState("");
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const nextUrl = useRef("/results");
@@ -252,8 +254,13 @@ export default function AdaptiveInterviewPage() {
 
   async function submitAnswer(raw: string) {
     if (!question || busy) return;
-    const value = raw.trim();
-    if (!value) return;
+    const checked = checkOpenAnswer(question.target_fact_key, raw);
+    if (!checked.ok) {
+      setAnswerError(checked.message);
+      return;
+    }
+    setAnswerError("");
+    const value = checked.answer;
     setBusy(true);
     const nextState = applyAdaptiveAnswer(state, question, value);
     setState(nextState);
@@ -275,6 +282,7 @@ export default function AdaptiveInterviewPage() {
   }
 
   const options = question?.answer_options || [];
+  const notSureLabel = unknownChoiceLabel(question?.target_fact_key);
 
   return (
     <main className="min-h-screen bg-[#f8f5ef] px-5 py-10 text-[#22332d] sm:px-8">
@@ -305,8 +313,12 @@ export default function AdaptiveInterviewPage() {
             ) : (
               <form className="ml-12 mt-5" onSubmit={(event) => { event.preventDefault(); void submitAnswer(answer); }}>
                 <label htmlFor="decision-answer" className="sr-only">Your answer</label>
-                <textarea id="decision-answer" value={answer} onChange={(event) => setAnswer(event.target.value)} disabled={busy} rows={3} placeholder="Tell me in your own words…" className="w-full rounded-[1.5rem] border border-[#bcd9e7] bg-white px-5 py-4 text-lg leading-8 outline-none focus:border-[#079ff2]" />
+                <textarea id="decision-answer" value={answer} onChange={(event) => { setAnswer(event.target.value); setAnswerError(""); }} disabled={busy} rows={3} placeholder="Tell me in your own words…" className="w-full rounded-[1.5rem] border border-[#bcd9e7] bg-white px-5 py-4 text-lg leading-8 outline-none focus:border-[#079ff2]" />
                 <button type="submit" disabled={busy || !answer.trim()} className="mt-4 inline-flex items-center gap-2 rounded-2xl bg-[#315f53] px-7 py-4 text-xl font-semibold text-white disabled:opacity-50">{!busy && <OomnikMark size={18} />}{busy ? "Using your answer…" : "Continue"}</button>
+                {notSureLabel ? (
+                  <button type="button" disabled={busy} onClick={() => void submitAnswer(explicitUnknownAnswer())} className="mt-4 ml-3 rounded-2xl border border-[#bcd9e7] bg-white px-6 py-4 text-xl font-medium text-[#234f63] disabled:opacity-50">{notSureLabel}</button>
+                ) : null}
+                {answerError ? <p role="alert" className="mt-3 text-lg leading-7 text-rose-800">{answerError}</p> : null}
               </form>
             )}
           </div>

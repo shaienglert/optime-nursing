@@ -17,7 +17,7 @@ def test_each_structured_assistance_choice_reaches_same_adl_gate(selection, cont
 def test_joined_and_list_storage_preserve_all_selected_parameters():
     selections = ["Help with medications", "Help with toileting"]
     assert assistance_parameters(selections) == assistance_parameters(", ".join(selections)) == {
-        "medication_support", "adl_support", "transfer_assistance"}
+        "medication_support", "adl_support"}
 
 
 @pytest.mark.parametrize("selection", ["Help with bathing", "Help with dressing", "Help with toileting", "Daytime supervision", "24/7 support required"])

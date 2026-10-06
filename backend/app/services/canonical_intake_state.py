@@ -72,6 +72,20 @@ def _budget_amount(value: Any) -> Optional[Union[int, float]]:
     return int(amount) if amount == int(amount) else amount
 
 
+# Legacy/free memory labels all mean the intake's "Significant memory issues" (a memory-care
+# need). One vocabulary for every channel, so the strategy, the needs engine and the filters
+# can never disagree about whether the resident has a memory-care need.
+_MEMORY_STATUS_ALIASES = {
+    "dementia": "Significant memory issues",
+    "alzheimer": "Significant memory issues",
+    "alzheimers": "Significant memory issues",
+    "alzheimer's": "Significant memory issues",
+    "dementia/alzheimer's": "Significant memory issues",
+    "memory care": "Significant memory issues",
+    "yes": "Significant memory issues",
+}
+
+
 def canonicalize_intake_state(questionnaire_state: Mapping[str, Any] | None) -> Dict[str, Any]:
     """Return an idempotent copy with explicit identity vocabulary normalized."""
 
@@ -92,8 +106,14 @@ def canonicalize_intake_state(questionnaire_state: Mapping[str, Any] | None) -> 
     elif relationship_gender:
         state["gender"] = relationship_gender
 
-    amount = _budget_amount(state.get("budget"))
-    if amount is not None:
-        state["budget"] = amount
+    memory_status = _MEMORY_STATUS_ALIASES.get(str(state.get("memoryStatus") or "").strip().casefold())
+    if memory_status:
+        state["memoryStatus"] = memory_status
+
+    # availableCapital (one-time funds) is a separate fact from the monthly budget.
+    for money_field in ("budget", "availableCapital"):
+        amount = _budget_amount(state.get(money_field))
+        if amount is not None:
+            state[money_field] = amount
 
     return state

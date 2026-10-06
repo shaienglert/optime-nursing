@@ -121,30 +121,123 @@ def test_golden_ongoing_adl_client_top5_is_assisted_living_primary_fit():
     assert all((row.get("client_intent_fit") or {}).get("hard_gate") != "FAIL" for row in rows)
 
 
-def test_golden_memory_care_client_top5_requires_confirmed_memory_fit():
-    result = _run_ready(
-        {
-            "relationship": "My mother",
-            "ageGroup": "80-84",
-            "assistanceLevel": "Needs supervision and daily assistance",
-            "memoryStatus": "Dementia",
-            "budget": 9000,
-            "locationCity": "Las Vegas",
-        },
-        (
-            "My mother is 82, has diagnosed dementia with wandering risk, and needs memory-care supervision and daily assistance. "
-            "We need an appropriate memory care setting in Las Vegas. Her monthly budget is $9,000."
-        ),
-    )
+_MEMORY_STORY = (
+    "My mother is 82, has diagnosed dementia and needs memory-care supervision and daily assistance. "
+    "We need an appropriate memory care setting in Las Vegas. Her monthly budget is $9,000."
+)
+_MEMORY_CLIENT = {
+    "relationship": "My mother",
+    "ageGroup": "80-84",
+    "assistanceLevel": "Needs supervision and daily assistance",
+    # The intake's own enum value; the legacy free label "Dementia" never created the
+    # memory-care need in the engine.
+    "memoryStatus": "Significant memory issues",
+    "budget": 9000,
+    "locationCity": "Las Vegas",
+}
+
+
+def _memory_client(wandering=None):
+    client = dict(_MEMORY_CLIENT)
+    if wandering is not None:
+        client["humanIntelligenceV2"] = {"transitionRiskProfile": {"wanderingConcerns": wandering}}
+    return client
+
+
+def _must_keys(result):
+    return {item["key"] for item in result["decision_intelligence"]["client_intent"]["must_haves"]}
+
+
+def test_golden_memory_label_alone_asks_the_safety_question_instead_of_assuming_a_secured_unit():
+    # Owner decision: a memory label never creates a secured-unit MUST by itself. With the
+    # wandering/security question unanswered the interview asks it and withholds results.
+    result = _run_ready(_memory_client(), _MEMORY_STORY)
+    state = result["decision_intelligence"]["canonical_decision_state"]
+    assert state["next_action"] == "ASK_CLIENT" and state["client"] == "INCOMPLETE"
+    # The memory need still requires a memory-care setting; only the secured unit waits.
+    assert "MEMORY_CARE_SETTING_CONFIRMED" in _must_keys(result)
+    assert "SECURED_UNIT_AVAILABLE" not in _must_keys(result)
+    assert "memory_safety_need" in {q["question_key"] for q in result["decision_intelligence"]["living_strategy"]["guardian_clarification_candidates"]}
+    assert result["result_count"] == 0
+
+
+@pytest.mark.parametrize("answer", ["No", "Not sure"])
+def test_golden_memory_client_with_answered_safety_question_gets_results(answer):
+    # After the question is answered (even "Not sure") the client progresses and receives
+    # results: no secured-unit MUST; the memory-care setting is still required, so only
+    # communities with confirmed memory care are shown (none enter by ranking lower).
+    result = _run_ready(_memory_client(answer), _MEMORY_STORY)
     rows = result.get("results") or []
-    assert rows, result
+    assert rows, result["decision_intelligence"]["canonical_decision_state"]
+    assert "MEMORY_CARE_SETTING_CONFIRMED" in _must_keys(result)
+    assert "SECURED_UNIT_AVAILABLE" not in _must_keys(result)
     assert all((row.get("client_intent_fit") or {}).get("hard_gate") != "FAIL" for row in rows)
-    assert all((row.get("care_setting_fit") or {}).get("status") == "PRIMARY_FIT" for row in rows), [
-        (row.get("facility_name"), row.get("care_setting_fit"), row.get("memory_care_classification")) for row in rows
-    ]
+    assert all((row.get("care_setting_fit") or {}).get("status") == "PRIMARY_FIT" for row in rows)
+    # The memory-care need itself is evaluated against each community's official evidence.
     assert all(str(row.get("memory_care_classification") or "").upper() == "CONFIRMED" for row in rows), [
         (row.get("facility_name"), row.get("memory_care_classification")) for row in rows
     ]
+    assert all({"memory_care", "dementia_alz_programs"} <= {n["parameter_id"] for n in row.get("matched_needs") or []} for row in rows)
+
+
+def test_golden_legacy_dementia_label_reaches_the_same_results_as_the_enum_value():
+    # One meaning in every input channel: the legacy label must flow through the strategy,
+    # the needs engine, the filter and the results exactly like the intake's own enum value.
+    legacy = _run_ready(dict(_memory_client("No"), memoryStatus="Dementia"), _MEMORY_STORY)
+    enum = _run_ready(_memory_client("No"), _MEMORY_STORY)
+    assert legacy["result_count"] > 0
+    assert [r["canonical_facility_id"] for r in legacy["results"]] == [r["canonical_facility_id"] for r in enum["results"]]
+    assert "MEMORY_CARE_SETTING_CONFIRMED" in _must_keys(legacy)
+    assert {"memory_care", "dementia_alz_programs"} <= {n["parameter_id"] for n in legacy["patient_needs_profile"]["needs"]}
+
+
+def test_golden_confirmed_wandering_is_pending_evidence_not_silent_zero_and_never_unconfirmed():
+    result = _run_ready(_memory_client("Yes"), _MEMORY_STORY)
+    assert {"MEMORY_CARE_SETTING_CONFIRMED", "SECURED_UNIT_AVAILABLE"} <= _must_keys(result)
+    state = result["decision_intelligence"]["canonical_decision_state"]
+    assert state["client"] == "COMPLETE"
+    # The Las Vegas dataset has no verified secured-unit evidence for any community
+    # (181 pass the memory-care classification but are unverified for a secured unit):
+    # the outcome must be an explicit evidence-pending state, never an unconfirmed row.
+    assert result["result_count"] == 0
+    assert state["next_action"] == "RESEARCH_PROVIDER_EVIDENCE"
+    stage = {item["stage"]: item for item in result["decision_funnel"]["stages"]}["MUST_EVIDENCE_UNKNOWN"]
+    assert stage["zeroing_parameter"] == "SECURED_UNIT_AVAILABLE"
+
+
+def test_golden_confirmed_wandering_returns_only_communities_with_verified_secured_unit_evidence():
+    # Test-only evidence: a verified secured-unit row for SOME memory-care communities, clearly
+    # labelled as a fixture. It proves the gate returns exactly the communities that have the
+    # evidence; no production evidence is created or implied.
+    from app.services import facility_parameter_service as service
+
+    original = service._synthesize_nevada_evidence
+    granted: set = set()
+
+    def with_fixture_evidence(canonical_rows, generated_at):
+        rows = original(canonical_rows, generated_at)
+        confirmed = [r for r in canonical_rows if r.get("memory_care_classification") == "CONFIRMED"]
+        for facility in confirmed[:3]:
+            canonical_id = str(facility.get("canonical_id") or "").strip()
+            granted.add(canonical_id)
+            rows.append(service._evidence_row(
+                canonical_id, "secured_units", "YES", source="TEST FIXTURE (not production evidence)",
+                source_record_id="fixture", evidence_date=generated_at,
+            ))
+        return rows
+
+    try:
+        with patch.object(service, "_synthesize_nevada_evidence", with_fixture_evidence):
+            result = _run_ready(_memory_client("Yes"), _MEMORY_STORY)
+    finally:
+        service.refresh_runtime_cache("restore_after_secured_unit_fixture")
+    assert granted, "fixture granted no evidence"
+    rows = result.get("results") or []
+    assert rows, result["decision_intelligence"]["canonical_decision_state"]
+    assert {r["canonical_facility_id"] for r in rows} <= granted
+    for row in rows:
+        assert row["secured_unit_evidence"]["verified"] is True
+        assert str(row.get("memory_care_classification")).upper() == "CONFIRMED"
 
 
 def test_golden_skilled_nursing_client_does_not_surface_residential_only_settings():

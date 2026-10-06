@@ -34,7 +34,7 @@ CARE_MUST_KEYS = frozenset({
     "REHAB_PATH_AVAILABLE",
     "POST_HOSPITAL_REHAB_PROGRAM",
     "SECURED_UNIT_AVAILABLE",
-    "SECURE_MEMORY_CARE_CONFIRMED",
+    "MEMORY_CARE_SETTING_CONFIRMED",
 })
 # Client MUSTs that are not care needs. They stay hard gates on what is shown, but they do
 # not define what care costs, so they do not shape the floor. Budget and Medicaid are here

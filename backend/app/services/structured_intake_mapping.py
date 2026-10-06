@@ -3,14 +3,14 @@
 STRUCTURED_INTAKE_MAPPING_CONTRACT = {
     "assistanceLevel": {
         "Fully independent": {"classification": "NO_REQUIREMENT", "parameter_ids": []},
-        "Light assistance": {"classification": "NEED", "parameter_ids": ["adl_support", "transfer_assistance"]},
+        "Light assistance": {"classification": "NEED", "parameter_ids": ["adl_support"]},
         "Help with bathing": {"classification": "NEED", "parameter_ids": ["adl_support"]},
         "Help with dressing": {"classification": "NEED", "parameter_ids": ["adl_support"]},
-        "Help with toileting": {"classification": "NEED", "parameter_ids": ["adl_support", "transfer_assistance"]},
+        "Help with toileting": {"classification": "NEED", "parameter_ids": ["adl_support"]},
         "Help with medications": {"classification": "NEED", "parameter_ids": ["medication_support"]},
-        "Daytime supervision": {"classification": "NEED", "parameter_ids": ["adl_support", "transfer_assistance"]},
-        "24/7 support required": {"classification": "NEED", "parameter_ids": ["adl_support", "transfer_assistance"]},
-        "Skilled nursing care": {"classification": "NEED", "parameter_ids": ["skilled_nursing_capabilities", "nursing_24_7"]},
+        "Daytime supervision": {"classification": "NEED", "parameter_ids": ["adl_support"]},
+        "24/7 support required": {"classification": "NEED", "parameter_ids": ["adl_support"]},
+        "Skilled nursing care": {"classification": "NEED", "parameter_ids": ["skilled_nursing_capabilities"]},
     },
     "medicalCareProfile.needs": {
         "Dialysis": {"classification": "NEED", "parameter_ids": ["dialysis_arrangements"]},

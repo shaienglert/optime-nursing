@@ -78,3 +78,29 @@ describe("canonicalizeAdaptiveFact monthly_budget", () => {
     }
   });
 });
+
+describe("backend clarification questions are answerable", () => {
+  const base = () => ({ humanIntelligenceV2: { transitionRiskProfile: { wanderingConcerns: "" }, languageProfile: { preferredSpokenLanguage: "Other" } } }) as never;
+
+  it.each([["Yes", "Yes"], ["No", "No"], ["Not sure", "Not sure"]])("memory_safety_need %s is stored", (answer, expected) => {
+    const state = canonicalizeAdaptiveFact(base(), "memory_safety_need", answer) as never as { humanIntelligenceV2: { transitionRiskProfile: { wanderingConcerns: string } } };
+    expect(state.humanIntelligenceV2.transitionRiskProfile.wanderingConcerns).toBe(expected);
+  });
+
+  it("required_language replaces Other with the named language", () => {
+    const state = canonicalizeAdaptiveFact(base(), "required_language", "Tagalog") as never as { humanIntelligenceV2: { languageProfile: { preferredSpokenLanguage: string } } };
+    expect(state.humanIntelligenceV2.languageProfile.preferredSpokenLanguage).toBe("Tagalog");
+  });
+
+  it("required_language 'Not sure' keeps the requirement pending", () => {
+    const state = canonicalizeAdaptiveFact(base(), "required_language", "Not sure") as never as { humanIntelligenceV2: { languageProfile: { preferredSpokenLanguage: string } } };
+    expect(state.humanIntelligenceV2.languageProfile.preferredSpokenLanguage).toBe("Other");
+  });
+
+  it("a numeric budget answer is stored and a non-numeric one never becomes a default amount", () => {
+    const ok = canonicalizeAdaptiveFact({ budget: 0 } as never, "monthly_budget", "7,000") as never as { budget: number };
+    expect(ok.budget).toBe(7000);
+    const bad = canonicalizeAdaptiveFact({ budget: "seven thousand" } as never, "monthly_budget", "seven thousand") as never as { budget: number };
+    expect(bad.budget).toBe(0);
+  });
+});

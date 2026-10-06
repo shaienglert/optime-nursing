@@ -257,8 +257,12 @@ def _map_assistance_level(questionnaire: Dict[str, Any], needs_by_id: Dict[str, 
     # Round-the-clock *supervision* (for example for dementia) is not evidence
     # that the resident requires a skilled-nursing license. Only an explicit
     # nursing/clinical statement may create this requirement.
-    if "24/7 nursing" in level or "24x7 nursing" in level or "round the clock nursing" in level or "skilled nursing" in level or "complex" in level:
+    explicit_round_the_clock_nursing = "24/7 nursing" in level or "24x7 nursing" in level or "round the clock nursing" in level
+    if explicit_round_the_clock_nursing or "skilled nursing" in level or "complex" in level:
         _add_need(needs_by_id, "skilled_nursing_capabilities", "REQUIRED", "YES", ["YES"], "FACILITY", "questionnaire.assistanceLevel", 1.0, "Needs skilled nursing capability")
+    if explicit_round_the_clock_nursing:
+        # "Skilled nursing care" does not say around-the-clock; only an explicit 24/7 nursing
+        # statement creates the 24/7 requirement.
         _add_need(needs_by_id, "nursing_24_7", "REQUIRED", "YES", ["YES"], "FACILITY", "questionnaire.assistanceLevel", 1.0, "Needs 24/7 nursing")
     # Clinical nursing does not establish medication or transfer assistance.
     # Keep separately selected daily-living help even when nursing is selected.
@@ -270,8 +274,9 @@ def _map_assistance_level(questionnaire: Dict[str, Any], needs_by_id: Dict[str, 
     ):
         # Daily-living help remains explicit even when selected alongside nursing.
         _add_need(needs_by_id, "adl_support", "HIGH", "YES", ["YES"], "SERVICE", "questionnaire.assistanceLevel", 1.0, "Needs ADL support")
-        if not any(word in daily_level for word in ("bathing", "dressing")) or any(word in daily_level for word in ("transfer", "lift")):
-            _add_need(needs_by_id, "transfer_assistance", "MEDIUM", "YES", ["YES"], "SERVICE", "questionnaire.assistanceLevel", 0.8, "May need transfer help")
+    # Transfer help is never inferred from a general assistance level: it comes only from the
+    # explicit transfer-method answer (see _map_structured_follow_ups) or an explicit statement.
+
 
 
 from app.services.structured_intake_mapping import STRUCTURED_INTAKE_MAPPING_CONTRACT

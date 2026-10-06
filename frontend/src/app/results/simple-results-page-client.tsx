@@ -9,9 +9,12 @@ import { useQuestionnaire } from "@/context/questionnaire-context";
 import { createClientCase, DecisionEngineResponse, fetchPatientDecisionRecommendations } from "@/lib/api";
 import { loadDecisionResponseCache, saveDecisionResponseCache, saveSessionJson, QUESTIONNAIRE_SESSION_KEY } from "@/lib/search-session";
 import { isFinalRecommendation, isPendingRecommendation } from "@/lib/recommendation-eligibility";
+import { BUDGET_MISSING_EXPLANATION, budgetIsKnown, checkOpenAnswer } from "@/lib/open-answer";
 import { applyAdaptiveAnswer } from "@/lib/adaptive-answer";
 import { resultsClientState } from "@/lib/results-client-state";
 import { parseOomnikerQuantities } from "@/lib/oomniker-quantity";
+import { fundingLines, fundingLinks } from "@/lib/funding-display";
+import { publicQualityLines, publicQualityLink } from "@/lib/public-quality-display";
 import { DistanceScope } from "./distance-scope";
 
 const TOP_COUNT = 5;
@@ -29,11 +32,17 @@ const missingEvidenceLabels: Record<string, string> = {
   SEMANTIC_MEDICAID_PATHWAY: "Medicaid participation",
   MEDICATION_SUPPORT_AVAILABLE: "medication support",
   ADL_SUPPORT_AVAILABLE: "help with daily activities",
-  SECURE_MEMORY_CARE_CONFIRMED: "secure memory care",
+  MEMORY_CARE_SETTING_CONFIRMED: "memory care setting",
   SECURED_UNIT_AVAILABLE: "a secured unit with wandering protection",
   REHAB_PATH_AVAILABLE: "a rehabilitation pathway",
   COUPLE_CORESIDENCE: "a shared living arrangement",
   RECOVERY_TRANSITION_COMPATIBLE: "a suitable recovery transition",
+  MEDICAID_PATHWAY_REQUIRED: "Medicaid participation and what your household would pay out of pocket",
+  KOSHER_MEALS: "kosher meals",
+  REQUIRED_LANGUAGE_SUPPORT: "support in the language you need",
+  CONTINUUM_OF_CARE_REQUIRED: "a continuum of care on one campus",
+  REQUIRED_ACTIVITIES: "the activities you require",
+  CURRENT_AVAILABILITY_FOR_URGENT_MOVE: "current availability for an urgent move",
 };
 
 function personLabel(relationship: string, query: string): string {
@@ -68,6 +77,8 @@ export function SimpleResultsPageClient() {
   const [error, setError] = useState<string | null>(null);
   const [followUpAnswer, setFollowUpAnswer] = useState("");
   const [continuingInterview, setContinuingInterview] = useState(false);
+  const [budgetEntry, setBudgetEntry] = useState("");
+  const [budgetEntryError, setBudgetEntryError] = useState("");
   const [searchStage, setSearchStage] = useState(0);
   const [oomnikerOpen, setOOmnikerOpen] = useState(false);
   const [oomnikerText, setOOmnikerText] = useState("");
@@ -239,6 +250,20 @@ export function SimpleResultsPageClient() {
     .map((key) => missingEvidenceLabels[key] || "another required facility detail");
   const syntheticPilot = (response?.results || []).some((item) => item.synthetic_pilot)
     || pendingEvidence?.synthetic_pilot === true;
+  const budgetMissing = !budgetIsKnown(state.budget);
+  const submitBudget = (raw: string) => {
+    const checked = checkOpenAnswer("monthly_budget", raw);
+    if (!checked.ok) { setBudgetEntryError(checked.message); return; }
+    setBudgetEntryError("");
+    const next = applyAdaptiveAnswer({ ...state, notes: naturalLanguageQuery }, {
+      question_key: "monthly_budget",
+      question: "What is your monthly budget in dollars?",
+      target_fact_key: "monthly_budget",
+    }, checked.answer);
+    saveSessionJson(QUESTIONNAIRE_SESSION_KEY, next);
+    setState(next);
+    router.push("/adaptive-interview?next=%2Fresults");
+  };
   const relationship = personLabel(state.relationship, naturalLanguageQuery);
   const detailsHref = `/results/details${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
   const personalReportHref = `/results/personal-report${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
@@ -312,6 +337,15 @@ export function SimpleResultsPageClient() {
                 {missingEvidence.length > 0 ? ` I still need to verify ${missingEvidence.join(", ")}.` : " I still need to verify the required conditions."}
                 {" These are open questions, not confirmed mismatches."}
               </p> : null}
+              {budgetMissing ? <div className="mt-3 text-base leading-7" data-testid="budget-missing">
+                <p>{BUDGET_MISSING_EXPLANATION}</p>
+                <form className="mt-3 flex flex-wrap items-center gap-3" onSubmit={event => { event.preventDefault(); submitBudget(budgetEntry); }}>
+                  <label htmlFor="results-budget" className="sr-only">Monthly budget in dollars</label>
+                  <input id="results-budget" inputMode="numeric" placeholder="e.g. 7,000" value={budgetEntry} onChange={event => { setBudgetEntry(event.target.value); setBudgetEntryError(""); }} className="rounded-xl border p-3 text-lg" />
+                  <button type="submit" disabled={!budgetEntry.trim()} className="rounded-full bg-[#315f53] px-6 py-3 font-semibold text-white disabled:opacity-40">Add my budget</button>
+                </form>
+                {budgetEntryError ? <p role="alert" className="mt-2 text-rose-800">{budgetEntryError}</p> : null}
+              </div> : null}
               {response.market_coverage_notice ? <p className="mt-3 text-base leading-7">{response.market_coverage_notice}</p> : null}
               {(response.results || []).some((item: any) => item.budget_exception === true) ? <p className="mt-3 text-base leading-7">We did not find enough otherwise suitable communities within the budget you requested, so OOmnik is also showing suitable options up to 10% above it. The budget difference lowers their ranking and is marked on the relevant option. Use OOmniker below to change the budget or any other parameter and add more communities.</p> : null}
             </div>
@@ -371,7 +405,30 @@ export function SimpleResultsPageClient() {
                       <p className="mt-2 text-base text-[#684d19]">{item.availability_status === "NO" ? "No space is currently recorded. Ask whether a suitable opening is expected by your move date." : "Confirm a suitable room and admission date directly with the community."} Care compatibility does not confirm readiness to move.</p>
                       {personalDistances.length > 0 || nearbyDistances.length > 0 ? <div className="mt-4 rounded-2xl bg-[#f5f8f6] p-4">{personalDistances.length > 0 ? <><p className="text-sm font-semibold uppercase tracking-[0.12em] text-[#437667]">Close to the people and places that matter</p><ul className="mt-2 grid gap-x-6 gap-y-1 text-base sm:grid-cols-2">{personalDistances.map((place, destinationIndex) => <li key={`${place.label}-${destinationIndex}`}><strong>{place.label}</strong>: {place.driving_distance_miles != null || place.distance_miles != null ? `${Number(place.driving_distance_miles ?? place.distance_miles).toFixed(1)} mi` : "distance unavailable"}{place.driving_time_minutes ? ` · ${place.driving_time_minutes} min drive` : place.status === "UNKNOWN" ? "" : " · estimated"}</li>)}</ul></> : null}{nearbyDistances.length > 0 ? <><p className="text-sm font-semibold uppercase tracking-[0.12em] text-[#437667]">Distances that matter to you</p><ul className="mt-2 grid gap-x-6 gap-y-1 text-base sm:grid-cols-2">{nearbyDistances.map(([category, place]) => <li key={category}><strong>{category}</strong>: {Number(place.driving_distance_miles ?? place.distance_miles).toFixed(1)} mi{place.driving_time_minutes ? ` · ${place.driving_time_minutes} min drive` : ""}{place.name && place.name !== category ? ` · ${place.name}` : ""}</li>)}</ul><p className="mt-2 text-xs text-[#68766f]">Based on the preferences you selected. Driving distance and time are shown when routing is available; otherwise OOmnik shows straight-line proximity and labels it as an estimate.</p></> : null}</div> : null}
                       {item.synthetic_pilot && item.monthly_rate_includes_verified_care ? <p className="mt-2 text-base text-[#334b42]">{item.monthly_price_basis === "TWO_RESIDENT_TOTAL" ? `Pilot monthly total for two residents, including verified care and the $${Number(item.second_resident_monthly_fee || 0).toLocaleString()} second-resident fee.` : "Pilot monthly rate includes the care services verified for this community."}</p> : null}
-                      {typeof item.entrance_fee === "number" && item.entrance_fee > 0 ? <div className="mt-2 rounded-xl border border-amber-300 bg-amber-50 p-3 text-base text-[#684d19]"><p>One-time entrance fee: ${item.entrance_fee.toLocaleString()}, separate from the monthly rate.</p><p className="mt-2">One-time affordability is not confirmed. Can the household fund this amount separately? The community must also confirm whether this fee applies to the specific care program and admission contract.</p></div> : null}
+                      {publicQualityLines(item.public_quality).length > 0 ? (
+                        <div data-testid="public-quality" className="mt-3 rounded-xl border border-[#d9d2e6] bg-[#faf8fd] px-4 py-3 text-sm leading-6 text-[#463d5c]">
+                          <p className="font-semibold">Public quality record</p>
+                          <ul className="mt-1 space-y-1">
+                            {publicQualityLines(item.public_quality).map((line) => (
+                              <li key={line.label}><strong>{line.label}:</strong> {line.text}</li>
+                            ))}
+                          </ul>
+                          {publicQualityLink(item.public_quality) ? <a href={publicQualityLink(item.public_quality) as string} target="_blank" rel="noreferrer" className="mt-1 block underline">View the public record</a> : null}
+                        </div>
+                      ) : null}
+                      {fundingLines(item.funding_explanation, Boolean((state as { medicaidStatus?: string }).medicaidStatus)).length > 0 ? (
+                        <div data-testid="funding-explanation" className="mt-3 rounded-xl border border-[#cfe3da] bg-[#f7fbf9] px-4 py-3 text-sm leading-6 text-[#40564e]">
+                          <p className="font-semibold">Price</p>
+                          <ul className="mt-1 space-y-1">
+                            {fundingLines(item.funding_explanation, Boolean((state as { medicaidStatus?: string }).medicaidStatus)).map((line) => (
+                              <li key={line.label}><strong>{line.label}:</strong> {line.text}</li>
+                            ))}
+                          </ul>
+                          {fundingLinks(item.funding_explanation).map((link) => (
+                            <a key={link} href={link} target="_blank" rel="noreferrer" className="mt-1 block underline">Source</a>
+                          ))}
+                        </div>
+                      ) : null}
                       {(item.nice_to_have_coverage?.unresolved || []).length > 0 || (item.structured_nice_to_have_coverage?.unresolved || []).length > 0 ? <p className="mt-3 text-sm text-[#684d19]">Some of your personal preferences still need facility-specific evidence. Verified care does not prove every lifestyle preference.</p> : null}
                       {state.budget > 0 && !(item.synthetic_pilot && item.monthly_rate_includes_verified_care && (state.relationship !== "Couple" || item.monthly_price_basis === "TWO_RESIDENT_TOTAL")) && (state.relationship === "Couple" || (response?.patient_needs_profile?.needs || []).some((need) => ["adl_support", "medication_support", "transfer_assistance", "memory_care", "nursing_24_7"].includes(need.parameter_id) && ["REQUIRED", "HIGH"].includes(need.requirement_level))) ? (
                         <p className="mt-3 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm leading-6 text-[#684d19]">

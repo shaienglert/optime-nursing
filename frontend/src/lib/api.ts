@@ -302,6 +302,20 @@ export type PatientNeedsProfile = {
   decision_intelligence?: Record<string, unknown>;
 };
 
+export type PublicQuality =
+  | { kind: "NV_STATE_INSPECTION"; source_label: string; latest_grade: "A" | "B" | "C" | "D" | null; latest_grade_date: string | null; graded_inspections: number; inspections_on_record: number; grades_below_a: Record<string, number>; disciplinary_action_on_record: boolean; source_url?: string | null; caveat: string }
+  | { kind: "CMS_FIVE_STAR"; source_label: string; overall: number | null; health_inspection: number | null; staffing: number | null; quality_measures: number | null; as_of: string | null; source_url?: string | null; caveat: string }
+  | { kind: "NONE"; statement: string };
+
+export type FundingExplanation = {
+  pathway: "PRIVATE_PAY" | "MEDICAID";
+  monthly: { amount: number | null; basis: string; budget: number | null; included_in_budget: boolean | null; price_source?: string | null };
+  one_time: { amount: number; available_capital: number | null; status: "CAPITAL_NOT_PROVIDED" | "FEE_WITHIN_STATED_CAPITAL" | "FEE_EXCEEDS_STATED_CAPITAL"; provider_confirmation_required: boolean } | null;
+  medicaid: { state: "APPROVED" | "APPLICATION_PENDING" | "MAY_QUALIFY" | "NOT_ELIGIBLE" | "UNKNOWN"; acceptance_evidence: string; coverage_promised: boolean };
+  links: string[];
+  explanation: string;
+};
+
 export type DecisionEngineRecommendation = {
   canonical_facility_id: string;
   facility_name: string;
@@ -320,6 +334,8 @@ export type DecisionEngineRecommendation = {
   second_resident_monthly_fee?: number | null;
   single_resident_starting_monthly_price?: number | null;
   entrance_fee?: number | null;
+  funding_explanation?: FundingExplanation | null;
+  public_quality?: PublicQuality | null;
   nice_to_have_coverage?: { unresolved?: string[] };
   structured_nice_to_have_coverage?: { unresolved?: string[] };
   combined_care_solution?: {
