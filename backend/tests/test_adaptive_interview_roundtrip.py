@@ -73,7 +73,7 @@ class AdaptiveInterviewRoundTripTests(unittest.TestCase):
             "statements": [],
         }
         state = self._state()
-        state.update({"budget": 17000, "referenceLocationValue": "Las Vegas"})
+        state.update({"referenceLocationValue": "Las Vegas"})
         state["humanIntelligenceV2"]["transitionRiskProfile"].update({
             "recentHospitalization": "Yes",
             "hospitalizationRecency": "Within 30 days",
@@ -81,7 +81,7 @@ class AdaptiveInterviewRoundTripTests(unittest.TestCase):
         })
         query = (
             "My father recently had a stroke and needs bathing, dressing, transfers, medication management, "
-            "PT, OT and speech therapy in Las Vegas for $17,000 monthly."
+            "PT, OT and speech therapy in Las Vegas."
         )
         with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "1", "OPTIME_SEMANTIC_AI_REQUIRED": "1"}, clear=False), patch(
             "app.services.human_intelligence_runtime_verified.interpret_client_intent_with_ai",
@@ -89,7 +89,7 @@ class AdaptiveInterviewRoundTripTests(unittest.TestCase):
         ):
             context = build_human_intelligence_context(state, query)
         question = context["adaptive_questions"][0]
-        self.assertEqual("medicare_status", question["target_fact_key"])
+        self.assertEqual("monthly_budget", question["target_fact_key"])
         self.assertNotIn("stroke", question["question"].lower())
         self.assertEqual("DETERMINISTIC_CANONICAL_FALLBACK", context["readiness_guardian"]["veto_resolution"])
 
@@ -209,7 +209,7 @@ class AdaptiveInterviewRoundTripTests(unittest.TestCase):
             context["readiness_guardian"]["question_target_repair_resolution"],
         )
 
-    def test_guardian_deterministically_binds_medicare_wording_when_ai_omits_gap_metadata(self) -> None:
+    def test_removed_insurance_question_cannot_create_a_guardian_blocker(self) -> None:
         state = self._state()
         state.update({"budget": 17000, "referenceLocationValue": "Las Vegas"})
         query = (
@@ -217,8 +217,8 @@ class AdaptiveInterviewRoundTripTests(unittest.TestCase):
             "plus PT, OT and speech therapy in Las Vegas for up to $17,000 monthly."
         )
         # Single authority (owner, 2026-10-01/02): the rehab need reaches the guardian only
-        # as a quoted interpreter fact in the canonical profile; the Medicare blocker then
-        # follows from canonical state, not from a regex over the story.
+        # as a quoted interpreter fact in the canonical profile. Insurance no longer
+        # creates a blocker or an adaptive question under the monthly-price policy.
         bad = {
             "decision_readiness": "NEEDS_CLARIFICATION",
             "next_question": "Is he still in rehabilitation?",
@@ -239,9 +239,9 @@ class AdaptiveInterviewRoundTripTests(unittest.TestCase):
             side_effect=[bad, medicare_wording_only],
         ):
             context = build_human_intelligence_context(state, query)
-        question = context["adaptive_questions"][0]
-        self.assertEqual("medicare_status", question["target_fact_key"])
-        self.assertEqual(["Original Medicare", "Medicare Advantage", "No Medicare", "Not sure"], question["answer_options"])
+        self.assertEqual([], context["adaptive_questions"])
+        self.assertEqual("READY", context["decision_readiness"])
+        self.assertNotIn("medicare_status", {row["fact_key"] for row in context["readiness_guardian"]["client_owned_blockers"]})
 
     def test_explicit_semantic_fact_answer_resolves_guardian_blocker_without_scripted_question(self) -> None:
         state = self._state()

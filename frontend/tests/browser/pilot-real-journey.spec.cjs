@@ -87,7 +87,16 @@ async function answerInterview(page, scenario, maxSteps = 120) {
       continue; // a single choice advances on its own
     }
     if (kind === 'multi') {
-      for (const option of value) await page.getByRole('button', { name: String(option), exact: true }).click();
+      // Dispatch choices in one browser task to reproduce clicks queued before a
+      // React render. This must retain every choice, not just the final one.
+      await page.locator('main').evaluate((main, options) => {
+        for (const option of options) {
+          const button = [...main.querySelectorAll('button')].find(item => item.getAttribute('aria-label') === String(option));
+          if (!button) throw new Error(`Missing multi-choice: ${option}`);
+          button.click();
+        }
+      }, value);
+      for (const option of value) await expect(page.getByRole('button', { name: String(option), exact: true })).toHaveAttribute('aria-pressed', 'true');
     } else {
       if (id === 'budget') {
         const budgetChoice = page.getByRole('combobox', { name: 'Monthly budget in dollars', exact: true });
