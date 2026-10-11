@@ -1057,6 +1057,34 @@ def _record_refresh_incident(
     return int(getattr(incident, "id", 0) or 0) or None
 
 
+
+def _clear_runtime_evidence_caches() -> None:
+    """Ensure refreshed evidence is visible in this worker without a process restart."""
+    from app.services import (
+        decision_engine_evidence,
+        facility_service_delivery_runtime,
+        human_intelligence_runtime,
+        human_intelligence_runtime_verified,
+        personal_care_agency_runtime,
+        provider_housing_runtime,
+        public_reputation_runtime,
+    )
+    cached = [
+        decision_engine_evidence._regulatory_index,
+        facility_service_delivery_runtime._records,
+        human_intelligence_runtime._person_fit_index,
+        human_intelligence_runtime_verified._verified_person_fit_index,
+        personal_care_agency_runtime.load_personal_care_agency_evidence,
+        provider_housing_runtime._provider_records,
+        provider_housing_runtime._life_plan_records,
+        public_reputation_runtime._snapshot,
+    ]
+    for loader in cached:
+        clear = getattr(loader, "cache_clear", None)
+        if callable(clear):
+            clear()
+
+
 def refresh_all_agent_reports(
     db: Session,
     refresh_mode: str = "scheduled",
@@ -1268,6 +1296,8 @@ def refresh_all_agent_reports(
             agent_results.append(result)
 
     db.commit()
+    if refreshed:
+        _clear_runtime_evidence_caches()
     return {
         "attempted": attempted,
         "refreshed": refreshed,

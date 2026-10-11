@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import base64
+import hmac
+import json
 import hashlib
+import os
 import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional
@@ -188,16 +192,31 @@ def start_email_verification(
         ip_address=ip_address,
     )
     db.add(challenge)
+    db.flush()
+
+    from app.services.email_service import send_email_detailed
+    outcome = send_email_detailed(
+        subject="Your OOmnik verification code",
+        body_text=f"Your OOmnik verification code is {code}. It expires in 15 minutes.",
+        recipients=[email],
+    )
+    if not getattr(outcome, "success", False):
+        db.rollback()
+        raise RuntimeError(f"Verification email could not be sent: {getattr(outcome, 'error', 'unknown error')}")
     db.commit()
 
-    return {
+    result = {
         "facility_id": facility_id,
         "user_id": user.id,
         "email": email,
         "verification_sent_at": challenge.verification_sent_at.isoformat(),
         "verification_method": "EMAIL_OTP",
-        "debug_verification_code": code,
     }
+    # Never disclose an authentication secret in a production API response. Tests may
+    # opt in explicitly; the default is fail-closed.
+    if os.getenv("OOMNIK_EXPOSE_DEBUG_VERIFICATION_CODE", "").strip().lower() in {"1", "true", "yes"}:
+        result["debug_verification_code"] = code
+    return result
 
 
 def complete_email_verification(db: Session, facility_id: int, email: str, code: str) -> Dict[str, object]:
@@ -228,6 +247,11 @@ def complete_email_verification(db: Session, facility_id: int, email: str, code:
         db.commit()
         raise ValueError("Verification code expired")
 
+    if int(challenge.attempt_count or 0) >= 5:
+        challenge.status = "LOCKED"
+        db.commit()
+        raise ValueError("Verification challenge locked after too many attempts")
+
     challenge.attempt_count = int(challenge.attempt_count or 0) + 1
     if challenge.code_hash != _hash_code(code):
         db.commit()
@@ -249,7 +273,55 @@ def complete_email_verification(db: Session, facility_id: int, email: str, code:
         "user_id": user.id,
         "verification_completed_at": now.isoformat(),
         "verification_method": user.verification_method,
+        "access_token": issue_provider_access_token(facility_id, user.id),
+        "access_token_expires_in_seconds": _PROVIDER_SESSION_TTL_SECONDS,
     }
+
+
+
+_PROVIDER_SESSION_TTL_SECONDS = 12 * 60 * 60
+
+
+def _provider_session_secret() -> str:
+    secret = os.getenv("OOMNIK_PROVIDER_SESSION_SECRET", "").strip()
+    if not secret:
+        raise RuntimeError("Provider session authentication is not configured")
+    return secret
+
+
+def issue_provider_access_token(facility_id: int, user_id: int) -> str:
+    payload = {
+        "facility_id": int(facility_id),
+        "user_id": int(user_id),
+        "exp": int(_now().timestamp()) + _PROVIDER_SESSION_TTL_SECONDS,
+    }
+    body = base64.urlsafe_b64encode(json.dumps(payload, separators=(",", ":"), sort_keys=True).encode()).decode().rstrip("=")
+    signature = hmac.new(_provider_session_secret().encode(), body.encode(), hashlib.sha256).hexdigest()
+    return f"{body}.{signature}"
+
+
+def provider_session_user_id(token: str, facility_id: int) -> int:
+    try:
+        body, supplied = str(token or "").split(".", 1)
+        expected = hmac.new(_provider_session_secret().encode(), body.encode(), hashlib.sha256).hexdigest()
+        if not hmac.compare_digest(supplied, expected):
+            raise PermissionError("Invalid provider session")
+        padded = body + "=" * (-len(body) % 4)
+        payload = json.loads(base64.urlsafe_b64decode(padded.encode()).decode())
+        if int(payload.get("facility_id")) != int(facility_id):
+            raise PermissionError("Provider session facility mismatch")
+        if int(payload.get("exp") or 0) < int(_now().timestamp()):
+            raise PermissionError("Provider session expired")
+        return int(payload.get("user_id"))
+    except PermissionError:
+        raise
+    except Exception as error:
+        raise PermissionError("Invalid provider session") from error
+
+
+def verify_provider_access_token(token: str, facility_id: int, user_id: int) -> None:
+    if provider_session_user_id(token, facility_id) != int(user_id):
+        raise PermissionError("Provider session identity mismatch")
 
 
 def validate_license_ownership(
