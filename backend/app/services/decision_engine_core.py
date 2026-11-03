@@ -733,6 +733,10 @@ def _evaluate_need(need: Dict[str, Any], row_by_param: Dict[str, Dict[str, Any]]
         # Availability is volatile by definition. Preserve the evidence for disclosure,
         # but YES/NO/LIMITED all remain pending direct confirmation for the requested date.
         return "UNKNOWN", f"Recorded availability is {raw or 'UNKNOWN'}; direct facility confirmation is required."
+    # Acceptable-value lists describe known values, never evidence of an unknown.
+    # Apply this before every parameter-specific or generic match branch.
+    if raw is None or (isinstance(raw, str) and _normalize(raw) in {"", "unknown"}):
+        return "UNKNOWN", "Not verified."
     if need["parameter_id"] == "current_price":
         price = _to_number(raw)
         budget = _to_number(need.get("desired_value"))

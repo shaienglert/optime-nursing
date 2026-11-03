@@ -1,0 +1,38 @@
+import pytest
+
+from app.services import decision_engine_core as core
+from app.services.client_intent_runtime import evaluate_candidate_intent
+
+
+@pytest.mark.parametrize('parameter', ['kosher', 'therapeutic_diets', 'transportation', 'arbitrary_capability'])
+@pytest.mark.parametrize('raw', ['UNKNOWN', 'unknown', ' UNKNOWN ', None, '', '  '])
+@pytest.mark.parametrize('level', ['REQUIRED', 'PREFERENCE'])
+def test_unknown_cannot_match_even_when_acceptable_list_includes_unknown(parameter, raw, level):
+    need = {'parameter_id': parameter, 'requirement_level': level,
+            'desired_value': 'YES', 'acceptable_values': ['YES', 'UNKNOWN', '']}
+    rows = {parameter: {'raw_value': raw, 'source': 'contract evidence'}}
+    status, _reason = core._evaluate_need(need, rows)
+    assert status == 'UNKNOWN'
+    eligibility = core._eligibility_from_needs([need], rows)
+    assert eligibility['matched_needs'] == []
+    unknowns = 'unknown_critical_needs' if level == 'REQUIRED' else 'unknown_preferences'
+    assert [item['parameter_id'] for item in eligibility[unknowns]] == [parameter]
+
+
+@pytest.mark.parametrize('raw,expected', [('YES', 'MATCH'), ('NO', 'GAP'), ('LIMITED', 'MATCH')])
+def test_known_values_retain_their_matching_meaning(raw, expected):
+    need = {'parameter_id': 'transportation', 'desired_value': 'YES',
+            'acceptable_values': ['YES', 'LIMITED', 'UNKNOWN']}
+    assert core._evaluate_need(need, {'transportation': {'raw_value': raw}})[0] == expected
+
+
+def test_missing_continuum_evidence_is_neutral():
+    key = 'CONTINUUM_OF_CARE'
+    fit = evaluate_candidate_intent(
+        {'canonical_type': 'ASSISTED_LIVING_RFG'},
+        {'must_haves': [], 'nice_to_haves': [{'key': key}]},
+    )
+    assert key in fit['nice_unknown']
+    assert key not in fit['nice_match']
+    assert key not in fit['nice_mismatch']
+    assert key not in fit['nice_fit_scores']
