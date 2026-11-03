@@ -1865,7 +1865,7 @@ async def runtime_status():
     return get_runtime_sync_status()
 
 
-@app.get("/diagnostics/medication-evidence-audit")
+@app.get("/diagnostics/medication-evidence-audit", dependencies=[Depends(require_admin_token)])
 def medication_evidence_audit(db: Session = Depends(get_db)):
     from app.models.agent_execution import AgentKnowledgeRecord
     from app.services.governed_evidence_runtime import is_governed_positive_source
@@ -1961,7 +1961,7 @@ _MOTHER90_QUERY = (
 )
 
 
-@app.get("/diagnostics/must-gate-screen")
+@app.get("/diagnostics/must-gate-screen", dependencies=[Depends(require_admin_token)])
 def must_gate_screen(db: Session = Depends(get_db)):
     """Gold-dataset methodology, step 2: run one resident persona against every real
     facility in the canonical registry using the real MUST-gate engine
@@ -3117,7 +3117,7 @@ async def run_intelligence(facility_id: Optional[int] = Query(default=None), db:
     )
 
 
-@app.get("/intelligence/facilities/{id}", response_model=FacilityIntelligenceProfileOut)
+@app.get("/intelligence/facilities/{id}", response_model=FacilityIntelligenceProfileOut, dependencies=[Depends(require_admin_token)])
 async def get_facility_intelligence_profile(id: int, db: Session = Depends(get_db)):
     profile = db.query(FacilityIntelligenceProfile).filter(FacilityIntelligenceProfile.facility_id == id).first()
     if not profile:
@@ -3197,7 +3197,7 @@ async def knowledge_freshness_states():
     }
 
 
-@app.get("/supervisor/overview", response_model=KnowledgeSupervisorOut)
+@app.get("/supervisor/overview", response_model=KnowledgeSupervisorOut, dependencies=[Depends(require_admin_token)])
 async def supervisor_overview(db: Session = Depends(get_db)):
     summary = compute_supervisor_metrics(db)
     return KnowledgeSupervisorOut(**summary)
@@ -3209,17 +3209,17 @@ async def supervisor_run_cycle(db: Session = Depends(get_db), _: None = Depends(
     return run_supervisor_cycle(db)
 
 
-@app.get("/supervisor/incidents")
+@app.get("/supervisor/incidents", dependencies=[Depends(require_admin_token)])
 async def supervisor_incidents(limit: int = Query(default=200, ge=1, le=1000), db: Session = Depends(get_db)):
     return {"incidents": recent_incidents(db, limit=limit)}
 
 
-@app.get("/supervisor/stale-usage")
+@app.get("/supervisor/stale-usage", dependencies=[Depends(require_admin_token)])
 async def supervisor_stale_usage(hours: int = Query(default=24, ge=1, le=24 * 30), db: Session = Depends(get_db)):
     return stale_usage_summary(db, hours=hours)
 
 
-@app.post("/recommendation/knowledge-guard", response_model=RecommendationGuardCheckOut)
+@app.post("/recommendation/knowledge-guard", response_model=RecommendationGuardCheckOut, dependencies=[Depends(require_admin_token)])
 async def recommendation_knowledge_guard(payload: RecommendationGuardCheckIn, db: Session = Depends(get_db)):
     ensure_reports_available(db)
     decisions: List[RecommendationGuardDecisionOut] = []
@@ -3237,7 +3237,7 @@ async def recommendation_knowledge_guard(payload: RecommendationGuardCheckIn, db
     return RecommendationGuardCheckOut(recommendation_key=payload.recommendation_key, decisions=decisions)
 
 
-@app.post("/human-intelligence", response_model=HumanIntelligenceOut)
+@app.post("/human-intelligence", response_model=HumanIntelligenceOut, dependencies=[Depends(require_admin_token)])
 async def create_human_intelligence(payload: HumanIntelligenceIn, db: Session = Depends(get_db)):
     def clip_optional(value: Optional[float]) -> Optional[float]:
         if value is None:
@@ -3273,7 +3273,7 @@ async def create_human_intelligence(payload: HumanIntelligenceIn, db: Session = 
     return HumanIntelligenceOut.model_validate(record)
 
 
-@app.post("/human-intelligence/adaptive-response", response_model=AdaptiveQuestionResponseOut)
+@app.post("/human-intelligence/adaptive-response", response_model=AdaptiveQuestionResponseOut, dependencies=[Depends(require_admin_token)])
 def create_adaptive_response(payload: AdaptiveQuestionResponseIn, db: Session = Depends(get_db)):
     record = AdaptiveQuestionResponse(
         resident_key=payload.resident_key,
@@ -3291,7 +3291,7 @@ def create_adaptive_response(payload: AdaptiveQuestionResponseIn, db: Session = 
     return AdaptiveQuestionResponseOut.model_validate(record)
 
 
-@app.post("/resident-outcomes", response_model=ResidentOutcomeOut)
+@app.post("/resident-outcomes", response_model=ResidentOutcomeOut, dependencies=[Depends(require_admin_token)])
 async def create_resident_outcome(payload: ResidentOutcomeIn, db: Session = Depends(get_db)):
     if payload.human_intelligence_score_id is not None:
         score_record = db.query(HumanIntelligenceScore).filter(HumanIntelligenceScore.id == payload.human_intelligence_score_id).first()
