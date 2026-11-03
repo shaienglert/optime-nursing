@@ -76,6 +76,19 @@ def _quality_advantage(candidate: dict, displaced: list[dict]) -> dict | None:
     return None
 
 
+_MUST_WORDS = {"kosher", "halal", "wheelchair", "dialysis"}
+
+
+def _enforced_as_must(expression: str, musts: set[str]) -> bool:
+    """True when a free-text preference only restates a dimension the client made a MUST.
+
+    A MUST is a hard gate, so every row in the eligible set already satisfies it; counting it
+    again as an unresolved dynamic NICE blocked every relaxation proposal (kosher MUST case)."""
+    words = {w for w in expression.lower().replace("&", " ").split() if w}
+    must_words = {w for key in musts for w in key.lower().split("_")}
+    return bool(words) and len(words) <= 2 and bool(words & must_words & _MUST_WORDS)
+
+
 def analyze_preferences(rows: list[dict], intent: dict, profile: dict,
                         rank: Callable[[list[dict]], list[dict]], *, display_limit: int = DISPLAY_LIMIT,
                         dynamic_preference_count: int = 0, dynamic_preferences: dict | None = None,
@@ -151,6 +164,8 @@ def analyze_preferences(rows: list[dict], intent: dict, profile: dict,
                 # unresolved preference. Arbitrary/mixed narrative stays open-world.
                 replaced_size_trace = (key == "COMMUNITY_ENVIRONMENT_MATCH" and paths == {path}
                                        and quote == str(value) and bool(size_preference))
+                if _enforced_as_must(quote, musts):
+                    continue  # Already a MUST gate: every eligible row passed it, so it is not an open NICE.
                 if not replaced_size_trace:
                     remaining_dynamic.append(str(preference.get("preference_id") or ""))
             simulated = deepcopy(eligible)

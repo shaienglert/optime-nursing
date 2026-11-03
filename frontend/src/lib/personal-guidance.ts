@@ -10,7 +10,7 @@ export function personalSummary(state: QuestionnaireState): string[] {
     `You are looking for a place for ${person}${state.ageGroup ? ` (${state.ageGroup})` : ""}. ${needs.length ? `Your answers describe the support and safety needs we should focus on: ${needs.join("; ")}.` : "We will use the needs you confirmed to guide the search."}`,
     priorities.length ? `The move also needs to respect what matters in everyday life: ${priorities.join(", ")}. These priorities will be considered alongside the essential care requirements.` : "We will distinguish the essential requirements from preferences, so you can see what each option actually offers.",
     [state.budget > 0 ? `Your monthly budget is up to $${state.budget.toLocaleString("en-US")}.` : "", state.referenceAddress || state.referenceLocationValue ? `You chose ${state.referenceAddress || state.referenceLocationValue}${state.maximumDistanceMiles ? `, within ${state.maximumDistanceMiles} miles` : ""}.` : "", state.moveTiming ? `Your move timing is ${state.moveTiming}.` : ""].filter(Boolean).join(" "),
-    state.notes?.trim() ? `You also told us: “${state.notes.trim()}”` : "",
+    state.notes?.trim() && !/^(none|no|n\/a|na|nothing)([\s.,]+(none|no|n\/a|na|nothing))*[.\s]*$/i.test(state.notes.trim()) ? `You also told us: “${state.notes.trim()}”` : "",
   ].filter(Boolean);
 }
 
