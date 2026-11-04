@@ -816,6 +816,8 @@ class PatientComparisonContextRequestIn(BaseModel):
 
 class PatientDecisionEngineOut(BaseModel):
     patient_needs_profile: Dict[str, Any]
+    # Preserve the integrated engine's care options through HTTP and stored decisions.
+    care_partner_options: List[Dict[str, Any]] = Field(default_factory=list)
     # Aggregate only: candidate identities remain hidden while MUST evidence is pending.
     pending_evidence_summary: Optional[Dict[str, Any]] = None
     price_research_candidates: List[Dict[str, Any]] = Field(default_factory=list)
