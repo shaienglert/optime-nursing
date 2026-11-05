@@ -47,6 +47,16 @@ def report_semantic_delta(case: str, baseline: dict, candidate: dict) -> None:
         )
         if changed:
             print(f"    eligibility_ids_sample={changed[:12]}")
+            for fid in changed[:3]:
+                before, after = old[fid], new[fid]
+                for key in ("eligibility_status", "must_eligibility"):
+                    if before.get(key) != after.get(key):
+                        print(f"    {fid} {key}: {before.get(key)} -> {after.get(key)}")
+                for key in ("matched_needs", "unknown_critical_needs", "unknown_preferences"):
+                    old_params = sorted(str(v.get("parameter_id")) for v in before.get(key) or [] if isinstance(v, dict))
+                    new_params = sorted(str(v.get("parameter_id")) for v in after.get(key) or [] if isinstance(v, dict))
+                    if old_params != new_params:
+                        print(f"    {fid} {key}: {old_params} -> {new_params}")
         if score_changed:
             print(f"    score_ids_sample={score_changed[:12]}")
         if a_ids != b_ids:
@@ -72,3 +82,5 @@ def report_semantic_delta(case: str, baseline: dict, candidate: dict) -> None:
     )
     if semantic_changes:
         print(f"    disposition_changed_ids_sample={semantic_changes[:12]}")
+    if len(a) == len(b) and set(old) == set(new) and not semantic_changes and list(old) != list(new):
+        print("    disposition_reordering_only=True")
