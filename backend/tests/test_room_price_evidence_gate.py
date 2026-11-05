@@ -46,7 +46,7 @@ def test_unverified_bargain_cannot_lower_market_floor():
     sourced = _room("NV-VALID", 480000, "OFFICIAL_WEBSITE",
                     source_url="https://example.org/pricing", observed_at=stamp)
     db = MagicMock()
-    db.query.return_value.filter.return_value.all.return_value = [reported, sourced]
+    db.query.return_value.filter.return_value.filter.return_value.all.return_value = [reported, sourced]
     with patch("app.services.market_price_floor.SessionLocal", return_value=db):
         floor = minimum_market_monthly_price(canonical_ids=["NV-CHEAP", "NV-VALID"])
     assert floor["minimum_monthly_price"] == 4800
