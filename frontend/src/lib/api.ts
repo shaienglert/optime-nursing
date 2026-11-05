@@ -389,7 +389,7 @@ export type DecisionEngineRecommendation = {
     reason?: string;
     information_deficits?: string[];
   };
-  domain_breakdown: Record<string, number>;
+  domain_breakdown: Record<string, number | null>;
   explanation: {
     why_matches: string[];
     needs_verification: string[];
