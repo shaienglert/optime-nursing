@@ -212,6 +212,38 @@ class FacilityOutreachServiceTests(unittest.TestCase):
         finally:
             db.close()
 
+    def test_batch_write_failure_rolls_back_every_room_and_token_claim(self) -> None:
+        db = self._db()
+        try:
+            outreach = app.models.facility_outreach.FacilityOutreachRequest(
+                canonical_facility_id="canonical-atomic-batch", status="SENT"
+            )
+            db.add(outreach)
+            db.commit()
+            db.refresh(outreach)
+            original_upsert = svc.upsert_room_type
+            calls = [0]
+
+            def fail_second(*args, **kwargs):
+                calls[0] += 1
+                if calls[0] == 2:
+                    raise RuntimeError("simulated_second_room_failure")
+                return original_upsert(*args, **kwargs)
+
+            with patch("app.services.facility_outreach_service.upsert_room_type",
+                       side_effect=fail_second):
+                with self.assertRaisesRegex(RuntimeError, "simulated_second_room_failure"):
+                    svc.submit_outreach_response(db, outreach.response_token, [
+                        {"room_type_name": "Studio", "monthly_price_cents": 400000},
+                        {"room_type_name": "Suite", "monthly_price_cents": 600000},
+                    ])
+            db.expire_all()
+            fresh = svc.get_request_by_token(db, outreach.response_token)
+            self.assertEqual(fresh.status, "SENT")
+            self.assertEqual(list_room_types(db, "canonical-atomic-batch"), [])
+        finally:
+            db.close()
+
     def test_submit_outreach_response_unknown_token_raises(self) -> None:
         db = self._db()
         try:
