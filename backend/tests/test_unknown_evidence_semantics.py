@@ -36,3 +36,23 @@ def test_missing_continuum_evidence_is_neutral():
     assert key not in fit['nice_match']
     assert key not in fit['nice_mismatch']
     assert key not in fit['nice_fit_scores']
+
+
+def test_unverified_domain_fit_is_unscored_not_zero():
+    need = {'parameter_id': 'kosher', 'requirement_level': 'PREFERENCE',
+            'desired_value': 'YES', 'acceptable_values': ['YES', 'UNKNOWN']}
+    row = {'kosher': {'raw_value': 'UNKNOWN'}}
+    eligibility = core._eligibility_from_needs([need], row)
+    breakdown = core._domain_breakdown(
+        [need], eligibility['matched_needs'], eligibility['unmet_verified_needs'])
+    assert breakdown['personal_social_fit'] is None
+    assert eligibility['unknown_preferences'][0]['parameter_id'] == 'kosher'
+
+
+def test_verified_gap_remains_genuine_zero_and_match_remains_full():
+    need = {'parameter_id': 'kosher', 'requirement_level': 'PREFERENCE',
+            'desired_value': 'YES', 'acceptable_values': ['YES']}
+    gap = core._domain_breakdown([need], [], [{'parameter_id': 'kosher'}])
+    match = core._domain_breakdown([need], [{'parameter_id': 'kosher'}], [])
+    assert gap['personal_social_fit'] == 0.0
+    assert match['personal_social_fit'] == 100.0
