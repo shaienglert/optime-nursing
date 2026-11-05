@@ -152,8 +152,7 @@ def submit_outreach_response(db: Session, response_token: str, room_types: list[
     if not room_types or len(room_types) > 30:
         raise ValueError("invalid_room_count")
 
-    # Validate the whole submission before upsert_room_type (which commits each
-    # room), so malformed later entries cannot partially persist prior rooms.
+    # Validate all rooms before claiming the single-use token or writing data.
     room_names: set[str] = set()
     for room in room_types:
         if not isinstance(room, dict):
@@ -173,20 +172,36 @@ def submit_outreach_response(db: Session, response_token: str, room_types: list[
         }:
             raise ValueError("invalid_availability_status")
 
-    for room in room_types:
-        upsert_room_type(
-            db,
-            canonical_facility_id=outreach.canonical_facility_id,
+    # Conditional UPDATE takes the database write lock and atomically claims the
+    # token; a concurrent request cannot also transition SENT -> RESPONDING.
+    claimed = (
+        db.query(FacilityOutreachRequest)
+        .filter(FacilityOutreachRequest.id == outreach.id, FacilityOutreachRequest.status == "SENT")
+        .update({"status": "RESPONDING"}, synchronize_session="fetch")
+    )
+    if claimed != 1:
+        db.rollback()
+        raise ValueError("response_link_not_active")
+
+    try:
+        for room in room_types:
+            upsert_room_type(
+                db,
+                canonical_facility_id=outreach.canonical_facility_id,
             room_type_name=str(room["room_type_name"]),
             description=str(room.get("description") or ""),
             monthly_price_cents=room.get("monthly_price_cents"),
             availability_status=str(room.get("availability_status") or "UNKNOWN"),
             source="OUTREACH",
-            photo_urls=room.get("photo_urls"),
-        )
+                photo_urls=room.get("photo_urls"),
+                commit=False,
+            )
 
-    outreach.status = "RESPONDED"
-    outreach.responded_at = datetime.now(timezone.utc)
-    db.commit()
-    db.refresh(outreach)
-    return outreach
+        outreach.status = "RESPONDED"
+        outreach.responded_at = datetime.now(timezone.utc)
+        db.commit()
+        db.refresh(outreach)
+        return outreach
+    except Exception:
+        db.rollback()
+        raise
