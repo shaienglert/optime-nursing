@@ -145,6 +145,33 @@ def submit_outreach_response(db: Session, response_token: str, room_types: list[
     outreach = get_request_by_token(db, response_token)
     if outreach is None:
         raise ValueError("unknown_response_token")
+    # A bearer URL is only valid after the approved email was actually sent.
+    # Once answered, it must not be reusable to overwrite a published room.
+    if outreach.status != "SENT":
+        raise ValueError("response_link_not_active")
+    if not room_types or len(room_types) > 30:
+        raise ValueError("invalid_room_count")
+
+    # Validate the whole submission before upsert_room_type (which commits each
+    # room), so malformed later entries cannot partially persist prior rooms.
+    room_names: set[str] = set()
+    for room in room_types:
+        if not isinstance(room, dict):
+            raise ValueError("invalid_room")
+        name = room.get("room_type_name")
+        if not isinstance(name, str) or not name.strip() or len(name) > 255:
+            raise ValueError("invalid_room_type_name")
+        key = name.strip().casefold()
+        if key in room_names:
+            raise ValueError("duplicate_room_type_name")
+        room_names.add(key)
+        price = room.get("monthly_price_cents")
+        if price is not None and (type(price) is not int or price <= 0):
+            raise ValueError("invalid_monthly_price")
+        if str(room.get("availability_status") or "UNKNOWN") not in {
+            "AVAILABLE", "LIMITED", "WAITLIST", "UNAVAILABLE", "UNKNOWN"
+        }:
+            raise ValueError("invalid_availability_status")
 
     for room in room_types:
         upsert_room_type(
