@@ -27,6 +27,8 @@ jobs:
         with:
           python-version: '3.12'
       - run: python -m pip install -r candidate/backend/requirements.txt httpx2
+      - name: Verify parity diff semantics
+        run: python -m pytest candidate/scripts/decision_parity/test_diff_snaps.py -q
       - name: Compare decisions
         id: parity
         continue-on-error: true
