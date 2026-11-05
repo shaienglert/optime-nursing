@@ -27,6 +27,7 @@ sys.path.insert(0, str(HERE))
 from cases import CASES  # noqa: E402
 from diff_snaps import walk  # noqa: E402
 from advisory_contract import is_declared_advisory_change  # noqa: E402
+from semantic_delta import report_semantic_delta  # noqa: E402
 
 
 def _warm_cache(backend: Path) -> None:
@@ -78,7 +79,10 @@ def compare(baseline: str, candidate: str, show: int = 12) -> int:
             total += 1
             continue
         diffs: list = []
-        walk(json.loads(a.read_text()), json.loads(b.read_text()), "$", diffs)
+        old_snapshot, new_snapshot = json.loads(a.read_text()), json.loads(b.read_text())
+        walk(old_snapshot, new_snapshot, "$", diffs)
+        if diffs and case in {"budget_medicaid_pending", "henderson_city"}:
+            report_semantic_delta(case, old_snapshot, new_snapshot)
         total += len(diffs)
         # Owner-directed advisor presentation and additive authority/provenance fields.
         # Existing decision, ranking, requirement and evidence fields still match exactly.
