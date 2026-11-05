@@ -1,5 +1,5 @@
 """Parity must distinguish recommendation order from unordered disposition records."""
-from diff_snaps import walk
+from scripts.decision_parity.diff_snaps import walk
 
 
 def _diff(a, b, path="$.http_recommendations.body.care_setting_policy.decision_intelligence.facility_selection_pipeline.candidate_dispositions"):
