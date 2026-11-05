@@ -78,7 +78,7 @@ def test_complete_pool_room_prices_use_one_query_and_preserve_total_truth():
     from app.services.decision_pipeline import _attach_room_pricing_truth
     rows = [{'canonical_facility_id': str(i)} for i in range(500)]
     db = MagicMock()
-    room = SimpleNamespace(canonical_facility_id='499', room_type_name='Studio', monthly_price_cents=400000, care_fee_cents=50000, mandatory_monthly_fees_cents=10000, pricing_qualifier='EXACT', availability_status='UNKNOWN')
+    room = SimpleNamespace(canonical_facility_id='499', room_type_name='Studio', monthly_price_cents=400000, care_fee_cents=50000, mandatory_monthly_fees_cents=10000, pricing_qualifier='EXACT', availability_status='UNKNOWN', source='OFFICIAL_WEBSITE', source_url='https://facility.example/rooms', observed_at='2026-11-05')
     db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [room]
     with patch('app.database.SessionLocal', return_value=db):
         _attach_room_pricing_truth(rows)
@@ -88,6 +88,51 @@ def test_complete_pool_room_prices_use_one_query_and_preserve_total_truth():
     assert rows[-1]['total_affordability_status'] == 'KNOWN'
     assert rows[-1]['room_pricing_options'][0]['final_availability_status'] == 'REQUIRES_DIRECT_VERIFICATION'
     db.close.assert_called_once()
+
+
+
+def test_unverified_provider_price_does_not_become_verified_budget_match():
+    from types import SimpleNamespace
+    from unittest.mock import MagicMock
+    from app.services.decision_pipeline import _attach_room_pricing_truth, _refresh_starting_price_need
+    from app.services.affordability_floor import relevant_monthly_cost
+    rows = [{'canonical_facility_id': 'NV-PRICE-TEST', 'starting_monthly_price': 6500,
+             'matched_needs': [], 'unmet_verified_needs': [],
+             'unknown_critical_needs': [{'parameter_id': 'current_price', 'status': 'UNKNOWN'}]}]
+    db = MagicMock()
+    room = SimpleNamespace(canonical_facility_id='NV-PRICE-TEST', room_type_name='Studio',
+                           monthly_price_cents=10000, source='OUTREACH', source_url=None,
+                           observed_at=None, last_verified_at=None)
+    db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [room]
+    with patch('app.database.SessionLocal', return_value=db):
+        _attach_room_pricing_truth(rows)
+    _refresh_starting_price_need(rows, 5000)
+    assert rows[0]['starting_monthly_price'] == 6500
+    assert rows[0]['room_pricing_options'] == []
+    assert rows[0]['reported_room_pricing_options'][0]['verification_status'] == 'PROVIDER_REPORTED_UNVERIFIED'
+    assert relevant_monthly_cost(rows[0]) == 6500
+    assert rows[0]['matched_needs'] == []
+    assert rows[0]['unknown_critical_needs'][0]['parameter_id'] == 'current_price'
+    db.close.assert_called_once()
+
+
+def test_verified_room_price_can_affect_budget_comparison():
+    from datetime import datetime, timezone
+    from types import SimpleNamespace
+    from unittest.mock import MagicMock
+    from app.services.decision_pipeline import _attach_room_pricing_truth
+    rows = [{'canonical_facility_id': 'NV-VERIFIED-TEST', 'starting_monthly_price': 6500}]
+    db = MagicMock()
+    room = SimpleNamespace(canonical_facility_id='NV-VERIFIED-TEST', room_type_name='Studio',
+                           monthly_price_cents=480000, care_fee_cents=None,
+                           mandatory_monthly_fees_cents=None, pricing_qualifier='STARTING_AT',
+                           availability_status='UNKNOWN', source='PROVIDER',
+                           last_verified_at=datetime(2026, 11, 5, tzinfo=timezone.utc))
+    db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [room]
+    with patch('app.database.SessionLocal', return_value=db):
+        _attach_room_pricing_truth(rows)
+    assert rows[0]['starting_monthly_price'] == 4800
+    assert rows[0]['room_pricing_options'][0]['base_price'] == 4800
 
 
 def test_prepared_runtime_returns_all_survivors_but_keeps_research_budget():
