@@ -883,7 +883,7 @@ def _eligibility_from_needs(
     }
 
 
-def _domain_breakdown(needs: List[Dict[str, Any]], matched: List[Dict[str, Any]], unmet: List[Dict[str, Any]]) -> Dict[str, float]:
+def _domain_breakdown(needs: List[Dict[str, Any]], matched: List[Dict[str, Any]], unmet: List[Dict[str, Any]]) -> Dict[str, Optional[float]]:
     domain_weights: Dict[str, float] = defaultdict(float)
     matched_weights: Dict[str, float] = defaultdict(float)
     unmet_weights: Dict[str, float] = defaultdict(float)
@@ -918,7 +918,8 @@ def _domain_breakdown(needs: List[Dict[str, Any]], matched: List[Dict[str, Any]]
     for domain, total in domain_weights.items():
         known = matched_weights[domain] + unmet_weights[domain]
         if known <= 0:
-            breakdown[domain] = 0.0
+            # No evidence is not a verified zero percent fit. Leave unscored.
+            breakdown[domain] = None
         else:
             breakdown[domain] = round((matched_weights[domain] / known) * 100.0, 2)
     return breakdown
