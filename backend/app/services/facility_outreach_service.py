@@ -188,11 +188,11 @@ def submit_outreach_response(db: Session, response_token: str, room_types: list[
             upsert_room_type(
                 db,
                 canonical_facility_id=outreach.canonical_facility_id,
-            room_type_name=str(room["room_type_name"]),
-            description=str(room.get("description") or ""),
-            monthly_price_cents=room.get("monthly_price_cents"),
-            availability_status=str(room.get("availability_status") or "UNKNOWN"),
-            source="OUTREACH",
+                room_type_name=str(room["room_type_name"]),
+                description=str(room.get("description") or ""),
+                monthly_price_cents=room.get("monthly_price_cents"),
+                availability_status=str(room.get("availability_status") or "UNKNOWN"),
+                source="OUTREACH",
                 photo_urls=room.get("photo_urls"),
                 commit=False,
             )
