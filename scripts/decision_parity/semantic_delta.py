@@ -5,8 +5,6 @@ The goal is to distinguish real changes in ranked facilities from array reorderi
 """
 from __future__ import annotations
 
-from collections import Counter
-
 
 def _by_id(rows):
     return {str(r.get("canonical_facility_id")): r for r in rows
