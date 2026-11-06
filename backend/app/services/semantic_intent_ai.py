@@ -455,11 +455,11 @@ def _ground_clinical_patch(result: Dict[str, Any], user_text: str, state: Dict[s
         sources = result.get("questionnaire_patch_sources")
         quote = str((sources or {}).get("medicalCareProfile.oxygenUse") or "") if isinstance(sources, dict) else ""
         positive_oxygen = re.search(
-            r"\\b(?:uses?|using|requires?|needs?|on|receives?|receiving)\\s+(?:supplemental\\s+)?oxygen\\b",
+            r"\b(?:uses?|using|requires?|needs?|on|receives?|receiving)\s+(?:supplemental\s+)?oxygen\b",
             quote, re.I,
         )
         negated_oxygen = re.search(
-            r"\\b(?:no|not|never|without|doesn['’]?t|don['’]?t)\\b.{0,24}\\boxygen\\b",
+            r"\b(?:no|not|never|without|doesn['’]?t|don['’]?t)\b.{0,24}\boxygen\b",
             quote, re.I,
         )
         if quote and quote in user_text and positive_oxygen and not negated_oxygen:
