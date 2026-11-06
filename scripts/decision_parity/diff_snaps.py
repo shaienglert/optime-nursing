@@ -19,7 +19,7 @@ def walk(a, b, path, out):
         # A disposition ledger describes candidates identified by canonical ID.
         # Its array position is not a recommendation rank; compare every record
         # by identity while still failing on missing, extra or modified records.
-        if path.endswith(".candidate_dispositions") and all(
+        if (path.endswith(".candidate_dispositions") or path.endswith(".must_pending_verification_candidates")) and all(
             isinstance(row, dict) and isinstance(row.get("canonical_facility_id"), str)
             and row["canonical_facility_id"] for row in a + b
         ):
