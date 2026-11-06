@@ -164,7 +164,6 @@ jobs:
               'DETERMINISTIC_MUST_GATE',
               'DETERMINISTIC_GOVERNED_NICE_EVIDENCE',
               'GOVERNMENT_REGULATORY_DATA',
-              'PUBLIC_REPUTATION',
               'RELEVANT_EVIDENCE_COMPLETENESS',
           ]
           base = {
@@ -387,3 +386,4 @@ jobs:
 
           print('NEVADA_AI_GOVERNED_E2E=' + json.dumps(output, indent=2))
           PY
+
