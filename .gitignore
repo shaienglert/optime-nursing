@@ -19,3 +19,6 @@ database/system_recovery_state.json
 reports/daily/archive/executive_intelligence_report_*.html
 reports/daily/archive/executive_intelligence_report_*.json
 reports/daily/archive/executive_intelligence_report_*.md
+
+# Current Guardian status is generated for each run, never trusted from git.
+reports/guardian/status.json
