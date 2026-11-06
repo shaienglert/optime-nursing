@@ -165,7 +165,6 @@ class MainDecisionRuntimeContractTests(unittest.TestCase):
                 "DETERMINISTIC_MUST_GATE",
                 "DETERMINISTIC_GOVERNED_NICE_EVIDENCE",
                 "GOVERNMENT_REGULATORY_DATA",
-                "PUBLIC_REPUTATION",
                 "RELEVANT_EVIDENCE_COMPLETENESS",
             ],
         )
@@ -244,3 +243,4 @@ class MainDecisionRuntimeContractTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

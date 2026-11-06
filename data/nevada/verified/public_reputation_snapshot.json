@@ -2,9 +2,9 @@
   "schema_version": "nevada-public-reputation-snapshot-v1.0.0",
   "observed_at": "2026-08-19",
   "policy": {
-    "role": "REPUTATION_ENRICHMENT_ONLY",
+    "role": "DISPLAY_ONLY_NOT_RANKING",
     "identity_rule": "Apply only on exact normalized facility name or governed alias plus exact street address. Never use reputation data to establish facility identity, licensing, care capability, or MUST eligibility.",
-    "ranking_rule": "Public rating and review count are considered only after MUST gate, explicit NICE-TO-HAVE fit, and government/regulatory evidence.",
+    "ranking_rule": "Owner-approved 2026-11-06: external public ratings and review counts are display-only; never influence ranking, ties or case-relevant evidence counts.",
     "unknown_rule": "Missing rating or review count remains UNKNOWN and is not treated as zero or negative evidence.",
     "source": "PUBLIC_LOCAL_BUSINESS_INDEX"
   },
@@ -83,3 +83,4 @@
     }
   ]
 }
+

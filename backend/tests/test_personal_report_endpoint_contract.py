@@ -157,9 +157,12 @@ class PersonalReportEndpointContractTests(unittest.TestCase):
     def test_main_wires_personal_report_endpoint(self) -> None:
         main = importlib.import_module("app.main")
         self.assertTrue(callable(main.post_personal_decision_report))
-        route_paths = {route.path for route in main.app.routes}
+        # FastAPI 0.139 includes lazy router containers in app.routes. OpenAPI
+        # checks the externally registered path, including nested routers.
+        route_paths = main.app.openapi()["paths"]
         self.assertIn("/decision-engine/personal-report", route_paths)
 
 
 if __name__ == "__main__":
     unittest.main()
+

@@ -53,7 +53,7 @@ def _row_identity_names(row: Dict[str, Any]) -> set[str]:
 def get_public_reputation(row: Dict[str, Any]) -> Dict[str, Any]:
     """Return governed reputation evidence only on deterministic identity match.
 
-    Reputation is enrichment only. It cannot establish identity, care capability,
+    Reputation is display-only and must not influence ranking or break ties. It cannot establish identity, care capability,
     licensing, or MUST eligibility. Missing evidence remains UNKNOWN.
     """
     row_names = _row_identity_names(row)
@@ -81,10 +81,12 @@ def get_public_reputation(row: Dict[str, Any]) -> Dict[str, Any]:
             "source_entity_id": record.get("source_entity_id") or "UNKNOWN",
             "observed_at": _snapshot().get("observed_at") or "UNKNOWN",
             "identity_verified": True,
-            "role": "REPUTATION_ENRICHMENT_ONLY",
+            "role": "DISPLAY_ONLY_NOT_RANKING",
+            "ranking_eligible": False,
         }
 
     return {"rating": "UNKNOWN", "review_count": "UNKNOWN", "source": "UNKNOWN", "identity_verified": False}
 
 
 __all__ = ["get_public_reputation"]
+

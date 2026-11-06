@@ -29,8 +29,8 @@ def _fallback_key(row: Dict[str, Any]) -> tuple[Any, ...]:
 
 
 # intent_rank_key = (gate, care setting, NICE match, NICE mismatch, community fit known,
-# community fit, <regulatory...>, <reputation...>, <evidence counts>). The family's own
-# criteria are the first six; everything after is government/quality/reputation evidence,
+# community fit, <regulatory...>, <reserved neutral slots>, <evidence counts>). The family's own
+# criteria are the first six; everything after is government/quality evidence,
 # which belongs to the Regulatory/Quality Evidence Layer and is applied there instead.
 _FAMILY_CRITERIA_LENGTH = 6
 
@@ -91,21 +91,14 @@ def _has_differentiating_evidence(rows: List[Dict[str, Any]], dynamic_preference
 
     If a client has NICE preferences, verifying them against governed evidence is
     real differentiating work an AI can meaningfully do. Otherwise, this checks the
-    same raw signals intent_rank_key ranks on (rating, review count, regulatory
-    grade, disciplinary record) -- if not one candidate in the pool has any of
+    governed regulatory signals (grade and disciplinary record) -- if not one candidate in the pool has any of
     these on record, there is nothing for the AI to have a real opinion about, and
     asking it for one just produces noise dressed up as judgment.
     """
     if dynamic_preferences.get("preference_count"):
         return True
     for row in rows:
-        fit = row.get("client_intent_fit") if isinstance(row.get("client_intent_fit"), dict) else {}
-        reputation = fit.get("public_reputation") if isinstance(fit.get("public_reputation"), dict) else {}
         history = row.get("regulatory_history") if isinstance(row.get("regulatory_history"), dict) else {}
-        if isinstance(reputation.get("rating"), (int, float)):
-            return True
-        if isinstance(reputation.get("review_count"), int):
-            return True
         grade = str(history.get("latest_known_grade") or "").upper()
         if grade and grade != "UNKNOWN":
             return True
@@ -115,7 +108,7 @@ def _has_differentiating_evidence(rows: List[Dict[str, Any]], dynamic_preference
     # language, budget, Medicaid -- see semantic_facility_requirements.py) that some
     # candidates in this pool already have confirmed and others don't is real,
     # client-relevant differentiation for the AI to reason about, even when none of
-    # them has a star rating or regulatory grade yet. Likewise a care-setting-fit tier
+    # them has a regulatory grade yet. Likewise a care-setting-fit tier
     # split (e.g. some PRIMARY_FIT, some POSSIBLE_FIT) is a real distinction the
     # alphabetical fallback order does not otherwise surface.
     must_pass_signatures = {
@@ -140,7 +133,7 @@ def _deterministic_waterfall_rank(rows: List[Dict[str, Any]]) -> tuple[List[Dict
         row["ai_ranking"] = {
             "status": "DETERMINISTIC_THIN_EVIDENCE_WATERFALL",
             "rank": position,
-            "reason": "No NICE preferences and no candidate in this set has any known rating, review count, regulatory grade, or disciplinary record. Ranked by the governed deterministic order (MUST, then NICE, then regulatory grade, then reviews) instead of AI-blended judgment, which would have nothing real to differentiate on.",
+            "reason": "Ranked by the governed deterministic order: MUST, explicit family preferences, government/regulatory evidence, then case-relevant evidence. External ratings are display-only and do not break ties.",
             "information_deficits": [],
             "rank_drivers": [],
             "rank_risks": [],
@@ -675,11 +668,11 @@ def apply_must_ai_nice_pipeline(
         "rejected": len(rejected),
         "selected_must_unknown_count": 0,
     }
+    decision["external_ratings_policy"] = "DISPLAY_ONLY_NOT_RANKING_OR_TIES"
     decision["ranking_order"] = [
         "DETERMINISTIC_MUST_GATE",
         "DETERMINISTIC_GOVERNED_NICE_EVIDENCE",
         "GOVERNMENT_REGULATORY_DATA",
-        "PUBLIC_REPUTATION",
         "RELEVANT_EVIDENCE_COMPLETENESS",
     ]
 
@@ -706,3 +699,4 @@ def apply_must_ai_nice_pipeline(
 
 
 __all__ = ["apply_must_ai_nice_pipeline"]
+

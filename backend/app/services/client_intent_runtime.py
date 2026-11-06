@@ -7,8 +7,8 @@ Decision order:
 2. Reject only VERIFIED MUST mismatches. UNKNOWN never becomes a mismatch; a
    material MUST unknown keeps the decision provisional and should be researched/asked.
 3. Rank surviving candidates by explicit NICE-TO-HAVE fit.
-4. Then use objective evidence: government/regulatory quality, public reputation,
-   and relevant evidence completeness.
+4. Then use objective evidence: government/regulatory quality and case-relevant evidence.
+   External public ratings are display-only and cannot break ties.
 
 No arbitrary numeric quality weights are introduced here; ordering is lexicographic
 and auditable. Numeric values are used only where an explicit user-preference fit
@@ -19,7 +19,6 @@ import re
 from typing import Any, Dict, List
 
 from app.services import governed_evidence_runtime
-from app.services.public_reputation_runtime import get_public_reputation
 
 
 def _upper(value: Any) -> str:
@@ -259,7 +258,7 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
         "must_haves": must,
         "nice_to_haves": nice,
         "in_house_only_requested": in_house_only_requested,
-        "rule": "Client intent first -> verified MUST gate -> NICE-TO-HAVE MATCH/UNKNOWN/MISMATCH ordering -> objective government/regulatory evidence -> public reputation -> relevant evidence completeness.",
+        "rule": "Client intent first -> verified MUST gate -> NICE-TO-HAVE MATCH/UNKNOWN/MISMATCH ordering -> objective government/regulatory evidence -> case-relevant evidence. External public ratings are display-only.",
         "unknown_policy": "A material MUST with UNKNOWN evidence is not a pass or a fail; it triggers clarification or research and prevents finality. A specific NICE preference remains unresolved until evidence verifies that exact preference; known poor fit is MISMATCH, not UNKNOWN, and a broader category cannot silently satisfy it.",
         "external_care_policy": "A care-delivery MUST (e.g. medication management, ADL support) is satisfied by a verified in-house capability or a verified external-agency pathway as a complementary product; it is not restricted to in-house delivery unless the client explicitly asked for in-house-only care. External-vs-in-house delivery affects ranking and must be disclosed to the user, never used to silently exclude a facility.",
     }
@@ -555,28 +554,11 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
         else:
             nice_unknown.append(key)
 
-    reputation = get_public_reputation(row)
-    web_rating = reputation.get("rating") if isinstance(reputation.get("rating"), (int, float)) else None
-    web_review_count = reputation.get("review_count") if isinstance(reputation.get("review_count"), int) else None
-    reputation_source = reputation.get("source") if reputation.get("identity_verified") is True else "UNKNOWN"
-    reputation_observed_at = reputation.get("observed_at") if reputation.get("identity_verified") is True else "UNKNOWN"
-
-    if web_rating is None or web_review_count is None:
-        for payload in governed_evidence_runtime.agent_only_payloads(row):
-            if web_rating is None and isinstance(payload.get("public_rating"), (int, float)):
-                web_rating = float(payload.get("public_rating"))
-                reputation_source = payload.get("public_reputation_source") or "AGENT_RESEARCH"
-            if web_review_count is None and isinstance(payload.get("public_review_count"), int):
-                web_review_count = int(payload.get("public_review_count"))
-                reputation_source = payload.get("public_reputation_source") or reputation_source
-
     relevant_known = (
         len(must_pass)
         + len(nice_match)
         + len(nice_mismatch)
         + len(row.get("matched_needs") or [])
-        + len(payloads)
-        + (1 if reputation.get("identity_verified") is True else 0)
     )
     relevant_unknown = len(must_unknown) + len(nice_unknown) + len(row.get("unknown_critical_needs") or [])
 
@@ -591,14 +573,7 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
         "nice_mismatch": nice_mismatch,
         "nice_fit_scores": nice_fit_scores,
         "preference_consistency": "MISMATCH" if nice_mismatch else ("UNKNOWN" if nice_unknown else "MATCH"),
-        "public_reputation": {
-            "rating": web_rating if web_rating is not None else "UNKNOWN",
-            "review_count": web_review_count if web_review_count is not None else "UNKNOWN",
-            "source": reputation_source,
-            "observed_at": reputation_observed_at,
-            "identity_verified": reputation.get("identity_verified") is True,
-            "role": "REPUTATION_ENRICHMENT_ONLY",
-        },
+        "public_reputation": {"role": "DISPLAY_ONLY", "ranking_eligible": False},
         "relevant_evidence_known_count": relevant_known,
         "relevant_evidence_unknown_count": relevant_unknown,
     }
@@ -615,12 +590,6 @@ def intent_rank_key(row: Dict[str, Any]) -> tuple[Any, ...]:
     community_fit_known = isinstance(community_fit, (int, float))
 
     history = row.get("regulatory_history") if isinstance(row.get("regulatory_history"), dict) else {}
-
-    reputation = fit.get("public_reputation") if isinstance(fit.get("public_reputation"), dict) else {}
-    rating = reputation.get("rating")
-    reviews = reputation.get("review_count")
-    rating_known = isinstance(rating, (int, float))
-    reviews_known = isinstance(reviews, int)
 
     care_setting = row.get("care_setting_fit") if isinstance(row.get("care_setting_fit"), dict) else {}
     care_status = _upper(care_setting.get("status"))
@@ -661,10 +630,8 @@ def intent_rank_key(row: Dict[str, Any]) -> tuple[Any, ...]:
         int(counts.get("C") or 0),
         int(counts.get("B") or 0),
         -int(counts.get("A") or 0),
-        0 if rating_known else 1,
-        -float(rating) if rating_known else 0.0,
-        0 if reviews_known else 1,
-        -int(reviews) if reviews_known else 0,
+        # Reserved legacy reputation slots stay neutral for every candidate.
+        0, 0.0, 0, 0,
         -int(fit.get("relevant_evidence_known_count") or 0),
         int(fit.get("relevant_evidence_unknown_count") or 0),
     )
@@ -716,3 +683,4 @@ def attach_explicit_intent_explanation(row: Dict[str, Any], intent: Dict[str, An
 
 
 __all__ = ["attach_client_intent_fit", "build_client_intent", "evaluate_candidate_intent", "intent_rank_key"]
+

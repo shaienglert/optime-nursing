@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ExternalRatings } from "./external-ratings";
 import { FacilityPersonalFit } from "@/components/guidance/facility-personal-fit";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -420,7 +421,9 @@ export function FacilityProfileClient({ facilityId, backHref, backLabel }: Facil
             </section>
           </div>
         </section>
+        <ExternalRatings canonicalFacilityId={canonicalFacilityId ? String(canonicalFacilityId) : null} />
       </section>
     </main>
   );
 }
+

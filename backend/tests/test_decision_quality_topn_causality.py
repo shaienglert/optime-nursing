@@ -101,10 +101,11 @@ def test_regulatory_safety_precedes_public_reputation():
     assert intent_rank_key(safer) < intent_rank_key(popular_but_adverse)
 
 
-def test_public_reputation_precedes_evidence_completeness_when_prior_dimensions_tie():
+def test_public_reputation_cannot_override_case_relevant_evidence():
     better_reputation = _row("Better Reputation", rating=4.8, reviews=200, known=1, unknown=20)
     more_documented = _row("More Documented", rating=4.2, reviews=5000, known=100, unknown=0)
-    assert intent_rank_key(better_reputation) < intent_rank_key(more_documented)
+    # Owner-approved 2026-11-06: reviews are presentation only.
+    assert intent_rank_key(more_documented) < intent_rank_key(better_reputation)
 
 
 def test_legacy_numeric_scores_cannot_change_final_rank_causality():
@@ -113,3 +114,4 @@ def test_legacy_numeric_scores_cannot_change_final_rank_causality():
     # The only remaining difference is the deterministic facility-name tie-breaker.
     # Legacy numeric scores are intentionally absent from the final intent rank key.
     assert intent_rank_key(baseline)[:-1] == intent_rank_key(inflated_legacy)[:-1]
+

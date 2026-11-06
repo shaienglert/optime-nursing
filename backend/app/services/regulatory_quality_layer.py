@@ -29,8 +29,6 @@ MEASURES: Tuple[Tuple[str, str, str], ...] = (
     ("total_nurse_hours_per_resident_day", "GOVERNMENT_REGULATORY", "higher"),
     ("rn_hours_per_resident_day", "GOVERNMENT_REGULATORY", "higher"),
     ("staffing_turnover", "GOVERNMENT_REGULATORY", "lower"),
-    ("public_rating", "PUBLIC_REPUTATION", "higher"),
-    ("public_review_count", "PUBLIC_REPUTATION", "higher"),
     ("relevant_evidence_known_count", "RELEVANT_EVIDENCE", "higher"),
 )
 # Parameters whose verified value (and source) the core attaches for this layer.
@@ -75,11 +73,7 @@ def measure_values(row: Dict[str, Any]) -> Dict[str, Tuple[str, Any]]:
             if value is not None:
                 out[parameter] = (str(item.get("source_family") or "UNKNOWN_SOURCE"), value)
     fit = row.get("client_intent_fit") if isinstance(row.get("client_intent_fit"), dict) else {}
-    reputation = fit.get("public_reputation") if isinstance(fit.get("public_reputation"), dict) else {}
-    if _number(reputation.get("rating")) is not None:
-        out["public_rating"] = (str(reputation.get("source") or "PUBLIC_REVIEWS"), _number(reputation.get("rating")))
-    if isinstance(reputation.get("review_count"), int) and not isinstance(reputation.get("review_count"), bool):
-        out["public_review_count"] = (str(reputation.get("source") or "PUBLIC_REVIEWS"), reputation["review_count"])
+    # Owner-approved 2026-11-06: external ratings never distinguish candidates.
     known = fit.get("relevant_evidence_known_count")
     if isinstance(known, int) and not isinstance(known, bool):
         out["relevant_evidence_known_count"] = ("CASE_RELEVANT_EVIDENCE", known)
@@ -194,3 +188,4 @@ def explain_ranked_pair(higher: Dict[str, Any], lower: Dict[str, Any], base_dime
 
 
 __all__ = ["MEASURES", "QUALITY_PARAMETERS", "measure_values", "rank_with_evidence_layer"]
+

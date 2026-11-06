@@ -59,7 +59,7 @@ def test_verified_agency_closes_combined_adl_must_without_changing_rank_contract
     assert row["combined_care_solution"]["meal_component"]["meals_per_day"] == "UNKNOWN"
 
 
-def test_rows_that_differ_on_rating_or_evidence_are_not_reported_as_tied():
+def test_case_relevant_evidence_separates_rows_without_rating_in_ranking_basis():
     rows = [
         _row("nv-il-1", "Sunrise Community", rating=2.8, review_count=30, grade="A", evidence_known=68),
         _row("nv-il-2", "Valley Community", rating="UNKNOWN", review_count="UNKNOWN", grade=None, evidence_known=59),
@@ -71,10 +71,11 @@ def test_rows_that_differ_on_rating_or_evidence_are_not_reported_as_tied():
         assert row["rank_tie_status"] == "UNIQUE_RANK"
         assert row["tied_with"] == []
     assert ranked[0]["ranking_basis"] == {
-        "rating": 2.8, "review_count": 30, "latest_regulatory_grade": "A",
+        "external_ratings_role": "DISPLAY_ONLY_NOT_RANKING", "latest_regulatory_grade": "A",
         "disciplinary_action_on_record": "N", "nice_preferences_matched": 1, "verified_evidence_items": 68,
     }
-    assert ranked[1]["ranking_basis"]["rating"] == "UNKNOWN"
+    assert "rating" not in ranked[1]["ranking_basis"]
+    assert "review_count" not in ranked[1]["ranking_basis"]
     assert ranked[1]["ranking_basis"]["verified_evidence_items"] == 59
 
 
@@ -89,3 +90,14 @@ def test_rows_with_identical_ranking_signals_are_reported_as_a_joint_rank():
         assert row["rank_tie_status"] == "JOINT_RANK"
     assert ranked[0]["tied_with"] == [ranked[1]["facility_name"]]
     assert ranked[1]["tied_with"] == [ranked[0]["facility_name"]]
+
+
+def test_public_rating_alone_cannot_break_combined_care_tie():
+    rows = [
+        _row("nv-il-1", "First", rating=5.0, review_count=10000, evidence_known=59),
+        _row("nv-il-2", "Second", rating=1.0, review_count=1, evidence_known=59),
+    ]
+    result = services._apply_combined_care_layer(_base_result(rows=rows), {}, "Prefers independent living", 5)
+    assert all(row["rank_tie_status"] == "JOINT_RANK" for row in result["results"])
+    assert all("rating" not in row["ranking_basis"] for row in result["results"])
+
