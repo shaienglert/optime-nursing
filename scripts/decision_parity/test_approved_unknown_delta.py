@@ -80,3 +80,31 @@ def test_mismatched_candidate_sets_cannot_be_approved():
     after = deepcopy(before)
     after["run_limit5"]["results"][0]["canonical_facility_id"] = "NV-CHANGED"
     assert _compare(before, after)[1] == set()
+
+
+def test_unknown_contract_composes_with_only_exact_empty_care_partner_additions():
+    from copy import deepcopy
+    before = _snap(_row())
+    after = deepcopy(before)
+    for prefix in (after["run_limit5"], after["run_limit50"], after["http_recommendations"]["body"]):
+        prefix["results"][0]["matched_needs"] = []
+        prefix["results"][0]["client_intent_fit"]["relevant_evidence_known_count"] = 5
+    after["http_recommendations"]["body"]["care_partner_options"] = []
+    before["db_side_effects"] = {"decision_artifacts": [{"payload_json": {}}]}
+    after["db_side_effects"] = {"decision_artifacts": [{"payload_json": {"care_partner_options": []}}]}
+    diffs, accepted = _compare(before, after)
+    assert len(diffs) == 8
+    assert len(accepted) == 6
+    assert all(diffs[index][0].endswith(("matched_needs", "relevant_evidence_known_count"))
+               for index in accepted)
+
+
+def test_nonempty_care_partner_addition_is_not_approved_as_unknown():
+    from copy import deepcopy
+    before = _snap(_row())
+    after = deepcopy(before)
+    for prefix in (after["run_limit5"], after["run_limit50"], after["http_recommendations"]["body"]):
+        prefix["results"][0]["matched_needs"] = []
+        prefix["results"][0]["client_intent_fit"]["relevant_evidence_known_count"] = 5
+    after["http_recommendations"]["body"]["care_partner_options"] = [{"agency_id": "unsafe"}]
+    assert _compare(before, after)[1] == set()
