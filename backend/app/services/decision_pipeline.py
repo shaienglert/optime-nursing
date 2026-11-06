@@ -431,6 +431,8 @@ def _attach_pipeline_trace(result: dict[str, Any], questionnaire_state: dict[str
         from app.services.questionnaire_answer_accounting import attach_questionnaire_answer_accounting
         attach_questionnaire_answer_accounting(result, questionnaire_state)
     result = attach_decision_pipeline_trace(result)
+    from app.services.search_ranking_audit import observe_final_ranking
+    observe_final_ranking(result)
     # Final transport boundary, after all consumers of private ranking snapshots.
     # Apply recursively to audit/research copies as well as displayed facilities.
     def public(value):
@@ -562,3 +564,4 @@ def run_decision_pipeline(questionnaire_state: dict[str, Any], natural_language_
     result = _attach_pipeline_trace(result, questionnaire_state)
     logger.info("decision_pipeline_stage_timings_ms %s total_ms=%s", stage_timings, round(sum(stage_timings.values()), 1))
     return result
+
