@@ -154,6 +154,22 @@ class FacilityOutreachEndpointsTests(unittest.TestCase):
         self.assertEqual(status_response.status_code, 200)
         self.assertEqual(status_response.json()["status"], "FAILED_NO_CONTACT")
 
+        # A link for an outreach that was never approved/sent must not write.
+        unsent_response = self.client.post(
+            f"/facility-outreach/{token}/submit",
+            json={"room_types": [{"room_type_name": "Studio", "monthly_price_cents": 100}]},
+        )
+        self.assertEqual(unsent_response.status_code, 404)
+
+        # Simulate the successful staff-approved delivery recorded by the service.
+        db = self.main.SessionLocal()
+        try:
+            outreach = self.main.facility_outreach_service.get_request_by_id(db, created["id"])
+            outreach.status = "SENT"
+            db.commit()
+        finally:
+            db.close()
+
         submit_response = self.client.post(
             f"/facility-outreach/{token}/submit",
             json={
@@ -170,6 +186,12 @@ class FacilityOutreachEndpointsTests(unittest.TestCase):
         )
         self.assertEqual(submit_response.status_code, 200)
         self.assertEqual(submit_response.json()["status"], "RESPONDED")
+        # Responded links are single-use; another submit cannot overwrite prices.
+        replay_response = self.client.post(
+            f"/facility-outreach/{token}/submit",
+            json={"room_types": [{"room_type_name": "Studio", "monthly_price_cents": 100}]},
+        )
+        self.assertEqual(replay_response.status_code, 404)
 
         rooms_response = self.client.get(f"/canonical-facilities/{self.real_canonical_id}/rooms")
         self.assertTrue(rooms_response.json()["has_data"])

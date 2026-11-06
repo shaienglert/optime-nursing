@@ -20,6 +20,24 @@ VALID_AVAILABILITY_STATUSES = {"AVAILABLE", "LIMITED", "WAITLIST", "UNAVAILABLE"
 VALID_PRICING_QUALIFIERS = {"EXACT", "STARTING_AT", "RANGE", "UNKNOWN"}
 VALID_SOURCES = {"OUTREACH", "MANUAL", "EXISTING_DATABASE", "PROVIDER", "OFFICIAL_WEBSITE", "RESEARCH"}
 
+def room_price_has_decision_evidence(room: FacilityRoomType) -> bool:
+    """Reported room prices are not budget MATCH evidence by themselves.
+
+    A price confirmed in the room record, or a dated source-linked price on the
+    facility's own website, may enter the matching price floor. A bare outreach,
+    manual, research or provider report cannot promote itself to verified.
+    """
+    amount = getattr(room, "monthly_price_cents", None)
+    if type(amount) is not int or amount <= 0:
+        return False
+    if getattr(room, "last_verified_at", None) is not None:
+        return True
+    return (
+        getattr(room, "source", None) == "OFFICIAL_WEBSITE"
+        and bool(getattr(room, "source_url", None))
+        and getattr(room, "observed_at", None) is not None
+    )
+
 
 def list_room_types(db: Session, canonical_facility_id: str) -> List[FacilityRoomType]:
     return (
@@ -49,6 +67,7 @@ def upsert_room_type(
     availability_status: str = "UNKNOWN",
     source: str = "MANUAL",
     photo_urls: Optional[List[str]] = None,
+    commit: bool = True,
 ) -> FacilityRoomType:
     if availability_status not in VALID_AVAILABILITY_STATUSES:
         raise ValueError(f"invalid availability_status: {availability_status}")
@@ -88,6 +107,8 @@ def upsert_room_type(
         for url in photo_urls:
             db.add(FacilityRoomPhoto(room_type_id=room.id, url=url))
 
-    db.commit()
-    db.refresh(room)
+    # Callers importing batches can opt into a single outer transaction.
+    if commit:
+        db.commit()
+        db.refresh(room)
     return room

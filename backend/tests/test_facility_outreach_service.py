@@ -147,6 +147,103 @@ class FacilityOutreachServiceTests(unittest.TestCase):
         finally:
             db.close()
 
+    def test_unapproved_link_cannot_write_rooms(self) -> None:
+        db = self._db()
+        try:
+            outreach = app.models.facility_outreach.FacilityOutreachRequest(
+                canonical_facility_id="canonical-unapproved", status="AWAITING_APPROVAL"
+            )
+            db.add(outreach)
+            db.commit()
+            db.refresh(outreach)
+            with patch("app.services.facility_outreach_service.upsert_room_type") as upsert:
+                with self.assertRaisesRegex(ValueError, "response_link_not_active"):
+                    svc.submit_outreach_response(
+                        db, outreach.response_token,
+                        [{"room_type_name": "Studio", "monthly_price_cents": 100}],
+                    )
+                upsert.assert_not_called()
+        finally:
+            db.close()
+
+    def test_answered_link_cannot_overwrite_rooms(self) -> None:
+        db = self._db()
+        try:
+            outreach = app.models.facility_outreach.FacilityOutreachRequest(
+                canonical_facility_id="canonical-replay", status="SENT"
+            )
+            db.add(outreach)
+            db.commit()
+            db.refresh(outreach)
+            payload = [{"room_type_name": "Studio", "monthly_price_cents": 550000}]
+            svc.submit_outreach_response(db, outreach.response_token, payload)
+            with patch("app.services.facility_outreach_service.upsert_room_type") as upsert:
+                with self.assertRaisesRegex(ValueError, "response_link_not_active"):
+                    svc.submit_outreach_response(
+                        db, outreach.response_token,
+                        [{"room_type_name": "Studio", "monthly_price_cents": 100}],
+                    )
+                upsert.assert_not_called()
+            rooms = list_room_types(db, "canonical-replay")
+            self.assertEqual(rooms[0].monthly_price_cents, 550000)
+        finally:
+            db.close()
+
+    def test_invalid_room_payload_never_partially_writes(self) -> None:
+        db = self._db()
+        try:
+            outreach = app.models.facility_outreach.FacilityOutreachRequest(
+                canonical_facility_id="canonical-bad-room", status="SENT"
+            )
+            db.add(outreach)
+            db.commit()
+            db.refresh(outreach)
+            bad_values = (0, -100, "50000", True)
+            for bad_price in bad_values:
+                with patch("app.services.facility_outreach_service.upsert_room_type") as upsert:
+                    with self.assertRaisesRegex(ValueError, "invalid_monthly_price"):
+                        svc.submit_outreach_response(db, outreach.response_token, [
+                            {"room_type_name": "Valid", "monthly_price_cents": 500000},
+                            {"room_type_name": "Invalid", "monthly_price_cents": bad_price},
+                        ])
+                    upsert.assert_not_called()
+            self.assertEqual(list_room_types(db, "canonical-bad-room"), [])
+            self.assertEqual(outreach.status, "SENT")
+        finally:
+            db.close()
+
+    def test_batch_write_failure_rolls_back_every_room_and_token_claim(self) -> None:
+        db = self._db()
+        try:
+            outreach = app.models.facility_outreach.FacilityOutreachRequest(
+                canonical_facility_id="canonical-atomic-batch", status="SENT"
+            )
+            db.add(outreach)
+            db.commit()
+            db.refresh(outreach)
+            original_upsert = svc.upsert_room_type
+            calls = [0]
+
+            def fail_second(*args, **kwargs):
+                calls[0] += 1
+                if calls[0] == 2:
+                    raise RuntimeError("simulated_second_room_failure")
+                return original_upsert(*args, **kwargs)
+
+            with patch("app.services.facility_outreach_service.upsert_room_type",
+                       side_effect=fail_second):
+                with self.assertRaisesRegex(RuntimeError, "simulated_second_room_failure"):
+                    svc.submit_outreach_response(db, outreach.response_token, [
+                        {"room_type_name": "Studio", "monthly_price_cents": 400000},
+                        {"room_type_name": "Suite", "monthly_price_cents": 600000},
+                    ])
+            db.expire_all()
+            fresh = svc.get_request_by_token(db, outreach.response_token)
+            self.assertEqual(fresh.status, "SENT")
+            self.assertEqual(list_room_types(db, "canonical-atomic-batch"), [])
+        finally:
+            db.close()
+
     def test_submit_outreach_response_unknown_token_raises(self) -> None:
         db = self._db()
         try:

@@ -16,6 +16,20 @@ def walk(a, b, path, out):
             else:
                 walk(a[key], b[key], f"{path}.{key}", out)
     elif isinstance(a, list):
+        # Disposition and pending-evidence ledgers identify candidates by ID.
+        # Neither list position is a published recommendation rank. Compare all
+        # records by identity; missing, extra or modified records still fail.
+        # Published results and ranked lists remain position-sensitive.
+        if (path.endswith(".candidate_dispositions") or path.endswith(".must_pending_verification_candidates")) and all(
+            isinstance(row, dict) and isinstance(row.get("canonical_facility_id"), str)
+            and row["canonical_facility_id"] for row in a + b
+        ):
+            a_ids = [row["canonical_facility_id"] for row in a]
+            b_ids = [row["canonical_facility_id"] for row in b]
+            if len(set(a_ids)) == len(a_ids) and len(set(b_ids)) == len(b_ids):
+                walk({row["canonical_facility_id"]: row for row in a},
+                     {row["canonical_facility_id"]: row for row in b}, path, out)
+                return
         if len(a) != len(b):
             out.append((path, f"length {len(a)} -> {len(b)}", None, None))
         for index, (x, y) in enumerate(zip(a, b)):
