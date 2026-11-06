@@ -464,6 +464,8 @@ def _ground_clinical_patch(result: Dict[str, Any], user_text: str, state: Dict[s
         )
         if quote and quote in user_text and positive_oxygen and not negated_oxygen:
             needs = medical.get("needs")
+            if needs is None:
+                needs = []
             if isinstance(needs, list) and "Oxygen" not in needs:
                 medical["needs"] = [*needs, "Oxygen"]
                 sources["medicalCareProfile.needs"] = quote
