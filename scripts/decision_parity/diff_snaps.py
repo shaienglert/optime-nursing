@@ -16,9 +16,10 @@ def walk(a, b, path, out):
             else:
                 walk(a[key], b[key], f"{path}.{key}", out)
     elif isinstance(a, list):
-        # A disposition ledger describes candidates identified by canonical ID.
-        # Its array position is not a recommendation rank; compare every record
-        # by identity while still failing on missing, extra or modified records.
+        # Disposition and pending-evidence ledgers identify candidates by ID.
+        # Neither list position is a published recommendation rank. Compare all
+        # records by identity; missing, extra or modified records still fail.
+        # Published results and ranked lists remain position-sensitive.
         if (path.endswith(".candidate_dispositions") or path.endswith(".must_pending_verification_candidates")) and all(
             isinstance(row, dict) and isinstance(row.get("canonical_facility_id"), str)
             and row["canonical_facility_id"] for row in a + b
