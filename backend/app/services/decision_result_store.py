@@ -10,12 +10,14 @@ import hashlib
 import json
 import secrets
 import time
+import uuid
 from typing import Any, Dict, Optional
 
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.database import SessionLocal
 from app.models.decision_artifact import DecisionArtifact
+from app.models.search_ranking_audit import SearchRankingAudit
 
 _TTL_SECONDS = 2 * 60 * 60
 _SCHEMA_VERSION = 1
@@ -39,7 +41,7 @@ def _token_hash(token: str) -> str:
     return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
 
-def remember_decision_result(result: Dict[str, Any], *, inputs_fingerprint: str) -> str:
+def remember_decision_result(result: Dict[str, Any], *, inputs_fingerprint: str, ranking_audit: Optional[Dict[str, Any]] = None) -> str:
     token = secrets.token_urlsafe(24)
     now = time.time()
     payload = json.dumps(result, ensure_ascii=False, allow_nan=False)
@@ -51,6 +53,12 @@ def remember_decision_result(result: Dict[str, Any], *, inputs_fingerprint: str)
                 schema_version=_SCHEMA_VERSION, payload_json=payload,
                 created_at_epoch=now, expires_at_epoch=now + _TTL_SECONDS,
             ))
+            if ranking_audit is not None:
+                db.add(SearchRankingAudit(
+                    id=str(uuid.uuid4()), decision_token_hash=_token_hash(token),
+                    created_at_epoch=now,
+                    payload_json=json.dumps(ranking_audit, ensure_ascii=False, allow_nan=False),
+                ))
             db.commit()
     except SQLAlchemyError as exc:
         raise ArtifactStoreUnavailable("Unable to save your reviewed profile. Please try again.") from exc
@@ -115,3 +123,4 @@ __all__ = [
     "recall_decision_result",
     "remember_decision_result",
 ]
+
