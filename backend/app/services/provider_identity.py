@@ -196,7 +196,6 @@ def start_email_verification(
         "email": email,
         "verification_sent_at": challenge.verification_sent_at.isoformat(),
         "verification_method": "EMAIL_OTP",
-        "debug_verification_code": code,
     }
 
 
