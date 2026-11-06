@@ -33,20 +33,29 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
+      - name: Test Guardian status validation
+        run: node --test scripts/tests/guardian_status.test.cjs
+
       - name: Install frontend dependencies
         working-directory: frontend
         run: npm ci
 
+      - name: Discard previous Guardian status
+        id: guardian_prepare
+        run: |
+          node -e "const fs=require('fs');fs.rmSync('reports/guardian/status.json',{force:true});fs.appendFileSync(process.env.GITHUB_OUTPUT,'started_ms='+Date.now()+'\n');"
+
       - name: Run Guardian gate
         id: guardian
-        continue-on-error: true
         working-directory: frontend
         run: npm run guardian
 
       - name: Read Guardian status
         id: guardian_status
-        run: |
-          node -e "const fs=require('fs');const status=JSON.parse(fs.readFileSync('reports/guardian/status.json','utf8'));process.stdout.write('verdict='+status.verdict+'\n');process.stdout.write('fingerprint='+status.fingerprint+'\n');process.stdout.write('violations='+status.violationCount+'\n');" >> "$GITHUB_OUTPUT"
+        if: always() && steps.guardian.outcome != 'skipped'
+        env:
+          GUARDIAN_STARTED_MS: ${{ steps.guardian_prepare.outputs.started_ms }}
+        run: node scripts/read_guardian_status.cjs >> "$GITHUB_OUTPUT"
 
       - name: Upload Guardian artifacts
         if: always()
@@ -118,8 +127,11 @@ jobs:
               });
             }
 
-      - name: Enforce hard stop on BLOCK
-        if: always() && steps.guardian_status.outputs.verdict == 'BLOCK'
+      - name: Enforce Guardian gate
+        if: always()
+        env:
+          GUARDIAN_PROCESS_OUTCOME: ${{ steps.guardian.outcome }}
+          GUARDIAN_STATUS_OUTCOME: ${{ steps.guardian_status.outcome }}
+          GUARDIAN_VERDICT: ${{ steps.guardian_status.outputs.verdict }}
         run: |
-          echo "Guardian returned BLOCK. Stopping pipeline."
-          exit 1
+          node -e "if(process.env.GUARDIAN_PROCESS_OUTCOME!=='success'||process.env.GUARDIAN_STATUS_OUTCOME!=='success'||!['PASS','WARN'].includes(process.env.GUARDIAN_VERDICT)){console.error('Guardian failed, blocked, or did not produce a valid current report.');process.exit(1);}"
