@@ -109,7 +109,7 @@ def _allow_path(path, kind, old, new):
     if name.endswith("relevant_evidence_known_count"):
         return kind == "value" and isinstance(old, int) and isinstance(new, int) and new == old - 1
     if name in {"domain_breakdown.clinical_care_fit", "domain_breakdown.personal_social_fit", "practical_fit_score"}:
-        return old == 0.0 and new is None and kind == "type float -> NoneType"
+        return isinstance(old, float) and 0.0 <= old <= 100.0 and new is None and kind == "type float -> NoneType"
     if name == "evidence_confidence":
         return kind == "value" and isinstance(old, (int, float)) and isinstance(new, (int, float)) and new <= old
     if name == "matched_needs":
