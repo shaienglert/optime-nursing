@@ -109,6 +109,17 @@ def compare(baseline: str, candidate: str, show: int = 12) -> int:
             for path, kind, _old, _new in diffs
         )
         print(f"{case}: {'identical' if not diffs else f'{len(diffs)} differences'}")
+        if case == "budget_medicaid_pending" and diffs:
+            # Review every difference family before declaring a behaviour change.
+            # This does NOT alter which diffs fail the parity gate.
+            import re
+            from collections import Counter
+            shapes = Counter(
+                (re.sub(r"\\[\\d+\\]", "[*]", path), kind)
+                for path, kind, _old, _new in diffs
+            )
+            for (shape, category), count in shapes.most_common():
+                print(f"PARITY_DIFF_SHAPE count={count} kind={category} path={shape}")
         for path, kind, x, y in diffs[:show]:
             print(f"    {path} [{kind}] {json.dumps(x, default=str)[:100]} -> {json.dumps(y, default=str)[:100]}")
     print(f"TOTAL_DIFFERENCES={total}")
