@@ -115,7 +115,7 @@ def compare(baseline: str, candidate: str, show: int = 12) -> int:
             import re
             from collections import Counter
             shapes = Counter(
-                (re.sub(r"\\[\\d+\\]", "[*]", path), kind)
+                (re.sub(r"\[\d+\]", "[*]", path), kind)
                 for path, kind, _old, _new in diffs
             )
             for (shape, category), count in shapes.most_common():
