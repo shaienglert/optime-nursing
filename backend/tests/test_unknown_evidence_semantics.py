@@ -56,3 +56,36 @@ def test_verified_gap_remains_genuine_zero_and_match_remains_full():
     match = core._domain_breakdown([need], [{'parameter_id': 'kosher'}], [])
     assert gap['personal_social_fit'] == 0.0
     assert match['personal_social_fit'] == 100.0
+
+
+@pytest.mark.parametrize("level", ["REQUIRED", "HIGH"])
+def test_unverified_transport_cannot_satisfy_a_critical_must(level):
+    need = {"parameter_id": "transportation", "requirement_level": level,
+            "desired_value": "YES", "acceptable_values": ["YES", "UNKNOWN"]}
+    result = core._eligibility_from_needs(
+        [need], {"transportation": {"raw_value": "UNKNOWN", "source": "facility"}})
+    assert result["eligibility_status"] == "INSUFFICIENT_EVIDENCE"
+    assert result["matched_needs"] == []
+    assert [x["parameter_id"] for x in result["unknown_critical_needs"]] == ["transportation"]
+    assert result["unmet_verified_needs"] == []
+
+
+def test_unknown_transport_preference_is_neither_verified_match_nor_mismatch():
+    need = {"parameter_id": "transportation", "requirement_level": "PREFERENCE",
+            "desired_value": "YES", "acceptable_values": ["YES", "UNKNOWN"]}
+    result = core._eligibility_from_needs(
+        [need], {"transportation": {"raw_value": "UNKNOWN", "source": "facility"}})
+    assert result["matched_needs"] == []
+    assert result["preference_matches"] == []
+    assert result["unmet_verified_needs"] == []
+    assert [x["parameter_id"] for x in result["unknown_preferences"]] == ["transportation"]
+    assert core._domain_breakdown([need], [], [])["personal_social_fit"] is None
+
+
+def test_confirmed_transport_does_not_lose_existing_matching_behavior():
+    need = {"parameter_id": "transportation", "requirement_level": "REQUIRED",
+            "desired_value": "YES", "acceptable_values": ["YES", "UNKNOWN"]}
+    match = core._eligibility_from_needs(
+        [need], {"transportation": {"raw_value": "YES", "source": "facility"}})
+    assert [x["parameter_id"] for x in match["matched_needs"]] == ["transportation"]
+    assert match["unknown_critical_needs"] == []
