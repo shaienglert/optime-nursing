@@ -446,6 +446,38 @@ def _ground_clinical_patch(result: Dict[str, Any], user_text: str, state: Dict[s
         omitted.append("assistanceLevel:Skilled nursing care")
     if omitted:
         result["clinical_fact_validation"] = {"omitted_unsupported_fields": omitted, "reason": "EXPLICIT_CLIENT_EVIDENCE_REQUIRED"}
+
+    # Explicit oxygen-use details entail the parent Oxygen need. The model may
+    # omit that dependent field despite an exact source quote; reconstruct only
+    # when the quote itself directly establishes current oxygen therapy.
+    # Neither a negated mention nor a merely inferred clinical need is promoted.
+    if isinstance(medical, dict) and medical.get("oxygenUse") in {"At night", "With activity", "Continuously"}:
+        sources = result.get("questionnaire_patch_sources")
+        quote = str((sources or {}).get("medicalCareProfile.oxygenUse") or "") if isinstance(sources, dict) else ""
+        positive_oxygen = re.search(
+            r"\\b(?:uses?|using|requires?|needs?|on|receives?|receiving)\\s+(?:supplemental\\s+)?oxygen\\b",
+            quote, re.I,
+        )
+        negated_oxygen = re.search(
+            r"\\b(?:no|not|never|without|doesn['’]?t|don['’]?t)\\b.{0,24}\\boxygen\\b",
+            quote, re.I,
+        )
+        if quote and quote in user_text and positive_oxygen and not negated_oxygen:
+            needs = medical.get("needs")
+            if isinstance(needs, list) and "Oxygen" not in needs:
+                medical["needs"] = [*needs, "Oxygen"]
+                sources["medicalCareProfile.needs"] = quote
+                for statement in result.get("statements") or []:
+                    if not isinstance(statement, dict) or statement.get("raw_text") != quote:
+                        continue
+                    if statement.get("knowledge_state") != "KNOWN" or statement.get("status") != "USED":
+                        continue
+                    paths = statement.get("mapped_parameters")
+                    if isinstance(paths, list) and "medicalCareProfile.needs" not in paths:
+                        paths.append("medicalCareProfile.needs")
+                result["oxygen_dependency_normalization"] = {
+                    "applied": True, "basis": "EXACT_EXPLICIT_OXYGEN_QUOTE"
+                }
     return result
 
 
