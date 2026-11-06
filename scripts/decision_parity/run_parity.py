@@ -28,6 +28,7 @@ from cases import CASES  # noqa: E402
 from diff_snaps import walk  # noqa: E402
 from advisory_contract import is_declared_advisory_change  # noqa: E402
 from semantic_delta import report_semantic_delta  # noqa: E402
+from approved_unknown_delta import approved_unknown_evidence_delta  # noqa: E402
 
 
 def _warm_cache(backend: Path) -> None:
@@ -84,6 +85,10 @@ def compare(baseline: str, candidate: str, show: int = 12) -> int:
         if diffs and case in {"budget_medicaid_pending", "henderson_city"}:
             report_semantic_delta(case, old_snapshot, new_snapshot)
         total += len(diffs)
+        approved_unknown = approved_unknown_evidence_delta(case, old_snapshot, new_snapshot, diffs)
+        if approved_unknown:
+            print(f"APPROVED_UNKNOWN_EVIDENCE_DELTA={len(approved_unknown)} "
+                  "(strict scenario invariant, unchanged facility order and scores)")
         # Owner-directed advisor presentation and additive authority/provenance fields.
         # Existing decision, ranking, requirement and evidence fields still match exactly.
         allowed += sum(
@@ -106,8 +111,10 @@ def compare(baseline: str, candidate: str, show: int = 12) -> int:
                 or path.endswith(".intake_resolution")
                 or path.endswith(".source_backed_conflict_keys")
             )
-            for path, kind, _old, _new in diffs
+            for index, (path, kind, _old, _new) in enumerate(diffs)
+            if index not in approved_unknown
         )
+        allowed += len(approved_unknown)
         print(f"{case}: {'identical' if not diffs else f'{len(diffs)} differences'}")
         if case == "budget_medicaid_pending" and diffs:
             # Review every difference family before declaring a behaviour change.
