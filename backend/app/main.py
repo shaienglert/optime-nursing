@@ -180,6 +180,7 @@ from app.services.supplier_intelligence_service import (
     supplier_coverage,
 )
 from app.services.supplier_verification_agent import supplier_verification_status
+from app.services.external_rating_api import external_rating_router
 
 class NearbyPlaceRequest(BaseModel):
     latitude: float
@@ -217,6 +218,8 @@ app = FastAPI(
     version="0.3.0",
     description="OPTIME Phase 1 CMS ingestion pipeline for Florida nursing homes",
 )
+
+app.include_router(external_rating_router(get_canonical_facility_index))
 
 
 @app.post("/api/client-cases")
@@ -3791,3 +3794,4 @@ async def evidence_recommendation_score_trace(recommendation_key: str, db: Sessi
 # Owner-authorized event-driven technical incident reporting.
 from app.services.user_incident_reporting import install_incident_reporting
 install_incident_reporting(app, allowed_origins)
+

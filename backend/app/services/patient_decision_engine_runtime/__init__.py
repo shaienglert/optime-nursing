@@ -105,7 +105,7 @@ def build_patient_needs_profile(questionnaire_state: Dict[str, Any], natural_lan
         "success_factor_policy": factor_policy,
         "decision_readiness": human_context.get("decision_readiness"),
         "adaptive_questions": human_context.get("adaptive_questions") or [],
-        "production_principle": "client intent first; verified MUST gate; NICE-TO-HAVE ordering; then objective government/regulatory evidence, public reputation and relevant evidence completeness; UNKNOWN material facts trigger questions or research",
+        "production_principle": "client intent first; verified MUST gate; NICE-TO-HAVE ordering; then objective government/regulatory evidence and case-relevant evidence; UNKNOWN material facts trigger questions or research",
     }
     # Seal the interview outcome in the same authority used by the recommendation
     # pipeline.  Consumers can now decide whether to advance without reading the raw
@@ -187,7 +187,7 @@ def _reassign_rank_metadata(rows: List[Dict[str, Any]]) -> None:
             "must_pass": fit.get("must_pass") or [],
             "must_unknown": fit.get("must_unknown") or [],
             "nice_match": fit.get("nice_match") or [],
-            "government_regulatory_then_public_reputation_then_evidence_completeness": True,
+            "government_regulatory_then_case_relevant_evidence": True,
         }
 
 
@@ -464,9 +464,9 @@ def _run_prepared_decision(questionnaire_state: Dict[str, Any], natural_language
         "agent_evidence_bridge": agent_bridge,
         "provider_evidence_finality": finality,
         "must_gate": {"survivors": len(survivors), "rejected": len(rejected), "selected_must_unknown_count": selected_must_unknown},
-        "ranking_order": ["CLIENT_INTENT", "MUST_GATE", "NICE_TO_HAVE", "GOVERNMENT_REGULATORY_DATA", "PUBLIC_REPUTATION", "RELEVANT_EVIDENCE_COMPLETENESS"],
+        "ranking_order": ["CLIENT_INTENT", "MUST_GATE", "NICE_TO_HAVE", "GOVERNMENT_REGULATORY_DATA", "RELEVANT_EVIDENCE_COMPLETENESS"],
         "facility_person_fit_evidence": "Only market-scoped governed evidence may affect fit. Missing MUST facility evidence becomes agent research; missing resident intent becomes a question.",
-        "production_principle": "understand the client first; reject verified MUST mismatches; rank only survivors by NICE-TO-HAVE fit; then use government/regulatory facts, public reputation and evidence completeness; UNKNOWN never becomes a silent pass or fail",
+        "production_principle": "understand the client first; reject verified MUST mismatches; rank only survivors by NICE-TO-HAVE fit; then use government/regulatory facts and case-relevant evidence; UNKNOWN never becomes a silent pass or fail",
     }
     core["decision_intelligence"] = decision_intelligence
     if isinstance(patient_profile, dict):
@@ -501,8 +501,8 @@ def _run_prepared_decision(questionnaire_state: Dict[str, Any], natural_language
     core["recommendation_audit_trace"] = {
         "model_version": "decision-intelligence-runtime-v3.1",
         "facts_used": {"patient_needs": [item.get("parameter_id") for item in patient_profile.get("needs") or []], "human_signals": human_context.get("signals") or {}, "living_strategy_signals": strategy.get("signals") or {}, "household": strategy.get("household") or {}, "client_intent": client_intent, "care_partner_layer": care_partner_layer},
-        "decision_rules_applied": ["client_intent_first", "verified_must_mismatch_rejected", "material_must_unknown_requires_verification", "nice_to_have_orders_survivors", "government_regulatory_after_fit", "public_reputation_after_regulatory", "evidence_completeness_after_reputation", "living_strategy_before_facility_ranking", "least_restrictive_safe_strategy", "temporary_recovery_separate_from_long_term_residence", "independent_living_temporary_care_uses_separate_licensed_pca_layer", "facility_agency_access_requires_provider_evidence", "pca_operational_unknowns_keep_care_partner_provisional", "couple_members_keep_separate_care_profiles", "unknown_is_not_mismatch", "resident_material_unknown_triggers_next_best_question", "facility_material_unknown_triggers_market_agent_research", "agent_evidence_must_match_active_market", "success_factor_influence_classes_no_unvalidated_numeric_weights", "facility_size_not_independent_quality", "knowledge_fabric_requires_recommendation_eligibility_and_verification_gate", "outcomes_are_validation_only_without_governed_weight_change"],
-        "evidence_references": ["Nevada HCQC / ALiS", "Nevada PCA operational primary-source evidence", "market-scoped official provider evidence", "CMS when applicable", "public reputation only when source/identity/review count are verifiable", "reports/RESIDENT_SENIOR_LIVING_SUCCESS_FACTORS_CANON_V1.md", "reports/RECOMMENDATION_INFLUENCE_MODEL_V1.md", "reports/RECOMMENDATION_REQUIRED_DATA_AND_NBQ_V1.md"],
+        "decision_rules_applied": ["client_intent_first", "verified_must_mismatch_rejected", "material_must_unknown_requires_verification", "nice_to_have_orders_survivors", "government_regulatory_after_fit", "external_ratings_display_only", "case_relevant_evidence_after_regulatory", "living_strategy_before_facility_ranking", "least_restrictive_safe_strategy", "temporary_recovery_separate_from_long_term_residence", "independent_living_temporary_care_uses_separate_licensed_pca_layer", "facility_agency_access_requires_provider_evidence", "pca_operational_unknowns_keep_care_partner_provisional", "couple_members_keep_separate_care_profiles", "unknown_is_not_mismatch", "resident_material_unknown_triggers_next_best_question", "facility_material_unknown_triggers_market_agent_research", "agent_evidence_must_match_active_market", "success_factor_influence_classes_no_unvalidated_numeric_weights", "facility_size_not_independent_quality", "knowledge_fabric_requires_recommendation_eligibility_and_verification_gate", "outcomes_are_validation_only_without_governed_weight_change"],
+        "evidence_references": ["Nevada HCQC / ALiS", "Nevada PCA operational primary-source evidence", "market-scoped official provider evidence", "CMS when applicable", "reports/RESIDENT_SENIOR_LIVING_SUCCESS_FACTORS_CANON_V1.md", "reports/RECOMMENDATION_INFLUENCE_MODEL_V1.md", "reports/RECOMMENDATION_REQUIRED_DATA_AND_NBQ_V1.md"],
         "living_strategy": strategy,
         "client_intent": client_intent,
         "strategy_universe": universe_status,
@@ -528,3 +528,4 @@ __all__ = ["_regulatory_index", "build_patient_needs_profile", "build_patient_co
 def run_patient_decision_engine(questionnaire_state: Dict[str, Any], natural_language_query: str = "", limit: int = 50, *, prepared_profile: Dict[str, Any] | None = None) -> Dict[str, Any]:
     from app.services.decision_pipeline import run_decision_pipeline
     return run_decision_pipeline(questionnaire_state, natural_language_query, limit, profile_builder=build_patient_needs_profile, runner=_run_prepared_decision, prepared_profile=prepared_profile)
+

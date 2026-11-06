@@ -59,3 +59,8 @@ Do not overwrite historical entries.
 ## Owner-approved 2026-10-05: monthly starting-price search
 
 ACTIVE: `MONTHLY_STARTING_PRICE_POLICY.md`. Insurance funding-pathway gates and final-total search verification are superseded for the family search. Insurance is settled with facilities; budget uses starting prices, retaining the existing tolerance and all care/safety requirements.
+
+## Owner-approved 2026-11-06: external ratings are display-only
+
+ACTIVE: `EXTERNAL_RATINGS_DISPLAY_POLICY.md`. Google ratings and U.S. News recognition may be shown with exact source attribution, availability and assessment date/year. External public reputation is excluded from recommendation scores, comparator keys, tie-breaking and case-relevant evidence-count advantages. This supersedes public-reputation ranking stages in older runtime/audit descriptions. Government inspection and licensing evidence remain governed inputs. Approval: explicit owner request to display these sources without influencing Oomnik ranking, followed by execution authorization in the 2026-11-06 conversation.
+

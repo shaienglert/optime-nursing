@@ -52,7 +52,8 @@ def test_later_record_change_cannot_rewrite_original_comparison():
 
 def test_nested_evidence_branch_uses_the_first_actual_difference():
     rows = rank([row("a", grade="A", rating=5), row("b", grade="A", rating=4), row("c", grade="B", rating=5)])
-    assert explain_ranked_pair(rows[0], rows[1], DIMENSIONS)["decision_dimension"] == "public_rating"
+    # Public ratings cannot separate an otherwise equal group.
+    assert explain_ranked_pair(rows[0], rows[1], DIMENSIONS)["decision_dimension"] == "true_tie"
     assert explain_ranked_pair(rows[1], rows[2], DIMENSIONS)["decision_dimension"] == "alis_latest_grade"
 
 
@@ -99,3 +100,4 @@ def test_final_component_names_are_pinned_to_real_key_order():
         "verified_preference_matches": -4, "verified_preference_mismatches": 5,
         "community_environment_evidence": 0, "community_environment_fit": -17.,
         "nearby_comparison_scope": 0, "requested_nearby_fit": -7, "requested_nearby_distance": 23.}
+

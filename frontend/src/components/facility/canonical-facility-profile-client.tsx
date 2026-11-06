@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ExternalRatings } from "./external-ratings";
 import { PilotPhoto } from "./pilot-photo";
 import { FacilityPersonalFit } from "@/components/guidance/facility-personal-fit";
 import { useEffect, useMemo, useState } from "react";
@@ -277,7 +278,7 @@ export function CanonicalFacilityProfileClient({ canonicalFacilityId, backHref, 
           </div>
         </section>
 
-        <section className="rounded-xl border border-line bg-white p-5"><h2 className="text-2xl font-semibold">Family reviews and OOmnik assessment</h2><p className="mt-3 text-lg leading-8">A sourced family-review rating and a separate OOmnik assessment are not available in this profile. The regulatory history above reports inspection evidence; it is not a family-review score.</p></section>
+        <ExternalRatings canonicalFacilityId={canonicalFacilityId} />
         <details className="rounded-xl border border-line bg-white p-5">
           <summary className="cursor-pointer text-lg font-semibold text-forest">Explore the supporting evidence</summary>
           <div className="mt-4 overflow-x-auto">
@@ -302,3 +303,4 @@ export function CanonicalFacilityProfileClient({ canonicalFacilityId, backHref, 
     </main>
   );
 }
+

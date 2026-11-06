@@ -249,10 +249,10 @@ class DeterministicWaterfallThinEvidenceTests(unittest.TestCase):
         rows = [_thin_row("A"), _thin_row("B")]
         self.assertTrue(_has_differentiating_evidence(rows, {"preference_count": 2}))
 
-    def test_has_differentiating_evidence_is_true_if_any_row_has_a_known_rating(self):
+    def test_public_rating_is_not_differentiating_evidence(self):
         rows = [_thin_row("A"), _thin_row("B")]
         rows[1]["client_intent_fit"]["public_reputation"]["rating"] = 3.5
-        self.assertTrue(_has_differentiating_evidence(rows, {"preference_count": 0}))
+        self.assertFalse(_has_differentiating_evidence(rows, {"preference_count": 0}))
 
     def test_has_differentiating_evidence_is_true_if_any_row_has_a_known_grade(self):
         rows = [_thin_row("A"), _row("B", "PASS", grade="C")]
@@ -337,3 +337,4 @@ def test_must_eligible_reconciles_legacy_status_for_visible_card():
     assert visible["must_eligibility"] == "MUST_ELIGIBLE"
     assert visible["eligibility_status"] == "ELIGIBLE"
     assert visible["legacy_eligibility_status"] == "POTENTIALLY_ELIGIBLE"
+

@@ -97,18 +97,16 @@ def _reconcile_medication_must(row: dict[str, Any]) -> None:
 
 def _ranking_basis(row: dict[str, Any]) -> dict[str, Any]:
     """The specific, already-verified signals that actually separate this row from
-    its neighbors in intent_rank_key's ordering -- rating, regulatory grade, and
+    its neighbors in intent_rank_key's ordering -- regulatory grade and
     evidence completeness, not the flat needs-coverage match_score. Two rows can
     carry an identical match_score while ranking apart on these; without this field
     that gap was invisible to the client, who saw only a tied score with no visible
     reason for the order.
     """
     fit = row.get("client_intent_fit") if isinstance(row.get("client_intent_fit"), dict) else {}
-    reputation = fit.get("public_reputation") if isinstance(fit.get("public_reputation"), dict) else {}
     history = row.get("regulatory_history") if isinstance(row.get("regulatory_history"), dict) else {}
     return {
-        "rating": reputation.get("rating", "UNKNOWN"),
-        "review_count": reputation.get("review_count", "UNKNOWN"),
+        "external_ratings_role": "DISPLAY_ONLY_NOT_RANKING",
         "latest_regulatory_grade": history.get("latest_known_grade", "UNKNOWN"),
         "disciplinary_action_on_record": history.get("disciplinary_action", "UNKNOWN"),
         "nice_preferences_matched": len(fit.get("nice_match") or []),
@@ -562,3 +560,4 @@ def run_decision_pipeline(questionnaire_state: dict[str, Any], natural_language_
     result = _attach_pipeline_trace(result, questionnaire_state)
     logger.info("decision_pipeline_stage_timings_ms %s total_ms=%s", stage_timings, round(sum(stage_timings.values()), 1))
     return result
+
