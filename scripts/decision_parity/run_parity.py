@@ -92,7 +92,15 @@ def compare(baseline: str, candidate: str, show: int = 12) -> int:
         # Owner-directed advisor presentation and additive authority/provenance fields.
         # Existing decision, ranking, requirement and evidence fields still match exactly.
         allowed += sum(
-            is_declared_advisory_change(path, kind) or kind == "added" and (
+            (
+                kind == "added"
+                and _old is None
+                and _new == []
+                and path in {
+                    "$.http_recommendations.body.care_partner_options",
+                    "$.db_side_effects.decision_artifacts[0].payload_json.care_partner_options",
+                }
+            ) or is_declared_advisory_change(path, kind) or kind == "added" and (
                 path == "$.http_recommendations.body.decision_id"
                 or path == "$.db_side_effects.decision_artifacts"
                 # Additive intake-reuse contract. Existing signals, decisions,
