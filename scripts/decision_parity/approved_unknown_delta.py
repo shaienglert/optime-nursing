@@ -131,6 +131,20 @@ def approved_unknown_evidence_delta(case, baseline, candidate, diffs):
         return set()
     if not _fixture_invariants(baseline, candidate):
         return set()
-    if any(not _allow_path(path, kind, old, new) for path, kind, old, new in diffs):
-        return set()
-    return set(range(len(diffs)))
+    # Another independently tested API repair adds this optional response field.
+    # Validate those two exact additive changes separately; they must not make
+    # the UNKNOWN remediation fail or become a blanket exemption.
+    care_partner_paths = {
+        "$.http_recommendations.body.care_partner_options",
+        "$.db_side_effects.decision_artifacts[0].payload_json.care_partner_options",
+    }
+    approved_unknown_indexes = set()
+    for index, (path, kind, old, new) in enumerate(diffs):
+        if path in care_partner_paths:
+            if not (kind == "added" and old is None and new == []):
+                return set()
+            continue
+        if not _allow_path(path, kind, old, new):
+            return set()
+        approved_unknown_indexes.add(index)
+    return approved_unknown_indexes
