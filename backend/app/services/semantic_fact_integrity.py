@@ -37,8 +37,14 @@ def _has_value(packet: dict, state: dict, path: str) -> bool:
         return False
     for source in (packet.get("questionnaire_patch") or {}, state):
         value = _leaf(source, path)
-        if value is not None and value != "" and value != [] and value != {}:
-            return True
+        if value is None or value == "" or value == [] or value == {}:
+            continue
+        # Unknown/unanswered cannot satisfy a recognized explicit fact.
+        if isinstance(value, str) and _normalized(value) in {
+            "not sure", "unknown", "not specified", "unanswered",
+        }:
+            continue
+        return True
     return False
 
 
