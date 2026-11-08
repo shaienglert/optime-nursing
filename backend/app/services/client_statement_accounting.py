@@ -83,6 +83,83 @@ def account_user_input(text: str) -> Dict[str, Any]:
     }
 
 
+
+def reconcile_semantic_statement_coverage(text: str, semantic_packet: Dict[str, Any]) -> Dict[str, Any]:
+    """Audit actual source-trace linkage; not an assertion of full comprehension.
+
+    The existing keyword classifier assigns a status to every segment, which
+    cannot establish that the interpreter understood it. Reconcile original
+    segments with exact source quotes and canonical field materialization.
+    Unknown vocabulary is never discarded; unquoted segments remain visible.
+    """
+    from app.services.canonical_structured_profile import in_schema
+
+    def normalized(value: Any) -> str:
+        return " ".join(str(value or "").casefold().split())
+
+    def at(obj: Any, path: str) -> Any:
+        for key in path.split("."):
+            if not isinstance(obj, dict):
+                return None
+            obj = obj.get(key)
+        return obj
+
+    result = account_user_input(text)
+    input_text = normalized(text)
+    traces = [row for row in semantic_packet.get("statements") or []
+              if isinstance(row, dict) and normalized(row.get("raw_text"))
+              and normalized(row.get("raw_text")) in input_text]
+    patch = semantic_packet.get("questionnaire_patch") or {}
+    rows: List[Dict[str, Any]] = []
+    for row in result["statements"]:
+        clause = normalized(row["statement"])
+        linked = [trace for trace in traces if clause in normalized(trace.get("raw_text"))]
+        paths = sorted({
+            str(path) for trace in linked
+            for path in (trace.get("mapped_parameters") or [])
+            if isinstance(path, str) and in_schema(path)
+        })
+        materialized = [
+            path for path in paths
+            if at(patch, path) not in (None, "", [], {})
+        ]
+        if not linked:
+            status = "MISSING_SOURCE_TRACE"
+        elif any(trace.get("status") == "ASKED" for trace in linked):
+            status = "CLARIFICATION_TRACE"
+        elif any(trace.get("status") == "RESEARCH_REQUIRED" for trace in linked):
+            status = "RESEARCH_TRACE"
+        elif materialized:
+            status = "SOURCE_AND_FIELD_LINKED_NOT_SEMANTICALLY_VERIFIED"
+        else:
+            status = "TRACED_WITHOUT_MATERIALIZED_FIELD"
+        rows.append({
+            "index": row["index"], "statement": row["statement"],
+            "concepts": row["concepts"], "trace_status": status,
+            "mapped_paths": paths, "materialized_paths": materialized,
+        })
+
+    traced = sum(row["trace_status"] != "MISSING_SOURCE_TRACE" for row in rows)
+    return {
+        "statements": rows,
+        "statement_count": len(rows),
+        "trace_linked_count": traced,
+        "missing_source_trace_count": len(rows) - traced,
+        "trace_link_rate_percent": round(100.0 * traced / len(rows), 2) if rows else None,
+        # Even complete quote coverage is not proof each semantic clause was
+        # understood and correctly mapped to the right field.
+        "semantic_coverage_percent": None,
+        "semantic_coverage_status": "NOT_INDEPENDENTLY_VERIFIED",
+        "classification_is_not_interpretation": True,
+        "unverified_clauses": [row["statement"] for row in rows
+                               if row["trace_status"] in {
+                                   "MISSING_SOURCE_TRACE",
+                                   "TRACED_WITHOUT_MATERIALIZED_FIELD",
+                               }],
+    }
+
+
+
 def apply_no_drop_contract(context: Dict[str, Any], natural_language_query: str, question_factory: Any) -> Dict[str, Any]:
     accounting = account_user_input(natural_language_query)
     context["user_statement_accounting"] = accounting
