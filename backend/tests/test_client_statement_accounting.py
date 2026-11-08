@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from app.services.client_statement_accounting import account_user_input
+from app.services.client_statement_accounting import account_user_input, reconcile_semantic_statement_coverage
 from app.services.human_intelligence_runtime_verified import build_human_intelligence_context
 
 
@@ -53,3 +53,47 @@ class ClientStatementAccountingTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def test_reconciliation_does_not_claim_keyword_classification_proves_comprehension():
+    text = "Dad receives dialysis three times a week and needs wound care."
+    packet = {
+        "questionnaire_patch": {
+            "medicalCareProfile": {"needs": ["Wound care"]}
+        },
+        "statements": [{
+            "raw_text": text, "status": "USED", "knowledge_state": "KNOWN",
+            "mapped_parameters": ["medicalCareProfile.needs"],
+        }],
+    }
+    audit = reconcile_semantic_statement_coverage(text, packet)
+    assert audit["statement_count"] == 2
+    assert audit["trace_linked_count"] == 2
+    assert audit["semantic_coverage_percent"] is None
+    assert audit["semantic_coverage_status"] == "NOT_INDEPENDENTLY_VERIFIED"
+
+
+def test_unquoted_clause_is_visible_as_missing_not_silently_covered():
+    text = "Mom needs a small community and loves pottery at night."
+    packet = {"questionnaire_patch": {}, "statements": [{
+        "raw_text": "Mom needs a small community", "status": "USED",
+        "mapped_parameters": [],
+    }]}
+    audit = reconcile_semantic_statement_coverage(text, packet)
+    assert audit["missing_source_trace_count"] == 1
+    assert any("pottery" in s for s in audit["unverified_clauses"])
+    assert audit["semantic_coverage_percent"] is None
+
+
+def test_research_is_not_mistaken_for_materialized_capability():
+    text = "We need a synagogue within walking distance."
+    audit = reconcile_semantic_statement_coverage(text, {
+        "questionnaire_patch": {},
+        "statements": [{
+            "raw_text": text, "status": "RESEARCH_REQUIRED",
+            "research_task": "Check nearby synagogues",
+            "mapped_parameters": [],
+        }],
+    })
+    assert audit["statements"][0]["trace_status"] == "RESEARCH_TRACE"
+    assert audit["semantic_coverage_percent"] is None
