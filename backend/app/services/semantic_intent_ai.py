@@ -493,6 +493,11 @@ def _ground_clinical_patch(result: Dict[str, Any], user_text: str, state: Dict[s
         ]
         supported_needs = []
         for quote in exact_quotes:
+            # A question or historical therapy is not a present clinical requirement.
+            if quote.rstrip().endswith("?") or re.search(
+                r"\b(?:used to|previously|formerly|no longer)\b", quote, re.I
+            ):
+                continue
             if (re.search(r"\b(?:receives?|receiving|undergoes?|on|needs?|requires?)\s+(?:regular\s+)?dialysis\b", quote, re.I)
                     and not re.search(r"\b(?:no|not|never|without|doesn['’]?t|don['’]?t)\b.{0,30}\bdialysis\b", quote, re.I)):
                 supported_needs.append(("Dialysis", quote))
