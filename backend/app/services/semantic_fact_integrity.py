@@ -108,6 +108,21 @@ def check_recognized_fact_conservation(
                 for item in matching
             )
             if not explicitly_unresolved:
+                # A fabricated NICE/CONTEXT field mapping may be removed during
+                # schema repair. Keep the exact original statement and expose
+                # the missing canonical mapping for later review; it must not
+                # silently become a verified decision input.
+                if (
+                    old.get("importance") in {"NICE", "CONTEXT"}
+                    and not _has_value(initial, state, path)
+                    and any(item.get("status") == "USED" for item in matching)
+                ):
+                    final.setdefault("unmapped_recognized_facts", []).append({
+                        "raw_text": raw,
+                        "rejected_path": path,
+                        "status": "PRESERVED_UNMAPPED_NOT_DECISION_EVIDENCE",
+                    })
+                    continue
                 errors.append("DROPPED_RECOGNIZED_FIELD:" + path)
     if errors:
         raise RuntimeError("SEMANTIC_AI_FACT_LOSS:" + ",".join(sorted(set(errors))))
