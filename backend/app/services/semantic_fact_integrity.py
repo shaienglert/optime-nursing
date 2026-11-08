@@ -67,7 +67,12 @@ def check_recognized_fact_conservation(
     for old in initial_statements:
         if not isinstance(old, dict):
             continue
-        if old.get("status") != "USED" or old.get("knowledge_state") != "KNOWN":
+        # Preserve recognized facts and unresolved research signals alike.
+        # Only explicit source-grounded entries are covered here; new user text
+        # comprehension itself belongs to the interpretation/coverage contract.
+        if old.get("status") not in {"USED", "RESEARCH_REQUIRED"}:
+            continue
+        if old.get("knowledge_state") not in {"KNOWN", "AMBIGUOUS", "UNKNOWN"}:
             continue
         raw = str(old.get("raw_text") or "").strip()
         if not raw or not source_text or _normalized(raw) not in source_text:
@@ -81,6 +86,8 @@ def check_recognized_fact_conservation(
         ]
         if not matching:
             errors.append("DROPPED_RECOGNIZED_STATEMENT")
+            continue
+        if old.get("status") != "USED" or old.get("knowledge_state") != "KNOWN":
             continue
         for path in sorted(_paths(old)):
             from app.services.canonical_structured_profile import in_schema
