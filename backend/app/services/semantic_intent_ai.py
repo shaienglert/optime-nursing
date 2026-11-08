@@ -860,6 +860,14 @@ def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Opti
         _validate_patch_contract(packet, user_text, questionnaire_state)
         from app.services.client_statement_accounting import reconcile_semantic_statement_coverage
         packet["source_statement_audit"] = reconcile_semantic_statement_coverage(user_text, packet)
+        missing_source = [
+            row["statement"] for row in packet["source_statement_audit"]["statements"]
+            if row["trace_status"] == "MISSING_SOURCE_TRACE"
+        ]
+        if missing_source:
+            error = RuntimeError("SEMANTIC_AI_SOURCE_COVERAGE_GAP:" + ",".join(missing_source))
+            error.source_coverage_diagnostic = {"missing_source_clauses": missing_source}
+            raise error
         check_recognized_fact_conservation(
             initial_semantic_packet, packet, user_text=user_text,
             questionnaire_state=questionnaire_state,
@@ -893,6 +901,7 @@ def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Opti
                 "SEMANTIC_AI_MISSING_STATEMENT_TRACE",
                 "SEMANTIC_AI_PATCH_CONTRACT",
                 "SEMANTIC_AI_FACT_LOSS",
+                "SEMANTIC_AI_SOURCE_COVERAGE_GAP",
                 "SEMANTIC_AI_WIRE_CONTRACT",
                 "SEMANTIC_AI_REPAIR_REASKED_ANSWERED_DIMENSION",
                 "SEMANTIC_AI_READY_WITH_MISSING_MINIMUM_DIMENSIONS",
@@ -905,6 +914,9 @@ def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Opti
                              if item.startswith("KNOWN_FIELD_NOT_MATERIALIZED:")]
             repair_payload["packet_validation_repair"] = {
                 "validation_error": str(error),
+                "unaccounted_source_clauses": getattr(error, "source_coverage_diagnostic", {}).get(
+                    "missing_source_clauses", []
+                ),
                 "original_recognized_facts": [
                     {"raw_text": row.get("raw_text"), "meaning": row.get("meaning"),
                      "mapped_parameters": row.get("mapped_parameters")}
