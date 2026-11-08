@@ -143,3 +143,34 @@ def test_ambiguous_source_fact_survives_without_fabricated_answer():
         "mapped_parameters": [],
     }], "questionnaire_patch": {}}
     check_recognized_fact_conservation(original, final, user_text=text)
+
+
+def test_unsupported_nice_mapping_is_preserved_as_unmapped_not_a_verified_fact():
+    quote = "The resident wants to keep their vintage piano."
+    initial = {"statements": [{
+        "raw_text": quote, "status": "USED", "knowledge_state": "KNOWN",
+        "importance": "NICE", "mapped_parameters": ["relationship"],
+    }], "questionnaire_patch": {}}
+    final = {"statements": [{
+        "raw_text": quote, "status": "USED", "knowledge_state": "KNOWN",
+        "importance": "NICE", "mapped_parameters": [],
+    }], "questionnaire_patch": {}}
+    check_recognized_fact_conservation(initial, final, user_text=quote)
+    assert final["unmapped_recognized_facts"] == [{
+        "raw_text": quote, "rejected_path": "relationship",
+        "status": "PRESERVED_UNMAPPED_NOT_DECISION_EVIDENCE",
+    }]
+
+
+def test_unmaterialized_must_remains_a_blocking_error():
+    quote = "Dad needs continuous oxygen."
+    initial = {"statements": [{
+        "raw_text": quote, "status": "USED", "knowledge_state": "KNOWN",
+        "importance": "MUST", "mapped_parameters": ["medicalCareProfile.needs"],
+    }], "questionnaire_patch": {}}
+    final = {"statements": [{
+        "raw_text": quote, "status": "USED", "knowledge_state": "KNOWN",
+        "importance": "MUST", "mapped_parameters": [],
+    }], "questionnaire_patch": {}}
+    with pytest.raises(RuntimeError, match="DROPPED_RECOGNIZED_FIELD:medicalCareProfile.needs"):
+        check_recognized_fact_conservation(initial, final, user_text=quote)
