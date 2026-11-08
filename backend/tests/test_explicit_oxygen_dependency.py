@@ -116,3 +116,30 @@ def test_unknown_value_does_not_falsely_materialize_a_recognized_fact(placeholde
     with pytest.raises(RuntimeError, match="SEMANTIC_AI_FACT_LOSS.*assistanceLevel"):
         check_recognized_fact_conservation(
             _initial(), finish, user_text="Dad needs support with bathing.")
+
+
+def test_recognized_research_signal_cannot_silently_disappear():
+    original = {"statements": [{
+        "raw_text": "The facility's language support has not been verified.",
+        "status": "RESEARCH_REQUIRED", "knowledge_state": "UNKNOWN",
+        "research_task": "Verify supported languages",
+        "mapped_parameters": [],
+    }]}
+    with pytest.raises(RuntimeError, match="DROPPED_RECOGNIZED_STATEMENT"):
+        check_recognized_fact_conservation(
+            original, {"statements": [], "questionnaire_patch": {}},
+            user_text="The facility's language support has not been verified.")
+
+
+def test_ambiguous_source_fact_survives_without_fabricated_answer():
+    text = "We are unsure whether he needs help transferring."
+    original = {"statements": [{
+        "raw_text": text, "status": "RESEARCH_REQUIRED",
+        "knowledge_state": "AMBIGUOUS", "mapped_parameters": [],
+    }]}
+    final = {"statements": [{
+        "raw_text": text, "status": "ASKED", "knowledge_state": "AMBIGUOUS",
+        "clarification_question": "Does he need help transferring?",
+        "mapped_parameters": [],
+    }], "questionnaire_patch": {}}
+    check_recognized_fact_conservation(original, final, user_text=text)
