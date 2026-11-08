@@ -108,3 +108,11 @@ def test_unrelated_or_unquoted_statement_is_not_promoted_to_fact():
     check_recognized_fact_conservation(
         initial, {"questionnaire_patch": {}, "statements": []},
         user_text="We are asking a general question.", questionnaire_state={})
+
+
+@pytest.mark.parametrize("placeholder", ["Not sure", "UNKNOWN", "Not specified"])
+def test_unknown_value_does_not_falsely_materialize_a_recognized_fact(placeholder):
+    finish = _final(value=placeholder)
+    with pytest.raises(RuntimeError, match="SEMANTIC_AI_FACT_LOSS.*assistanceLevel"):
+        check_recognized_fact_conservation(
+            _initial(), finish, user_text="Dad needs support with bathing.")
