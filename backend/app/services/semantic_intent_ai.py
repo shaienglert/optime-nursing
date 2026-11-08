@@ -858,6 +858,8 @@ def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Opti
         if readiness == "NEEDS_CLARIFICATION" and _question_reasks_answered_dimension(packet, questionnaire_state, user_text):
             raise RuntimeError("SEMANTIC_AI_REPAIR_REASKED_ANSWERED_DIMENSION")
         _validate_patch_contract(packet, user_text, questionnaire_state)
+        from app.services.client_statement_accounting import reconcile_semantic_statement_coverage
+        packet["source_statement_audit"] = reconcile_semantic_statement_coverage(user_text, packet)
         check_recognized_fact_conservation(
             initial_semantic_packet, packet, user_text=user_text,
             questionnaire_state=questionnaire_state,
