@@ -480,6 +480,63 @@ def _ground_clinical_patch(result: Dict[str, Any], user_text: str, state: Dict[s
                 result["oxygen_dependency_normalization"] = {
                     "applied": True, "basis": "EXACT_EXPLICIT_OXYGEN_QUOTE"
                 }
+    # Clinical need extraction can omit a parent despite an explicit USED/KNOWN
+    # source quote. Restore only the two conditions directly stated by the client.
+    # A missing frequency is never "Not specified" evidence; keep it unknown.
+    if isinstance(medical, dict):
+        exact_quotes = [
+            str(item.get("raw_text") or "")
+            for item in result.get("statements") or []
+            if isinstance(item, dict) and item.get("status") == "USED"
+            and item.get("knowledge_state") == "KNOWN"
+            and str(item.get("raw_text") or "") in user_text
+        ]
+        supported_needs = []
+        for quote in exact_quotes:
+            if (re.search(r"\b(?:receives?|receiving|undergoes?|on|needs?|requires?)\s+(?:regular\s+)?dialysis\b", quote, re.I)
+                    and not re.search(r"\b(?:no|not|never|without|doesn['’]?t|don['’]?t)\b.{0,30}\bdialysis\b", quote, re.I)):
+                supported_needs.append(("Dialysis", quote))
+            if (re.search(r"\b(?:needs?|requires?|receives?|receiving)\s+(?:regular\s+)?wound care\b", quote, re.I)
+                    and not re.search(r"\b(?:no|not|never|without|doesn['’]?t|don['’]?t)\b.{0,30}\bwound care\b", quote, re.I)):
+                supported_needs.append(("Wound care", quote))
+        needs = medical.get("needs")
+        sources = result.get("questionnaire_patch_sources")
+        if supported_needs and isinstance(sources, dict) and (needs is None or isinstance(needs, list)):
+            present = list(needs or [])
+            for need, quote in supported_needs:
+                if need not in present:
+                    present.append(need)
+                sources["medicalCareProfile.needs"] = quote
+            medical["needs"] = present
+            result["clinical_needs_normalization"] = {
+                "applied": True, "basis": "EXACT_EXPLICIT_CLIENT_QUOTE",
+                "needs": [need for need, _ in supported_needs],
+            }
+
+        # A model-emitted placeholder is not a clinical frequency. Never turn
+        # "Not specified" into a value or a satisfied dependent field.
+        if medical.get("woundCareFrequency") == "Not specified":
+            del medical["woundCareFrequency"]
+            if isinstance(sources, dict):
+                sources.pop("medicalCareProfile.woundCareFrequency", None)
+            for statement in result.get("statements") or []:
+                if isinstance(statement, dict) and isinstance(statement.get("mapped_parameters"), list):
+                    statement["mapped_parameters"] = [
+                        key for key in statement["mapped_parameters"]
+                        if key != "medicalCareProfile.woundCareFrequency"
+                    ]
+
+        # Recover a stated dialysis schedule only from the exact quote, not from
+        # general clinical background or an unsupported frequency.
+        if not medical.get("dialysisFrequency") and isinstance(sources, dict):
+            for need, quote in supported_needs:
+                if need != "Dialysis":
+                    continue
+                frequency = re.search(r"\b(?:three|3)\s+times?\s+(?:a|per)\s+week\b", quote, re.I)
+                if frequency:
+                    medical["dialysisFrequency"] = frequency.group(0)
+                    sources["medicalCareProfile.dialysisFrequency"] = quote
+                    break
     return result
 
 
