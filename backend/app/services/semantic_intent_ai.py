@@ -514,8 +514,12 @@ def _validate_result(result: Dict[str, Any], *, allow_empty_statements: bool = F
     if readiness == "NEEDS_RESEARCH" and not pending_question:
         result["decision_readiness"] = "READY"
         result["readiness_normalization"] = {"from": "NEEDS_RESEARCH", "to": "READY", "reason": "CLIENT_INTENT_COMPLETE_FACILITY_RESEARCH_DEFERRED", "pending_facility_research": pending_research}
-    result["statement_coverage_percent"] = 100.0
-    result["dropped_statement_count"] = 0
+    # Statement accounting has not compared the text against an independent
+    # inventory of source facts. Never claim 100% comprehension by default.
+    # The separate conservation guard verifies only facts already recognized.
+    result["statement_coverage_percent"] = None
+    result["dropped_statement_count"] = None
+    result["statement_coverage_status"] = "NOT_INDEPENDENTLY_VERIFIED"
     result["governance"] = {
         "ai_based": True,
         "learning_center_consulted": True,
