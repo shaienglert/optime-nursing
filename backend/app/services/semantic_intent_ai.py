@@ -447,101 +447,6 @@ def _ground_clinical_patch(result: Dict[str, Any], user_text: str, state: Dict[s
     if omitted:
         result["clinical_fact_validation"] = {"omitted_unsupported_fields": omitted, "reason": "EXPLICIT_CLIENT_EVIDENCE_REQUIRED"}
 
-    # Explicit oxygen-use details entail the parent Oxygen need. The model may
-    # omit that dependent field despite an exact source quote; reconstruct only
-    # when the quote itself directly establishes current oxygen therapy.
-    # Neither a negated mention nor a merely inferred clinical need is promoted.
-    if isinstance(medical, dict) and medical.get("oxygenUse") in {"At night", "With activity", "Continuously"}:
-        sources = result.get("questionnaire_patch_sources")
-        quote = str((sources or {}).get("medicalCareProfile.oxygenUse") or "") if isinstance(sources, dict) else ""
-        positive_oxygen = re.search(
-            r"\b(?:uses?|using|requires?|needs?|on|receives?|receiving)\s+(?:supplemental\s+)?oxygen\b",
-            quote, re.I,
-        )
-        negated_oxygen = re.search(
-            r"\b(?:no|not|never|without|doesn['’]?t|don['’]?t)\b.{0,24}\boxygen\b",
-            quote, re.I,
-        )
-        if quote and quote in user_text and positive_oxygen and not negated_oxygen:
-            needs = medical.get("needs")
-            if needs is None:
-                needs = []
-            if isinstance(needs, list) and "Oxygen" not in needs:
-                medical["needs"] = [*needs, "Oxygen"]
-                sources["medicalCareProfile.needs"] = quote
-                for statement in result.get("statements") or []:
-                    if not isinstance(statement, dict) or statement.get("raw_text") != quote:
-                        continue
-                    if statement.get("knowledge_state") != "KNOWN" or statement.get("status") != "USED":
-                        continue
-                    paths = statement.get("mapped_parameters")
-                    if isinstance(paths, list) and "medicalCareProfile.needs" not in paths:
-                        paths.append("medicalCareProfile.needs")
-                result["oxygen_dependency_normalization"] = {
-                    "applied": True, "basis": "EXACT_EXPLICIT_OXYGEN_QUOTE"
-                }
-    # Clinical need extraction can omit a parent despite an explicit USED/KNOWN
-    # source quote. Restore only the two conditions directly stated by the client.
-    # A missing frequency is never "Not specified" evidence; keep it unknown.
-    if isinstance(medical, dict):
-        exact_quotes = [
-            str(item.get("raw_text") or "")
-            for item in result.get("statements") or []
-            if isinstance(item, dict) and item.get("status") == "USED"
-            and item.get("knowledge_state") == "KNOWN"
-            and str(item.get("raw_text") or "") in user_text
-        ]
-        supported_needs = []
-        for quote in exact_quotes:
-            # A question or historical therapy is not a present clinical requirement.
-            if quote.rstrip().endswith("?") or re.search(
-                r"\b(?:used to|previously|formerly|no longer)\b", quote, re.I
-            ):
-                continue
-            if (re.search(r"\b(?:receives?|receiving|undergoes?|on|needs?|requires?)\s+(?:regular\s+)?dialysis\b", quote, re.I)
-                    and not re.search(r"\b(?:no|not|never|without|doesn['’]?t|don['’]?t)\b.{0,30}\bdialysis\b", quote, re.I)):
-                supported_needs.append(("Dialysis", quote))
-            if (re.search(r"\b(?:needs?|requires?|receives?|receiving)\s+(?:regular\s+)?wound care\b", quote, re.I)
-                    and not re.search(r"\b(?:no|not|never|without|doesn['’]?t|don['’]?t)\b.{0,30}\bwound care\b", quote, re.I)):
-                supported_needs.append(("Wound care", quote))
-        needs = medical.get("needs")
-        sources = result.get("questionnaire_patch_sources")
-        if supported_needs and isinstance(sources, dict) and (needs is None or isinstance(needs, list)):
-            present = list(needs or [])
-            for need, quote in supported_needs:
-                if need not in present:
-                    present.append(need)
-                sources["medicalCareProfile.needs"] = quote
-            medical["needs"] = present
-            result["clinical_needs_normalization"] = {
-                "applied": True, "basis": "EXACT_EXPLICIT_CLIENT_QUOTE",
-                "needs": [need for need, _ in supported_needs],
-            }
-
-        # A model-emitted placeholder is not a clinical frequency. Never turn
-        # "Not specified" into a value or a satisfied dependent field.
-        if medical.get("woundCareFrequency") == "Not specified":
-            del medical["woundCareFrequency"]
-            if isinstance(sources, dict):
-                sources.pop("medicalCareProfile.woundCareFrequency", None)
-            for statement in result.get("statements") or []:
-                if isinstance(statement, dict) and isinstance(statement.get("mapped_parameters"), list):
-                    statement["mapped_parameters"] = [
-                        key for key in statement["mapped_parameters"]
-                        if key != "medicalCareProfile.woundCareFrequency"
-                    ]
-
-        # Recover a stated dialysis schedule only from the exact quote, not from
-        # general clinical background or an unsupported frequency.
-        if not medical.get("dialysisFrequency") and isinstance(sources, dict):
-            for need, quote in supported_needs:
-                if need != "Dialysis":
-                    continue
-                frequency = re.search(r"\b(?:three|3)\s+times?\s+(?:a|per)\s+week\b", quote, re.I)
-                if frequency:
-                    medical["dialysisFrequency"] = frequency.group(0)
-                    sources["medicalCareProfile.dialysisFrequency"] = quote
-                    break
     return result
 
 
@@ -934,7 +839,9 @@ def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Opti
     payload = _build_prompt(user_text, questionnaire_state, learning_advice)
     active_transport = transport or _default_transport
     result = {}
+    initial_semantic_packet: Dict[str, Any] = {}
     def validate_live_packet(packet: Dict[str, Any]) -> Dict[str, Any]:
+        from app.services.semantic_fact_integrity import check_recognized_fact_conservation
         packet = _ground_clinical_patch(packet, user_text, questionnaire_state)
         packet = _repair_live_readiness_mismatch(packet)
         # Validation normalizes advisory readiness, so check minimum dimensions
@@ -947,12 +854,17 @@ def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Opti
         if readiness == "NEEDS_CLARIFICATION" and _question_reasks_answered_dimension(packet, questionnaire_state, user_text):
             raise RuntimeError("SEMANTIC_AI_REPAIR_REASKED_ANSWERED_DIMENSION")
         _validate_patch_contract(packet, user_text, questionnaire_state)
+        check_recognized_fact_conservation(
+            initial_semantic_packet, packet, user_text=user_text,
+            questionnaire_state=questionnaire_state,
+        )
         return packet
 
     if transport is None:
         prior_packet = copy.deepcopy(result)
         try:
             result = active_transport(payload)
+            initial_semantic_packet = copy.deepcopy(result)
             prior_packet = copy.deepcopy(result)
             result = _repair_live_readiness_mismatch(result)
             result = _repair_clarification_contract_with_ai(result=result, payload=payload, user_text=user_text, questionnaire_state=questionnaire_state, transport=active_transport, strict=False)
@@ -974,6 +886,7 @@ def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Opti
                 "SEMANTIC_AI_ASKED_WITHOUT_QUESTION",
                 "SEMANTIC_AI_MISSING_STATEMENT_TRACE",
                 "SEMANTIC_AI_PATCH_CONTRACT",
+                "SEMANTIC_AI_FACT_LOSS",
                 "SEMANTIC_AI_WIRE_CONTRACT",
                 "SEMANTIC_AI_REPAIR_REASKED_ANSWERED_DIMENSION",
                 "SEMANTIC_AI_READY_WITH_MISSING_MINIMUM_DIMENSIONS",
@@ -986,6 +899,13 @@ def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Opti
                              if item.startswith("KNOWN_FIELD_NOT_MATERIALIZED:")]
             repair_payload["packet_validation_repair"] = {
                 "validation_error": str(error),
+                "original_recognized_facts": [
+                    {"raw_text": row.get("raw_text"), "meaning": row.get("meaning"),
+                     "mapped_parameters": row.get("mapped_parameters")}
+                    for row in initial_semantic_packet.get("statements") or []
+                    if isinstance(row, dict) and row.get("status") == "USED"
+                    and row.get("knowledge_state") == "KNOWN"
+                ],
                 "missing_materialized_fields": [{
                     "path": path,
                     "existing_questionnaire_value": False,
