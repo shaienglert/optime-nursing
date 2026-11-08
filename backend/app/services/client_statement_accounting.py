@@ -76,7 +76,13 @@ def account_user_input(text: str) -> Dict[str, Any]:
         "statements": rows,
         "statement_count": len(rows),
         "accounted_count": len(rows) - len(dropped),
+        # Legacy ratio describes assigned labels, not semantic comprehension.
+        # Preserve the established field for existing consumers, with an
+        # explicit meaning and a separate nonfabricated semantic audit status.
         "coverage_percent": 100.0 if not dropped else round(100.0 * (len(rows) - len(dropped)) / max(1, len(rows)), 2),
+        "coverage_basis": "STATEMENT_CLASSIFICATION_ONLY",
+        "semantic_coverage_percent": None,
+        "semantic_coverage_status": "NOT_INDEPENDENTLY_VERIFIED",
         "unresolved_parameters": unresolved,
         "dropped_count": len(dropped),
         "contract": "EVERY_MEANINGFUL_CLIENT_STATEMENT_MUST_BE_USED_ASKED_RESEARCH_REQUIRED_OR_NOT_DECISION_RELEVANT_NEVER_DROPPED",
