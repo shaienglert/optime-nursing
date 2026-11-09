@@ -860,9 +860,15 @@ def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Opti
         _validate_patch_contract(packet, user_text, questionnaire_state)
         from app.services.client_statement_accounting import reconcile_semantic_statement_coverage
         packet["source_statement_audit"] = reconcile_semantic_statement_coverage(user_text, packet)
+        # The legacy classifier can recognize an already-known category from
+        # the source without the LLM repeating every selected answer verbatim.
+        # Keep every absence in the audit; block unrecognized *material* clauses,
+        # while the separate fact-conservation contract blocks any dropped
+        # source-backed KNOWN/USED field, including MUST requirements.
         missing_source = [
             row["statement"] for row in packet["source_statement_audit"]["statements"]
             if row["trace_status"] == "MISSING_SOURCE_TRACE"
+            and "UNRESOLVED_PARAMETER" in (row.get("concepts") or [])
         ]
         # Legacy test doubles may intentionally provide a partial statement
         # packet; the schema-constrained production wire contract promises
