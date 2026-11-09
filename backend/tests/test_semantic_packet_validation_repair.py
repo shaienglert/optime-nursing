@@ -277,3 +277,25 @@ def test_repeated_missing_selected_preference_cannot_claim_validated_packet():
         with pytest.raises(RuntimeError, match="MISSING_SELECTED_PROPERTY_TRACE"):
             interpret_client_intent_with_ai(user_text=TEXT, questionnaire_state=state)
     assert transport.call_count == 2
+
+
+def test_strict_interpreter_reasks_model_for_source_clause_it_omitted():
+    text = "Mom needs help bathing. Mom enjoys pottery."
+    def trace(quote):
+        return {"raw_text": quote, "meaning": quote, "importance": "CONTEXT",
+                "knowledge_state": "KNOWN", "status": "USED", "mapped_parameters": []}
+    base = {"decision_readiness": "READY", "next_question": None,
+            "questionnaire_patch": {}, "wire_contract": {"schema_constrained": True},
+            "statements": [trace("Mom needs help bathing.")]}
+    repaired = deepcopy(base)
+    repaired["statements"].append(trace("Mom enjoys pottery."))
+    with patch("app.services.semantic_intent_ai._validate_patch_contract", return_value=None):
+        with patch("app.services.semantic_intent_ai._default_transport",
+                   side_effect=[base, repaired]) as transport:
+            output = interpret_client_intent_with_ai(
+                user_text=text,
+                questionnaire_state={"budget": 6500, "referenceLocationValue": "Las Vegas"})
+    assert transport.call_count == 2
+    assert "unaccounted_source_clauses" in transport.call_args.args[0]["packet_validation_repair"]
+    assert output["source_statement_audit"]["missing_source_trace_count"] == 0
+    assert output["source_statement_audit"]["semantic_coverage_percent"] is None
