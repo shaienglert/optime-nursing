@@ -446,6 +446,7 @@ def _ground_clinical_patch(result: Dict[str, Any], user_text: str, state: Dict[s
         omitted.append("assistanceLevel:Skilled nursing care")
     if omitted:
         result["clinical_fact_validation"] = {"omitted_unsupported_fields": omitted, "reason": "EXPLICIT_CLIENT_EVIDENCE_REQUIRED"}
+
     return result
 
 
@@ -513,8 +514,12 @@ def _validate_result(result: Dict[str, Any], *, allow_empty_statements: bool = F
     if readiness == "NEEDS_RESEARCH" and not pending_question:
         result["decision_readiness"] = "READY"
         result["readiness_normalization"] = {"from": "NEEDS_RESEARCH", "to": "READY", "reason": "CLIENT_INTENT_COMPLETE_FACILITY_RESEARCH_DEFERRED", "pending_facility_research": pending_research}
-    result["statement_coverage_percent"] = 100.0
-    result["dropped_statement_count"] = 0
+    # Statement accounting has not compared the text against an independent
+    # inventory of source facts. Never claim 100% comprehension by default.
+    # The separate conservation guard verifies only facts already recognized.
+    result["statement_coverage_percent"] = None
+    result["dropped_statement_count"] = None
+    result["statement_coverage_status"] = "NOT_INDEPENDENTLY_VERIFIED"
     result["governance"] = {
         "ai_based": True,
         "learning_center_consulted": True,
@@ -838,7 +843,9 @@ def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Opti
     payload = _build_prompt(user_text, questionnaire_state, learning_advice)
     active_transport = transport or _default_transport
     result = {}
+    initial_semantic_packet: Dict[str, Any] = {}
     def validate_live_packet(packet: Dict[str, Any]) -> Dict[str, Any]:
+        from app.services.semantic_fact_integrity import check_recognized_fact_conservation
         packet = _ground_clinical_patch(packet, user_text, questionnaire_state)
         packet = _repair_live_readiness_mismatch(packet)
         # Validation normalizes advisory readiness, so check minimum dimensions
@@ -851,12 +858,30 @@ def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Opti
         if readiness == "NEEDS_CLARIFICATION" and _question_reasks_answered_dimension(packet, questionnaire_state, user_text):
             raise RuntimeError("SEMANTIC_AI_REPAIR_REASKED_ANSWERED_DIMENSION")
         _validate_patch_contract(packet, user_text, questionnaire_state)
+        from app.services.client_statement_accounting import reconcile_semantic_statement_coverage
+        packet["source_statement_audit"] = reconcile_semantic_statement_coverage(user_text, packet)
+        missing_source = [
+            row["statement"] for row in packet["source_statement_audit"]["statements"]
+            if row["trace_status"] == "MISSING_SOURCE_TRACE"
+        ]
+        # Legacy test doubles may intentionally provide a partial statement
+        # packet; the schema-constrained production wire contract promises
+        # source-backed completeness and is held to the stronger requirement.
+        if missing_source and (packet.get("wire_contract") or {}).get("schema_constrained") is True:
+            error = RuntimeError("SEMANTIC_AI_SOURCE_COVERAGE_GAP:" + ",".join(missing_source))
+            error.source_coverage_diagnostic = {"missing_source_clauses": missing_source}
+            raise error
+        check_recognized_fact_conservation(
+            initial_semantic_packet, packet, user_text=user_text,
+            questionnaire_state=questionnaire_state,
+        )
         return packet
 
     if transport is None:
         prior_packet = copy.deepcopy(result)
         try:
             result = active_transport(payload)
+            initial_semantic_packet = copy.deepcopy(result)
             prior_packet = copy.deepcopy(result)
             result = _repair_live_readiness_mismatch(result)
             result = _repair_clarification_contract_with_ai(result=result, payload=payload, user_text=user_text, questionnaire_state=questionnaire_state, transport=active_transport, strict=False)
@@ -878,6 +903,8 @@ def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Opti
                 "SEMANTIC_AI_ASKED_WITHOUT_QUESTION",
                 "SEMANTIC_AI_MISSING_STATEMENT_TRACE",
                 "SEMANTIC_AI_PATCH_CONTRACT",
+                "SEMANTIC_AI_FACT_LOSS",
+                "SEMANTIC_AI_SOURCE_COVERAGE_GAP",
                 "SEMANTIC_AI_WIRE_CONTRACT",
                 "SEMANTIC_AI_REPAIR_REASKED_ANSWERED_DIMENSION",
                 "SEMANTIC_AI_READY_WITH_MISSING_MINIMUM_DIMENSIONS",
@@ -890,6 +917,16 @@ def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Opti
                              if item.startswith("KNOWN_FIELD_NOT_MATERIALIZED:")]
             repair_payload["packet_validation_repair"] = {
                 "validation_error": str(error),
+                "unaccounted_source_clauses": getattr(error, "source_coverage_diagnostic", {}).get(
+                    "missing_source_clauses", []
+                ),
+                "original_recognized_facts": [
+                    {"raw_text": row.get("raw_text"), "meaning": row.get("meaning"),
+                     "mapped_parameters": row.get("mapped_parameters")}
+                    for row in initial_semantic_packet.get("statements") or []
+                    if isinstance(row, dict) and row.get("status") == "USED"
+                    and row.get("knowledge_state") == "KNOWN"
+                ],
                 "missing_materialized_fields": [{
                     "path": path,
                     "existing_questionnaire_value": False,
