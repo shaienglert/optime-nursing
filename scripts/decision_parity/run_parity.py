@@ -29,6 +29,7 @@ from diff_snaps import walk  # noqa: E402
 from advisory_contract import is_declared_advisory_change  # noqa: E402
 from semantic_delta import report_semantic_delta  # noqa: E402
 from approved_unknown_delta import approved_unknown_evidence_delta  # noqa: E402
+from coverage_parity_contract import is_additive_coverage_metadata  # noqa: E402
 
 
 def _warm_cache(backend: Path) -> None:
@@ -100,7 +101,7 @@ def compare(baseline: str, candidate: str, show: int = 12) -> int:
                     "$.http_recommendations.body.care_partner_options",
                     "$.db_side_effects.decision_artifacts[0].payload_json.care_partner_options",
                 }
-            ) or is_declared_advisory_change(path, kind) or kind == "added" and (
+            ) or is_additive_coverage_metadata(path, kind, _old, _new) or is_declared_advisory_change(path, kind) or kind == "added" and (
                 path == "$.http_recommendations.body.decision_id"
                 or path == "$.db_side_effects.decision_artifacts"
                 # Additive intake-reuse contract. Existing signals, decisions,
