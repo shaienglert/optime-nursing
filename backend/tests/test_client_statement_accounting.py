@@ -97,3 +97,39 @@ def test_research_is_not_mistaken_for_materialized_capability():
     })
     assert audit["statements"][0]["trace_status"] == "RESEARCH_TRACE"
     assert audit["semantic_coverage_percent"] is None
+
+
+def test_punctuation_and_clause_splitting_are_not_false_missing_quotes():
+    source = "They are a couple, and both need help."
+    audit = reconcile_semantic_statement_coverage(source, {
+        "questionnaire_patch": {},
+        "statements": [{"raw_text": source, "status": "USED",
+                        "mapped_parameters": []}],
+    })
+    assert audit["missing_source_trace_count"] == 0
+    assert audit["statement_count"] >= 2
+    assert audit["semantic_coverage_percent"] is None
+
+
+def test_exact_partial_quote_is_visible_but_not_silently_full_coverage():
+    source = "My father needs dialysis three times a week in Las Vegas."
+    audit = reconcile_semantic_statement_coverage(source, {
+        "questionnaire_patch": {},
+        "statements": [{"raw_text": "dialysis three times a week",
+                        "status": "USED", "mapped_parameters": []}],
+    })
+    assert audit["missing_source_trace_count"] == 0
+    assert audit["statements"][0]["trace_status"] == "PARTIAL_SOURCE_TRACE_REQUIRES_REVIEW"
+    assert audit["unverified_clauses"]
+    assert audit["semantic_coverage_percent"] is None
+
+
+def test_one_shared_word_is_not_evidence_that_a_clause_was_understood():
+    source = "Mom needs a small community and loves pottery at night."
+    audit = reconcile_semantic_statement_coverage(source, {
+        "questionnaire_patch": {},
+        "statements": [{"raw_text": "Mom needs a small community",
+                        "status": "USED", "mapped_parameters": []}],
+    })
+    assert audit["missing_source_trace_count"] == 1
+    assert any("pottery" in clause for clause in audit["unverified_clauses"])
