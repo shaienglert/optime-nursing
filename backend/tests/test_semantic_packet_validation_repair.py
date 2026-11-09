@@ -321,3 +321,29 @@ def test_repair_contract_explicitly_preserves_all_extracted_list_members_without
     assert "do not infer unspecified frequency" in instruction.lower()
     assert result["questionnaire_patch"]["medicalCareProfile"]["needs"] == ["Dialysis", "Wound care"]
     assert "woundCareFrequency" not in result["questionnaire_patch"]["medicalCareProfile"]
+
+
+def test_strict_packet_keeps_auditing_already_classified_clause_without_false_block():
+    text = "They are a couple; he needs help bathing."
+    response = {
+        "decision_readiness": "READY", "next_question": None,
+        "questionnaire_patch": {},
+        "wire_contract": {"schema_constrained": True},
+        "statements": [{
+            "raw_text": "he needs help bathing.",
+            "meaning": "Help with bathing",
+            "status": "USED", "knowledge_state": "KNOWN",
+            "importance": "CONTEXT", "mapped_parameters": [],
+        }],
+    }
+    with patch("app.services.semantic_intent_ai._validate_patch_contract", return_value=None):
+        with patch("app.services.semantic_intent_ai._default_transport", return_value=response) as transport:
+            packet = interpret_client_intent_with_ai(
+                user_text=text, questionnaire_state={
+                    "budget": 6500, "referenceLocationValue": "Las Vegas",
+                })
+    assert transport.call_count == 1
+    assert any(row["statement"] == "They are a couple"
+               and row["trace_status"] == "MISSING_SOURCE_TRACE"
+               for row in packet["source_statement_audit"]["statements"])
+    assert packet["source_statement_audit"]["semantic_coverage_percent"] is None
