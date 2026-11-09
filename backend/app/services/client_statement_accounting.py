@@ -108,7 +108,7 @@ def reconcile_semantic_statement_coverage(text: str, semantic_packet: Dict[str, 
         # Valid model quotes can also cover only one exact source subspan.
         # Partial overlap is diagnostic, NOT proof the whole clause was used.
         def tokens(value: str) -> list[str]:
-            return re.findall(r"\\w+", normalized(value), flags=re.UNICODE)
+            return re.findall(r"\w+", normalized(value), flags=re.UNICODE)
 
         left, right = tokens(clause), tokens(quote)
         if not left or not right:
