@@ -299,3 +299,21 @@ def test_strict_interpreter_reasks_model_for_source_clause_it_omitted():
     assert "unaccounted_source_clauses" in transport.call_args.args[0]["packet_validation_repair"]
     assert output["source_statement_audit"]["missing_source_trace_count"] == 0
     assert output["source_statement_audit"]["semantic_coverage_percent"] is None
+
+
+def test_repair_contract_explicitly_preserves_all_extracted_list_members_without_guessing():
+    original = packet()
+    original["questionnaire_patch"]["medicalCareProfile"]["needs"] = ["Dialysis", "Wound care"]
+    original["statements"][0]["mapped_parameters"] = [
+        "medicalCareProfile.needs", "medicalCareProfile.woundCareFrequency",
+    ]
+    corrected = deepcopy(original)
+    corrected["statements"][0]["mapped_parameters"] = ["medicalCareProfile.needs"]
+    with patch("app.services.semantic_intent_ai._default_transport",
+               side_effect=[original, corrected]) as transport:
+        result = interpret_client_intent_with_ai(user_text=TEXT)
+    instruction = transport.call_args.args[0]["packet_validation_repair"]["instruction"]
+    assert "every member of multivalue client requirements" in instruction
+    assert "do not infer unspecified frequency" in instruction.lower()
+    assert result["questionnaire_patch"]["medicalCareProfile"]["needs"] == ["Dialysis", "Wound care"]
+    assert "woundCareFrequency" not in result["questionnaire_patch"]["medicalCareProfile"]
