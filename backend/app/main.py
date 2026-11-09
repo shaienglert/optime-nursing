@@ -3103,7 +3103,12 @@ def post_personal_decision_report(payload: PersonalDecisionReportRequestIn, db: 
 
 @app.post("/decision-engine/comparison-context", response_model=PatientComparisonContextOut)
 def post_patient_comparison_context(payload: PatientComparisonContextRequestIn):
-    return build_patient_comparison_context(payload.canonical_facility_ids, payload.patient_needs_profile)
+    try:
+        return build_patient_comparison_context(payload.canonical_facility_ids, payload.patient_needs_profile)
+    except KeyError as error:
+        # Do not expose a server error or invent a comparison for IDs outside
+        # the canonical facility registry for the active market.
+        raise HTTPException(status_code=404, detail="Requested facility is not in the canonical registry") from error
 
 
 @app.post("/intelligence/run", response_model=IntelligenceRunSummaryOut)
