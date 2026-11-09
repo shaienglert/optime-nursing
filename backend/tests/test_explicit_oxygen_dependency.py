@@ -187,7 +187,21 @@ def test_unmaterialized_must_field_remains_explicitly_unresolved_not_verified():
         "raw_text": quote, "status": "USED", "knowledge_state": "KNOWN",
         "importance": "MUST", "mapped_parameters": [],
     }], "questionnaire_patch": {}}
-    check_recognized_fact_conservation(original, result, user_text=quote)
-    assert result["unmapped_recognized_facts"][0]["rejected_path"] == "medicalCareProfile.dialysisCenter"
-    assert result["unmapped_recognized_facts"][0]["importance"] == "MUST"
+    with pytest.raises(RuntimeError, match="DROPPED_RECOGNIZED_FIELD:medicalCareProfile.dialysisCenter"):
+        check_recognized_fact_conservation(original, result, user_text=quote)
     assert result["questionnaire_patch"] == {}
+
+
+def test_unknown_must_detail_can_only_remain_explicitly_unresolved():
+    quote = "Dad receives dialysis but we do not know the center."
+    original = {"statements": [{
+        "raw_text": quote, "status": "USED", "knowledge_state": "KNOWN",
+        "importance": "MUST", "mapped_parameters": ["medicalCareProfile.dialysisCenter"],
+    }], "questionnaire_patch": {}}
+    final = {"statements": [{
+        "raw_text": quote, "status": "RESEARCH_REQUIRED", "knowledge_state": "UNKNOWN",
+        "importance": "MUST", "mapped_parameters": [],
+        "research_task": "Verify dialysis center with family.",
+    }], "questionnaire_patch": {}}
+    check_recognized_fact_conservation(original, final, user_text=quote)
+    assert final["questionnaire_patch"] == {}
