@@ -7,6 +7,7 @@ import sys
 import threading
 import time
 import urllib.request
+import urllib.error
 from pathlib import Path
 
 
@@ -113,14 +114,29 @@ def test_decision_routes_end_to_end() -> None:
         assert isinstance(needs_payload.get("needs"), list)
 
         comparison_payload = {
-            "canonical_facility_ids": ["CMS-105005", "CMS-105511"],
+            "canonical_facility_ids": [],
             "patient_needs_profile": needs_payload,
         }
         comparison_status, comparison_body = _http_post(
             "http://127.0.0.1:8016/decision-engine/comparison-context", comparison_payload, timeout=240
         )
         assert comparison_status == 200
-        assert isinstance(comparison_body.get("facilities"), list)
+        assert comparison_body.get("facilities") == []
+
+        # These Florida CMS IDs are absent from the Las Vegas canonical registry.
+        # Unknown providers must fail explicitly, never produce fabricated
+        # comparisons or crash the server with an uncaught KeyError (HTTP 500).
+        invalid_payload = {
+            "canonical_facility_ids": ["CMS-105005", "CMS-105511"],
+            "patient_needs_profile": needs_payload,
+        }
+        try:
+            _http_post("http://127.0.0.1:8016/decision-engine/comparison-context", invalid_payload)
+        except urllib.error.HTTPError as error:
+            assert error.code == 404
+            assert "canonical registry" in error.read().decode("utf-8")
+        else:
+            raise AssertionError("Unknown canonical facility IDs were accepted")
 
         combined_logs = "\n".join(output_lines)
         assert re.search(r"POST /decision-engine/recommendations", combined_logs)
