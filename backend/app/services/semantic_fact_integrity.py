@@ -116,7 +116,8 @@ def check_recognized_fact_conservation(
                 # A value that WAS materialized and then disappeared remains a
                 # hard loss below, including for any clinical MUST.
                 if (
-                    not _has_value(initial, state, path)
+                    old.get("importance") in {"NICE", "CONTEXT"}
+                    and not _has_value(initial, state, path)
                     and any(item.get("status") == "USED" for item in matching)
                 ):
                     pending = {
