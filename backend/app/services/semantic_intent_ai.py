@@ -969,13 +969,58 @@ def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Opti
                 "instruction": "Return the complete corrected schema-constrained wire packet, including questionnaire_patch_fields and interview. Treat every ORIGINAL source-backed statement as a conservation obligation, not an invitation to rewrite history. Preserve every explicit fact and every member of multivalue client requirements, in all domains; do not patch one missing detail by dropping another. Each KNOWN/USED canonical field must either have its explicit exact {path,value,quote} (unless already in questionnaire_state), or be proven an unsupported model mapping and omitted without erasing the genuine source statement. Keep genuinely unresolved material MUST facts visible through the appropriate ASKED clarification or RESEARCH_REQUIRED task; never promote unknown into a proven match. A dependent clinical detail may be included only with its explicit parent need, based on a real quote. Do not infer unspecified frequency, center, cost, clinical capacity or availability. Retain exact source quotes, all selected property traces and other supported fields. Normalize via schema-constrained questionnaire_patch_fields and interview; do not output legacy questionnaire_patch keys. If a material client question remains, include one question plus matching unresolved trace; otherwise READY only when every client-owned blocking fact is resolved.",
             }
             repaired_packet = active_transport(repair_payload)
+            attempts = 1
             try:
                 result = validate_live_packet(repaired_packet)
             except RuntimeError as final_error:
-                if not hasattr(final_error, "patch_diagnostic"):
-                    final_error.patch_diagnostic = {"patch": repaired_packet.get("questionnaire_patch"), "sources": repaired_packet.get("questionnaire_patch_sources"), "statements": repaired_packet.get("statements"), "decision_readiness": repaired_packet.get("decision_readiness"), "next_question": repaired_packet.get("next_question")}
-                raise
-            result["packet_validation_repair"] = {"applied": True, "validation_error": code, "attempts": 1}
+                strict_wire = (repaired_packet.get("wire_contract") or {}).get("schema_constrained") is True
+                # One additional focused repair is allowed only for a live,
+                # schema-constrained packet and a source/field-conservation error.
+                # No changes to matching, MUST eligibility, or source authority.
+                recoverable = str(final_error).startswith((
+                    "SEMANTIC_AI_PATCH_CONTRACT:",
+                    "SEMANTIC_AI_FACT_LOSS:",
+                    "SEMANTIC_AI_SOURCE_COVERAGE_GAP:",
+                ))
+                if not (strict_wire and recoverable):
+                    if not hasattr(final_error, "patch_diagnostic"):
+                        final_error.patch_diagnostic = {"patch": repaired_packet.get("questionnaire_patch"), "sources": repaired_packet.get("questionnaire_patch_sources"), "statements": repaired_packet.get("statements"), "decision_readiness": repaired_packet.get("decision_readiness"), "next_question": repaired_packet.get("next_question")}
+                    raise
+                second_payload = dict(repair_payload)
+                second_repair = dict(repair_payload["packet_validation_repair"])
+                second_repair["validation_error"] = str(final_error)
+                second_repair["attempt"] = 2
+                second_repair["prior_packet"] = {
+                    key: value for key, value in repaired_packet.items()
+                    if key not in {"governance", "learning_center"}
+                }
+                second_repair["instruction"] = (
+                    "The previous repair still failed the exact validation_error. "
+                    "Return a fully corrected schema-constrained packet, preserving "
+                    "every originally quoted fact and multivalue item. Emit only "
+                    "source-proven field values. Unknown details remain explicitly "
+                    "unresolved, never invented or quietly discarded. Never change "
+                    "MUST status to force READY. Fix the specified field and its "
+                    "dependencies without losing unrelated facts, then preserve "
+                    "all selected questionnaire traces."
+                )
+                second_payload["packet_validation_repair"] = second_repair
+                second_packet = active_transport(second_payload)
+                attempts = 2
+                try:
+                    result = validate_live_packet(second_packet)
+                except RuntimeError as terminal_error:
+                    if not hasattr(terminal_error, "patch_diagnostic"):
+                        terminal_error.patch_diagnostic = {
+                            "patch": second_packet.get("questionnaire_patch"),
+                            "sources": second_packet.get("questionnaire_patch_sources"),
+                            "statements": second_packet.get("statements"),
+                            "decision_readiness": second_packet.get("decision_readiness"),
+                            "next_question": second_packet.get("next_question"),
+                            "attempts": attempts,
+                        }
+                    raise
+            result["packet_validation_repair"] = {"applied": True, "validation_error": code, "attempts": attempts}
     else:
         result = active_transport(payload)
         result = _validate_result(_ground_clinical_patch(result, user_text, questionnaire_state), allow_empty_statements=not user_text.strip())
