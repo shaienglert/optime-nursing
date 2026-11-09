@@ -40,8 +40,9 @@ class SemanticAiLearningCenterContractTests(unittest.TestCase):
         self.assertGreaterEqual(len(captured["rules"]), 8)
         self.assertTrue(result["governance"]["ai_based"])
         self.assertTrue(result["governance"]["learning_center_consulted"])
-        self.assertEqual(100.0, result["statement_coverage_percent"])
-        self.assertEqual(0, result["dropped_statement_count"])
+        self.assertIsNone(result["statement_coverage_percent"])
+        self.assertIsNone(result["dropped_statement_count"])
+        self.assertEqual("NOT_INDEPENDENTLY_VERIFIED", result["statement_coverage_status"])
         self.assertEqual("NEEDS_CLARIFICATION", result["decision_readiness"])
 
     def test_single_asked_statement_can_use_top_level_next_question(self) -> None:
