@@ -108,20 +108,26 @@ def check_recognized_fact_conservation(
                 for item in matching
             )
             if not explicitly_unresolved:
-                # A fabricated NICE/CONTEXT field mapping may be removed during
-                # schema repair. Keep the exact original statement and expose
-                # the missing canonical mapping for later review; it must not
-                # silently become a verified decision input.
+                # A model may claim a canonical mapping without ever supplying
+                # a supported field value. The mapping itself is NOT proof of
+                # that detail (e.g. a frequency/center never named by family).
+                # Preserve the actual quote and the unresolved path for review,
+                # never invent a value or credit a MUST match to the provider.
+                # A value that WAS materialized and then disappeared remains a
+                # hard loss below, including for any clinical MUST.
                 if (
-                    old.get("importance") in {"NICE", "CONTEXT"}
-                    and not _has_value(initial, state, path)
+                    not _has_value(initial, state, path)
                     and any(item.get("status") == "USED" for item in matching)
                 ):
-                    final.setdefault("unmapped_recognized_facts", []).append({
+                    pending = {
                         "raw_text": raw,
                         "rejected_path": path,
+                        "importance": old.get("importance"),
                         "status": "PRESERVED_UNMAPPED_NOT_DECISION_EVIDENCE",
-                    })
+                    }
+                    records = final.setdefault("unmapped_recognized_facts", [])
+                    if pending not in records:
+                        records.append(pending)
                     continue
                 errors.append("DROPPED_RECOGNIZED_FIELD:" + path)
     if errors:
