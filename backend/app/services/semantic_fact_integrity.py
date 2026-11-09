@@ -125,10 +125,27 @@ def check_recognized_fact_conservation(
                 # never invent a value or credit a MUST match to the provider.
                 # A value that WAS materialized and then disappeared remains a
                 # hard loss below, including for any clinical MUST.
+                from app.services.semantic_field_contract import FIELD_RULES
+                dependency = getattr(FIELD_RULES.get(path), "dependency", None)
+                parent_supported = False
+                if dependency:
+                    parent_path, expected_member = dependency
+                    parent = _leaf(final.get("questionnaire_patch") or {}, parent_path)
+                    if parent in (None, "", []):
+                        parent = _leaf(state, parent_path)
+                    parent_supported = (
+                        isinstance(parent, list) and expected_member in parent
+                        and any(
+                            parent_path in _paths(item)
+                            and item.get("status") == "USED"
+                            and item.get("knowledge_state") == "KNOWN"
+                            for item in matching
+                        )
+                    )
                 if (
-                    old.get("importance") in {"NICE", "CONTEXT"}
-                    and not _has_value(initial, state, path)
+                    not _has_value(initial, state, path)
                     and any(item.get("status") == "USED" for item in matching)
+                    and (old.get("importance") in {"NICE", "CONTEXT"} or parent_supported)
                 ):
                     pending = {
                         "raw_text": raw,
