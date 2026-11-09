@@ -1,0 +1,1342 @@
+{
+  "version": 2,
+  "based_on_main": "67303fe78fcf31b1889ce15acef73898c44eaa0f",
+  "answer_states": [
+    "YES",
+    "NO",
+    "UNKNOWN",
+    "LIMITED"
+  ],
+  "sections": {
+    "Medical": [
+      {
+        "key": "medical_24_7_nursing",
+        "label": "24/7 nursing",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "medical_physician_availability",
+        "label": "Physician availability",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "medical_memory_care",
+        "label": "Memory care",
+        "response_kind": "state",
+        "hint": ""
+      }
+    ],
+    "Rehabilitation": [
+      {
+        "key": "rehab_speech_therapy",
+        "label": "Speech therapy",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "rehab_physical_therapy",
+        "label": "Physical therapy",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "rehab_occupational_therapy",
+        "label": "Occupational therapy",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "rehab_stroke_support",
+        "label": "Stroke rehabilitation",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "rehab_parkinson_support",
+        "label": "Parkinson support",
+        "response_kind": "state",
+        "hint": ""
+      }
+    ],
+    "Dining": [
+      {
+        "key": "dining_gluten_free",
+        "label": "Gluten free",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "dining_kosher",
+        "label": "Kosher",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "dining_vegetarian",
+        "label": "Vegetarian",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "dining_diabetic_meals",
+        "label": "Diabetic meals",
+        "response_kind": "state",
+        "hint": ""
+      }
+    ],
+    "Lifestyle": [
+      {
+        "key": "lifestyle_movies",
+        "label": "Movies",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "lifestyle_music",
+        "label": "Music",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "lifestyle_gardening",
+        "label": "Gardening",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "lifestyle_pool",
+        "label": "Pool",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "lifestyle_fitness_center",
+        "label": "Fitness center",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "lifestyle_religious_services",
+        "label": "Religious services",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "lifestyle_transportation",
+        "label": "Transportation",
+        "response_kind": "state",
+        "hint": ""
+      }
+    ],
+    "Housing": [
+      {
+        "key": "housing_kitchenette",
+        "label": "Kitchenette",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "housing_balcony",
+        "label": "Balcony",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "housing_studio",
+        "label": "Studio",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "housing_one_bedroom",
+        "label": "One bedroom",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "housing_pets_allowed",
+        "label": "Pets allowed",
+        "response_kind": "state",
+        "hint": ""
+      }
+    ],
+    "Accessibility": [
+      {
+        "key": "accessibility_walker_support",
+        "label": "Walker support",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "accessibility_wheelchair_access",
+        "label": "Wheelchair accessibility",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "accessibility_fall_prevention",
+        "label": "Fall prevention",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "accessibility_transfer_assistance",
+        "label": "Transfer assistance",
+        "response_kind": "state",
+        "hint": ""
+      }
+    ],
+    "Future Care Continuum": [
+      {
+        "key": "continuum_assisted_living",
+        "label": "Assisted living available",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "continuum_memory_care",
+        "label": "Memory care available",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "continuum_skilled_nursing",
+        "label": "Skilled nursing available",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "continuum_rehabilitation",
+        "label": "Rehabilitation available",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "continuum_on_campus_progression",
+        "label": "On-campus progression across care levels",
+        "response_kind": "state",
+        "hint": ""
+      }
+    ],
+    "Daily assistance": [
+      {
+        "key": "care_bathing",
+        "label": "Help with bathing",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "care_dressing",
+        "label": "Help with dressing",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "care_toileting",
+        "label": "Help with toileting",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "care_medication_management",
+        "label": "Medication administration and management",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "care_daytime_supervision",
+        "label": "Daytime supervision",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "care_two_person_transfers",
+        "label": "Two-person transfers",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "care_mechanical_lift",
+        "label": "Mechanical lift transfers",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "care_bedbound",
+        "label": "Care for residents who spend most time in bed",
+        "response_kind": "state",
+        "hint": ""
+      }
+    ],
+    "Clinical coordination": [
+      {
+        "key": "care_dialysis_transport",
+        "label": "Transport to dialysis appointments",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "care_dialysis_coordination",
+        "label": "Dialysis coordination",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "care_oxygen",
+        "label": "Oxygen support",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "care_injections_infusions",
+        "label": "Injections or infusions",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "care_complex_conditions",
+        "label": "Support for complex chronic conditions",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "care_medical_equipment",
+        "label": "Support for permanent medical equipment",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "care_wound_frequency",
+        "label": "Maximum supported wound-care frequency",
+        "response_kind": "text",
+        "hint": ""
+      },
+      {
+        "key": "care_physician_coordination",
+        "label": "Coordination with the resident's physician",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "care_discharge_handover",
+        "label": "Hospital discharge and medication handover",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "care_temporary_stay",
+        "label": "Temporary or recovery stays",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "care_temporary_min_months",
+        "label": "Minimum temporary stay, in months",
+        "response_kind": "number",
+        "hint": ""
+      },
+      {
+        "key": "care_temporary_max_months",
+        "label": "Maximum temporary stay, in months",
+        "response_kind": "number",
+        "hint": ""
+      },
+      {
+        "key": "care_wandering",
+        "label": "Wandering prevention and response",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "care_secure_memory_unit",
+        "label": "Secure memory-care unit",
+        "response_kind": "state",
+        "hint": ""
+      }
+    ],
+    "Language and communication": [
+      {
+        "key": "communication_care_languages",
+        "label": "Languages available for direct care",
+        "response_kind": "text",
+        "hint": "List languages and shift coverage; distinguish staff from interpreter support."
+      },
+      {
+        "key": "communication_social_languages",
+        "label": "Languages used in social activities",
+        "response_kind": "text",
+        "hint": ""
+      },
+      {
+        "key": "communication_medical_languages",
+        "label": "Languages available for medical discussions",
+        "response_kind": "text",
+        "hint": ""
+      },
+      {
+        "key": "communication_interpreter",
+        "label": "Interpreter access",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "communication_family_contact",
+        "label": "Named contact for family",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "communication_family_updates",
+        "label": "Family update and care-conference process",
+        "response_kind": "text",
+        "hint": ""
+      }
+    ],
+    "Autonomy and personal routines": [
+      {
+        "key": "autonomy_meal_times",
+        "label": "Flexible meal timing",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "autonomy_daily_schedule",
+        "label": "Flexible waking and daily schedules",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "autonomy_independent_exit",
+        "label": "Independent outings subject to individual care needs",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "autonomy_visitors",
+        "label": "Hosting family or friends",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "autonomy_personal_belongings",
+        "label": "Personal furniture and meaningful belongings",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "autonomy_privacy",
+        "label": "Private space and privacy policies",
+        "response_kind": "text",
+        "hint": ""
+      },
+      {
+        "key": "autonomy_cooking",
+        "label": "Resident cooking facilities",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "autonomy_parking",
+        "label": "Resident or visitor parking",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "autonomy_parking_spaces",
+        "label": "Parking spaces available per resident",
+        "response_kind": "number",
+        "hint": ""
+      }
+    ],
+    "Transition and social support": [
+      {
+        "key": "transition_resident_participation",
+        "label": "Resident participates in the care and move-in plan",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "transition_orientation",
+        "label": "Pre-move visit or orientation",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "transition_named_contact",
+        "label": "Named move-in support contact",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "transition_personal_plan",
+        "label": "Individualized transition support plan",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "transition_followup",
+        "label": "Follow-up during the first weeks",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "transition_anxiety_support",
+        "label": "Support for move-related anxiety or resistance",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "transition_grief_support",
+        "label": "Grief or bereavement support",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "social_peer_introduction",
+        "label": "Supported introductions to other residents",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "social_quiet_space",
+        "label": "Quiet space and individual activities",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "social_activity_frequency",
+        "label": "Actual activity schedule and frequency",
+        "response_kind": "text",
+        "hint": ""
+      },
+      {
+        "key": "social_resident_count",
+        "label": "Current resident population",
+        "response_kind": "number",
+        "hint": ""
+      },
+      {
+        "key": "social_small_groups",
+        "label": "Small-group activity options",
+        "response_kind": "state",
+        "hint": ""
+      }
+    ],
+    "Activities and faith": [
+      {
+        "key": "activities_games",
+        "label": "Games",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "activities_outdoor",
+        "label": "Outdoor activities",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "activities_cultural",
+        "label": "Cultural activities",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "activities_classes",
+        "label": "Classes and learning",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "activities_volunteering",
+        "label": "Volunteering opportunities",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "faith_traditions",
+        "label": "Faith traditions supported",
+        "response_kind": "text",
+        "hint": ""
+      },
+      {
+        "key": "faith_worship_transport",
+        "label": "Transport or access to places of worship",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "faith_prayer_space",
+        "label": "Prayer or worship space",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "dining_halal",
+        "label": "Halal meals",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "dining_vegan",
+        "label": "Vegan meals",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "dining_low_sodium",
+        "label": "Low-sodium meals",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "dining_other_restrictions",
+        "label": "Other supported dietary restrictions",
+        "response_kind": "text",
+        "hint": ""
+      }
+    ],
+    "Couples and continuity": [
+      {
+        "key": "couple_same_room",
+        "label": "Couples may share a room",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "couple_different_care",
+        "label": "Couples with different care needs may stay together",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "couple_temporary_separation",
+        "label": "Temporary separation and reunion policy",
+        "response_kind": "text",
+        "hint": ""
+      },
+      {
+        "key": "continuum_transfer_policy",
+        "label": "Care escalation and transfer policy",
+        "response_kind": "text",
+        "hint": ""
+      },
+      {
+        "key": "care_external_support",
+        "label": "External care providers may deliver services",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "care_combined_strategy",
+        "label": "Resident-specific combined care plan",
+        "response_kind": "state",
+        "hint": ""
+      }
+    ],
+    "Prices, payment and availability": [
+      {
+        "key": "payment_medicare",
+        "label": "Medicare-covered services, subject to individual eligibility",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "payment_medicaid",
+        "label": "Medicaid-covered services, subject to individual eligibility",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "payment_medicaid_terms",
+        "label": "Medicaid eligibility, covered services and resident payment terms",
+        "response_kind": "text",
+        "hint": ""
+      },
+      {
+        "key": "pricing_base_monthly",
+        "label": "Base monthly housing price, USD",
+        "response_kind": "number",
+        "hint": ""
+      },
+      {
+        "key": "pricing_care_monthly",
+        "label": "Monthly care fee, USD",
+        "response_kind": "number",
+        "hint": ""
+      },
+      {
+        "key": "pricing_mandatory_monthly",
+        "label": "Other mandatory monthly fees, USD",
+        "response_kind": "number",
+        "hint": ""
+      },
+      {
+        "key": "pricing_second_person",
+        "label": "Monthly second-person fee, USD",
+        "response_kind": "number",
+        "hint": ""
+      },
+      {
+        "key": "pricing_entry_fee",
+        "label": "One-time entry fee, USD",
+        "response_kind": "number",
+        "hint": ""
+      },
+      {
+        "key": "pricing_basis",
+        "label": "Room, occupancy, care level and what this quote includes",
+        "response_kind": "text",
+        "hint": ""
+      },
+      {
+        "key": "availability_earliest_date",
+        "label": "Earliest possible admission date",
+        "response_kind": "date",
+        "hint": ""
+      },
+      {
+        "key": "availability_waitlist",
+        "label": "Waiting list",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "availability_current",
+        "label": "Accepting new admissions, subject to confirmation",
+        "response_kind": "state",
+        "hint": ""
+      }
+    ],
+    "Transport and local access": [
+      {
+        "key": "transport_accessible_vehicle",
+        "label": "Accessible transportation",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "transport_service_area",
+        "label": "Transport destinations, service area and schedule",
+        "response_kind": "text",
+        "hint": ""
+      },
+      {
+        "key": "transport_regular_destinations",
+        "label": "Transport to recurring personal destinations",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "housing_private_room",
+        "label": "Private room",
+        "response_kind": "state",
+        "hint": ""
+      },
+      {
+        "key": "housing_pet_conditions",
+        "label": "Pet policy and limitations",
+        "response_kind": "text",
+        "hint": ""
+      }
+    ]
+  },
+  "consumer_mapping": {
+    "relationship": {
+      "mode": "SUPPORT_CONTEXT",
+      "provider_keys": [
+        "couple_same_room",
+        "couple_different_care"
+      ],
+      "reason": "Relationship identifies the decision-maker or couple; it is not facility quality."
+    },
+    "ageGroup": {
+      "mode": "EXISTING_DATA",
+      "provider_keys": [],
+      "source": "resident_profile",
+      "reason": "Personal context only; no facility desirability by age."
+    },
+    "locationImportant": {
+      "mode": "EXISTING_DATA",
+      "provider_keys": [],
+      "source": "facility.address / coordinates + resident destinations",
+      "reason": "Compute case-specific distances; do not ask facility to rate proximity to an unknown family."
+    },
+    "referenceAddress": {
+      "mode": "EXISTING_DATA",
+      "provider_keys": [],
+      "source": "facility.address / coordinates + resident destinations",
+      "reason": "Compute case-specific distances; do not ask facility to rate proximity to an unknown family."
+    },
+    "maximumDistanceMiles": {
+      "mode": "EXISTING_DATA",
+      "provider_keys": [],
+      "source": "facility.address / coordinates + resident destinations",
+      "reason": "Compute case-specific distances; do not ask facility to rate proximity to an unknown family."
+    },
+    "nearbyPlaces": {
+      "mode": "EXISTING_DATA",
+      "provider_keys": [],
+      "source": "facility.address / coordinates + resident destinations",
+      "reason": "Compute case-specific distances; do not ask facility to rate proximity to an unknown family."
+    },
+    "nearbyOther": {
+      "mode": "EXISTING_DATA",
+      "provider_keys": [],
+      "source": "facility.address / coordinates + resident destinations",
+      "reason": "Compute case-specific distances; do not ask facility to rate proximity to an unknown family."
+    },
+    "nearbyImportance": {
+      "mode": "EXISTING_DATA",
+      "provider_keys": [],
+      "source": "facility.address / coordinates + resident destinations",
+      "reason": "Compute case-specific distances; do not ask facility to rate proximity to an unknown family."
+    },
+    "personalDestinationLabel": {
+      "mode": "EXISTING_DATA",
+      "provider_keys": [],
+      "source": "facility.address / coordinates + resident destinations",
+      "reason": "Compute case-specific distances; do not ask facility to rate proximity to an unknown family."
+    },
+    "personalDestinationAddress": {
+      "mode": "EXISTING_DATA",
+      "provider_keys": [],
+      "source": "facility.address / coordinates + resident destinations",
+      "reason": "Compute case-specific distances; do not ask facility to rate proximity to an unknown family."
+    },
+    "dialysisCenter": {
+      "mode": "EXISTING_DATA",
+      "provider_keys": [],
+      "source": "facility.address / coordinates + resident destinations",
+      "reason": "Compute case-specific distances; do not ask facility to rate proximity to an unknown family."
+    },
+    "assistance": {
+      "mode": "PROVIDER_CAPABILITY",
+      "provider_keys": [
+        "care_bathing",
+        "care_dressing",
+        "care_toileting",
+        "care_medication_management",
+        "care_daytime_supervision",
+        "medical_24_7_nursing",
+        "continuum_skilled_nursing"
+      ],
+      "reason": "Match the resident's need to the stated capability; verify evidence before use."
+    },
+    "mobilityMethod": {
+      "mode": "PROVIDER_CAPABILITY",
+      "provider_keys": [
+        "accessibility_walker_support",
+        "accessibility_wheelchair_access",
+        "care_bedbound"
+      ],
+      "reason": "Match the resident's need to the stated capability; verify evidence before use."
+    },
+    "transferAssistance": {
+      "mode": "PROVIDER_CAPABILITY",
+      "provider_keys": [
+        "accessibility_transfer_assistance",
+        "care_two_person_transfers",
+        "care_mechanical_lift"
+      ],
+      "reason": "Match the resident's need to the stated capability; verify evidence before use."
+    },
+    "recentFalls": {
+      "mode": "SUPPORT_CONTEXT",
+      "provider_keys": [
+        "accessibility_fall_prevention"
+      ],
+      "reason": "Resident falls are context for evaluating prevention capability, not facility risk history."
+    },
+    "memoryStatus": {
+      "mode": "PROVIDER_CAPABILITY",
+      "provider_keys": [
+        "medical_memory_care",
+        "care_wandering",
+        "care_secure_memory_unit"
+      ],
+      "reason": "Match the resident's need to the stated capability; verify evidence before use."
+    },
+    "memoryWandering": {
+      "mode": "PROVIDER_CAPABILITY",
+      "provider_keys": [
+        "care_wandering"
+      ],
+      "reason": "Match the resident's need to the stated capability; verify evidence before use."
+    },
+    "secureMemory": {
+      "mode": "PROVIDER_CAPABILITY",
+      "provider_keys": [
+        "care_secure_memory_unit"
+      ],
+      "reason": "Match the resident's need to the stated capability; verify evidence before use."
+    },
+    "hasOngoingMedicalNeeds": {
+      "mode": "PROVIDER_CAPABILITY",
+      "provider_keys": [
+        "care_oxygen",
+        "care_injections_infusions",
+        "care_complex_conditions",
+        "care_medical_equipment",
+        "medical_24_7_nursing"
+      ],
+      "reason": "Specific conditions and Other require scoped review; broad YES cannot prove every unlisted need."
+    },
+    "medicalNeeds": {
+      "mode": "PROVIDER_CAPABILITY",
+      "provider_keys": [
+        "care_oxygen",
+        "care_injections_infusions",
+        "care_complex_conditions",
+        "care_medical_equipment",
+        "medical_24_7_nursing"
+      ],
+      "reason": "Specific conditions and Other require scoped review; broad YES cannot prove every unlisted need."
+    },
+    "medicalOther": {
+      "mode": "PROVIDER_CAPABILITY",
+      "provider_keys": [
+        "care_oxygen",
+        "care_injections_infusions",
+        "care_complex_conditions",
+        "care_medical_equipment",
+        "medical_24_7_nursing"
+      ],
+      "reason": "Specific conditions and Other require scoped review; broad YES cannot prove every unlisted need."
+    },
+    "complexConditionDetails": {
+      "mode": "PROVIDER_CAPABILITY",
+      "provider_keys": [
+        "care_oxygen",
+        "care_injections_infusions",
+        "care_complex_conditions",
+        "care_medical_equipment",
+        "medical_24_7_nursing"
+      ],
+      "reason": "Specific conditions and Other require scoped review; broad YES cannot prove every unlisted need."
+    },
+    "dialysisFrequency": {
+      "mode": "PROVIDER_CAPABILITY",
+      "provider_keys": [
+        "care_dialysis_coordination",
+        "care_dialysis_transport"
+      ],
+      "reason": "Match the resident's need to the stated capability; verify evidence before use."
+    },
+    "dialysisTransportation": {
+      "mode": "PROVIDER_CAPABILITY",
+      "provider_keys": [
+        "care_dialysis_transport",
+        "transport_accessible_vehicle"
+      ],
+      "reason": "Match the resident's need to the stated capability; verify evidence before use."
+    },
+    "oxygenUse": {
+      "mode": "PROVIDER_CAPABILITY",
+      "provider_keys": [
+        "care_oxygen"
+      ],
+      "reason": "Match the resident's need to the stated capability; verify evidence before use."
+    },
+    "woundCareFrequency": {
+      "mode": "PROVIDER_CAPABILITY",
+      "provider_keys": [
+        "care_wound_frequency"
+      ],
+      "reason": "Match the resident's need to the stated capability; verify evidence before use."
+    },
+    "physicianCoordination": {
+      "mode": "PROVIDER_CAPABILITY",
+      "provider_keys": [
+        "care_physician_coordination"
+      ],
+      "reason": "Match the resident's need to the stated capability; verify evidence before use."
+    },
+    "recentHospitalization": {
+      "mode": "SUPPORT_CONTEXT",
+      "provider_keys": [
+        "care_discharge_handover",
+        "care_temporary_stay",
+        "rehab_physical_therapy",
+        "rehab_occupational_therapy",
+        "rehab_speech_therapy"
+      ],
+      "reason": "Resident clinical history informs a scoped care review; no diagnosis inferred and no aggregate recovery promise."
+    },
+    "hospitalTiming": {
+      "mode": "SUPPORT_CONTEXT",
+      "provider_keys": [
+        "care_discharge_handover",
+        "care_temporary_stay",
+        "rehab_physical_therapy",
+        "rehab_occupational_therapy",
+        "rehab_speech_therapy"
+      ],
+      "reason": "Resident clinical history informs a scoped care review; no diagnosis inferred and no aggregate recovery promise."
+    },
+    "recentProcedure": {
+      "mode": "SUPPORT_CONTEXT",
+      "provider_keys": [
+        "care_discharge_handover",
+        "care_temporary_stay",
+        "rehab_physical_therapy",
+        "rehab_occupational_therapy",
+        "rehab_speech_therapy"
+      ],
+      "reason": "Resident clinical history informs a scoped care review; no diagnosis inferred and no aggregate recovery promise."
+    },
+    "procedureType": {
+      "mode": "SUPPORT_CONTEXT",
+      "provider_keys": [
+        "care_discharge_handover",
+        "care_temporary_stay",
+        "rehab_physical_therapy",
+        "rehab_occupational_therapy",
+        "rehab_speech_therapy"
+      ],
+      "reason": "Resident clinical history informs a scoped care review; no diagnosis inferred and no aggregate recovery promise."
+    },
+    "expectedRecovery": {
+      "mode": "SUPPORT_CONTEXT",
+      "provider_keys": [
+        "care_discharge_handover",
+        "care_temporary_stay",
+        "rehab_physical_therapy",
+        "rehab_occupational_therapy",
+        "rehab_speech_therapy"
+      ],
+      "reason": "Resident clinical history informs a scoped care review; no diagnosis inferred and no aggregate recovery promise."
+    },
+    "temporarySupportMonths": {
+      "mode": "PROVIDER_CAPABILITY",
+      "provider_keys": [
+        "care_temporary_min_months",
+        "care_temporary_max_months",
+        "care_temporary_stay"
+      ],
+      "reason": "Match the resident's need to the stated capability; verify evidence before use."
+    },
+    "rehabNeed": {
+      "mode": "PROVIDER_CAPABILITY",
+      "provider_keys": [
+        "rehab_physical_therapy",
+        "rehab_occupational_therapy",
+        "rehab_speech_therapy",
+        "rehab_stroke_support"
+      ],
+      "reason": "Match the resident's need to the stated capability; verify evidence before use."
+    },
+    "medicareStatus": {
+      "mode": "PROVIDER_CAPABILITY",
+      "provider_keys": [
+        "payment_medicare"
+      ],
+      "reason": "Match the resident's need to the stated capability; verify evidence before use."
+    },
+    "medicaidStatus": {
+      "mode": "PROVIDER_CAPABILITY",
+      "provider_keys": [
+        "payment_medicaid",
+        "payment_medicaid_terms"
+      ],
+      "reason": "Match the resident's need to the stated capability; verify evidence before use."
+    },
+    "medicaidAmountKnown": {
+      "mode": "EXISTING_DATA",
+      "provider_keys": [],
+      "source": "resident funding scenario + payment_medicaid_terms",
+      "reason": "Resident benefit amount is not a facility attribute; reconcile with actual covered services and out-of-pocket cost."
+    },
+    "medicaidMonthlyAmount": {
+      "mode": "EXISTING_DATA",
+      "provider_keys": [],
+      "source": "resident funding scenario + payment_medicaid_terms",
+      "reason": "Resident benefit amount is not a facility attribute; reconcile with actual covered services and out-of-pocket cost."
+    },
+    "medicaidBudgetIncludesSupport": {
+      "mode": "EXISTING_DATA",
+      "provider_keys": [],
+      "source": "resident funding scenario + payment_medicaid_terms",
+      "reason": "Resident benefit amount is not a facility attribute; reconcile with actual covered services and out-of-pocket cost."
+    },
+    "medicaidBudgetScenarioChoice": {
+      "mode": "EXISTING_DATA",
+      "provider_keys": [],
+      "source": "resident funding scenario + payment_medicaid_terms",
+      "reason": "Resident benefit amount is not a facility attribute; reconcile with actual covered services and out-of-pocket cost."
+    },
+    "budget": {
+      "mode": "PROVIDER_CAPABILITY",
+      "provider_keys": [
+        "pricing_base_monthly",
+        "pricing_care_monthly",
+        "pricing_mandatory_monthly",
+        "pricing_second_person",
+        "pricing_entry_fee",
+        "pricing_basis"
+      ],
+      "reason": "One scoped quote is not a facility-wide floor or a complete room inventory. Existing room-type records remain authoritative for room-level listings."
+    },
+    "moveTiming": {
+      "mode": "PROVIDER_CAPABILITY",
+      "provider_keys": [
+        "availability_earliest_date",
+        "availability_current",
+        "availability_waitlist"
+      ],
+      "reason": "Match the resident's need to the stated capability; verify evidence before use."
+    },
+    "moveAttitude": {
+      "mode": "SUPPORT_CONTEXT",
+      "provider_keys": [
+        "transition_anxiety_support",
+        "transition_named_contact",
+        "transition_personal_plan",
+        "transition_resident_participation"
+      ],
+      "reason": "Support needs modify transition planning; do not penalize the resident or override MUST."
+    },
+    "biggestFear": {
+      "mode": "SUPPORT_CONTEXT",
+      "provider_keys": [
+        "transition_anxiety_support",
+        "transition_named_contact",
+        "transition_personal_plan",
+        "transition_resident_participation"
+      ],
+      "reason": "Support needs modify transition planning; do not penalize the resident or override MUST."
+    },
+    "socialFrequency": {
+      "mode": "PROVIDER_CAPABILITY",
+      "provider_keys": [
+        "social_activity_frequency",
+        "social_small_groups",
+        "social_quiet_space"
+      ],
+      "reason": "Match the resident's need to the stated capability; verify evidence before use."
+    },
+    "communityStyle": {
+      "mode": "PROVIDER_CAPABILITY",
+      "provider_keys": [
+        "social_resident_count",
+        "social_small_groups"
+      ],
+      "reason": "Resident preference only; no generic quality weight for facility size."
+    },
+    "activities": {
+      "mode": "PROVIDER_CAPABILITY",
+      "provider_keys": [
+        "lifestyle_music",
+        "lifestyle_movies",
+        "activities_games",
+        "lifestyle_fitness_center",
+        "activities_outdoor",
+        "activities_cultural",
+        "activities_classes",
+        "activities_volunteering",
+        "lifestyle_religious_services"
+      ],
+      "reason": "Unlisted Other interests need follow-up; not silently matched by a generic activities YES."
+    },
+    "activityImportance": {
+      "mode": "PROVIDER_CAPABILITY",
+      "provider_keys": [
+        "lifestyle_music",
+        "lifestyle_movies",
+        "activities_games",
+        "lifestyle_fitness_center",
+        "activities_outdoor",
+        "activities_cultural",
+        "activities_classes",
+        "activities_volunteering",
+        "lifestyle_religious_services"
+      ],
+      "reason": "Unlisted Other interests need follow-up; not silently matched by a generic activities YES."
+    },
+    "otherInterests": {
+      "mode": "PROVIDER_CAPABILITY",
+      "provider_keys": [
+        "lifestyle_music",
+        "lifestyle_movies",
+        "activities_games",
+        "lifestyle_fitness_center",
+        "activities_outdoor",
+        "activities_cultural",
+        "activities_classes",
+        "activities_volunteering",
+        "lifestyle_religious_services"
+      ],
+      "reason": "Unlisted Other interests need follow-up; not silently matched by a generic activities YES."
+    },
+    "moveLossConcerns": {
+      "mode": "SUPPORT_CONTEXT",
+      "provider_keys": [
+        "autonomy_daily_schedule",
+        "autonomy_independent_exit",
+        "autonomy_visitors",
+        "autonomy_personal_belongings",
+        "autonomy_privacy",
+        "housing_pets_allowed",
+        "social_peer_introduction"
+      ],
+      "reason": "Confirm which resident routine needs to be preserved."
+    },
+    "language": {
+      "mode": "PROVIDER_CAPABILITY",
+      "provider_keys": [
+        "communication_care_languages",
+        "communication_social_languages",
+        "communication_interpreter"
+      ],
+      "reason": "Match the resident's need to the stated capability; verify evidence before use."
+    },
+    "languageImportance": {
+      "mode": "PROVIDER_CAPABILITY",
+      "provider_keys": [
+        "communication_care_languages",
+        "communication_social_languages",
+        "communication_interpreter"
+      ],
+      "reason": "Match the resident's need to the stated capability; verify evidence before use."
+    },
+    "medicalLanguage": {
+      "mode": "PROVIDER_CAPABILITY",
+      "provider_keys": [
+        "communication_medical_languages",
+        "communication_interpreter"
+      ],
+      "reason": "Match the resident's need to the stated capability; verify evidence before use."
+    },
+    "dietary": {
+      "mode": "PROVIDER_CAPABILITY",
+      "provider_keys": [
+        "dining_gluten_free",
+        "dining_kosher",
+        "dining_halal",
+        "dining_vegetarian",
+        "dining_vegan",
+        "dining_low_sodium",
+        "dining_diabetic_meals",
+        "dining_other_restrictions"
+      ],
+      "reason": "Match the resident's need to the stated capability; verify evidence before use."
+    },
+    "dietaryOther": {
+      "mode": "PROVIDER_CAPABILITY",
+      "provider_keys": [
+        "dining_gluten_free",
+        "dining_kosher",
+        "dining_halal",
+        "dining_vegetarian",
+        "dining_vegan",
+        "dining_low_sodium",
+        "dining_diabetic_meals",
+        "dining_other_restrictions"
+      ],
+      "reason": "Match the resident's need to the stated capability; verify evidence before use."
+    },
+    "kosherImportance": {
+      "mode": "PROVIDER_CAPABILITY",
+      "provider_keys": [
+        "dining_kosher"
+      ],
+      "reason": "Record certification/source, kitchen or supplier, supervision and limitations; general YES does not establish a specific kosher standard."
+    },
+    "religiousCommunity": {
+      "mode": "PROVIDER_CAPABILITY",
+      "provider_keys": [
+        "faith_traditions",
+        "faith_worship_transport",
+        "faith_prayer_space",
+        "lifestyle_religious_services"
+      ],
+      "reason": "Match requested services, not religious desirability."
+    },
+    "religion": {
+      "mode": "PROVIDER_CAPABILITY",
+      "provider_keys": [
+        "faith_traditions",
+        "faith_worship_transport",
+        "faith_prayer_space",
+        "lifestyle_religious_services"
+      ],
+      "reason": "Match requested services, not religious desirability."
+    },
+    "religiousNeeds": {
+      "mode": "PROVIDER_CAPABILITY",
+      "provider_keys": [
+        "faith_traditions",
+        "faith_worship_transport",
+        "faith_prayer_space",
+        "lifestyle_religious_services"
+      ],
+      "reason": "Match requested services, not religious desirability."
+    },
+    "petOwnershipImportance": {
+      "mode": "PROVIDER_CAPABILITY",
+      "provider_keys": [
+        "housing_pets_allowed",
+        "housing_pet_conditions"
+      ],
+      "reason": "Match the resident's need to the stated capability; verify evidence before use."
+    },
+    "abilityToLeaveIndependently": {
+      "mode": "PROVIDER_CAPABILITY",
+      "provider_keys": [
+        "autonomy_independent_exit"
+      ],
+      "reason": "Match the resident's need to the stated capability; verify evidence before use."
+    },
+    "parkingRequirement": {
+      "mode": "PROVIDER_CAPABILITY",
+      "provider_keys": [
+        "autonomy_parking",
+        "autonomy_parking_spaces"
+      ],
+      "reason": "Match the resident's need to the stated capability; verify evidence before use."
+    },
+    "parkingVehicleCount": {
+      "mode": "PROVIDER_CAPABILITY",
+      "provider_keys": [
+        "autonomy_parking",
+        "autonomy_parking_spaces"
+      ],
+      "reason": "Match the resident's need to the stated capability; verify evidence before use."
+    },
+    "continuum": {
+      "mode": "PROVIDER_CAPABILITY",
+      "provider_keys": [
+        "continuum_on_campus_progression",
+        "continuum_assisted_living",
+        "continuum_memory_care",
+        "continuum_skilled_nursing",
+        "continuum_transfer_policy"
+      ],
+      "reason": "Match the resident's need to the stated capability; verify evidence before use."
+    },
+    "careSearchApproach": {
+      "mode": "PROVIDER_CAPABILITY",
+      "provider_keys": [
+        "care_external_support",
+        "care_combined_strategy"
+      ],
+      "reason": "Strategy choice is confirmed by resident; verify each external service, legal scope and total cost separately."
+    }
+  },
+  "governance": {
+    "provider_submission_is_verified": false,
+    "generic_completeness_is_ranking_signal": false,
+    "unknown_is_negative": false,
+    "automatic_production_mapping": false
+  },
+  "structured_detail_fields": [
+    "value",
+    "conditions",
+    "scope",
+    "delivery",
+    "evidence_url",
+    "observed_on"
+  ]
+}

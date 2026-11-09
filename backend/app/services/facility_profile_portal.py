@@ -20,6 +20,8 @@ tell a provider's own claim apart from something read off a government file.
 from __future__ import annotations
 
 from datetime import datetime, timezone
+
+from app.services.facility_questionnaire_details import normalize_details, encode_details, decode_details
 from typing import Dict, Iterable, List, Optional, Sequence
 
 from sqlalchemy import func as sa_func
@@ -40,6 +42,8 @@ from app.models.facility_questionnaire import (
     ANSWER_STATES,
     FACILITY_QUESTIONNAIRE_V1,
     facility_questionnaire_v1_flat,
+    consumer_question_ids,
+    FACILITY_ALIGNMENT,
 )
 from app.services.provider_identity import (
     CATEGORY_ACTIVITIES,
@@ -62,6 +66,15 @@ SECTION_TO_BUCKET: Dict[str, str] = {
     "Lifestyle": "lifestyle",
     "Housing": "lifestyle",
     "Dining": "dining",
+    "Daily assistance": "medical",
+    "Clinical coordination": "medical",
+    "Language and communication": "lifestyle",
+    "Autonomy and personal routines": "lifestyle",
+    "Transition and social support": "lifestyle",
+    "Activities and faith": "lifestyle",
+    "Couples and continuity": "lifestyle",
+    "Prices, payment and availability": "lifestyle",
+    "Transport and local access": "lifestyle",
 }
 
 # Which portal role may answer which section, expressed through the identity service's
@@ -74,6 +87,15 @@ SECTION_TO_EDIT_CATEGORY: Dict[str, str] = {
     "Lifestyle": CATEGORY_ACTIVITIES,
     "Housing": CATEGORY_ACTIVITIES,
     "Dining": CATEGORY_ACTIVITIES,
+    "Daily assistance": CATEGORY_MEDICAL,
+    "Clinical coordination": CATEGORY_MEDICAL,
+    "Couples and continuity": CATEGORY_MEDICAL,
+    "Language and communication": CATEGORY_ACTIVITIES,
+    "Autonomy and personal routines": CATEGORY_ACTIVITIES,
+    "Transition and social support": CATEGORY_ACTIVITIES,
+    "Activities and faith": CATEGORY_ACTIVITIES,
+    "Transport and local access": CATEGORY_ACTIVITIES,
+    "Prices, payment and availability": CATEGORY_MEDICAL,
 }
 
 # A profile with eight photographs is not twice as useful as one with four; the curve
@@ -234,6 +256,11 @@ def facility_profile_snapshot(db: Session, facility_id: int) -> Dict[str, object
                 {
                     "key": question["key"],
                     "label": question["label"],
+                    "response_kind": question.get("response_kind", "state"),
+                    "hint": question.get("hint", ""),
+                    "consumer_question_ids": consumer_question_ids(question["key"]),
+                    "details": decode_details(existing.notes) if existing and existing.source == PORTAL_SOURCE else {},
+                    "claim_status": "PROVIDER_SUPPLIED" if existing and existing.source == PORTAL_SOURCE else "SOURCE_RECORD",
                     "value": existing.value.value if existing else AnswerState.UNKNOWN.value,
                     "source": existing.source if existing else None,
                     # Present only on a derived answer: what public record it was read from,
@@ -300,6 +327,8 @@ def facility_profile_snapshot(db: Session, facility_id: int) -> Dict[str, object
         "activity_calendar_connected": any(row["import_source"] for row in activities),
         "completeness": recompute_completeness(db, facility_id),
         "answer_states": list(ANSWER_STATES),
+        "questionnaire_version": FACILITY_ALIGNMENT["version"],
+        "consumer_mapping": FACILITY_ALIGNMENT["consumer_mapping"],
         "governance": {
             "unknownIsNotNegative": True,
             "unknownCannotMatch": True,
@@ -314,6 +343,7 @@ def save_capabilities(
     user_id: int,
     answers: Dict[str, str],
     ip_address: Optional[str] = None,
+    details: Optional[Dict[str, dict]] = None,
 ) -> Dict[str, object]:
     """Upsert questionnaire answers, one audit row per actual change.
 
@@ -324,6 +354,9 @@ def save_capabilities(
     _get_facility(db, facility_id)
     user = _get_user(db, facility_id, user_id)
 
+    details = details or {}
+    if set(details) - set(answers):
+        raise ValueError("Every detail must have a corresponding answer in this submission.")
     if not answers:
         return {"updated": 0, "unchanged": 0, "completeness": recompute_completeness(db, facility_id)}
 
@@ -347,13 +380,23 @@ def save_capabilities(
         )
     }
 
+    normalized_details = {}
+    for key, value in normalized.items():
+        prior = existing.get(key)
+        raw = details.get(key, decode_details(prior.notes) if prior and prior.source == PORTAL_SOURCE else {})
+        # Preserve legacy state-only LIMITED answers until the provider edits their details.
+        legacy_limited = value == "LIMITED" and key not in details and _QUESTION_INDEX[key].get("response_kind", "state") == "state"
+        normalized_details[key] = raw if legacy_limited else normalize_details(_QUESTION_INDEX[key], value, raw)
+
     now = _now()
     updated = 0
     unchanged = 0
     for key, value in normalized.items():
         row = existing.get(key)
         previous = row.value.value if row else None
-        if previous == value:
+        new_notes = encode_details(normalized_details[key]) if normalized_details[key] else None
+        prior_notes = row.notes if row and row.source == PORTAL_SOURCE else None
+        if previous == value and prior_notes == new_notes and row.source == PORTAL_SOURCE:
             unchanged += 1
             continue
 
@@ -361,6 +404,8 @@ def save_capabilities(
             row = FacilityCapability(facility_id=facility_id, capability=key)
             db.add(row)
 
+        old_notes = row.notes if row else None
+        row.notes = new_notes
         row.value = AnswerState(value)
         row.source = PORTAL_SOURCE
         row.last_updated_by_user_id = user.id
@@ -382,6 +427,10 @@ def save_capabilities(
                 user_role=user.role,
             )
         )
+        if old_notes != new_notes:
+            db.add(FacilityAuditLog(facility_id=facility_id, user_id=user.id,
+                field_name=f"capability_details:{key}", old_value=old_notes,
+                new_value=new_notes, ip_address=ip_address, user_role=user.role))
         updated += 1
 
     db.commit()
