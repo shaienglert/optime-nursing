@@ -237,3 +237,51 @@ def test_reordered_recognized_items_are_not_false_missing_facts():
         packet(["Dialysis", "Wound care"]),
         packet(["Wound care", "Dialysis", "Oxygen"]),
         user_text=quote)
+
+
+def test_unstated_dependent_detail_does_not_erase_a_proven_parent_requirement():
+    quote = "Dad needs dialysis three times a week and wound care."
+    initial = {
+        "questionnaire_patch": {"medicalCareProfile": {
+            "needs": ["Dialysis", "Wound care"],
+        }},
+        "statements": [{
+            "raw_text": quote, "status": "USED", "knowledge_state": "KNOWN",
+            "importance": "MUST",
+            "mapped_parameters": ["medicalCareProfile.needs", "medicalCareProfile.woundCareFrequency"],
+        }],
+    }
+    corrected = {
+        "questionnaire_patch": {"medicalCareProfile": {
+            "needs": ["Dialysis", "Wound care"],
+        }},
+        "statements": [{
+            "raw_text": quote, "status": "USED", "knowledge_state": "KNOWN",
+            "importance": "MUST", "mapped_parameters": ["medicalCareProfile.needs"],
+        }],
+    }
+    check_recognized_fact_conservation(initial, corrected, user_text=quote)
+    assert corrected["questionnaire_patch"]["medicalCareProfile"]["needs"] == ["Dialysis", "Wound care"]
+    assert corrected["unmapped_recognized_facts"] == [{
+        "raw_text": quote,
+        "rejected_path": "medicalCareProfile.woundCareFrequency",
+        "importance": "MUST",
+        "status": "PRESERVED_UNMAPPED_NOT_DECISION_EVIDENCE",
+    }]
+
+
+def test_dependent_detail_cannot_disappear_if_parent_need_was_lost():
+    quote = "Dad needs wound care, but the frequency is unknown."
+    before = {"questionnaire_patch": {"medicalCareProfile": {
+        "needs": ["Wound care"],
+    }}, "statements": [{
+        "raw_text": quote, "status": "USED", "knowledge_state": "KNOWN",
+        "importance": "MUST",
+        "mapped_parameters": ["medicalCareProfile.needs", "medicalCareProfile.woundCareFrequency"],
+    }]}
+    after = {"questionnaire_patch": {}, "statements": [{
+        "raw_text": quote, "status": "USED", "knowledge_state": "KNOWN",
+        "importance": "MUST", "mapped_parameters": [],
+    }]}
+    with pytest.raises(RuntimeError, match="SEMANTIC_AI_FACT_LOSS"):
+        check_recognized_fact_conservation(before, after, user_text=quote)
