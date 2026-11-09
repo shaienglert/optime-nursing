@@ -158,19 +158,36 @@ def test_unsupported_nice_mapping_is_preserved_as_unmapped_not_a_verified_fact()
     check_recognized_fact_conservation(initial, final, user_text=quote)
     assert final["unmapped_recognized_facts"] == [{
         "raw_text": quote, "rejected_path": "relationship",
+        "importance": "NICE",
         "status": "PRESERVED_UNMAPPED_NOT_DECISION_EVIDENCE",
     }]
 
 
-def test_unmaterialized_must_remains_a_blocking_error():
+def test_materialized_must_cannot_disappear_after_repair():
     quote = "Dad needs continuous oxygen."
     initial = {"statements": [{
         "raw_text": quote, "status": "USED", "knowledge_state": "KNOWN",
         "importance": "MUST", "mapped_parameters": ["medicalCareProfile.needs"],
-    }], "questionnaire_patch": {}}
+    }], "questionnaire_patch": {"medicalCareProfile": {"needs": ["Oxygen"]}}}
     final = {"statements": [{
         "raw_text": quote, "status": "USED", "knowledge_state": "KNOWN",
         "importance": "MUST", "mapped_parameters": [],
     }], "questionnaire_patch": {}}
     with pytest.raises(RuntimeError, match="DROPPED_RECOGNIZED_FIELD:medicalCareProfile.needs"):
         check_recognized_fact_conservation(initial, final, user_text=quote)
+
+
+def test_unmaterialized_must_field_remains_explicitly_unresolved_not_verified():
+    quote = "Dad receives dialysis but we do not know the center."
+    original = {"statements": [{
+        "raw_text": quote, "status": "USED", "knowledge_state": "KNOWN",
+        "importance": "MUST", "mapped_parameters": ["medicalCareProfile.dialysisCenter"],
+    }], "questionnaire_patch": {}}
+    result = {"statements": [{
+        "raw_text": quote, "status": "USED", "knowledge_state": "KNOWN",
+        "importance": "MUST", "mapped_parameters": [],
+    }], "questionnaire_patch": {}}
+    check_recognized_fact_conservation(original, result, user_text=quote)
+    assert result["unmapped_recognized_facts"][0]["rejected_path"] == "medicalCareProfile.dialysisCenter"
+    assert result["unmapped_recognized_facts"][0]["importance"] == "MUST"
+    assert result["questionnaire_patch"] == {}
