@@ -205,3 +205,35 @@ def test_unknown_must_detail_can_only_remain_explicitly_unresolved():
     }], "questionnaire_patch": {}}
     check_recognized_fact_conservation(original, final, user_text=quote)
     assert final["questionnaire_patch"] == {}
+
+
+def test_a_recognized_list_cannot_drop_one_of_two_original_items():
+    quote = "Dad needs dialysis and wound care."
+    before = {"questionnaire_patch": {
+        "medicalCareProfile": {"needs": ["Dialysis", "Wound care"]}
+    }, "statements": [{
+        "raw_text": quote, "status": "USED", "importance": "MUST",
+        "knowledge_state": "KNOWN", "mapped_parameters": ["medicalCareProfile.needs"],
+    }]}
+    after = {"questionnaire_patch": {
+        "medicalCareProfile": {"needs": ["Dialysis"]}
+    }, "statements": [{
+        "raw_text": quote, "status": "USED", "importance": "MUST",
+        "knowledge_state": "KNOWN", "mapped_parameters": ["medicalCareProfile.needs"],
+    }]}
+    with pytest.raises(RuntimeError, match="DROPPED_RECOGNIZED_VALUE:medicalCareProfile.needs"):
+        check_recognized_fact_conservation(before, after, user_text=quote)
+
+
+def test_reordered_recognized_items_are_not_false_missing_facts():
+    quote = "Dad needs dialysis and wound care."
+    def packet(items):
+        return {"questionnaire_patch": {"medicalCareProfile": {"needs": items}},
+                "statements": [{
+                    "raw_text": quote, "status": "USED", "importance": "MUST",
+                    "knowledge_state": "KNOWN", "mapped_parameters": ["medicalCareProfile.needs"],
+                }]}
+    check_recognized_fact_conservation(
+        packet(["Dialysis", "Wound care"]),
+        packet(["Wound care", "Dialysis", "Oxygen"]),
+        user_text=quote)
