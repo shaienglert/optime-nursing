@@ -99,6 +99,16 @@ def check_recognized_fact_conservation(
                 and item.get("knowledge_state") == "KNOWN"
                 for item in matching
             ):
+                initial_items = _leaf(initial.get("questionnaire_patch") or {}, path)
+                if isinstance(initial_items, list) and initial_items:
+                    final_items = _leaf(final.get("questionnaire_patch") or {}, path)
+                    if final_items in (None, [], ""):
+                        final_items = _leaf(state, path)
+                    original_set = {_normalized(item) for item in initial_items}
+                    final_set = {_normalized(item) for item in final_items} if isinstance(final_items, list) else set()
+                    if not original_set.issubset(final_set):
+                        errors.append("DROPPED_RECOGNIZED_VALUE:" + path)
+                        continue
                 continue
             explicitly_unresolved = any(
                 item.get("status") == "ASKED"
