@@ -183,7 +183,7 @@ def test_explicit_refusal_of_locked_memory_unit_survives_mild_memory_need():
     assert assisted["hard_gate"] == "PASS"
 
 
-def test_continuing_care_matches_continuum_preference_and_active_adult_does_not():
+def test_continuing_care_matches_continuum_preference_and_active_adult_remains_unknown():
     intent = {"must_haves": [], "nice_to_haves": [{"key": "CONTINUUM_OF_CARE"}]}
 
     continuing_care = evaluate_candidate_intent(
@@ -196,7 +196,10 @@ def test_continuing_care_matches_continuum_preference_and_active_adult_does_not(
     )
 
     assert "CONTINUUM_OF_CARE" in continuing_care["nice_match"]
-    assert "CONTINUUM_OF_CARE" in active_adult["nice_mismatch"]
+    # The archetype alone does not prove that a continuum service is absent.
+    assert "CONTINUUM_OF_CARE" in active_adult["nice_unknown"]
+    assert "CONTINUUM_OF_CARE" not in active_adult["nice_mismatch"]
+    assert "CONTINUUM_OF_CARE" not in active_adult["nice_fit_scores"]
 
 
 def test_explicit_continuum_match_ranks_above_generic_active_adult_fit():
