@@ -138,8 +138,12 @@ def approved_unknown_evidence_delta(case, baseline, candidate, diffs):
         "$.http_recommendations.body.care_partner_options",
         "$.db_side_effects.decision_artifacts[0].payload_json.care_partner_options",
     }
+    from coverage_parity_contract import is_additive_coverage_metadata
     approved_unknown_indexes = set()
     for index, (path, kind, old, new) in enumerate(diffs):
+        # Coverage metadata is validated independently with a fixed schema.
+        if is_additive_coverage_metadata(path, kind, old, new):
+            continue
         if path in care_partner_paths:
             if not (kind == "added" and old is None and new == []):
                 return set()
