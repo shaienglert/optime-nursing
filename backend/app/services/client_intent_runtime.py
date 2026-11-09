@@ -328,10 +328,20 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
         elif key == "REQUIRED_ACTIVITIES":
             wanted = [str(x).strip().lower() for x in must.get("value") or [] if str(x).strip()]
             verified = str((row.get("verified_capabilities") or {}).get("activities") or "").lower()
+            # verified_capabilities.activities is a YES/NO capability flag, not a list of
+            # activities. The documented schedule is the evidence that can name a specific
+            # activity; checking only the flag made every "Requirement" activity a verified
+            # fail for every community (zero results for a normal journey).
+            schedule = str((row.get("pilot_service_evidence") or {}).get("activity_schedule") or "").lower()
+            haystack = f"{verified} {schedule}"
             if not verified or verified == "unknown":
                 must_unknown.append(key)
-            elif all(x in verified for x in wanted):
+            elif verified in {"no", "false"}:
+                hard_fail.append(key)
+            elif all(x in haystack for x in wanted):
                 must_pass.append(key)
+            elif verified in {"yes", "true", "limited"}:
+                must_unknown.append(key)  # a program exists but the named activity is not documented
             else:
                 hard_fail.append(key)
         elif key == URGENT_AVAILABILITY_KEY:
