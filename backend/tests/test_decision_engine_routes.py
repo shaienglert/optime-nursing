@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import re
 import subprocess
+import sys
 import threading
 import time
 import urllib.request
@@ -42,9 +43,10 @@ def _http_post(url: str, payload: dict, timeout: int = 120) -> tuple[int, dict]:
 
 def test_decision_routes_end_to_end() -> None:
     backend_dir = Path(__file__).resolve().parents[1]
-    python_exe = backend_dir / "venv" / "Scripts" / "python.exe"
+    # Use the same interpreter/environment as pytest on Linux, macOS and Windows.
+    # A repository-local Windows virtualenv path is not portable to CI.
     command = [
-        str(python_exe),
+        sys.executable,
         "-m",
         "uvicorn",
         "app.main:app",
