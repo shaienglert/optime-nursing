@@ -487,6 +487,20 @@ def _consult_semantic_ai(
             "status": "CONSULTED_AND_VALIDATED" if readiness != "NEEDS_RESEARCH" else ("GUARDIAN_BLOCKED_READY" if guardian_veto else "CONSULTED_AND_VALIDATED"),
             "result": result,
         }
+        # Reuse the existing statement-accounting record for actual
+        # source-trace reconciliation. Do not confuse its legacy 100% label
+        # classification with independently verified text comprehension.
+        source_audit = result.get("source_statement_audit")
+        if isinstance(source_audit, dict):
+            accounting = context.get("user_statement_accounting")
+            if isinstance(accounting, dict):
+                accounting["source_trace_audit"] = source_audit
+                accounting["semantic_coverage_status"] = source_audit.get(
+                    "semantic_coverage_status", "NOT_INDEPENDENTLY_VERIFIED"
+                )
+                accounting["semantic_coverage_percent"] = source_audit.get(
+                    "semantic_coverage_percent"
+                )
         context["decision_readiness"] = readiness
         context["adaptive_questions"] = []
 
