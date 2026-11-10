@@ -1,14 +1,20 @@
 from app.services.client_intent_runtime import build_client_intent, evaluate_candidate_intent
 
 
-def _intent():
-    state = {"humanIntelligenceV2": {"socialProfile": {"hobbyParticipation": ["Music"], "activityRequirementLevel": "Requirement"}}}
+def _intent(activities=None):
+    state = {"humanIntelligenceV2": {"socialProfile": {
+        "hobbyParticipation": ["Music"] if activities is None else activities,
+        "activityRequirementLevel": "Requirement",
+    }}}
     return build_client_intent(state, "", {}, state["humanIntelligenceV2"])
 
 
-def _fit(activities, schedule):
-    row = {"verified_capabilities": {"activities": activities}, "pilot_service_evidence": {"activity_schedule": schedule}}
-    return evaluate_candidate_intent(row, _intent())
+def _fit(activities, schedule, wanted=None):
+    row = {
+        "verified_capabilities": {"activities": activities},
+        "pilot_service_evidence": {"activity_schedule": schedule},
+    }
+    return evaluate_candidate_intent(row, _intent(wanted))
 
 
 def test_documented_schedule_naming_the_activity_passes():
@@ -25,3 +31,46 @@ def test_activity_program_without_the_named_activity_is_unknown_not_a_verified_f
 def test_verified_no_activities_still_fails():
     fit = _fit("NO", "")
     assert "REQUIRED_ACTIVITIES" in fit["must_fail"]
+
+
+def test_multiple_required_activities_all_documented_pass():
+    fit = _fit("YES", "Music groups and painting classes", ["Music", "Painting"])
+    assert "REQUIRED_ACTIVITIES" in fit["must_pass"]
+
+
+def test_multiple_required_activities_missing_one_stays_unknown():
+    fit = _fit("YES", "Music groups and exercise", ["Music", "Painting"])
+    assert "REQUIRED_ACTIVITIES" in fit["must_unknown"]
+
+
+def test_missing_capability_even_with_schedule_is_not_verified_pass():
+    fit = _fit(None, "Daily organized music")
+    assert "REQUIRED_ACTIVITIES" in fit["must_unknown"]
+    assert "REQUIRED_ACTIVITIES" not in fit["must_pass"]
+
+
+def test_explicit_no_overrides_conflicting_schedule():
+    fit = _fit("NO", "Daily organized music")
+    assert "REQUIRED_ACTIVITIES" in fit["must_fail"]
+    assert "REQUIRED_ACTIVITIES" not in fit["must_pass"]
+
+
+def test_missing_schedule_stays_unknown():
+    fit = _fit("YES", "")
+    assert "REQUIRED_ACTIVITIES" in fit["must_unknown"]
+
+
+def test_substring_is_not_activity_evidence():
+    fit = _fit("YES", "Weekly parties", ["Art"])
+    assert "REQUIRED_ACTIVITIES" in fit["must_unknown"]
+
+
+def test_empty_activities_do_not_create_vacuous_verified_pass():
+    fit = _fit("YES", "Music groups", [])
+    assert "REQUIRED_ACTIVITIES" not in fit["must_pass"]
+
+
+def test_unrecognized_capability_is_unknown_not_verified_failure():
+    fit = _fit("SOMETIMES", "Daily music")
+    assert "REQUIRED_ACTIVITIES" in fit["must_unknown"]
+    assert "REQUIRED_ACTIVITIES" not in fit["must_fail"]
