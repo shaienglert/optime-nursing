@@ -421,7 +421,10 @@ export function FacilityProfileClient({ facilityId, backHref, backLabel }: Facil
             </section>
           </div>
         </section>
-        <ExternalRatings canonicalFacilityId={canonicalFacilityId ? String(canonicalFacilityId) : null} />
+        <ExternalRatings canonicalFacilityId={
+          recommendation?.canonical_facility_id || parameterTable?.canonical_facility_id
+          || facility.canonical_facility_id || canonicalFromQuery || null
+        } />
       </section>
     </main>
   );
