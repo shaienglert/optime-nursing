@@ -2,6 +2,7 @@
 
 import { updateClientCaseQuestionnaire } from "@/lib/api";
 import { budgetChoices } from "@/lib/budget-choices";
+import { verifiedBudgetFloor } from "@/lib/verified-budget-floor";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -56,10 +57,10 @@ function AnswerControl({ question, value, onAnswer, priceFloor }: { question: In
     );
   }
   if (question.kind === "number" && question.id === "budget") {
-    const knownFloor = priceFloor?.minimum_monthly_price;
+    const knownFloor = verifiedBudgetFloor(priceFloor);
     // A failed price-floor lookup is not evidence that the market starts at $100.
     // Let the family state its budget without inventing a local minimum.
-    if (!priceFloor?.minimum_budget_is_binding || !knownFloor) {
+    if (knownFloor === null) {
       return <div className="mt-4">
         <label className="block text-sm" htmlFor="monthly-budget-manual">Your monthly budget in dollars</label>
         <input id="monthly-budget-manual" aria-label="Monthly budget in dollars" type="number" min="1" step="500"
