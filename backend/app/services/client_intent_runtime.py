@@ -332,7 +332,11 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
             # activities. The documented schedule is the evidence that can name a specific
             # activity; checking only the flag made every "Requirement" activity a verified
             # fail for every community (zero results for a normal journey).
-            schedule = str((row.get("pilot_service_evidence") or {}).get("activity_schedule") or "").lower()
+            # A pilot schedule is fictional and may only establish a pilot-fixture
+            # result when its provenance and facility identity pass the shared gate.
+            # Real facility schedules need separate governed verification.
+            pilot_evidence = governed_evidence_runtime.pilot_service_payload(row)
+            schedule = str(pilot_evidence.get("activity_schedule") or "").lower()
             # Match complete activity names, not substrings (e.g. "art" in "party").
             # An empty requested list or missing/contradictory evidence must never
             # count as an established MUST pass.
