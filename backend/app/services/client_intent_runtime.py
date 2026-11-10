@@ -337,7 +337,7 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
             # An empty requested list or missing/contradictory evidence must never
             # count as an established MUST pass.
             schedule_matches = bool(wanted) and all(
-                re.search(r"(?<!\\w)" + re.escape(activity) + r"(?!\\w)", schedule)
+                re.search(r"(?<!\w)" + re.escape(activity) + r"(?!\w)", schedule)
                 for activity in wanted
             )
             if verified in {"no", "false"}:
