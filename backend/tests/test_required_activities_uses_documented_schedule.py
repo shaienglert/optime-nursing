@@ -11,8 +11,16 @@ def _intent(activities=None):
 
 def _fit(activities, schedule, wanted=None):
     row = {
+        "canonical_facility_id": "PILOT-NV-027",
+        "synthetic_pilot": True,
         "verified_capabilities": {"activities": activities},
-        "pilot_service_evidence": {"activity_schedule": schedule},
+        "pilot_service_evidence": {
+            "activity_schedule": schedule,
+            "canonical_facility_id": "PILOT-NV-027",
+            "source": "SYNTHETIC_PILOT_SERVICE_FIXTURE",
+            "verification_status": "VERIFIED",
+            "provenance": {"synthetic_pilot": True, "not_real_world_evidence": True},
+        },
     }
     return evaluate_candidate_intent(row, _intent(wanted))
 
@@ -74,3 +82,57 @@ def test_unrecognized_capability_is_unknown_not_verified_failure():
     fit = _fit("SOMETIMES", "Daily music")
     assert "REQUIRED_ACTIVITIES" in fit["must_unknown"]
     assert "REQUIRED_ACTIVITIES" not in fit["must_fail"]
+
+
+def test_unverified_pilot_schedule_cannot_prove_required_activity():
+    row = {
+        "canonical_facility_id": "PILOT-NV-027",
+        "synthetic_pilot": True,
+        "verified_capabilities": {"activities": "YES"},
+        "pilot_service_evidence": {
+            "activity_schedule": "Daily music",
+            "canonical_facility_id": "PILOT-NV-027",
+            "source": "SYNTHETIC_PILOT_SERVICE_FIXTURE",
+            "verification_status": "UNVERIFIED",
+            "provenance": {"synthetic_pilot": True, "not_real_world_evidence": True},
+        },
+    }
+    fit = evaluate_candidate_intent(row, _intent())
+    assert "REQUIRED_ACTIVITIES" in fit["must_unknown"]
+    assert "REQUIRED_ACTIVITIES" not in fit["must_pass"]
+
+
+def test_pilot_schedule_with_wrong_facility_identity_is_not_proof():
+    row = {
+        "canonical_facility_id": "PILOT-NV-028",
+        "synthetic_pilot": True,
+        "verified_capabilities": {"activities": "YES"},
+        "pilot_service_evidence": {
+            "activity_schedule": "Daily music",
+            "canonical_facility_id": "PILOT-NV-027",
+            "source": "SYNTHETIC_PILOT_SERVICE_FIXTURE",
+            "verification_status": "VERIFIED",
+            "provenance": {"synthetic_pilot": True, "not_real_world_evidence": True},
+        },
+    }
+    fit = evaluate_candidate_intent(row, _intent())
+    assert "REQUIRED_ACTIVITIES" in fit["must_unknown"]
+    assert "REQUIRED_ACTIVITIES" not in fit["must_pass"]
+
+
+def test_real_facility_cannot_use_synthetic_schedule_as_must_proof():
+    row = {
+        "canonical_facility_id": "PILOT-NV-027",
+        "synthetic_pilot": False,
+        "verified_capabilities": {"activities": "YES"},
+        "pilot_service_evidence": {
+            "activity_schedule": "Daily music",
+            "canonical_facility_id": "PILOT-NV-027",
+            "source": "SYNTHETIC_PILOT_SERVICE_FIXTURE",
+            "verification_status": "VERIFIED",
+            "provenance": {"synthetic_pilot": True, "not_real_world_evidence": True},
+        },
+    }
+    fit = evaluate_candidate_intent(row, _intent())
+    assert "REQUIRED_ACTIVITIES" in fit["must_unknown"]
+    assert "REQUIRED_ACTIVITIES" not in fit["must_pass"]
