@@ -26,6 +26,7 @@ on:
       - 'scripts/validate_synthetic_pilot.cjs'
       - 'scripts/build_synthetic_pilot_facilities.py'
       - 'database/synthetic_pilot/**'
+      - 'scripts/recovery/**'
   workflow_dispatch:
     inputs:
       scenario_start:
