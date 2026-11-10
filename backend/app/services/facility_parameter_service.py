@@ -147,6 +147,7 @@ def _signature(market: str) -> tuple[Any, ...]:
     return (
         market,
         os.getenv("OOMNIK_PILOT_CATALOG_SIZE", "500") if market == "synthetic-pilot" else None,
+        os.getenv("OOMNIK_PILOT_SOURCE", "fixture") if market == "synthetic-pilot" else None,
         os.getenv("OOMNIK_PILOT_FACILITY_LIMIT", "50") if market == "synthetic-pilot" else None,
         REGISTRY_PATH.stat().st_mtime,
         evidence_mtime,
@@ -332,11 +333,17 @@ def _build_runtime_payload(market: str, active_signature: tuple[Any, ...]) -> Di
     canonical_path = resolve_canonical_universe_path(market)
     canonical_payload = _read_json(canonical_path)
     canonical = _canonical_records_for_market(canonical_payload, market)
+    isolated_pilot_evidence = None
+    if market == "synthetic-pilot" and os.getenv("OOMNIK_PILOT_SOURCE") == "neon":
+        from app.services.isolated_pilot_reader import read_isolated_pilot
+        canonical, isolated_pilot_evidence = read_isolated_pilot()
 
     if market in {"florida", "synthetic-pilot"}:
         evidence_path = FLORIDA_EVIDENCE_PATH if market == "florida" else PILOT_EVIDENCE_PATH
         evidence_payload = _read_json(evidence_path)
         evidence = list(evidence_payload.get("records") or [])
+        if isolated_pilot_evidence is not None:
+            evidence = isolated_pilot_evidence
         evidence_generated_at = evidence_payload.get("generated_at_utc")
     else:
         evidence_generated_at = canonical_payload.get("generated_at_utc")
