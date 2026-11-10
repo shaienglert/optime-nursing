@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ExternalRatingsPanel } from "@/components/facility/external-ratings";
+import { ExternalRatings } from "@/components/facility/external-ratings";
 
 export const metadata: Metadata = {
   title: "The Heights of Summerlin | External Ratings Check",
@@ -20,7 +20,7 @@ export default function SummerlinExternalRatingsCheckPage() {
           <a className="underline" href="https://maps.app.goo.gl/8DiLgPgU1ZktWa81A">View this facility on Google Maps</a>
         </nav>
       </header>
-      <ExternalRatingsPanel data={null} />
+      <ExternalRatings canonicalFacilityId="verification-summerlin-295083" />
     </main>
   );
 }
