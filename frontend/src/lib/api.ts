@@ -2155,6 +2155,7 @@ export type FacilityOutreachStatus =
   | "RESPONDED";
 
 export type FacilityOutreachDraft = {
+  case_letter?: FacilityCaseLetter | null;
   to?: string | null;
   subject?: string | null;
   body_text?: string | null;
@@ -2173,7 +2174,16 @@ export type FacilityOutreachRequest = {
   draft?: FacilityOutreachDraft | null;
 };
 
+export type FacilityCaseLetter = {
+  summary: string;
+  items: { label: string; priority: "MUST" | "NICE" }[];
+  intent: "visit" | "pricing";
+  preferred_date?: string | null;
+};
+
 export type FacilityOutreachPublicStatus = {
+  case_specific?: boolean;
+  case_letter?: FacilityCaseLetter | null;
   canonical_facility_id: string;
   facility_name: string;
   status: FacilityOutreachStatus;

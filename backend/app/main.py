@@ -3,7 +3,7 @@ import json
 import hashlib
 import logging
 import time
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 
 # Uvicorn configures its own named loggers (uvicorn, uvicorn.error, uvicorn.access) but
 # never touches the root logger, so any application logger.info()/warning() call was
@@ -18,7 +18,7 @@ from sqlalchemy import func, or_
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.orm import Session
 
@@ -158,6 +158,10 @@ from app.services.personal_decision_report_contract import ReportContractViolati
 from app.services.personal_report_case_service import case_inputs, create_case, get_case_by_token, save_snapshot
 from app.services.facility_room_service import list_room_types
 from app.services import facility_outreach_service
+from app.models.facility_outreach import FacilityOutreachCaseReply, FacilityOutreachRequest
+from app.models.client_case import ClientCase, ClientCaseEvent
+from app.services.client_case_service import add_case_event, case_record, create_client_case, save_questionnaire_version, set_facility_status
+from app.services.facility_case_reply import CaseOutreachIn, CaseReplyIn, can_view, validated_reply
 from app.services import facility_relationship_service
 from app.services import placement_referral_service
 from app.services import facility_agreement_service
@@ -546,6 +550,7 @@ class FacilityRoomsOut(BaseModel):
 
 
 class FacilityOutreachDraftOut(BaseModel):
+    case_letter: Optional[dict] = None
     to: Optional[str] = None
     subject: Optional[str] = None
     body_text: Optional[str] = None
@@ -565,6 +570,8 @@ class FacilityOutreachRequestOut(BaseModel):
 
 
 class FacilityOutreachPublicStatusOut(BaseModel):
+    case_letter: Optional[dict] = None
+    case_specific: bool = False
     canonical_facility_id: str
     facility_name: str
     status: str
@@ -2460,11 +2467,14 @@ async def get_canonical_facility_rooms(canonical_id: str, db: Session = Depends(
     )
 
 
-def _serialize_outreach_request(outreach, *, include_draft: bool) -> FacilityOutreachRequestOut:
+def _serialize_outreach_request(outreach, *, include_draft: bool, case_reply=None) -> FacilityOutreachRequestOut:
     draft = None
     if include_draft and outreach.status == "AWAITING_APPROVAL":
-        composed = facility_outreach_service.draft_email(outreach)
-        draft = FacilityOutreachDraftOut(to=composed["to"], subject=composed["subject"], body_text=composed["body_text"])
+        composed = facility_outreach_service.draft_email(outreach, case_reply)
+        draft = FacilityOutreachDraftOut(
+            to=composed["to"], subject=composed["subject"], body_text=composed["body_text"],
+            case_letter=json.loads(case_reply.snapshot_json) if case_reply is not None else None,
+        )
     return FacilityOutreachRequestOut(
         id=outreach.id,
         canonical_facility_id=outreach.canonical_facility_id,
@@ -2487,9 +2497,28 @@ async def post_request_facility_outreach(canonical_id: str, db: Session = Depend
     return _serialize_outreach_request(outreach, include_draft=True)
 
 
+@app.post("/api/client-cases/{case_token}/facility-outreach")
+def request_case_facility_outreach(case_token: str, payload: CaseOutreachIn, db: Session = Depends(get_db)):
+    case = db.query(ClientCase).filter_by(case_token=case_token).one_or_none()
+    facility = get_canonical_facility_index().get(payload.facility_id)
+    if case is None or not case.terms_accepted_at or not facility:
+        raise HTTPException(status_code=404, detail="Case or community not found")
+    if facility.get("synthetic_pilot"):
+        raise HTTPException(status_code=409, detail="This community is available for testing only.")
+    existing = (db.query(FacilityOutreachRequest).join(FacilityOutreachCaseReply)
+                .filter(FacilityOutreachCaseReply.case_id == case.id,
+                        FacilityOutreachRequest.canonical_facility_id == payload.facility_id,
+                        FacilityOutreachRequest.status.in_(["PENDING", "AWAITING_APPROVAL", "SENT"]))
+                .order_by(FacilityOutreachRequest.id.desc()).first())
+    if existing:
+        return {"status": existing.status}
+    outreach = facility_outreach_service.request_outreach(
+        db, payload.facility_id, case_id=case.id, snapshot=payload.model_dump(exclude={"consent", "facility_id"}))
+    return {"status": outreach.status}
+
+
 @app.get("/api/admin/client-followups")
 def get_client_followups(db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
-    from app.models.client_case import ClientCase, ClientCaseEvent
     rows = db.query(ClientCaseEvent, ClientCase).join(ClientCase, ClientCase.id == ClientCaseEvent.case_id).filter(
         ClientCaseEvent.event_type.in_(["VISIT_REQUESTED", "ROOM_PRICING_REQUESTED"]),
         ClientCaseEvent.status.in_(["AWAITING_CONFIRMATION", "IN_PROGRESS"]),
@@ -2506,7 +2535,6 @@ class ClientFollowupUpdate(BaseModel):
 
 @app.patch("/api/admin/client-followups/{event_id}")
 def update_client_followup(event_id: int, payload: ClientFollowupUpdate, db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
-    from app.models.client_case import ClientCaseEvent
     if payload.status not in {"IN_PROGRESS", "COMPLETED"}:
         raise HTTPException(status_code=400, detail="Unsupported follow-up status")
     event = db.query(ClientCaseEvent).filter(ClientCaseEvent.id == event_id, ClientCaseEvent.event_type.in_([
@@ -2520,7 +2548,7 @@ def update_client_followup(event_id: int, payload: ClientFollowupUpdate, db: Ses
 
 @app.get("/facility-outreach-requests/awaiting-approval", response_model=List[FacilityOutreachRequestOut])
 async def get_facility_outreach_requests_awaiting_approval(db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
-    return [_serialize_outreach_request(o, include_draft=True) for o in facility_outreach_service.list_awaiting_approval(db)]
+    return [_serialize_outreach_request(o, include_draft=True, case_reply=db.get(FacilityOutreachCaseReply, o.id)) for o in facility_outreach_service.list_awaiting_approval(db)]
 
 
 @app.post("/facility-outreach-requests/{request_id}/approve-send", response_model=FacilityOutreachRequestOut)
@@ -2600,15 +2628,82 @@ async def post_facility_sales_copilot(payload: FacilitySalesCopilotIn, db: Sessi
 
 
 @app.get("/facility-outreach/{response_token}", response_model=FacilityOutreachPublicStatusOut)
-async def get_facility_outreach_public_status(response_token: str, db: Session = Depends(get_db)):
+async def get_facility_outreach_public_status(response_token: str, response: Response, db: Session = Depends(get_db)):
     outreach = facility_outreach_service.get_request_by_token(db, response_token)
     if outreach is None:
         raise HTTPException(status_code=404, detail="Unknown outreach link")
+    case_reply = db.get(FacilityOutreachCaseReply, outreach.id)
+    response.headers["Cache-Control"] = "no-store"
+    if case_reply is not None and not can_view(outreach):
+        raise HTTPException(status_code=404, detail="Unknown outreach link")
     return FacilityOutreachPublicStatusOut(
+        case_specific=case_reply is not None,
+        case_letter=json.loads(case_reply.snapshot_json) if case_reply is not None and outreach.status == "SENT" else None,
         canonical_facility_id=outreach.canonical_facility_id,
         facility_name=facility_outreach_service.facility_name_for(outreach.canonical_facility_id),
         status=outreach.status,
     )
+
+
+@app.post("/facility-outreach/{response_token}/case-reply")
+def submit_facility_case_reply(response_token: str, payload: CaseReplyIn, db: Session = Depends(get_db)):
+    outreach = facility_outreach_service.get_request_by_token(db, response_token)
+    if outreach is None or not can_view(outreach):
+        raise HTTPException(status_code=404, detail="Unknown outreach link")
+    record = db.get(FacilityOutreachCaseReply, outreach.id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="Unknown outreach link")
+    if outreach.status == "RESPONDED":
+        return {"status": "RESPONDED"}
+    try:
+        reply = validated_reply(payload, json.loads(record.snapshot_json))
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    now = datetime.now(timezone.utc)
+    updated = (db.query(FacilityOutreachRequest).filter_by(id=outreach.id, status="SENT")
+               .update({"status": "RESPONDED", "responded_at": now}))
+    if not updated:
+        db.rollback()
+        return {"status": "RESPONDED"}
+    record.reply_json = json.dumps(reply, ensure_ascii=False)
+    db.add(ClientCaseEvent(case_id=record.case_id, facility_id=outreach.canonical_facility_id,
+                           event_type="FACILITY_CHECKLIST_RESPONSE", status=reply["care_status"],
+                           note=reply["notes"] or None, created_by="FACILITY",
+                           payload_json=json.dumps({"outreach_id": outreach.id})))
+    db.commit()
+    return {"status": "RESPONDED"}
+
+
+@app.get("/api/client-cases/{case_token}/facility-replies")
+def list_client_facility_replies(case_token: str, response: Response, db: Session = Depends(get_db)):
+    case = db.query(ClientCase).filter_by(case_token=case_token).one_or_none()
+    if case is None:
+        raise HTTPException(status_code=404, detail="Case not found")
+    rows = (db.query(FacilityOutreachCaseReply, FacilityOutreachRequest).join(FacilityOutreachRequest)
+            .filter(FacilityOutreachCaseReply.case_id == case.id, FacilityOutreachCaseReply.reply_json.is_not(None))
+            .order_by(FacilityOutreachRequest.responded_at.desc()).limit(25).all())
+    response.headers["Cache-Control"] = "no-store"
+    results = []
+    for record, outreach in rows:
+        reply = json.loads(record.reply_json)
+        files = reply.pop("files")
+        results.append({"id": outreach.id, "facility_name": facility_outreach_service.facility_name_for(outreach.canonical_facility_id),
+                        "responded_at": outreach.responded_at, "letter": json.loads(record.snapshot_json),
+                        "reply": reply, "files": [file["name"] for file in files]})
+    return results
+
+
+@app.get("/api/client-cases/{case_token}/facility-replies/{outreach_id}/files/{index}")
+def download_facility_reply_file(case_token: str, outreach_id: int, index: int, db: Session = Depends(get_db)):
+    from base64 import b64decode
+    record = (db.query(FacilityOutreachCaseReply).join(ClientCase)
+              .filter(ClientCase.case_token == case_token, FacilityOutreachCaseReply.outreach_id == outreach_id).one_or_none())
+    files = json.loads(record.reply_json)["files"] if record and record.reply_json else []
+    if not 0 <= index < len(files):
+        raise HTTPException(status_code=404, detail="File not found")
+    return Response(b64decode(files[index]["content"]), media_type="application/octet-stream",
+                    headers={"Content-Disposition": "attachment", "Cache-Control": "no-store",
+                             "X-Content-Type-Options": "nosniff"})
 
 
 @app.post("/facility-outreach/{response_token}/submit", response_model=FacilityOutreachPublicStatusOut)

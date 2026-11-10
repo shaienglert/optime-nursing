@@ -1,9 +1,10 @@
 import uuid
 
-from sqlalchemy import Column, DateTime, Integer, String, Text
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.sql import func
 
 from app.database import Base
+from app.models import client_case  # noqa: F401 -- registers the case foreign key target
 
 
 def _new_response_token() -> str:
@@ -65,3 +66,15 @@ class FacilitySalesCopilotInteraction(Base):
     confidence = Column(String(24), nullable=False)
     escalation = Column(String(80), nullable=True, index=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+class FacilityOutreachCaseReply(Base):
+    """Private case snapshot and reply, separate from public facility evidence."""
+
+    __tablename__ = "facility_outreach_case_replies"
+
+
+    outreach_id = Column(Integer, ForeignKey("facility_outreach_requests.id"), primary_key=True)
+    case_id = Column(Integer, ForeignKey("client_cases.id"), nullable=False, index=True)
+    snapshot_json = Column(Text, nullable=False)
+    reply_json = Column(Text, nullable=True)

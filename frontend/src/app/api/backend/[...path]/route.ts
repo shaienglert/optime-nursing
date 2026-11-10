@@ -48,6 +48,10 @@ async function proxy(request: NextRequest, path: string[]): Promise<NextResponse
     const responseContentType = response.headers.get("content-type");
     if (responseContentType) responseHeaders.set("content-type", responseContentType);
     responseHeaders.set("cache-control", "no-store");
+    const disposition = response.headers.get("content-disposition");
+    if (disposition) responseHeaders.set("content-disposition", disposition);
+    const nosniff = response.headers.get("x-content-type-options");
+    if (nosniff) responseHeaders.set("x-content-type-options", nosniff);
 
     const body = await response.arrayBuffer();
     return new NextResponse(body, { status: response.status, headers: responseHeaders });

@@ -1,5 +1,7 @@
 import { FacilityOutreachResponseClient } from "@/components/facility/facility-outreach-response-client";
 
+export const metadata = { referrer: "no-referrer", robots: { index: false, follow: false } };
+
 type FacilityOutreachResponsePageProps = {
   params: Promise<{ token: string }>;
 };

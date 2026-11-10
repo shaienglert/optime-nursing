@@ -9,13 +9,15 @@ Populating the room-listing tables (facility_room_offering.py) from the facility
 reply is done by submit_outreach_response, called from the public form's endpoint.
 """
 
+import json
 import os
+from html import escape
 from datetime import datetime, timezone
 from typing import Optional
 
 from sqlalchemy.orm import Session
 
-from app.models.facility_outreach import FacilityOutreachRequest
+from app.models.facility_outreach import FacilityOutreachCaseReply, FacilityOutreachRequest
 from app.services import email_service
 from app.services.facility_contact_discovery_service import discover_contact
 from app.services.facility_parameter_service import get_canonical_facility_index
@@ -54,11 +56,22 @@ def response_url_for(outreach: FacilityOutreachRequest) -> str:
     return f"{frontend_base_url()}/facility-outreach/{outreach.response_token}"
 
 
-def draft_email(outreach: FacilityOutreachRequest) -> dict:
+def draft_email(outreach: FacilityOutreachRequest, case_reply=None) -> dict:
     """Composes the outreach email content for review. Pure/deterministic -- never
     called with side effects, and never itself sends anything."""
     facility_name = facility_name_for(outreach.canonical_facility_id)
     response_url = response_url_for(outreach)
+    if case_reply is not None:
+        # Keep private needs behind the request-specific link, out of email copies.
+        subject = "A family is considering your community | OOmnik"
+        text = (
+            f"Hello,\n\nA family considering {facility_name} asked OOmnik to check whether your "
+            "community could meet their needs before they decide on a visit. "
+            "Please review their short letter and checklist, and tell us what you can offer.\n\n"
+            f"Review and reply: {response_url}\n\nThank you,\nOOmnik"
+        )
+        return {"to": outreach.contact_email, "subject": subject, "body_text": text,
+                "body_html": "<p>" + escape(text).replace("\n", "<br>") + "</p>"}
     subject = f"Room availability & pricing request -- {facility_name}"
     text = (
         f"Hello,\n\n"
@@ -91,12 +104,16 @@ def draft_email(outreach: FacilityOutreachRequest) -> dict:
     return {"to": outreach.contact_email, "subject": subject, "body_text": text, "body_html": html}
 
 
-def request_outreach(db: Session, canonical_facility_id: str) -> FacilityOutreachRequest:
+def request_outreach(db: Session, canonical_facility_id: str, *, case_id=None, snapshot=None) -> FacilityOutreachRequest:
     """Creates the outreach record and, if a public contact email can be found on the
     facility's own website, prepares it for review. Sends nothing -- see
     approve_and_send_outreach for the explicit, human-approved send step."""
     outreach = FacilityOutreachRequest(canonical_facility_id=canonical_facility_id, status="PENDING")
     db.add(outreach)
+    if case_id is not None:
+        db.flush()
+        db.add(FacilityOutreachCaseReply(outreach_id=outreach.id, case_id=case_id,
+                                        snapshot_json=json.dumps(snapshot, ensure_ascii=False)))
     db.commit()
     db.refresh(outreach)
 
@@ -123,7 +140,7 @@ def approve_and_send_outreach(db: Session, request_id: int) -> FacilityOutreachR
     if outreach.status != "AWAITING_APPROVAL":
         raise ValueError(f"outreach request is not awaiting approval (status={outreach.status})")
 
-    draft = draft_email(outreach)
+    draft = draft_email(outreach, db.get(FacilityOutreachCaseReply, outreach.id))
     result = email_service.send_email_detailed(
         subject=draft["subject"],
         body_text=draft["body_text"],
@@ -144,6 +161,9 @@ def approve_and_send_outreach(db: Session, request_id: int) -> FacilityOutreachR
 def submit_outreach_response(db: Session, response_token: str, room_types: list[dict]) -> FacilityOutreachRequest:
     outreach = get_request_by_token(db, response_token)
     if outreach is None:
+        raise ValueError("unknown_response_token")
+
+    if db.get(FacilityOutreachCaseReply, outreach.id) is not None:
         raise ValueError("unknown_response_token")
 
     for room in room_types:
