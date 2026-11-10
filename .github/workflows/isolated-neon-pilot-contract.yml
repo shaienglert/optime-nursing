@@ -1,0 +1,31 @@
+name: Isolated Neon pilot reader contract
+on:
+  push:
+    branches:
+      - integration/neon-isolated-pilot-reader-20261110
+  pull_request:
+    paths:
+      - backend/app/services/isolated_pilot_reader.py
+      - backend/app/services/facility_parameter_service.py
+      - backend/tests/test_isolated_pilot_reader.py
+      - .github/workflows/isolated-neon-pilot-contract.yml
+  workflow_dispatch:
+
+jobs:
+  offline-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install backend dependencies
+        run: python -m pip install -r backend/requirements.txt pytest
+      - name: Validate opt-in and fail-closed behavior without credentials
+        env:
+          PYTHONPATH: backend
+          OOMNIK_PILOT_SOURCE: fixture
+        run: python -m pytest -q backend/tests/test_isolated_pilot_reader.py
