@@ -1,5 +1,6 @@
 "use client";
 
+import { FacilityCaseReplyClient } from "./facility-case-reply-client";
 import { useEffect, useState } from "react";
 
 import {
@@ -90,6 +91,12 @@ export function FacilityOutreachResponseClient({ responseToken }: { responseToke
     );
   }
 
+  if (status?.case_letter) {
+    return <FacilityCaseReplyClient letter={status.case_letter} token={responseToken} facilityName={status.facility_name} />;
+  }
+  if (status?.case_specific && status.status === "RESPONDED") {
+    return <main className="mx-auto max-w-2xl p-8"><h1 className="text-2xl font-semibold">Thank you. We received your reply.</h1></main>;
+  }
   if (submitted) {
     return (
       <main className="min-h-screen bg-canvas px-5 py-12 text-ink">

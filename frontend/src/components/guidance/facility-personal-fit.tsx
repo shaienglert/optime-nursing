@@ -42,6 +42,6 @@ export function FacilityPersonalFit({ facilityId, facilityName, backHref }: { fa
     {item ? <ServiceBudgetPlan item={item} budget={state.budget} couple={state.relationship === "Couple"} needs={decision?.patient_needs_profile?.needs} options={decision?.care_partner_options} /> : null}
     {item?.explanation?.concerns.some(isOutsideCareConcern) ? <details className="mt-4 text-base"><summary className="cursor-pointer underline">Original care evidence notes</summary>{item.explanation.concerns.filter(isOutsideCareConcern).map(text => <p key={text}>{text}</p>)}</details> : null}
     {item?.synthetic_pilot ? <p className="mt-5 rounded-xl bg-amber-50 p-4 text-lg">This is a synthetic pilot community. Visits and room enquiries for it are test requests.</p> : null}
-    <CommunityNextStep facilityId={facilityId} facilityName={facilityName} serviceNeeds={decision?.patient_needs_profile?.needs.map(need => need.need_text || need.parameter_id)} />
+    <CommunityNextStep facilityId={facilityId} facilityName={facilityName} needs={decision?.patient_needs_profile?.needs} synthetic={item?.synthetic_pilot} />
   </section>;
 }

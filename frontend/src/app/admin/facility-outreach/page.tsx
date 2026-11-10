@@ -159,6 +159,11 @@ export default function FacilityOutreachAdminPage() {
                   <p className="mt-1 text-sm text-ink">{request.draft.subject}</p>
                   <p className="mt-3 text-xs uppercase tracking-[0.14em] text-muted">Body</p>
                   <pre className="mt-1 whitespace-pre-wrap font-sans text-sm text-muted">{request.draft.body_text}</pre>
+                  {request.draft.case_letter ? <section className="mt-4 text-sm">
+                    <h3 className="font-semibold">Private letter shown after opening the link</h3>
+                    <p className="mt-1 whitespace-pre-wrap">{request.draft.case_letter.summary}</p>
+                    <ul className="mt-2 list-disc pl-5">{request.draft.case_letter.items.map((item, index) => <li key={index}>{item.priority === "MUST" ? "Required" : "Preference"}: {item.label}</li>)}</ul>
+                  </section> : null}
                 </div>
               ) : null}
             </article>

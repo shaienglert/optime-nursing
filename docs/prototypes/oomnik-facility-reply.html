@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OOmnik | Community response preview</title>
+<style>
+:root{font:17px/1.55 system-ui,sans-serif;color:#233a31;background:#fdfbf7}*{box-sizing:border-box}body{max-width:740px;margin:auto;padding:28px 18px 64px}header strong{color:#24665e;font-size:25px}header span{float:right;font-size:13px;color:#53655d}main{margin-top:24px;background:#fff;border:1px solid #dae4dd;border-radius:22px;padding:clamp(16px,5vw,36px)}h1{line-height:1.13;letter-spacing:-.04em;font-size:clamp(30px,6vw,46px);margin:.3em 0}h2{font-size:1.1rem;margin:1.6em 0 .3em}fieldset{border:0;border-bottom:1px solid #e1e9e3;padding:5px 0 14px;margin:8px 0 14px;min-width:0}legend{font-weight:650}label{display:block}fieldset label{display:inline-flex;align-items:center;gap:5px;margin:3px 14px 0 0;padding:5px 0}input[type=radio]{accent-color:#276357;width:18px;height:18px}textarea,input:not([type=radio]){font:inherit;width:100%;margin:5px 0 14px;padding:9px;border:1px solid #adbdb2;border-radius:8px}input[type=file]{font-size:.88rem}button{font:inherit;font-weight:650;color:white;background:#245445;border:0;border-radius:10px;padding:12px 17px;cursor:pointer}small{display:block;color:#4d6258}button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #348577;outline-offset:2px}#receipt:focus{outline:none}[hidden]{display:none!important}
+</style>
+<body>
+<header><strong>OOmnik</strong><span>Demo · fictional family</span></header>
+<main>
+<div id="request">
+<small>To the Admissions Team · Las Vegas</small>
+<h1>Could your community be a fit?</h1>
+<p>A daughter is helping her mother find a place in Las Vegas. Her mother enjoys meeting people and would love to keep playing bridge. Based on what the family told us, she’ll need help getting dressed and getting in and out of bed. They’re hoping to move next month.</p>
+<p>Could you confirm what your community can offer? This will help the family decide whether to visit.</p>
+<form id="reply">
+<h2>What she needs</h2>
+<fieldset><legend>Help getting dressed</legend><label><input type="radio" name="dressing" value="yes">Yes</label><label><input type="radio" name="dressing" value="no">No</label><label><input type="radio" name="dressing" value="depends">Depends</label></fieldset>
+<fieldset><legend>Help getting in and out of bed</legend><label><input type="radio" name="transfer" value="yes">Yes</label><label><input type="radio" name="transfer" value="no">No</label><label><input type="radio" name="transfer" value="depends">Depends</label></fieldset>
+<h2>What she’d enjoy</h2>
+<fieldset><legend>A regular bridge group</legend><label><input type="radio" name="bridge" value="yes">Yes</label><label><input type="radio" name="bridge" value="no">No</label><label><input type="radio" name="bridge" value="depends">Depends</label></fieldset>
+<h2>Before a visit</h2>
+<label>Suitable room available next month?<input name="availability" placeholder="For example, available or waitlist" maxlength="160"></label>
+<label>Estimated monthly cost including the help above ($)<input type="number" name="price" min="1" max="999999" inputmode="numeric"></label>
+<label>Anything we should know? <small>Optional. If a service depends on an assessment, you can tell us here.</small><textarea name="notes" rows="3" maxlength="1500"></textarea></label>
+<label>Attach a file <small>Optional. For example, a price sheet or an activity calendar.</small><input type="file" name="files" accept=".pdf,.png,.jpg,.jpeg" multiple></label>
+<p id="error" role="alert" hidden></p>
+<button type="submit">Send demo response</button>
+</form></div>
+<section id="receipt" tabindex="-1" hidden><h1>Thank you.</h1><p id="confirmation"></p><small>This preview doesn’t send or upload anything.</small></section>
+</main>
+<script>
+const form = document.querySelector('#reply');
+form.addEventListener('submit', (event) => {
+  event.preventDefault();
+  const data = new FormData(form);
+  const answers = ['dressing','transfer','bridge'].filter(key => data.has(key));
+  const error = document.querySelector('#error');
+  if (!answers.length && !['availability','price','notes'].some(key => String(data.get(key)).trim()) && !form.elements.files.files.length) {
+    error.textContent = 'Please answer at least one item or add a note or attachment.';
+    error.hidden = false;
+    return;
+  }
+  error.hidden = true;
+  const pending = ['dressing','transfer'].filter(key => !data.has(key) || data.get(key) === 'depends').length;
+  document.querySelector('#confirmation').textContent = pending
+    ? 'Your demo response was recorded. Some care needs still need confirmation.'
+    : 'Your demo response was recorded.';
+  document.querySelector('#request').hidden = true;
+  const receipt = document.querySelector('#receipt');
+  receipt.hidden = false;
+  receipt.focus();
+});
+</script>
+</body>
+</html>

@@ -447,7 +447,7 @@ export function SimpleResultsPageClient() {
                   <ServiceBudgetPlan item={item} budget={state.budget} couple={state.relationship === "Couple"} needs={response.patient_needs_profile?.needs} options={response.care_partner_options} />
                   {concerns.filter(text => !isOutsideCareConcern(text)).length > 0 ? <div className="mt-6 text-xl leading-9"><h3 className="text-xl font-semibold">Something I want you to know</h3>{concerns.filter(text => !isOutsideCareConcern(text)).map(text => <p key={text}>{text}</p>)}</div> : null}
                   {concerns.some(isOutsideCareConcern) ? <details className="mt-4 text-base"><summary className="cursor-pointer underline">Original care evidence notes</summary>{concerns.filter(isOutsideCareConcern).map(text => <p key={text}>{text}</p>)}</details> : null}
-                  <CommunityNextStep facilityId={item.canonical_facility_id} facilityName={item.facility_name} serviceNeeds={response.patient_needs_profile?.needs.map(need => need.need_text || need.parameter_id)} />
+                  <CommunityNextStep facilityId={item.canonical_facility_id} facilityName={item.facility_name} needs={response.patient_needs_profile?.needs} synthetic={item?.synthetic_pilot} />
                 </article>
               );
             })}
