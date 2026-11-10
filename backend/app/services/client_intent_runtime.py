@@ -327,12 +327,28 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
         elif key == "REQUIRED_ACTIVITIES":
             wanted = [str(x).strip().lower() for x in must.get("value") or [] if str(x).strip()]
             verified = str((row.get("verified_capabilities") or {}).get("activities") or "").lower()
-            if not verified or verified == "unknown":
-                must_unknown.append(key)
-            elif all(x in verified for x in wanted):
+            # verified_capabilities.activities is a YES/NO capability flag, not a list of
+            # activities. The documented schedule is the evidence that can name a specific
+            # activity; checking only the flag made every "Requirement" activity a verified
+            # fail for every community (zero results for a normal journey).
+            # A pilot schedule is fictional and may only establish a pilot-fixture
+            # result when its provenance and facility identity pass the shared gate.
+            # Real facility schedules need separate governed verification.
+            pilot_evidence = governed_evidence_runtime.pilot_service_payload(row)
+            schedule = str(pilot_evidence.get("activity_schedule") or "").lower()
+            # Match complete activity names, not substrings (e.g. "art" in "party").
+            # An empty requested list or missing/contradictory evidence must never
+            # count as an established MUST pass.
+            schedule_matches = bool(wanted) and all(
+                re.search(r"(?<!\w)" + re.escape(activity) + r"(?!\w)", schedule)
+                for activity in wanted
+            )
+            if verified in {"no", "false"}:
+                hard_fail.append(key)
+            elif verified in {"yes", "true", "limited"} and schedule_matches:
                 must_pass.append(key)
             else:
-                hard_fail.append(key)
+                must_unknown.append(key)  # missing/non-specific evidence is pending, not a verified failure
         elif key == URGENT_AVAILABILITY_KEY:
             recorded = _upper((row.get("verified_capabilities") or {}).get("current_availability"))
             if recorded in {"YES", "LIMITED"}:
