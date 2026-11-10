@@ -43,7 +43,9 @@ jobs:
             backend/tests/test_client_intent_runtime.py \
             backend/tests/test_pilot_care_path_contract.py \
             backend/tests/test_urgent_availability_contract.py \
-            backend/tests/test_pilot_service_evidence.py
+            backend/tests/test_pilot_service_evidence.py \
+            backend/tests/test_required_activities_uses_documented_schedule.py \
+            backend/tests/test_explicit_intent_explanation.py
       - name: Publish recovery artifacts for review (no production deployment)
         uses: actions/upload-artifact@v4
         with:
