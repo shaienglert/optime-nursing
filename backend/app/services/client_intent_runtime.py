@@ -333,17 +333,19 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
             # activity; checking only the flag made every "Requirement" activity a verified
             # fail for every community (zero results for a normal journey).
             schedule = str((row.get("pilot_service_evidence") or {}).get("activity_schedule") or "").lower()
-            haystack = f"{verified} {schedule}"
-            if not verified or verified == "unknown":
-                must_unknown.append(key)
-            elif verified in {"no", "false"}:
+            # Match complete activity names, not substrings (e.g. "art" in "party").
+            # An empty requested list or missing/contradictory evidence must never
+            # count as an established MUST pass.
+            schedule_matches = bool(wanted) and all(
+                re.search(r"(?<!\\w)" + re.escape(activity) + r"(?!\\w)", schedule)
+                for activity in wanted
+            )
+            if verified in {"no", "false"}:
                 hard_fail.append(key)
-            elif all(x in haystack for x in wanted):
+            elif verified in {"yes", "true", "limited"} and schedule_matches:
                 must_pass.append(key)
-            elif verified in {"yes", "true", "limited"}:
-                must_unknown.append(key)  # a program exists but the named activity is not documented
             else:
-                hard_fail.append(key)
+                must_unknown.append(key)  # missing/non-specific evidence is pending, not a verified failure
         elif key == URGENT_AVAILABILITY_KEY:
             recorded = _upper((row.get("verified_capabilities") or {}).get("current_availability"))
             if recorded in {"YES", "LIMITED"}:
