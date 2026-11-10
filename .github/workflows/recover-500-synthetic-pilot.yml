@@ -1,0 +1,55 @@
+name: Recover 500-Community Synthetic Pilot Offline
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/recover-500-synthetic-pilot.yml'
+      - 'scripts/recovery/restore_synthetic_pilot_sqlite.py'
+      - 'database/synthetic_pilot/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate original committed catalog
+        run: node scripts/validate_synthetic_pilot.cjs
+      - name: Recover a new isolated local SQLite database
+        run: python scripts/recovery/restore_synthetic_pilot_sqlite.py --out "$RUNNER_TEMP/oomnik-synthetic-recovered.db"
+      - name: Validate reconstructed data contract
+        run: |
+          python scripts/validate_synthetic_pilot_contract.py
+      - name: Install backend test dependencies
+        run: |
+          python -m pip install -r backend/requirements.txt
+          python -m pip install pytest==8.4.2
+      - name: Validate MUST gates, care proof and urgency against synthetic pilot
+        env:
+          PYTHONPATH: backend:.
+          OPTIME_CANONICAL_MARKET: synthetic-pilot
+        run: |
+          python -m pytest -q \
+            backend/tests/test_client_intent_runtime.py \
+            backend/tests/test_pilot_care_path_contract.py \
+            backend/tests/test_urgent_availability_contract.py \
+            backend/tests/test_pilot_service_evidence.py
+      - name: Publish recovery artifacts for review (no production deployment)
+        uses: actions/upload-artifact@v4
+        with:
+          name: oomnik-synthetic-pilot-recovery-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/oomnik-synthetic-recovered.db
+            ${{ runner.temp }}/oomnik-synthetic-recovered.manifest.json
+          retention-days: 30
+          if-no-files-found: error
