@@ -50,7 +50,27 @@ def test_declined_continuity_creates_no_continuum_explanation():
 
 
 def test_requested_activity_explanation_uses_the_actual_selected_values():
-    row = {"verified_capabilities": {"activities": "Astronomy club, Classes"}}
+    row = {
+        "canonical_facility_id": "PILOT-NV-027",
+        "synthetic_pilot": True,
+        "verified_capabilities": {"activities": "YES"},
+        "pilot_service_evidence": {
+            "activity_schedule": "Weekly astronomy club, classes and music",
+            "canonical_facility_id": "PILOT-NV-027",
+            "source": "SYNTHETIC_PILOT_SERVICE_FIXTURE",
+            "verification_status": "VERIFIED",
+            "provenance": {"synthetic_pilot": True, "not_real_world_evidence": True},
+        },
+    }
     intent = {"must_haves": [{"key": "REQUIRED_ACTIVITIES", "value": ["Astronomy club"]}]}
     attach_client_intent_fit([row], intent)
     assert row["explanation"]["why_matches"] == ["Verified activities match your requirement: Astronomy club."]
+
+
+def test_unverified_activity_never_creates_verified_explanation():
+    row = {"verified_capabilities": {"activities": "YES"},
+           "pilot_service_evidence": {"activity_schedule": "Weekly astronomy club"}}
+    intent = {"must_haves": [{"key": "REQUIRED_ACTIVITIES", "value": ["Astronomy club"]}]}
+    attach_client_intent_fit([row], intent)
+    assert row["explanation"]["why_matches"] == []
+    assert "REQUIRED_ACTIVITIES" in row["client_intent_fit"]["must_unknown"]
