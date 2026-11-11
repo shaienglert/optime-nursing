@@ -429,6 +429,8 @@ def _attach_pipeline_trace(result: dict[str, Any], questionnaire_state: dict[str
         from app.services.questionnaire_answer_accounting import attach_questionnaire_answer_accounting
         attach_questionnaire_answer_accounting(result, questionnaire_state)
     result = attach_decision_pipeline_trace(result)
+    from app.services.search_ranking_audit import observe_final_ranking
+    observe_final_ranking(result)
     # Final transport boundary, after all consumers of private ranking snapshots.
     # Apply recursively to audit/research copies as well as displayed facilities.
     def public(value):

@@ -13,6 +13,10 @@ export default function AdminIndexPage() {
         </header>
 
         <div className="grid gap-4 md:grid-cols-2">
+          <Link href="/admin/search-ranking" className="rounded-3xl border border-line bg-surface/80 p-6 hover:border-line">
+            <h2 className="text-xl font-semibold">Search ranking audit</h2>
+            <p className="mt-2 text-sm text-muted">See why the first ten communities were selected, the actual ordered criteria, evidence and true ties for each completed search.</p>
+          </Link>
           <Link href="/admin/client-followups" className="rounded-3xl border border-line bg-surface/80 p-6 hover:border-line">
             <h2 className="text-xl font-semibold">Client visits and pricing enquiries</h2>
             <p className="mt-2 text-sm text-muted">Follow up on saved requests, preferred visit dates, contact details and current room quotations.</p>
@@ -45,3 +49,4 @@ export default function AdminIndexPage() {
     </main>
   );
 }
+

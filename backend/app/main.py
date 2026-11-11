@@ -144,6 +144,8 @@ from app.services.facility_parameter_service import (
 from app.services.facility_media_registry import build_visual_media_payload, get_facility_media_record
 from app.services.decision_result_store import decision_inputs_fingerprint, recall_decision_result, remember_decision_result
 from app.services.decision_result_store import remember_intake_profile, recall_intake_profile, ArtifactStoreUnavailable
+from app.services.search_ranking_audit import capture_search_ranking_audit
+from app.services.search_ranking_admin_api import search_ranking_router
 from app.services.patient_decision_engine import (
     _regulatory_index,
     build_patient_comparison_context,
@@ -1362,6 +1364,9 @@ def require_admin_token(x_admin_token: Optional[str] = Header(default=None)) -> 
     expected = os.getenv("OPTIME_ADMIN_TOKEN", "").strip()
     if not expected or not x_admin_token or x_admin_token != expected:
         raise HTTPException(status_code=401, detail="Missing or invalid admin token")
+
+
+app.include_router(search_ranking_router(require_admin_token, get_db))
 
 
 def require_sales_desk_token(x_sales_desk_token: Optional[str] = Header(default=None)) -> None:
@@ -2982,7 +2987,8 @@ def post_patient_decision_recommendations(payload: PatientDecisionEngineRequestI
         run_inputs.update(questionnaire_state=artifact["questionnaire_state"],
                           natural_language_query=artifact["natural_language_query"],
                           prepared_profile=artifact["profile"])
-    response = run_patient_decision_engine(**run_inputs)
+    with capture_search_ranking_audit() as ranking_audit:
+        response = run_patient_decision_engine(**run_inputs)
 
     pending_candidates = response.get("must_pending_verification_candidates") or []
     if pending_candidates:
@@ -3027,6 +3033,7 @@ def post_patient_decision_recommendations(payload: PatientDecisionEngineRequestI
     served = PatientDecisionEngineOut.model_validate(response).model_dump()
     served["decision_id"] = remember_decision_result(
         served,
+        ranking_audit=ranking_audit,
         inputs_fingerprint=decision_inputs_fingerprint(
             payload.questionnaire_state, payload.natural_language_query or "", payload.limit
         ),
