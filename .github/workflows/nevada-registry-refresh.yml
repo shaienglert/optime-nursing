@@ -125,7 +125,7 @@ jobs:
   diagnostic-readonly:
     if: github.ref == 'refs/heads/fix/nevada-license-expiry-gate-20261111'
     runs-on: ubuntu-latest
-    timeout-minutes: 50
+    timeout-minutes: 60
     env:
       PYTHONPATH: backend
     steps:
@@ -135,7 +135,7 @@ jobs:
           python-version: '3.12'
       - run: python -m pip install -r backend/requirements.txt
       - name: Fetch official Nevada ALiS in dry-run mode
-        run: python scripts/refresh_nevada_registry.py --dry-run --skip-details
+        run: python scripts/refresh_nevada_registry.py --dry-run
       - name: Save government fetch diagnostic
         if: always()
         uses: actions/upload-artifact@v4
