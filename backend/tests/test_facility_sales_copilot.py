@@ -13,8 +13,10 @@ from fastapi.testclient import TestClient
 
 def test_ranking_answer_is_independent_of_payment() -> None:
     result = ask_sales_copilot("Can we pay to rank first?", transport=lambda _: {})
-    assert "does not buy ranking" in result["answer"]
+    assert "cannot buy a higher organic position" in result["answer"]
     assert "ranking_independence" in result["knowledge_ids"]
+    assert result["objection_guidance"]["category"] == "objection_ranking_trust"
+    assert result["disclosure_guard"] == "APPROVED_KNOWLEDGE_ONLY"
 
 
 def test_unknown_question_does_not_guess() -> None:
