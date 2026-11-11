@@ -49,6 +49,7 @@ def upsert_room_type(
     availability_status: str = "UNKNOWN",
     source: str = "MANUAL",
     photo_urls: Optional[List[str]] = None,
+    commit: bool = True,
 ) -> FacilityRoomType:
     if availability_status not in VALID_AVAILABILITY_STATUSES:
         raise ValueError(f"invalid availability_status: {availability_status}")
@@ -88,6 +89,8 @@ def upsert_room_type(
         for url in photo_urls:
             db.add(FacilityRoomPhoto(room_type_id=room.id, url=url))
 
-    db.commit()
-    db.refresh(room)
+    # Callers importing batches can opt into a single outer transaction.
+    if commit:
+        db.commit()
+        db.refresh(room)
     return room
