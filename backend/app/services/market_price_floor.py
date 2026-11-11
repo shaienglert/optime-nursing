@@ -3,6 +3,7 @@ from typing import Any
 from copy import deepcopy
 from app.database import SessionLocal
 from app.models.facility_room_offering import FacilityRoomType
+from app.services.facility_room_service import room_price_has_decision_evidence
 
 def minimum_market_monthly_price(*, canonical_ids:list[str]|None=None)->dict[str,Any]:
     """Lowest currently published room base price in the requested candidate geography.
@@ -12,8 +13,8 @@ def minimum_market_monthly_price(*, canonical_ids:list[str]|None=None)->dict[str
         q=db.query(FacilityRoomType).filter(FacilityRoomType.monthly_price_cents.isnot(None))
         if canonical_ids is not None:
             q=q.filter(FacilityRoomType.canonical_facility_id.in_(canonical_ids))
-        rows=q.all()
-        if not rows: return {"minimum_monthly_price":None,"basis":"NO_PUBLISHED_ROOM_PRICE"}
+        rows=[room for room in q.all() if room_price_has_decision_evidence(room)]
+        if not rows: return {"minimum_monthly_price":None,"basis":"NO_SOURCE_BACKED_ROOM_PRICE"}
         room=min(rows,key=lambda r:r.monthly_price_cents)
         return {"minimum_monthly_price":room.monthly_price_cents/100,"canonical_facility_id":room.canonical_facility_id,"room_type_name":room.room_type_name,"pricing_qualifier":room.pricing_qualifier or "UNKNOWN","basis":"LOWEST_CURRENT_PUBLISHED_ROOM_BASE_PRICE"}
     finally:
