@@ -1043,7 +1043,6 @@ class IdentityRegistrationStartOut(BaseModel):
     email: str
     verification_sent_at: str
     verification_method: str
-    debug_verification_code: str
 
 
 class IdentityVerificationCompleteIn(BaseModel):
@@ -3372,7 +3371,7 @@ async def get_validation_feedback(db: Session = Depends(get_db)):
     )
 
 
-@app.post("/provider/facilities/{facility_id}/activities/import", response_model=ActivityImportOut)
+@app.post("/provider/facilities/{facility_id}/activities/import", response_model=ActivityImportOut, dependencies=[Depends(require_admin_token)])
 async def import_facility_activities(
     facility_id: int,
     payload: ActivityImportIn,
@@ -3427,7 +3426,7 @@ async def get_activity_intelligence_policy():
     }
 
 
-@app.post("/provider/facilities/{facility_id}/verification/persist", response_model=ProviderPersistOut)
+@app.post("/provider/facilities/{facility_id}/verification/persist", response_model=ProviderPersistOut, dependencies=[Depends(require_admin_token)])
 async def persist_provider_verification_answers(
     facility_id: int,
     payload: ProviderPersistIn,
@@ -3479,7 +3478,7 @@ async def get_facility_memory(
     )
 
 
-@app.post("/provider/facilities/{facility_id}/identity/register/start", response_model=IdentityRegistrationStartOut)
+@app.post("/provider/facilities/{facility_id}/identity/register/start", response_model=IdentityRegistrationStartOut, dependencies=[Depends(require_admin_token)])
 async def provider_identity_register_start(
     facility_id: int,
     payload: IdentityRegistrationStartIn,
@@ -3500,7 +3499,7 @@ async def provider_identity_register_start(
     return IdentityRegistrationStartOut(**result)
 
 
-@app.post("/provider/facilities/{facility_id}/identity/register/verify", response_model=IdentityVerificationCompleteOut)
+@app.post("/provider/facilities/{facility_id}/identity/register/verify", response_model=IdentityVerificationCompleteOut, dependencies=[Depends(require_admin_token)])
 async def provider_identity_register_verify(
     facility_id: int,
     payload: IdentityVerificationCompleteIn,
@@ -3519,7 +3518,7 @@ async def provider_identity_register_verify(
     return IdentityVerificationCompleteOut(**result)
 
 
-@app.post("/provider/facilities/{facility_id}/identity/license/validate", response_model=LicenseValidationOut)
+@app.post("/provider/facilities/{facility_id}/identity/license/validate", response_model=LicenseValidationOut, dependencies=[Depends(require_admin_token)])
 async def provider_identity_license_validate(
     facility_id: int,
     payload: LicenseValidationIn,
@@ -3547,7 +3546,7 @@ async def provider_identity_access_check(payload: AccessCheckIn):
     return AccessCheckOut(allowed=role_can_edit_category(payload.role, payload.category))
 
 
-@app.post("/provider/facilities/{facility_id}/identity/field-update", response_model=FieldUpdateOut)
+@app.post("/provider/facilities/{facility_id}/identity/field-update", response_model=FieldUpdateOut, dependencies=[Depends(require_admin_token)])
 async def provider_identity_field_update(
     facility_id: int,
     payload: FieldUpdateIn,
@@ -3571,7 +3570,7 @@ async def provider_identity_field_update(
     return FieldUpdateOut(**result)
 
 
-@app.post("/provider/facilities/{facility_id}/identity/audit/{audit_id}/revert", response_model=RevertAuditOut)
+@app.post("/provider/facilities/{facility_id}/identity/audit/{audit_id}/revert", response_model=RevertAuditOut, dependencies=[Depends(require_admin_token)])
 async def provider_identity_revert_audit(
     facility_id: int,
     audit_id: int,
@@ -3594,7 +3593,7 @@ async def provider_identity_revert_audit(
     return RevertAuditOut(**result)
 
 
-@app.post("/provider/facilities/{facility_id}/identity/staff/invite", response_model=IdentityRegistrationStartOut)
+@app.post("/provider/facilities/{facility_id}/identity/staff/invite", response_model=IdentityRegistrationStartOut, dependencies=[Depends(require_admin_token)])
 async def provider_identity_staff_invite(
     facility_id: int,
     payload: StaffInviteIn,
@@ -3618,7 +3617,7 @@ async def provider_identity_staff_invite(
     return IdentityRegistrationStartOut(**result)
 
 
-@app.post("/provider/facilities/{facility_id}/identity/role/change", response_model=RoleChangeOut)
+@app.post("/provider/facilities/{facility_id}/identity/role/change", response_model=RoleChangeOut, dependencies=[Depends(require_admin_token)])
 async def provider_identity_role_change(
     facility_id: int,
     payload: RoleChangeIn,
@@ -3651,13 +3650,13 @@ async def provider_facility_search(
     return [ClaimSearchOut(**row) for row in search_claimable_facilities(db, q, state, city, limit)]
 
 
-@app.post("/provider/demo/opticare")
+@app.post("/provider/demo/opticare", dependencies=[Depends(require_admin_token)])
 async def provider_portal_opticare_demo(db: Session = Depends(get_db)):
     """Create or return the one isolated, non-production portal test record."""
     return ensure_opticare_demo(db)
 
 
-@app.get("/provider/facilities/{facility_id}/profile")
+@app.get("/provider/facilities/{facility_id}/profile", dependencies=[Depends(require_admin_token)])
 async def provider_facility_profile(facility_id: int, db: Session = Depends(get_db)):
     try:
         return facility_profile_snapshot(db, facility_id)
@@ -3665,7 +3664,7 @@ async def provider_facility_profile(facility_id: int, db: Session = Depends(get_
         raise HTTPException(status_code=404, detail=str(error)) from error
 
 
-@app.put("/provider/facilities/{facility_id}/capabilities", response_model=CapabilitySaveOut)
+@app.put("/provider/facilities/{facility_id}/capabilities", response_model=CapabilitySaveOut, dependencies=[Depends(require_admin_token)])
 async def provider_facility_save_capabilities(
     facility_id: int,
     payload: CapabilitySaveIn,
@@ -3686,7 +3685,7 @@ async def provider_facility_save_capabilities(
     return CapabilitySaveOut(**result)
 
 
-@app.post("/provider/facilities/{facility_id}/photos")
+@app.post("/provider/facilities/{facility_id}/photos", dependencies=[Depends(require_admin_token)])
 async def provider_facility_add_photo(
     facility_id: int,
     payload: PhotoAddIn,
@@ -3708,7 +3707,7 @@ async def provider_facility_add_photo(
         raise HTTPException(status_code=400, detail=str(error)) from error
 
 
-@app.delete("/provider/facilities/{facility_id}/photos/{photo_id}")
+@app.delete("/provider/facilities/{facility_id}/photos/{photo_id}", dependencies=[Depends(require_admin_token)])
 async def provider_facility_remove_photo(
     facility_id: int,
     photo_id: int,
@@ -3729,7 +3728,7 @@ async def provider_facility_remove_photo(
         raise HTTPException(status_code=404, detail=str(error)) from error
 
 
-@app.get("/provider/facilities/{facility_id}/completeness")
+@app.get("/provider/facilities/{facility_id}/completeness", dependencies=[Depends(require_admin_token)])
 async def provider_facility_completeness(facility_id: int, db: Session = Depends(get_db)):
     return recompute_completeness(db, facility_id)
 
