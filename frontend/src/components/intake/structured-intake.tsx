@@ -56,8 +56,21 @@ function AnswerControl({ question, value, onAnswer, priceFloor }: { question: In
     );
   }
   if (question.kind === "number" && question.id === "budget") {
-    const knownFloor = priceFloor?.minimum_monthly_price;
-    const min = priceFloor?.minimum_budget_is_binding && knownFloor ? knownFloor : 100;
+    const knownFloor = priceFloor?.minimum_budget_is_binding && Number(priceFloor.minimum_monthly_price) > 0
+      ? Number(priceFloor.minimum_monthly_price) : null;
+    // A missing or failed price lookup must never block the family or invent a market floor.
+    if (knownFloor === null) {
+      return <div className="mt-4">
+        <label htmlFor="manual-monthly-budget" className="block text-sm font-medium text-forest">Monthly budget in dollars</label>
+        <input id="manual-monthly-budget" aria-label="Monthly budget in dollars" type="number" min="1" step="any"
+          inputMode="numeric" value={Number(value) > 0 ? Number(value) : ""}
+          onChange={(event) => onAnswer(event.target.value === "" ? 0 : Number(event.target.value), false)}
+          placeholder="Enter your monthly budget"
+          className="mt-2 w-full rounded-xl border border-line bg-white px-4 py-3 text-lg text-forest" />
+        <p className="mt-3 text-sm">The minimum price for this search has not been verified. Your budget will be kept as stated; affordability still needs evidence.</p>
+      </div>;
+    }
+    const min = knownFloor;
     const max = Math.max(15000, min + 10000);
     const current = Number(value) > 0 ? Number(value) : min;
     const choices = budgetChoices(min, max);
@@ -275,7 +288,8 @@ export function StructuredIntake() {
                 <p className="mt-2 flex flex-wrap gap-x-4"><a className="underline" href="https://www.medicaid.gov/medicaid/long-term-services-supports/institutional-long-term-care/nursing-facilities" target="_blank" rel="noopener noreferrer">Official Medicaid guide</a><a className="underline" href="https://adsd.nv.gov/Programs/Seniors/HCBS_%28FE%29/HCBS_%28FE%29/" target="_blank" rel="noopener noreferrer">Nevada home and Assisted Living support</a><a className="underline" href="https://www.ecfr.gov/current/title-42/chapter-IV/subchapter-C/part-441/subpart-G/section-441.310" target="_blank" rel="noopener noreferrer">Federal regulation: 42 CFR 441.310</a></p>
                 {context.draft.medicaidStatus === "Application pending" ? <p className="mt-2 font-medium">Expected coverage is conditional on approval.</p> : null}
               </div> : null}
-              {onBudget && priceFloorLoading ? <p role="status">Checking starting prices in your selected area for the care answers given so far…</p> : <AnswerControl question={question} value={question.get(context)} onAnswer={answer} priceFloor={priceFloor} />}
+              {onBudget && priceFloorLoading ? <p role="status">Checking starting prices in your selected area… You can enter a budget now.</p> : null}
+              <AnswerControl question={question} value={question.get(context)} onAnswer={answer} priceFloor={priceFloor} />
               {onBudget && priceFloorError ? <p className="mt-3 text-sm">Price lookup is unavailable. <button type="button" onClick={() => setPriceFloorRetry(value => value + 1)} className="underline">Try price lookup again</button></p> : null}
               {belowKnownFloor ? <p role="alert" className="mt-3 text-sm text-[#a4501f]">Your stated budget is below the known private-pay starting price. I have kept your amount. Choose a budget you can fund, or go back to change the area or funding answer before continuing.</p> : null}
               {question.kind === "multi" ? <p className="mt-3 text-sm text-forest">Choose anything that applies, then continue.</p> : null}
@@ -287,7 +301,7 @@ export function StructuredIntake() {
                 ← Back
               </button>
               <p className="text-sm text-forest">Question {index + 1} of {questions.length}</p>
-              <button type="button" onClick={next} disabled={onBudget && (priceFloorLoading || belowKnownFloor)} className="inline-flex items-center justify-center gap-3 rounded-xl bg-forest px-6 py-2.5 text-sm font-semibold text-white hover:bg-forest-hover disabled:opacity-40">
+              <button type="button" onClick={next} disabled={Boolean(onBudget && belowKnownFloor)} className="inline-flex items-center justify-center gap-3 rounded-xl bg-forest px-6 py-2.5 text-sm font-semibold text-white hover:bg-forest-hover disabled:opacity-40">
                 <OomnikMark /> {question.required && !isAnswered(question, context) ? "Next →" : index + 1 === questions.length ? "See the summary →" : "Next →"}
               </button>
             </div>
