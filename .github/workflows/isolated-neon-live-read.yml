@@ -1,6 +1,11 @@
 name: Isolated Neon live read verification
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - integration/neon-isolated-pilot-reader-20261110
+    paths:
+      - .github/workflows/isolated-neon-live-read.yml
 
 permissions:
   contents: read
