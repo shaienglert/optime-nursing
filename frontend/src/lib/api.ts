@@ -1887,17 +1887,29 @@ async function fetchJson<T>(path: string, timeoutMs?: number): Promise<T> {
   }
 }
 
-async function postJson<TReq, TRes>(path: string, payload: TReq): Promise<TRes> {
+async function postJson<TReq, TRes>(path: string, payload: TReq, retryOn429 = false): Promise<TRes> {
   const requestUrl = joinApiUrl(getApiBaseUrl(), path);
-  const response = await fetch(requestUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-  if (!response.ok) {
-    throw new Error(`API request failed (${response.status})`);
+  // Retry only explicitly safe profile reads, never commands or payment/referral mutations.
+  const maxAttempts = retryOn429 ? 2 : 1;
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const response = await fetch(requestUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (response.status === 429 && attempt + 1 < maxAttempts) {
+      const retryAfter = Number(response.headers.get("retry-after"));
+      const delayMs = Number.isFinite(retryAfter) && retryAfter > 0
+        ? Math.min(retryAfter * 1000, 5000) : 800;
+      await new Promise<void>(resolve => setTimeout(resolve, delayMs));
+      continue;
+    }
+    if (!response.ok) {
+      throw new Error(`API request failed (${response.status})`);
+    }
+    return response.json() as Promise<TRes>;
   }
-  return response.json() as Promise<TRes>;
+  throw new Error("API request failed (429)");
 }
 
 export async function fetchFacilities(searchText?: string): Promise<Facility[]> {
@@ -2357,7 +2369,7 @@ export async function fetchPatientNeedsProfile(
   const existing = patientNeedsProfileRequests.get(key);
   if (existing) return existing;
 
-  const request = postJson<typeof payload, PatientNeedsProfile>("/decision-engine/patient-needs-profile", payload)
+  const request = postJson<typeof payload, PatientNeedsProfile>("/decision-engine/patient-needs-profile", payload, true)
     .finally(() => patientNeedsProfileRequests.delete(key));
   patientNeedsProfileRequests.set(key, request);
   return request;
