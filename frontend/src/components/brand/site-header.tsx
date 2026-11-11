@@ -6,7 +6,7 @@ import { OomnikMark } from "@/components/brand/oomnik-mark";
 const SECONDARY_LINKS = [
   { href: "/results", label: "Your results" }, { href: "/facilities", label: "Explore communities" },
   { href: "/compare", label: "Compare saved places" }, { href: "/las-vegas-senior-living", label: "Las Vegas evidence" },
-  { href: "/guides", label: "Family guides" }, { href: "/admin", label: "Admin" },
+  { href: "/guides", label: "Family guides" },
 ];
 
 export function SiteHeader() {

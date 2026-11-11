@@ -161,6 +161,16 @@ class NeedItem:
     need_text: str
 
 
+_AVAILABILITY_NOTES = {
+    "NO": "No open space is currently on record for this community. Ask whether a space or waitlist spot can be arranged before relying on it.",
+    "LIMITED": "Only limited space is currently on record. Confirm directly with the facility.",
+}
+
+
+def _availability_note(status: str) -> str:
+    return _AVAILABILITY_NOTES.get(status.upper(), "Current availability must be confirmed directly with the facility.")
+
+
 def _normalize(value: Any) -> str:
     return str(value or "").strip().lower()
 
@@ -1774,7 +1784,7 @@ def _build_ranked_candidate_detail(
             "needs_verification": verify,
             "concerns": concerns,
             "eligibility_reasons": eligibility["reasons"],
-            "availability_note": "Current availability must be confirmed directly with the facility.",
+            "availability_note": _availability_note(str(current_availability.get("raw_value") or "UNKNOWN")),
             "location_note": geo_note,
             "quality_safety": {
                 "known": dimensions["quality_safety"]["known_signals"],
