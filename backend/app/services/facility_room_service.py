@@ -21,6 +21,26 @@ VALID_PRICING_QUALIFIERS = {"EXACT", "STARTING_AT", "RANGE", "UNKNOWN"}
 VALID_SOURCES = {"OUTREACH", "MANUAL", "EXISTING_DATABASE", "PROVIDER", "OFFICIAL_WEBSITE", "RESEARCH"}
 
 
+
+def room_price_has_decision_evidence(room: FacilityRoomType) -> bool:
+    """Reported room prices are not budget MATCH evidence by themselves.
+
+    A price confirmed in the room record, or a dated source-linked price on the
+    facility's own website, may enter the matching price floor. A bare outreach,
+    manual, research or provider report cannot promote itself to verified.
+    """
+    amount = getattr(room, "monthly_price_cents", None)
+    if type(amount) is not int or amount <= 0:
+        return False
+    if getattr(room, "last_verified_at", None) is not None:
+        return True
+    return (
+        getattr(room, "source", None) == "OFFICIAL_WEBSITE"
+        and bool(getattr(room, "source_url", None))
+        and getattr(room, "observed_at", None) is not None
+    )
+
+
 def list_room_types(db: Session, canonical_facility_id: str) -> List[FacilityRoomType]:
     return (
         db.query(FacilityRoomType)
