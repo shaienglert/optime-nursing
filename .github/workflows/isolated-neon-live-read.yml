@@ -30,7 +30,6 @@ jobs:
           fi
           python - <<'PY'
           from app.services.isolated_pilot_reader import read_isolated_pilot
-          from app.services.facility_parameter_service import get_parameter_registry_payload, get_canonical_facilities
           facilities, evidence = read_isolated_pilot()
           assert len(facilities) == 500
           assert len(evidence) == 16320
