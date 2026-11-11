@@ -549,8 +549,8 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
                 nice_match.append(key)
                 nice_fit_scores[key] = 100.0
             else:
-                nice_mismatch.append(key)
-                nice_fit_scores[key] = 0.0
+                # No continuum evidence is not evidence that a continuum is absent.
+                nice_unknown.append(key)
         else:
             nice_unknown.append(key)
 

@@ -733,6 +733,10 @@ def _evaluate_need(need: Dict[str, Any], row_by_param: Dict[str, Dict[str, Any]]
         # Availability is volatile by definition. Preserve the evidence for disclosure,
         # but YES/NO/LIMITED all remain pending direct confirmation for the requested date.
         return "UNKNOWN", f"Recorded availability is {raw or 'UNKNOWN'}; direct facility confirmation is required."
+    # Acceptable-value lists describe known values, never evidence of an unknown.
+    # Apply this before every parameter-specific or generic match branch.
+    if raw is None or (isinstance(raw, str) and _normalize(raw) in {"", "unknown"}):
+        return "UNKNOWN", "Not verified."
     if need["parameter_id"] == "current_price":
         price = _to_number(raw)
         budget = _to_number(need.get("desired_value"))
@@ -879,7 +883,7 @@ def _eligibility_from_needs(
     }
 
 
-def _domain_breakdown(needs: List[Dict[str, Any]], matched: List[Dict[str, Any]], unmet: List[Dict[str, Any]]) -> Dict[str, float]:
+def _domain_breakdown(needs: List[Dict[str, Any]], matched: List[Dict[str, Any]], unmet: List[Dict[str, Any]]) -> Dict[str, Optional[float]]:
     domain_weights: Dict[str, float] = defaultdict(float)
     matched_weights: Dict[str, float] = defaultdict(float)
     unmet_weights: Dict[str, float] = defaultdict(float)
@@ -914,7 +918,8 @@ def _domain_breakdown(needs: List[Dict[str, Any]], matched: List[Dict[str, Any]]
     for domain, total in domain_weights.items():
         known = matched_weights[domain] + unmet_weights[domain]
         if known <= 0:
-            breakdown[domain] = 0.0
+            # No evidence is not a verified zero percent fit. Leave unscored.
+            breakdown[domain] = None
         else:
             breakdown[domain] = round((matched_weights[domain] / known) * 100.0, 2)
     return breakdown
