@@ -446,6 +446,7 @@ def _ground_clinical_patch(result: Dict[str, Any], user_text: str, state: Dict[s
         omitted.append("assistanceLevel:Skilled nursing care")
     if omitted:
         result["clinical_fact_validation"] = {"omitted_unsupported_fields": omitted, "reason": "EXPLICIT_CLIENT_EVIDENCE_REQUIRED"}
+
     return result
 
 
@@ -513,8 +514,12 @@ def _validate_result(result: Dict[str, Any], *, allow_empty_statements: bool = F
     if readiness == "NEEDS_RESEARCH" and not pending_question:
         result["decision_readiness"] = "READY"
         result["readiness_normalization"] = {"from": "NEEDS_RESEARCH", "to": "READY", "reason": "CLIENT_INTENT_COMPLETE_FACILITY_RESEARCH_DEFERRED", "pending_facility_research": pending_research}
-    result["statement_coverage_percent"] = 100.0
-    result["dropped_statement_count"] = 0
+    # Statement accounting has not compared the text against an independent
+    # inventory of source facts. Never claim 100% comprehension by default.
+    # The separate conservation guard verifies only facts already recognized.
+    result["statement_coverage_percent"] = None
+    result["dropped_statement_count"] = None
+    result["statement_coverage_status"] = "NOT_INDEPENDENTLY_VERIFIED"
     result["governance"] = {
         "ai_based": True,
         "learning_center_consulted": True,
@@ -838,7 +843,9 @@ def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Opti
     payload = _build_prompt(user_text, questionnaire_state, learning_advice)
     active_transport = transport or _default_transport
     result = {}
+    initial_semantic_packet: Dict[str, Any] = {}
     def validate_live_packet(packet: Dict[str, Any]) -> Dict[str, Any]:
+        from app.services.semantic_fact_integrity import check_recognized_fact_conservation
         packet = _ground_clinical_patch(packet, user_text, questionnaire_state)
         packet = _repair_live_readiness_mismatch(packet)
         # Validation normalizes advisory readiness, so check minimum dimensions
@@ -851,12 +858,36 @@ def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Opti
         if readiness == "NEEDS_CLARIFICATION" and _question_reasks_answered_dimension(packet, questionnaire_state, user_text):
             raise RuntimeError("SEMANTIC_AI_REPAIR_REASKED_ANSWERED_DIMENSION")
         _validate_patch_contract(packet, user_text, questionnaire_state)
+        from app.services.client_statement_accounting import reconcile_semantic_statement_coverage
+        packet["source_statement_audit"] = reconcile_semantic_statement_coverage(user_text, packet)
+        # The legacy classifier can recognize an already-known category from
+        # the source without the LLM repeating every selected answer verbatim.
+        # Keep every absence in the audit; block unrecognized *material* clauses,
+        # while the separate fact-conservation contract blocks any dropped
+        # source-backed KNOWN/USED field, including MUST requirements.
+        missing_source = [
+            row["statement"] for row in packet["source_statement_audit"]["statements"]
+            if row["trace_status"] == "MISSING_SOURCE_TRACE"
+            and "UNRESOLVED_PARAMETER" in (row.get("concepts") or [])
+        ]
+        # Legacy test doubles may intentionally provide a partial statement
+        # packet; the schema-constrained production wire contract promises
+        # source-backed completeness and is held to the stronger requirement.
+        if missing_source and (packet.get("wire_contract") or {}).get("schema_constrained") is True:
+            error = RuntimeError("SEMANTIC_AI_SOURCE_COVERAGE_GAP:" + ",".join(missing_source))
+            error.source_coverage_diagnostic = {"missing_source_clauses": missing_source}
+            raise error
+        check_recognized_fact_conservation(
+            initial_semantic_packet, packet, user_text=user_text,
+            questionnaire_state=questionnaire_state,
+        )
         return packet
 
     if transport is None:
         prior_packet = copy.deepcopy(result)
         try:
             result = active_transport(payload)
+            initial_semantic_packet = copy.deepcopy(result)
             prior_packet = copy.deepcopy(result)
             result = _repair_live_readiness_mismatch(result)
             result = _repair_clarification_contract_with_ai(result=result, payload=payload, user_text=user_text, questionnaire_state=questionnaire_state, transport=active_transport, strict=False)
@@ -878,6 +909,8 @@ def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Opti
                 "SEMANTIC_AI_ASKED_WITHOUT_QUESTION",
                 "SEMANTIC_AI_MISSING_STATEMENT_TRACE",
                 "SEMANTIC_AI_PATCH_CONTRACT",
+                "SEMANTIC_AI_FACT_LOSS",
+                "SEMANTIC_AI_SOURCE_COVERAGE_GAP",
                 "SEMANTIC_AI_WIRE_CONTRACT",
                 "SEMANTIC_AI_REPAIR_REASKED_ANSWERED_DIMENSION",
                 "SEMANTIC_AI_READY_WITH_MISSING_MINIMUM_DIMENSIONS",
@@ -890,6 +923,16 @@ def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Opti
                              if item.startswith("KNOWN_FIELD_NOT_MATERIALIZED:")]
             repair_payload["packet_validation_repair"] = {
                 "validation_error": str(error),
+                "unaccounted_source_clauses": getattr(error, "source_coverage_diagnostic", {}).get(
+                    "missing_source_clauses", []
+                ),
+                "original_recognized_facts": [
+                    {"raw_text": row.get("raw_text"), "meaning": row.get("meaning"),
+                     "mapped_parameters": row.get("mapped_parameters")}
+                    for row in initial_semantic_packet.get("statements") or []
+                    if isinstance(row, dict) and row.get("status") == "USED"
+                    and row.get("knowledge_state") == "KNOWN"
+                ],
                 "missing_materialized_fields": [{
                     "path": path,
                     "existing_questionnaire_value": False,
@@ -906,9 +949,9 @@ def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Opti
                     "MISSING_SELECTED_PROPERTY_TRACE": "Emit every selected_facility_property_traces item separately with exactly its quote, importance, KNOWN/USED and existing path. These button values are already materialized, so do not emit new extraction fields for them or omit their traces during clinical/clarification repair.",
                     "DUPLICATE_FIELD": "Return exactly one extraction entry per canonical path. Preserve all explicit selections in that field's supported array. For different people, retain each person's distinct needs and quotes in statements and coupleAssistance; never overwrite one partner with the other or combine contradictory facts as one person's answer. If the source is genuinely conflicting for the same person and time, ask a clarification rather than selecting a value.",
                     "NO_EXACT_FIELD_QUOTE": "Supply the field's own genuine source quote, or omit the unsupported field. Questionnaire defaults are not quotes from user_text.",
-                    "KNOWN_FIELD_NOT_MATERIALIZED": "If the exact field value is explicit, include one {path,value,quote} entry in questionnaire_patch_fields. If the path was only loosely related or inferred, remove that path from mapped_parameters instead of inventing its value; retain the original meaningful statement and its actual supported fields.",
-                    "UNSATISFIED_DEPENDENCY": "Supply the explicitly established parent field named in the contract error with its genuine source quote, or remove an unsupported detail. Never infer a parent fact or drop an explicit need.",
-                    "UNSUPPORTED_UNIT": "The source does not establish the field unit named in the contract error. Remove that unsupported field and mapping; retain the original statement. Never estimate or silently convert units.",
+                    "KNOWN_FIELD_NOT_MATERIALIZED": "Reconcile the original statement atomically. For each KNOWN/USED mapping actually supported by an exact client quote, output its exact {path,value,quote}, preserving every selected list member and all other mapped fields. A path suggested only by interpretation, with no explicit value in the source, must not be materialized or represented as verified. Preserve the complete original statement. If a genuinely material client MUST remains unresolved, emit one ASKED trace and its matching question; for provider-owned uncertainty use RESEARCH_REQUIRED with a concrete research task. Never silently discard an explicitly stated MUST or replace it with a different field.",
+                    "UNSATISFIED_DEPENDENCY": "If the original client quote explicitly establishes the parent need, extract parent and dependent detail together with the same genuine source quote, merging all explicitly required values in any multi-select list. If the quote does not establish the parent or detail, do not create either. Preserve supported clinical needs, and keep unspecified frequency/center/details UNKNOWN; mark a material unresolved client fact ASKED or provider-owned confirmation RESEARCH_REQUIRED. Never invent a frequency, place or capability.",
+                    "UNSUPPORTED_UNIT": "The source does not establish a supported unit for this field. Keep the exact original statement and other proven fields, but do not materialize an unsupported unit or invent/convert an amount. If the unit is decision-critical and client-owned, ask the client; if provider-owned, research it.",
                 },
                 "client_dimension_status": _minimum_dimension_status(user_text, questionnaire_state),
                 "clarification_contract": {
@@ -923,16 +966,61 @@ def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Opti
                 },
                 "prior_packet": {key: value for key, value in prior_packet.items() if key not in {"governance", "learning_center"}},
                 "rejected_wire_packet": getattr(error, "wire_diagnostic", None),
-                "instruction": "Return the complete corrected schema-constrained wire packet, including questionnaire_patch_fields and interview. Preserve explicit client facts and unknowns. Every KNOWN/USED canonical mapping must have one {path,value,quote} extraction entry unless that exact field is already supplied in questionnaire_state. Existing answers need their own source traces, not duplicate extraction entries. Use genuine original user_text quotes and full canonical paths. Known medical detail requires its explicitly established parent need with its own quote; never drop an explicit clinical need or infer a parent merely to pass validation. Omit unsupported inferred fields. Normalization reconstructs questionnaire_patch, questionnaire_patch_sources and decision_readiness; do not emit those legacy keys. If a material client question remains, put its question and unresolved-fact trace in interview; otherwise use the READY interview variant. Retain every selected property trace during repair.",
+                "instruction": "Return the complete corrected schema-constrained wire packet, including questionnaire_patch_fields and interview. Treat every ORIGINAL source-backed statement as a conservation obligation, not an invitation to rewrite history. Preserve every explicit fact and every member of multivalue client requirements, in all domains; do not patch one missing detail by dropping another. Each KNOWN/USED canonical field must either have its explicit exact {path,value,quote} (unless already in questionnaire_state), or be proven an unsupported model mapping and omitted without erasing the genuine source statement. Keep genuinely unresolved material MUST facts visible through the appropriate ASKED clarification or RESEARCH_REQUIRED task; never promote unknown into a proven match. A dependent clinical detail may be included only with its explicit parent need, based on a real quote. Do not infer unspecified frequency, center, cost, clinical capacity or availability. Retain exact source quotes, all selected property traces and other supported fields. Normalize via schema-constrained questionnaire_patch_fields and interview; do not output legacy questionnaire_patch keys. If a material client question remains, include one question plus matching unresolved trace; otherwise READY only when every client-owned blocking fact is resolved.",
             }
             repaired_packet = active_transport(repair_payload)
+            attempts = 1
             try:
                 result = validate_live_packet(repaired_packet)
             except RuntimeError as final_error:
-                if not hasattr(final_error, "patch_diagnostic"):
-                    final_error.patch_diagnostic = {"patch": repaired_packet.get("questionnaire_patch"), "sources": repaired_packet.get("questionnaire_patch_sources"), "statements": repaired_packet.get("statements"), "decision_readiness": repaired_packet.get("decision_readiness"), "next_question": repaired_packet.get("next_question")}
-                raise
-            result["packet_validation_repair"] = {"applied": True, "validation_error": code, "attempts": 1}
+                strict_wire = (repaired_packet.get("wire_contract") or {}).get("schema_constrained") is True
+                # One additional focused repair is allowed only for a live,
+                # schema-constrained packet and a source/field-conservation error.
+                # No changes to matching, MUST eligibility, or source authority.
+                recoverable = str(final_error).startswith((
+                    "SEMANTIC_AI_PATCH_CONTRACT:",
+                    "SEMANTIC_AI_FACT_LOSS:",
+                    "SEMANTIC_AI_SOURCE_COVERAGE_GAP:",
+                ))
+                if not (strict_wire and recoverable):
+                    if not hasattr(final_error, "patch_diagnostic"):
+                        final_error.patch_diagnostic = {"patch": repaired_packet.get("questionnaire_patch"), "sources": repaired_packet.get("questionnaire_patch_sources"), "statements": repaired_packet.get("statements"), "decision_readiness": repaired_packet.get("decision_readiness"), "next_question": repaired_packet.get("next_question")}
+                    raise
+                second_payload = dict(repair_payload)
+                second_repair = dict(repair_payload["packet_validation_repair"])
+                second_repair["validation_error"] = str(final_error)
+                second_repair["attempt"] = 2
+                second_repair["prior_packet"] = {
+                    key: value for key, value in repaired_packet.items()
+                    if key not in {"governance", "learning_center"}
+                }
+                second_repair["instruction"] = (
+                    "The previous repair still failed the exact validation_error. "
+                    "Return a fully corrected schema-constrained packet, preserving "
+                    "every originally quoted fact and multivalue item. Emit only "
+                    "source-proven field values. Unknown details remain explicitly "
+                    "unresolved, never invented or quietly discarded. Never change "
+                    "MUST status to force READY. Fix the specified field and its "
+                    "dependencies without losing unrelated facts, then preserve "
+                    "all selected questionnaire traces."
+                )
+                second_payload["packet_validation_repair"] = second_repair
+                second_packet = active_transport(second_payload)
+                attempts = 2
+                try:
+                    result = validate_live_packet(second_packet)
+                except RuntimeError as terminal_error:
+                    if not hasattr(terminal_error, "patch_diagnostic"):
+                        terminal_error.patch_diagnostic = {
+                            "patch": second_packet.get("questionnaire_patch"),
+                            "sources": second_packet.get("questionnaire_patch_sources"),
+                            "statements": second_packet.get("statements"),
+                            "decision_readiness": second_packet.get("decision_readiness"),
+                            "next_question": second_packet.get("next_question"),
+                            "attempts": attempts,
+                        }
+                    raise
+            result["packet_validation_repair"] = {"applied": True, "validation_error": code, "attempts": attempts}
     else:
         result = active_transport(payload)
         result = _validate_result(_ground_clinical_patch(result, user_text, questionnaire_state), allow_empty_statements=not user_text.strip())

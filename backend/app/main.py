@@ -819,6 +819,8 @@ class PatientComparisonContextRequestIn(BaseModel):
 
 class PatientDecisionEngineOut(BaseModel):
     patient_needs_profile: Dict[str, Any]
+    # Preserve the integrated engine's care options through HTTP and stored decisions.
+    care_partner_options: List[Dict[str, Any]] = Field(default_factory=list)
     # Aggregate only: candidate identities remain hidden while MUST evidence is pending.
     pending_evidence_summary: Optional[Dict[str, Any]] = None
     price_research_candidates: List[Dict[str, Any]] = Field(default_factory=list)
@@ -1043,7 +1045,6 @@ class IdentityRegistrationStartOut(BaseModel):
     email: str
     verification_sent_at: str
     verification_method: str
-    debug_verification_code: str
 
 
 class IdentityVerificationCompleteIn(BaseModel):
@@ -1868,7 +1869,7 @@ async def runtime_status():
     return get_runtime_sync_status()
 
 
-@app.get("/diagnostics/medication-evidence-audit")
+@app.get("/diagnostics/medication-evidence-audit", dependencies=[Depends(require_admin_token)])
 def medication_evidence_audit(db: Session = Depends(get_db)):
     from app.models.agent_execution import AgentKnowledgeRecord
     from app.services.governed_evidence_runtime import is_governed_positive_source
@@ -1964,7 +1965,7 @@ _MOTHER90_QUERY = (
 )
 
 
-@app.get("/diagnostics/must-gate-screen")
+@app.get("/diagnostics/must-gate-screen", dependencies=[Depends(require_admin_token)])
 def must_gate_screen(db: Session = Depends(get_db)):
     """Gold-dataset methodology, step 2: run one resident persona against every real
     facility in the canonical registry using the real MUST-gate engine
@@ -3102,7 +3103,12 @@ def post_personal_decision_report(payload: PersonalDecisionReportRequestIn, db: 
 
 @app.post("/decision-engine/comparison-context", response_model=PatientComparisonContextOut)
 def post_patient_comparison_context(payload: PatientComparisonContextRequestIn):
-    return build_patient_comparison_context(payload.canonical_facility_ids, payload.patient_needs_profile)
+    try:
+        return build_patient_comparison_context(payload.canonical_facility_ids, payload.patient_needs_profile)
+    except KeyError as error:
+        # Do not expose a server error or invent a comparison for IDs outside
+        # the canonical facility registry for the active market.
+        raise HTTPException(status_code=404, detail="Requested facility is not in the canonical registry") from error
 
 
 @app.post("/intelligence/run", response_model=IntelligenceRunSummaryOut)
@@ -3120,7 +3126,7 @@ async def run_intelligence(facility_id: Optional[int] = Query(default=None), db:
     )
 
 
-@app.get("/intelligence/facilities/{id}", response_model=FacilityIntelligenceProfileOut)
+@app.get("/intelligence/facilities/{id}", response_model=FacilityIntelligenceProfileOut, dependencies=[Depends(require_admin_token)])
 async def get_facility_intelligence_profile(id: int, db: Session = Depends(get_db)):
     profile = db.query(FacilityIntelligenceProfile).filter(FacilityIntelligenceProfile.facility_id == id).first()
     if not profile:
@@ -3200,7 +3206,7 @@ async def knowledge_freshness_states():
     }
 
 
-@app.get("/supervisor/overview", response_model=KnowledgeSupervisorOut)
+@app.get("/supervisor/overview", response_model=KnowledgeSupervisorOut, dependencies=[Depends(require_admin_token)])
 async def supervisor_overview(db: Session = Depends(get_db)):
     summary = compute_supervisor_metrics(db)
     return KnowledgeSupervisorOut(**summary)
@@ -3212,17 +3218,17 @@ async def supervisor_run_cycle(db: Session = Depends(get_db), _: None = Depends(
     return run_supervisor_cycle(db)
 
 
-@app.get("/supervisor/incidents")
+@app.get("/supervisor/incidents", dependencies=[Depends(require_admin_token)])
 async def supervisor_incidents(limit: int = Query(default=200, ge=1, le=1000), db: Session = Depends(get_db)):
     return {"incidents": recent_incidents(db, limit=limit)}
 
 
-@app.get("/supervisor/stale-usage")
+@app.get("/supervisor/stale-usage", dependencies=[Depends(require_admin_token)])
 async def supervisor_stale_usage(hours: int = Query(default=24, ge=1, le=24 * 30), db: Session = Depends(get_db)):
     return stale_usage_summary(db, hours=hours)
 
 
-@app.post("/recommendation/knowledge-guard", response_model=RecommendationGuardCheckOut)
+@app.post("/recommendation/knowledge-guard", response_model=RecommendationGuardCheckOut, dependencies=[Depends(require_admin_token)])
 async def recommendation_knowledge_guard(payload: RecommendationGuardCheckIn, db: Session = Depends(get_db)):
     ensure_reports_available(db)
     decisions: List[RecommendationGuardDecisionOut] = []
@@ -3240,7 +3246,7 @@ async def recommendation_knowledge_guard(payload: RecommendationGuardCheckIn, db
     return RecommendationGuardCheckOut(recommendation_key=payload.recommendation_key, decisions=decisions)
 
 
-@app.post("/human-intelligence", response_model=HumanIntelligenceOut)
+@app.post("/human-intelligence", response_model=HumanIntelligenceOut, dependencies=[Depends(require_admin_token)])
 async def create_human_intelligence(payload: HumanIntelligenceIn, db: Session = Depends(get_db)):
     def clip_optional(value: Optional[float]) -> Optional[float]:
         if value is None:
@@ -3276,7 +3282,7 @@ async def create_human_intelligence(payload: HumanIntelligenceIn, db: Session = 
     return HumanIntelligenceOut.model_validate(record)
 
 
-@app.post("/human-intelligence/adaptive-response", response_model=AdaptiveQuestionResponseOut)
+@app.post("/human-intelligence/adaptive-response", response_model=AdaptiveQuestionResponseOut, dependencies=[Depends(require_admin_token)])
 def create_adaptive_response(payload: AdaptiveQuestionResponseIn, db: Session = Depends(get_db)):
     record = AdaptiveQuestionResponse(
         resident_key=payload.resident_key,
@@ -3294,7 +3300,7 @@ def create_adaptive_response(payload: AdaptiveQuestionResponseIn, db: Session = 
     return AdaptiveQuestionResponseOut.model_validate(record)
 
 
-@app.post("/resident-outcomes", response_model=ResidentOutcomeOut)
+@app.post("/resident-outcomes", response_model=ResidentOutcomeOut, dependencies=[Depends(require_admin_token)])
 async def create_resident_outcome(payload: ResidentOutcomeIn, db: Session = Depends(get_db)):
     if payload.human_intelligence_score_id is not None:
         score_record = db.query(HumanIntelligenceScore).filter(HumanIntelligenceScore.id == payload.human_intelligence_score_id).first()
@@ -3372,7 +3378,7 @@ async def get_validation_feedback(db: Session = Depends(get_db)):
     )
 
 
-@app.post("/provider/facilities/{facility_id}/activities/import", response_model=ActivityImportOut)
+@app.post("/provider/facilities/{facility_id}/activities/import", response_model=ActivityImportOut, dependencies=[Depends(require_admin_token)])
 async def import_facility_activities(
     facility_id: int,
     payload: ActivityImportIn,
@@ -3427,7 +3433,7 @@ async def get_activity_intelligence_policy():
     }
 
 
-@app.post("/provider/facilities/{facility_id}/verification/persist", response_model=ProviderPersistOut)
+@app.post("/provider/facilities/{facility_id}/verification/persist", response_model=ProviderPersistOut, dependencies=[Depends(require_admin_token)])
 async def persist_provider_verification_answers(
     facility_id: int,
     payload: ProviderPersistIn,
@@ -3479,7 +3485,7 @@ async def get_facility_memory(
     )
 
 
-@app.post("/provider/facilities/{facility_id}/identity/register/start", response_model=IdentityRegistrationStartOut)
+@app.post("/provider/facilities/{facility_id}/identity/register/start", response_model=IdentityRegistrationStartOut, dependencies=[Depends(require_admin_token)])
 async def provider_identity_register_start(
     facility_id: int,
     payload: IdentityRegistrationStartIn,
@@ -3500,7 +3506,7 @@ async def provider_identity_register_start(
     return IdentityRegistrationStartOut(**result)
 
 
-@app.post("/provider/facilities/{facility_id}/identity/register/verify", response_model=IdentityVerificationCompleteOut)
+@app.post("/provider/facilities/{facility_id}/identity/register/verify", response_model=IdentityVerificationCompleteOut, dependencies=[Depends(require_admin_token)])
 async def provider_identity_register_verify(
     facility_id: int,
     payload: IdentityVerificationCompleteIn,
@@ -3519,7 +3525,7 @@ async def provider_identity_register_verify(
     return IdentityVerificationCompleteOut(**result)
 
 
-@app.post("/provider/facilities/{facility_id}/identity/license/validate", response_model=LicenseValidationOut)
+@app.post("/provider/facilities/{facility_id}/identity/license/validate", response_model=LicenseValidationOut, dependencies=[Depends(require_admin_token)])
 async def provider_identity_license_validate(
     facility_id: int,
     payload: LicenseValidationIn,
@@ -3547,7 +3553,7 @@ async def provider_identity_access_check(payload: AccessCheckIn):
     return AccessCheckOut(allowed=role_can_edit_category(payload.role, payload.category))
 
 
-@app.post("/provider/facilities/{facility_id}/identity/field-update", response_model=FieldUpdateOut)
+@app.post("/provider/facilities/{facility_id}/identity/field-update", response_model=FieldUpdateOut, dependencies=[Depends(require_admin_token)])
 async def provider_identity_field_update(
     facility_id: int,
     payload: FieldUpdateIn,
@@ -3571,7 +3577,7 @@ async def provider_identity_field_update(
     return FieldUpdateOut(**result)
 
 
-@app.post("/provider/facilities/{facility_id}/identity/audit/{audit_id}/revert", response_model=RevertAuditOut)
+@app.post("/provider/facilities/{facility_id}/identity/audit/{audit_id}/revert", response_model=RevertAuditOut, dependencies=[Depends(require_admin_token)])
 async def provider_identity_revert_audit(
     facility_id: int,
     audit_id: int,
@@ -3594,7 +3600,7 @@ async def provider_identity_revert_audit(
     return RevertAuditOut(**result)
 
 
-@app.post("/provider/facilities/{facility_id}/identity/staff/invite", response_model=IdentityRegistrationStartOut)
+@app.post("/provider/facilities/{facility_id}/identity/staff/invite", response_model=IdentityRegistrationStartOut, dependencies=[Depends(require_admin_token)])
 async def provider_identity_staff_invite(
     facility_id: int,
     payload: StaffInviteIn,
@@ -3618,7 +3624,7 @@ async def provider_identity_staff_invite(
     return IdentityRegistrationStartOut(**result)
 
 
-@app.post("/provider/facilities/{facility_id}/identity/role/change", response_model=RoleChangeOut)
+@app.post("/provider/facilities/{facility_id}/identity/role/change", response_model=RoleChangeOut, dependencies=[Depends(require_admin_token)])
 async def provider_identity_role_change(
     facility_id: int,
     payload: RoleChangeIn,
@@ -3651,13 +3657,13 @@ async def provider_facility_search(
     return [ClaimSearchOut(**row) for row in search_claimable_facilities(db, q, state, city, limit)]
 
 
-@app.post("/provider/demo/opticare")
+@app.post("/provider/demo/opticare", dependencies=[Depends(require_admin_token)])
 async def provider_portal_opticare_demo(db: Session = Depends(get_db)):
     """Create or return the one isolated, non-production portal test record."""
     return ensure_opticare_demo(db)
 
 
-@app.get("/provider/facilities/{facility_id}/profile")
+@app.get("/provider/facilities/{facility_id}/profile", dependencies=[Depends(require_admin_token)])
 async def provider_facility_profile(facility_id: int, db: Session = Depends(get_db)):
     try:
         return facility_profile_snapshot(db, facility_id)
@@ -3665,7 +3671,7 @@ async def provider_facility_profile(facility_id: int, db: Session = Depends(get_
         raise HTTPException(status_code=404, detail=str(error)) from error
 
 
-@app.put("/provider/facilities/{facility_id}/capabilities", response_model=CapabilitySaveOut)
+@app.put("/provider/facilities/{facility_id}/capabilities", response_model=CapabilitySaveOut, dependencies=[Depends(require_admin_token)])
 async def provider_facility_save_capabilities(
     facility_id: int,
     payload: CapabilitySaveIn,
@@ -3686,7 +3692,7 @@ async def provider_facility_save_capabilities(
     return CapabilitySaveOut(**result)
 
 
-@app.post("/provider/facilities/{facility_id}/photos")
+@app.post("/provider/facilities/{facility_id}/photos", dependencies=[Depends(require_admin_token)])
 async def provider_facility_add_photo(
     facility_id: int,
     payload: PhotoAddIn,
@@ -3708,7 +3714,7 @@ async def provider_facility_add_photo(
         raise HTTPException(status_code=400, detail=str(error)) from error
 
 
-@app.delete("/provider/facilities/{facility_id}/photos/{photo_id}")
+@app.delete("/provider/facilities/{facility_id}/photos/{photo_id}", dependencies=[Depends(require_admin_token)])
 async def provider_facility_remove_photo(
     facility_id: int,
     photo_id: int,
@@ -3729,7 +3735,7 @@ async def provider_facility_remove_photo(
         raise HTTPException(status_code=404, detail=str(error)) from error
 
 
-@app.get("/provider/facilities/{facility_id}/completeness")
+@app.get("/provider/facilities/{facility_id}/completeness", dependencies=[Depends(require_admin_token)])
 async def provider_facility_completeness(facility_id: int, db: Session = Depends(get_db)):
     return recompute_completeness(db, facility_id)
 

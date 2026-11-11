@@ -28,3 +28,22 @@ jobs:
           python-version: '3.12'
       - run: python -m pip install -r backend/requirements.txt pytest pytest-xdist httpx2
       - run: python scripts/run_backend_full_suite.py -n 4 --dist loadfile
+
+  excluded-route-contract:
+    # Run this formerly excluded end-to-end test independently so it cannot
+    # silently remain out of CI after its interpreter portability repair.
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      PYTHONPATH: backend:.:scripts
+      OPTIME_CANONICAL_MARKET: las-vegas
+      PYTHONHASHSEED: '0'
+      OPTIME_SEMANTIC_AI_ENABLED: '0'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r backend/requirements.txt pytest httpx2
+      - name: Run formerly excluded cross-platform decision routes E2E
+        run: python -m pytest backend/tests/test_decision_engine_routes.py::test_decision_routes_end_to_end -q

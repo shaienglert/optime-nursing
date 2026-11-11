@@ -27,6 +27,9 @@ sys.path.insert(0, str(HERE))
 from cases import CASES  # noqa: E402
 from diff_snaps import walk  # noqa: E402
 from advisory_contract import is_declared_advisory_change  # noqa: E402
+from semantic_delta import report_semantic_delta  # noqa: E402
+from approved_unknown_delta import approved_unknown_evidence_delta  # noqa: E402
+from coverage_parity_contract import is_additive_coverage_metadata  # noqa: E402
 
 
 def _warm_cache(backend: Path) -> None:
@@ -78,12 +81,27 @@ def compare(baseline: str, candidate: str, show: int = 12) -> int:
             total += 1
             continue
         diffs: list = []
-        walk(json.loads(a.read_text()), json.loads(b.read_text()), "$", diffs)
+        old_snapshot, new_snapshot = json.loads(a.read_text()), json.loads(b.read_text())
+        walk(old_snapshot, new_snapshot, "$", diffs)
+        if diffs and case in {"budget_medicaid_pending", "henderson_city"}:
+            report_semantic_delta(case, old_snapshot, new_snapshot)
         total += len(diffs)
+        approved_unknown = approved_unknown_evidence_delta(case, old_snapshot, new_snapshot, diffs)
+        if approved_unknown:
+            print(f"APPROVED_UNKNOWN_EVIDENCE_DELTA={len(approved_unknown)} "
+                  "(strict scenario invariant, unchanged facility order and scores)")
         # Owner-directed advisor presentation and additive authority/provenance fields.
         # Existing decision, ranking, requirement and evidence fields still match exactly.
         allowed += sum(
-            is_declared_advisory_change(path, kind) or kind == "added" and (
+            (
+                kind == "added"
+                and _old is None
+                and _new == []
+                and path in {
+                    "$.http_recommendations.body.care_partner_options",
+                    "$.db_side_effects.decision_artifacts[0].payload_json.care_partner_options",
+                }
+            ) or is_additive_coverage_metadata(path, kind, _old, _new) or is_declared_advisory_change(path, kind) or kind == "added" and (
                 path == "$.http_recommendations.body.decision_id"
                 or path == "$.db_side_effects.decision_artifacts"
                 # Additive intake-reuse contract. Existing signals, decisions,
@@ -102,9 +120,22 @@ def compare(baseline: str, candidate: str, show: int = 12) -> int:
                 or path.endswith(".intake_resolution")
                 or path.endswith(".source_backed_conflict_keys")
             )
-            for path, kind, _old, _new in diffs
+            for index, (path, kind, _old, _new) in enumerate(diffs)
+            if index not in approved_unknown
         )
+        allowed += len(approved_unknown)
         print(f"{case}: {'identical' if not diffs else f'{len(diffs)} differences'}")
+        if case == "budget_medicaid_pending" and diffs:
+            # Review every difference family before declaring a behaviour change.
+            # This does NOT alter which diffs fail the parity gate.
+            import re
+            from collections import Counter
+            shapes = Counter(
+                (re.sub(r"\[\d+\]", "[*]", path), kind)
+                for path, kind, _old, _new in diffs
+            )
+            for (shape, category), count in shapes.most_common():
+                print(f"PARITY_DIFF_SHAPE count={count} kind={category} path={shape}")
         for path, kind, x, y in diffs[:show]:
             print(f"    {path} [{kind}] {json.dumps(x, default=str)[:100]} -> {json.dumps(y, default=str)[:100]}")
     print(f"TOTAL_DIFFERENCES={total}")

@@ -273,7 +273,117 @@ def test_repeated_missing_selected_preference_cannot_claim_validated_packet():
     bad = packet()
     bad["wire_contract"] = {"schema_constrained": True}
     state = {"budget": 6500, "referenceLocationValue": "Las Vegas", "nearbyPlaces": ["Specialty art museum"], "nearbyPlacesImportance": "Nice to have"}
-    with patch("app.services.semantic_intent_ai._default_transport", side_effect=[deepcopy(bad), deepcopy(bad)]) as transport:
+    with patch("app.services.semantic_intent_ai._default_transport",
+               side_effect=[deepcopy(bad), deepcopy(bad), deepcopy(bad)]) as transport:
         with pytest.raises(RuntimeError, match="MISSING_SELECTED_PROPERTY_TRACE"):
             interpret_client_intent_with_ai(user_text=TEXT, questionnaire_state=state)
+    assert transport.call_count == 3
+
+
+def test_strict_interpreter_reasks_model_for_source_clause_it_omitted():
+    text = "Mom needs help bathing. Mom enjoys pottery."
+    def trace(quote):
+        return {"raw_text": quote, "meaning": quote, "importance": "CONTEXT",
+                "knowledge_state": "KNOWN", "status": "USED", "mapped_parameters": []}
+    base = {"decision_readiness": "READY", "next_question": None,
+            "questionnaire_patch": {}, "wire_contract": {"schema_constrained": True},
+            "statements": [trace("Mom needs help bathing.")]}
+    repaired = deepcopy(base)
+    repaired["statements"].append(trace("Mom enjoys pottery."))
+    with patch("app.services.semantic_intent_ai._validate_patch_contract", return_value=None):
+        with patch("app.services.semantic_intent_ai._default_transport",
+                   side_effect=[base, repaired]) as transport:
+            output = interpret_client_intent_with_ai(
+                user_text=text,
+                questionnaire_state={"budget": 6500, "referenceLocationValue": "Las Vegas"})
     assert transport.call_count == 2
+    assert "unaccounted_source_clauses" in transport.call_args.args[0]["packet_validation_repair"]
+    assert output["source_statement_audit"]["missing_source_trace_count"] == 0
+    assert output["source_statement_audit"]["semantic_coverage_percent"] is None
+
+
+def test_repair_contract_explicitly_preserves_all_extracted_list_members_without_guessing():
+    source = "My father needs dialysis three times a week and wound care in Las Vegas."
+    text = source + " His monthly budget is $6500."
+    original = packet()
+    original["questionnaire_patch"]["medicalCareProfile"]["needs"] = ["Dialysis", "Wound care"]
+    original["questionnaire_patch_sources"] = {"medicalCareProfile.needs": source}
+    original["statements"][0]["raw_text"] = source
+    original["statements"][0]["mapped_parameters"] = [
+        "medicalCareProfile.needs", "medicalCareProfile.woundCareFrequency",
+    ]
+    corrected = deepcopy(original)
+    corrected["statements"][0]["mapped_parameters"] = ["medicalCareProfile.needs"]
+    with patch("app.services.semantic_intent_ai._default_transport",
+               side_effect=[original, corrected]) as transport:
+        result = interpret_client_intent_with_ai(user_text=text)
+    instruction = transport.call_args.args[0]["packet_validation_repair"]["instruction"]
+    assert "every member of multivalue client requirements" in instruction
+    assert "do not infer unspecified frequency" in instruction.lower()
+    assert result["questionnaire_patch"]["medicalCareProfile"]["needs"] == ["Dialysis", "Wound care"]
+    assert "woundCareFrequency" not in result["questionnaire_patch"]["medicalCareProfile"]
+
+
+def test_strict_packet_keeps_auditing_already_classified_clause_without_false_block():
+    text = "They are a couple; he needs help bathing."
+    response = {
+        "decision_readiness": "READY", "next_question": None,
+        "questionnaire_patch": {},
+        "wire_contract": {"schema_constrained": True},
+        "statements": [{
+            "raw_text": "he needs help bathing.",
+            "meaning": "Help with bathing",
+            "status": "USED", "knowledge_state": "KNOWN",
+            "importance": "CONTEXT", "mapped_parameters": [],
+        }],
+    }
+    with patch("app.services.semantic_intent_ai._validate_patch_contract", return_value=None):
+        with patch("app.services.semantic_intent_ai._default_transport", return_value=response) as transport:
+            packet = interpret_client_intent_with_ai(
+                user_text=text, questionnaire_state={
+                    "budget": 6500, "referenceLocationValue": "Las Vegas",
+                })
+    assert transport.call_count == 1
+    assert any(row["statement"] == "They are a couple"
+               and row["trace_status"] == "MISSING_SOURCE_TRACE"
+               for row in packet["source_statement_audit"]["statements"])
+    assert packet["source_statement_audit"]["semantic_coverage_percent"] is None
+
+
+def test_strict_known_field_repair_gets_exactly_one_second_chance():
+    text = "The resident wants to keep their vintage piano."
+    bad = {"decision_readiness": "READY", "next_question": None,
+           "questionnaire_patch": {}, "wire_contract": {"schema_constrained": True},
+           "statements": [{"raw_text": text, "meaning": text, "importance": "NICE",
+                           "knowledge_state": "KNOWN", "status": "USED",
+                           "mapped_parameters": ["relationship"]}]}
+    fixed = deepcopy(bad)
+    fixed["statements"][0]["mapped_parameters"] = []
+    with patch("app.services.semantic_intent_ai._default_transport",
+               side_effect=[deepcopy(bad), deepcopy(bad), fixed]) as transport:
+        result = interpret_client_intent_with_ai(
+            user_text=text,
+            questionnaire_state={"budget": 6500, "referenceLocationValue": "Las Vegas"})
+    assert transport.call_count == 3
+    assert result["packet_validation_repair"]["attempts"] == 2
+    assert result["questionnaire_patch"] == {}
+    assert result["statements"][0]["raw_text"] == text
+    second = transport.call_args.args[0]["packet_validation_repair"]
+    assert second["attempt"] == 2
+    assert "KNOWN_FIELD_NOT_MATERIALIZED:relationship" in second["validation_error"]
+
+
+def test_strict_conservation_remains_blocked_after_second_bad_repair():
+    text = "The resident wants to keep their vintage piano."
+    bad = {"decision_readiness": "READY", "next_question": None,
+           "questionnaire_patch": {}, "wire_contract": {"schema_constrained": True},
+           "statements": [{"raw_text": text, "meaning": text, "importance": "NICE",
+                           "knowledge_state": "KNOWN", "status": "USED",
+                           "mapped_parameters": ["relationship"]}]}
+    with patch("app.services.semantic_intent_ai._default_transport",
+               side_effect=[deepcopy(bad), deepcopy(bad), deepcopy(bad)]) as transport:
+        with pytest.raises(RuntimeError, match="KNOWN_FIELD_NOT_MATERIALIZED:relationship"):
+            interpret_client_intent_with_ai(
+                user_text=text,
+                questionnaire_state={"budget": 6500, "referenceLocationValue": "Las Vegas"})
+    assert transport.call_count == 3
