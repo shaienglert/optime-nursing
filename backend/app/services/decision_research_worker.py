@@ -18,6 +18,7 @@ from app.services.decision_agent_bridge import QUEUE_TYPE
 from app.services.facility_parameter_service import get_canonical_facility_index
 from app.services.provider_housing_runtime import get_provider_housing_evidence
 from app.services.public_reputation_runtime import get_public_reputation
+from app.services.public_research_fetch import fetch_public_text
 from app.services.semantic_evidence_ai import capability_map, interpret_facility_evidence_with_ai
 
 _TIMEOUT = 12
@@ -45,16 +46,7 @@ def _norm(value: Any) -> str:
 
 
 def _fetch(url: str) -> tuple[str, int]:
-    response = requests.get(url, timeout=_TIMEOUT, headers={"User-Agent": "Mozilla/5.0 OPTIME Decision Evidence/1.0"}, allow_redirects=True)
-    # requests' default encoding guess (from headers alone, per RFC 2616) falls back to
-    # ISO-8859-1 for text/html with no explicit charset, which mangles punctuation
-    # (smart quotes, em dashes) on the overwhelming majority of modern sites that are
-    # actually UTF-8. Prefer UTF-8; only fall back to requests' own guess if that fails.
-    try:
-        text = response.content.decode("utf-8")
-    except UnicodeDecodeError:
-        text = response.text or ""
-    return text or "", int(response.status_code)
+    return fetch_public_text(url, timeout=_TIMEOUT)
 
 
 def _facility_tokens(facility_name: str) -> List[str]:
