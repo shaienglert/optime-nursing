@@ -15,6 +15,8 @@ os.environ["OPTIME_CANONICAL_MARKET"] = "synthetic-pilot"
 os.environ["OOMNIK_PILOT_CATALOG_SIZE"] = "500"
 os.environ["OOMNIK_PILOT_FACILITY_LIMIT"] = "500"
 os.environ["OOMNIK_ISOLATED_TEST_MODE"] = "1"
+os.environ["OPTIME_SEMANTIC_AI_ENABLED"] = "1"
+os.environ["OPTIME_SEMANTIC_AI_REQUIRED"] = "1"
 
 from cases import CASES
 from oracle import grade
