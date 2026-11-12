@@ -1,9 +1,13 @@
 """Preference sensitivity over the complete eligible pool; never a ranking authority."""
 from __future__ import annotations
 
+import logging
+import os
 from copy import deepcopy
 from typing import Any, Callable
 from app.services.oomniker_nth_contract import LABELS, NEARBY, acceptance_for, remove_nice, safe_nth_keys, waive_nth
+
+logger = logging.getLogger(__name__)
 
 DISPLAY_LIMIT = 5
 _IMPLICIT = {"BUDGET_FIT", "AVAILABILITY_FIT"}
@@ -179,6 +183,16 @@ def analyze_preferences(rows: list[dict], intent: dict, profile: dict,
             reranked = full_after[:window]
             promoted = [row for row in reranked if _identity(row) not in baseline_ids]
             diagnostic["new_recommendation_count"] = max(diagnostic["new_recommendation_count"], len(promoted))
+            if key == NEARBY and dynamic_preferences and os.getenv("OPTIME_LIVE_PREFERENCE_VERIFICATION") == "1":
+                # Evaluate only the synthetic candidates promoted by this counterfactual.
+                from app.services.semantic_preference_runtime import verify_dynamic_preferences
+                unchecked = [
+                    row for row in promoted
+                    if row.get("synthetic_pilot") is True
+                    and not (row.get("dynamic_preference_fit") or {}).get("assessments")
+                ]
+                if unchecked:
+                    verify_dynamic_preferences(unchecked, dynamic_preferences)
             displaced = [row for row in baseline if _identity(row) not in {_identity(r) for r in reranked}]
             proven = []
             blockers = set()
@@ -190,6 +204,13 @@ def analyze_preferences(rows: list[dict], intent: dict, profile: dict,
                     blockers.add("TIED_DISPLAY_ORDER_ONLY")
                     continue  # A display-order change inside a true tie is not a rank gain.
                 assessments = {str(a.get("preference_id")): a.get("status") for a in (row.get("dynamic_preference_fit") or {}).get("assessments") or []}
+                if key == NEARBY and row.get("synthetic_pilot") is True:
+                    logger.warning(
+                        "pilot_nearby_alternative facility=%s option=%s preference_statuses=%s",
+                        _identity(row),
+                        label,
+                        {pref_id: assessments.get(pref_id, "NOT_EVALUATED") for pref_id in sorted(remaining_dynamic)},
+                    )
                 unknown_ids = [pref_id for pref_id in remaining_dynamic if assessments.get(pref_id) not in {"MATCH", "NOT_APPLICABLE"}]
                 if unknown_ids:
                     blockers.add("OTHER_DYNAMIC_PREFERENCES_UNRESOLVED")
