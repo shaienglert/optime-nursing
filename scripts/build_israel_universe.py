@@ -84,6 +84,17 @@ def _evidence(key: str, record_id: str, retrieved_at: str) -> dict:
     }
 
 
+def _unknown() -> dict:
+    return {"value": None, "status": "UNKNOWN", "source": None, "basis": "UNKNOWN"}
+
+
+def _fact(value: object, source_key: str, basis: str) -> dict:
+    """One field with its own provenance. basis: SOURCE_LIST or REGULATORY_SCOPE."""
+    if value in (None, [], ""):
+        return _unknown()
+    return {"value": value, "status": "STATED", "source": source_key, "basis": basis}
+
+
 def _base(canonical_id: str, name: str, city: str | None, retrieved_at: str) -> dict:
     return {
         "canonical_id": canonical_id,
@@ -98,12 +109,16 @@ def _base(canonical_id: str, name: str, city: str | None, retrieved_at: str) -> 
         "website": None,
         "latitude": None,
         "longitude": None,
-        "license_id": None,
         "operator_name": None,
         "ownership_type": None,
-        "moh_code_agreement": "UNKNOWN",
-        "departments_reported": [],
-        "religion_attitude": [],
+        # Licensing, pricing and care capabilities are separate blocks with a
+        # source per field. Appearing in a list never makes a facility a match:
+        # UNKNOWN means the engine must ask or verify, never assume.
+        "licensing": {"authority": _unknown(), "license_id": _unknown(), "moh_code_agreement": _unknown()},
+        "pricing": {"currency": "ILS", "monthly_price": _unknown(), "deposit": _unknown(), "payment_tracks": _unknown()},
+        "care_capabilities": {"functional_levels_served": _unknown(), "departments": _unknown()},
+        "lifestyle": {"religion_attitude": _unknown()},
+        "matching_eligibility": "NOT_VERIFIED",
         "availability": "UNKNOWN",
         "merge_confidence": "NOT_MERGED",
         "data_quality_flags": [],
@@ -130,13 +145,15 @@ def build(raw_dir: Path = RAW_DIR) -> dict:
                 "facility_type": "מוסד סיעוד גריאטרי",
                 "source_facility_type": _clean(item["סוג מוסד"]),
                 "canonical_setting": "IL_GERIATRIC_NURSING_INSTITUTION",
-                "license_authority": "MINISTRY_OF_HEALTH",
-                "license_id": license_id,
                 "district": _clean(item["מחוז"]),
                 "ownership_type": _clean(item["בעלות"]),
-                "moh_code_agreement": {"כן": "YES", "לא": "NO"}.get(agreement or "", "UNKNOWN"),
-                # The list does not say which wards (סיעודי / תשו״ן) each institution runs.
-                "functional_levels_served": "UNKNOWN",
+                "licensing": {
+                    "authority": _fact("MINISTRY_OF_HEALTH", "moh", "SOURCE_LIST"),
+                    "license_id": _fact(license_id, "moh", "SOURCE_LIST"),
+                    "moh_code_agreement": _fact({"כן": "YES", "לא": "NO"}.get(agreement or ""), "moh", "SOURCE_LIST"),
+                },
+                # The MoH list does not say which wards (סיעודי / תשו״ן) each institution runs,
+                # so care_capabilities stays UNKNOWN.
                 "source_identity_ids": {"moh_license_id": license_id},
                 "source_evidence": _evidence("moh", license_id, retrieved_at),
             }
@@ -153,9 +170,16 @@ def build(raw_dir: Path = RAW_DIR) -> dict:
                     "facility_type": "בית אבות",
                     "source_facility_type": None,
                     "canonical_setting": "IL_OLD_AGE_HOME",
-                    "license_authority": "MINISTRY_OF_WELFARE",
+                    "licensing": {
+                        "authority": _fact("MINISTRY_OF_WELFARE", "welfare", "SOURCE_LIST"),
+                        "license_id": _unknown(),
+                        "moh_code_agreement": _unknown(),
+                    },
                     # Regulatory scope of a welfare-licensed home, not a facility-verified fact.
-                    "functional_levels_served": "REGULATORY_SCOPE_INDEPENDENT_AND_FRAIL",
+                    "care_capabilities": {
+                        "functional_levels_served": _fact(["INDEPENDENT", "FRAIL"], "welfare", "REGULATORY_SCOPE"),
+                        "departments": _unknown(),
+                    },
                     "source_identity_ids": {"welfare_list_serial": str(serial)},
                     "source_evidence": _evidence("welfare", str(serial), retrieved_at),
                 }
@@ -177,20 +201,29 @@ def build(raw_dir: Path = RAW_DIR) -> dict:
                 "facility_type": "דיור מוגן",
                 "source_facility_type": None,
                 "canonical_setting": "IL_PROTECTED_HOUSING",
-                "license_authority": "MINISTRY_OF_WELFARE",
-                "functional_levels_served": "REGULATORY_SCOPE_INDEPENDENT",
                 "operator_name": _clean(row["company"]),
                 "phone": phone.rstrip(":").strip() if phone else None,
                 "website": website,
-                "departments_reported": _split(_clean(row["treatment"])),
-                "religion_attitude": _split(_clean(row["religion_attitude"])),
+                "licensing": {
+                    "authority": _fact("MINISTRY_OF_WELFARE", "protected", "REGULATORY_SCOPE"),
+                    "license_id": _unknown(),
+                    "moh_code_agreement": _unknown(),
+                },
+                "care_capabilities": {
+                    "functional_levels_served": _fact(["INDEPENDENT"], "protected", "REGULATORY_SCOPE"),
+                    # Wards as the list reports them; not verified with the facility or a regulator.
+                    "departments": _fact(_split(_clean(row["treatment"])), "protected", "SOURCE_LIST"),
+                },
+                "lifestyle": {
+                    "religion_attitude": _fact(_split(_clean(row["religion_attitude"])), "protected", "SOURCE_LIST"),
+                },
                 "source_identity_ids": {"protected_housing_list_row": str(index)},
                 "source_evidence": _evidence("protected", str(index), retrieved_at),
             }
         )
         if malformed:
             record["data_quality_flags"].append("WEBSITE_HTML_MALFORMED_IN_SOURCE")
-        if not record["departments_reported"]:
+        if record["care_capabilities"]["departments"]["status"] == "UNKNOWN":
             record["data_quality_flags"].append("DEPARTMENTS_NOT_REPORTED")
         records.append(record)
 

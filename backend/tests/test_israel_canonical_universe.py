@@ -37,10 +37,32 @@ def test_every_record_carries_source_evidence():
 def test_missing_information_stays_unknown_not_negative():
     for r in _payload()["records"]:
         assert r["availability"] == "UNKNOWN"
+        licensing = r["licensing"]
         if r["canonical_setting"] == "IL_GERIATRIC_NURSING_INSTITUTION":
-            assert r["license_id"]
-            assert r["moh_code_agreement"] in {"YES", "NO"}
-            assert r["functional_levels_served"] == "UNKNOWN"
+            assert licensing["license_id"]["status"] == "STATED"
+            assert licensing["moh_code_agreement"]["value"] in {"YES", "NO"}
+            assert r["care_capabilities"]["functional_levels_served"]["status"] == "UNKNOWN"
         else:
-            assert r["moh_code_agreement"] == "UNKNOWN"
-            assert r["license_id"] is None
+            assert licensing["moh_code_agreement"]["status"] == "UNKNOWN"
+            assert licensing["license_id"]["status"] == "UNKNOWN"
+
+
+def test_every_stated_field_names_its_source_and_basis():
+    for r in _payload()["records"]:
+        evidence_keys = {key.split(":", 1)[0] for key in r["source_evidence"]}
+        for block in ("licensing", "pricing", "care_capabilities", "lifestyle"):
+            for name, fact in r[block].items():
+                if not isinstance(fact, dict):
+                    continue
+                if fact["status"] == "STATED":
+                    assert fact["source"] in evidence_keys, (r["canonical_id"], block, name)
+                    assert fact["basis"] in {"SOURCE_LIST", "REGULATORY_SCOPE"}
+                else:
+                    assert fact["value"] is None and fact["source"] is None
+
+
+def test_being_listed_never_makes_a_facility_a_match():
+    for r in _payload()["records"]:
+        assert r["matching_eligibility"] == "NOT_VERIFIED"
+        assert r["pricing"]["currency"] == "ILS"
+        assert r["pricing"]["monthly_price"]["status"] == "UNKNOWN"

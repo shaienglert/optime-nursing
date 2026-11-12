@@ -4,12 +4,20 @@ Recorded 2026-11-12. Owner approvals required by AGENTS.md (classes C/D/E).
 
 | # | Decision | Class | Owner answer |
 |---|---|---|---|
-| 1 | Deployment model | E | Separate deployment for Israel (`OPTIME_CANONICAL_MARKET=israel`); the Nevada pilot is untouched |
+| 1 | Deployment model | E | One shared engine, a separate deployment per market (`OPTIME_CANONICAL_MARKET=israel`). No second matching engine; the Nevada pilot is untouched |
 | 2 | Functional status (independent / frail / nursing / cognitively frail) as a MUST filter | C | Yes; unclear status means the system asks, never assumes |
 | 3 | Funding pathway (MoH "code", Welfare assistance, private) as a MUST filter | D | Yes; a family with a MoH code sees only institutions with a MoH agreement |
 | 4 | Commission on state-funded placements (MoH code / Welfare) | D | Charge the same as private placements. Legal question remains open and is the owner's accepted risk |
 | 5 | Family interface languages | C | Hebrew, Russian, Arabic, English |
 | 6 | Cross-list facility merging | C | None: every source row is its own facility record |
+
+## Shared engine vs. Israeli layer (owner, 2026-11-12)
+
+Shared by every market (one implementation, fixes land in both): interpreting the family's needs, MUST filtering, ranking, the match explanation, and OOmniker (suggests relaxing a preference only when at least two matching alternatives exist).
+
+Israeli layer only: Hebrew (and ru/ar/en) questionnaire, setting types, the facility registry, licensing sources, ILS prices, funding pathways, and facility contact.
+
+Licensing, pricing and care capabilities are stored as separate blocks with a source per field. Being on a list never makes a facility a match (`matching_eligibility: NOT_VERIFIED`); a MUST can pass only on a stated fact.
 
 ## Data (step 1, this branch)
 
