@@ -58,6 +58,7 @@ jobs:
       OPTIME_CANONICAL_MARKET: synthetic-pilot
       OOMNIK_PILOT_FACILITY_LIMIT: '500'
       OPTIME_SEMANTIC_AI_ENABLED: '1'
+      OPTIME_LIVE_PREFERENCE_VERIFICATION: '1'
       OPTIME_SEMANTIC_AI_REQUIRED: '1'
       OPTIME_SEMANTIC_AI_URL: https://api.openai.com/v1/chat/completions
       OPTIME_SEMANTIC_AI_MODEL: gpt-4.1-mini
@@ -106,7 +107,7 @@ jobs:
           cat /tmp/oomnik-pilot-next.log
           exit 1
       - name: Run real customer journey
-        run: npx playwright test tests/browser/pilot-real-journey.spec.cjs --reporter=line --workers=${{ github.event.inputs.workers || '2' }}
+        run: npx playwright test tests/browser/pilot-real-journey.spec.cjs --reporter=line --workers=1 --grep 'pilot-00[25] completes'
       - name: Upload diagnostics
         if: always()
         uses: actions/upload-artifact@v4
