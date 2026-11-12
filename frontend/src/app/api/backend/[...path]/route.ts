@@ -47,6 +47,9 @@ async function proxy(request: NextRequest, path: string[]): Promise<NextResponse
     const responseHeaders = new Headers();
     const responseContentType = response.headers.get("content-type");
     if (responseContentType) responseHeaders.set("content-type", responseContentType);
+    // Preserve upstream backoff guidance for browser retries after a 429.
+    const retryAfter = response.headers.get("retry-after");
+    if (retryAfter) responseHeaders.set("retry-after", retryAfter);
     responseHeaders.set("cache-control", "no-store");
 
     const body = await response.arrayBuffer();
