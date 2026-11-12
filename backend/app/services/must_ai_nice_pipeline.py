@@ -39,6 +39,7 @@ _FAMILY_CRITERIA_LENGTH = 6
 # comparator later changes without updating its explanation contract.
 _FINAL_BASE_DIMENSIONS = (
     ("strict_budget_before_expansion", "This option fits the stated monthly budget; the next option uses the permitted budget expansion."),
+    ("match_score", "This option has a higher match score after the mandatory eligibility and budget checks."),
     ("community_preference_evidence", "Verified evidence for your community preference distinguishes these options."),
     ("community_preference_fit", "This option better matches your stated community preference."),
     ("must_gate", "The recorded requirements gate distinguishes these options."),
@@ -62,7 +63,12 @@ def _family_criteria_key(row: Dict[str, Any]) -> tuple[Any, ...]:
 
 def _layered_rank(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     from app.services.regulatory_quality_layer import rank_with_evidence_layer
-    return rank_with_evidence_layer(rows, lambda row: (1 if row.get("budget_exception") else 0, *_family_criteria_key(row)), base_dimensions=_FINAL_BASE_DIMENSIONS)
+    def base_key(row: Dict[str, Any]) -> tuple[Any, ...]:
+        score = row.get("match_score")
+        score_key = -float(score) if isinstance(score, (int, float)) and not isinstance(score, bool) else 1.0
+        return (bool(row.get("budget_exception")), score_key, *_family_criteria_key(row))
+
+    return rank_with_evidence_layer(rows, base_key, base_dimensions=_FINAL_BASE_DIMENSIONS)
 
 
 def _rank_group_key(row: Dict[str, Any]) -> tuple[Any, ...]:
@@ -337,7 +343,7 @@ def apply_must_ai_nice_pipeline(
     decision["ranking_universe_audit"] = {
         "eligible_candidate_count": len(rankable),
         "eligible_candidate_order": [row.get("canonical_facility_id") for row in rankable],
-        "order": "BUDGET_BAND_THEN_EXPLICIT_PERSON_FIT_THEN_VERIFIED_NICE_THEN_REGULATORY_QUALITY",
+        "order": "BUDGET_BAND_THEN_MATCH_SCORE_THEN_EXPLICIT_PERSON_FIT_THEN_VERIFIED_NICE_THEN_REGULATORY_QUALITY",
         "shortlist_applied_after_full_universe_ranking": True,
     }
     interactive_shortlist_limit = _resolve_interactive_shortlist_limit(limit)
@@ -559,6 +565,19 @@ def apply_must_ai_nice_pipeline(
     complete_selected = [row for row in nice_complete_rows if str(row.get("canonical_facility_id")) in selected_ids]
     complete_beyond_display = [row for row in nice_complete_rows if str(row.get("canonical_facility_id")) not in selected_ids]
     pending_in_display_count = sum(1 for row in selected if row.get("must_eligibility") == "MUST_PENDING_VERIFICATION")
+
+    # Give the public ordering its own score. The evidence-match percentage is
+    # retained for audits and must not be confused with the budget-aware rank.
+    mixed_budget_bands = any(row.get("budget_exception") for row in ranked) and any(
+        not row.get("budget_exception") for row in ranked
+    )
+    for row in selected:
+        score = row.get("match_score")
+        if not isinstance(score, (int, float)) or isinstance(score, bool):
+            continue
+        if mixed_budget_bands:
+            score = score * 0.4999 if row.get("budget_exception") else 50 + score / 2
+        row["ranking_score"] = round(score, 3)
 
     result["results"] = selected
     result["tie_break_decisions"] = final_tie_breaks

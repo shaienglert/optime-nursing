@@ -15,7 +15,7 @@ function communities(count: number): string {
  * Says what the family's distance limit actually did -- never more.
  *
  * The limit is enforced only when the engine could measure from the place they chose. When
- * it could not, the page says so and that the results are not limited, rather than implying
+ * it could not, the page asks the family to confirm the reference point instead of implying
  * a limit that was never applied. Widening is offered, never done on the family's behalf.
  */
 export function DistanceScope({ scope, onWiden }: { scope?: LocationScope | null; onWiden: (miles: number) => void }) {
@@ -27,8 +27,8 @@ export function DistanceScope({ scope, onWiden }: { scope?: LocationScope | null
     return (
       <div className="mt-4 rounded-xl border border-line bg-sand p-5 text-lg leading-8 text-[#6d5426]" data-testid="distance-scope">
         <p>
-          I couldn’t measure distances from {place} yet, so these results are <strong>not limited to {scope.requested_miles} miles</strong>.
-          Please confirm travel distance before contacting a community.
+          I couldn’t measure distances from {place} yet. Confirm the starting location so I can show communities within <strong>{scope.requested_miles} miles</strong>.
+          Check the address or choose a nearby city as your starting point.
         </p>
         <p className="mt-2 text-base">{changeHint}</p>
       </div>
@@ -47,7 +47,7 @@ export function DistanceScope({ scope, onWiden }: { scope?: LocationScope | null
       </p>
       {unknown > 0 ? (
         <p className="mt-2 text-base">
-          {communities(unknown)} could not be measured and {unknown === 1 ? "is" : "are"} still included — please check {unknown === 1 ? "its" : "their"} distance.
+          {communities(unknown)} {unknown === 1 ? "was" : "were"} left out because I couldn’t verify the distance.
         </p>
       ) : null}
       {offer ? (

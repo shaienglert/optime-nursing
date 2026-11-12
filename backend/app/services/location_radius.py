@@ -202,7 +202,7 @@ def plan_radius_scope(
     if reference.get("status") != "RESOLVED":
         # Never imply a limit was enforced when there was nothing to measure from.
         return {
-            "rows": ranked_rows,
+            "rows": [],
             "scope": {
                 "requested_miles": requested,
                 "applied": False,
@@ -214,8 +214,12 @@ def plan_radius_scope(
         }
 
     effective = max(requested, approved) if approved else requested
-    measurable = [row for row in ranked_rows if isinstance(row.get("distance_miles"), (int, float))]
-    unmeasurable = [row for row in ranked_rows if not isinstance(row.get("distance_miles"), (int, float))]
+    def has_distance(row: Dict[str, Any]) -> bool:
+        value = row.get("distance_miles")
+        return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value) and value >= 0
+
+    measurable = [row for row in ranked_rows if has_distance(row)]
+    unmeasurable = [row for row in ranked_rows if not has_distance(row)]
 
     within = [row for row in measurable if row["distance_miles"] <= effective]
     beyond = sorted(
@@ -251,6 +255,5 @@ def plan_radius_scope(
         # The search is never widened on the family's behalf.
         "client_action": "CONFIRM_EXPANSION" if offer else None,
     }
-    # A community whose coordinates are missing is kept rather than silently dropped; the
-    # count above says how many could not be measured.
-    return {"rows": within + unmeasurable, "scope": scope}
+    # Missing coordinates cannot satisfy a mandatory radius.
+    return {"rows": within, "scope": scope}

@@ -357,6 +357,7 @@ export type DecisionEngineRecommendation = {
   eligibility_status: "ELIGIBLE" | "POTENTIALLY_ELIGIBLE" | "INSUFFICIENT_EVIDENCE" | "INELIGIBLE";
   match_score: number;
   patient_match_score: number;
+  ranking_score?: number;
   match_band: "STRONG_MATCH" | "GOOD_MATCH" | "PARTIAL_MATCH" | "LIMITED_MATCH";
   matched_needs: Array<Record<string, unknown>>;
   unmet_verified_needs: Array<Record<string, unknown>>;

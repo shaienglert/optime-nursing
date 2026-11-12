@@ -135,6 +135,7 @@ class AnUnplaceableReferencePointIsNeverPretendedTests(unittest.TestCase):
         self.assertFalse(plan["scope"]["applied"], "a radius was reported as applied with nothing to measure from")
         self.assertEqual("REFERENCE_POINT_NOT_GEOCODED", plan["scope"]["reason"])
         self.assertEqual("CONFIRM_LOCATION", plan["scope"]["client_action"])
+        self.assertEqual([], plan["rows"])
 
     def test_a_named_city_is_placed_and_marked_approximate(self):
         rows = [
@@ -159,13 +160,13 @@ class TheMeasurementItselfTests(unittest.TestCase):
         # formula rather than on the third decimal.
         self.assertAlmostEqual(13.0, haversine_miles((36.1699, -115.1398), (36.0395, -114.9817)), delta=1.5)
 
-    def test_a_community_with_no_coordinates_is_kept_and_counted_not_silently_dropped(self):
+    def test_a_community_with_no_coordinates_is_excluded_and_counted(self):
         rows = [
             {"canonical_facility_id": "NEAR", "distance_miles": 4.0},
             {"canonical_facility_id": "NO_COORDS", "distance_miles": None},
         ]
         plan = plan_radius_scope(rows, {"maximumDistanceMiles": "10"}, {"status": "RESOLVED"})
-        self.assertIn("NO_COORDS", {row["canonical_facility_id"] for row in plan["rows"]})
+        self.assertEqual({"NEAR"}, {row["canonical_facility_id"] for row in plan["rows"]})
         self.assertEqual(1, plan["scope"]["distance_unknown_count"])
 
 
