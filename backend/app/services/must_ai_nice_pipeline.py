@@ -566,6 +566,19 @@ def apply_must_ai_nice_pipeline(
     complete_beyond_display = [row for row in nice_complete_rows if str(row.get("canonical_facility_id")) not in selected_ids]
     pending_in_display_count = sum(1 for row in selected if row.get("must_eligibility") == "MUST_PENDING_VERIFICATION")
 
+    # Give the public ordering its own score. The evidence-match percentage is
+    # retained for audits and must not be confused with the budget-aware rank.
+    mixed_budget_bands = any(row.get("budget_exception") for row in ranked) and any(
+        not row.get("budget_exception") for row in ranked
+    )
+    for row in selected:
+        score = row.get("match_score")
+        if not isinstance(score, (int, float)) or isinstance(score, bool):
+            continue
+        if mixed_budget_bands:
+            score = score / 2 + (0 if row.get("budget_exception") else 50)
+        row["ranking_score"] = round(score, 3)
+
     result["results"] = selected
     result["tie_break_decisions"] = final_tie_breaks
     result["result_count"] = len(selected)
