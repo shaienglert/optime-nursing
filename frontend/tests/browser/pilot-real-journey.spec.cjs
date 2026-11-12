@@ -225,6 +225,19 @@ test.describe('real synthetic-pilot customer journey', () => {
     fs.writeFileSync(path.join(process.cwd(), 'pilot-results', `${scenario.id}-decision.json`), `${JSON.stringify(payload, null, 2)}\n`);
     const results = payload.results || [];
     const dynamicModel = payload.decision_intelligence.dynamic_preference_model;
+    // Diagnostic only: distinguish live semantic interpretation, AI ordering, and
+    // governed Oomniker alternatives; never log prompts, secrets, or family prose.
+    console.log('OOMNIK_LIVE_AI_DECISION_DIAGNOSTIC', JSON.stringify({
+      scenario_id: scenario.id,
+      semantic_status: payload.decision_intelligence?.human_intelligence?.semantic_ai?.status || null,
+      ai_ranking_status: payload.decision_intelligence?.facility_selection_pipeline?.ai_ranking?.status || null,
+      eligible_count: payload.must_eligible_count,
+      result_count: payload.result_count,
+      oomniker_suggestion_count: (payload.oomniker?.suggestions || []).length,
+      measured_nice_suggestions: (payload.oomniker?.suggestions || []).filter((item) =>
+        item.authority === 'PREFERENCE' && item.action === 'OFFER_PREFERENCE_ALTERNATIVE'
+        && item.new_recommendation_count >= 2).length,
+    }));
     expect(dynamicModel.preference_authority, JSON.stringify(payload.decision_intelligence.human_intelligence.semantic_ai)).toBe('QUOTED_STATEMENT_TRACES');
     expect(dynamicModel.preferences.every(pref => pref.source === 'semantic_ai.statements')).toBe(true);
     expect(dynamicModel.preferences.every(pref => !['Preference', 'Preferred', 'Nice to have', 'No preference'].includes(pref.client_expression))).toBe(true);
