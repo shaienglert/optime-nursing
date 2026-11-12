@@ -234,7 +234,7 @@ export function StructuredIntake() {
   function next() {
     cancelAdvance();
     if (!question) return;
-    if (onBudget && (priceFloorLoading || belowKnownFloor)) { setShowError(true); return; }
+    if (belowKnownFloor) { setShowError(true); return; }
     if (question.required && !isAnswered(question, context)) {
       setShowError(true);
       return;
