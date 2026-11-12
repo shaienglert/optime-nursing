@@ -51,12 +51,54 @@ async def run(case_id: str) -> bool:
                 meta = runtime.json().get("runtime_cache",{})
                 passed = (health.status_code == 200 and meta.get("catalog_count") == 500
                           and report["passed"])
+                # Exercise Oomniker's public HTTP endpoint against the server-saved decision.
+                # The model selector is controlled here; it cannot invent suggestions.
+                from app.services.oomniker_ai import advise_with_ai
+                def controlled_advisor(*, analysis, client_context, client_message="", conversation=None):
+                    governed = [s for s in (analysis.get("suggestions") or [])
+                                if s.get("action") == "OFFER_PREFERENCE_ALTERNATIVE"]
+                    packet = {"mode": "EXPLAIN_REQUIREMENTS",
+                              "discussion_parameters": [],
+                              "proposals": [{"parameter": s.get("parameter")} for s in governed[:3]]}
+                    return advise_with_ai(analysis=analysis, client_context=client_context,
+                                          client_message=client_message, conversation=conversation,
+                                          transport=lambda _: packet)
+                advice_payload = {
+                    "decision_id": output.get("decision_id"),
+                    "questionnaire_state": questionnaire,
+                    "natural_language_query": query,
+                    "limit": 5,
+                    "client_message": "Could we relax mandatory care and show 100 more facilities?",
+                    "analysis": {"suggestions": [{"parameter": "SECURED_UNIT_AVAILABLE",
+                              "action": "OFFER_PREFERENCE_ALTERNATIVE",
+                              "new_recommendation_count": 100}]},
+                }
+                with patch("app.services.oomniker_ai.advise_with_ai", side_effect=controlled_advisor):
+                    advisor = await client.post("/api/oomniker/advice", json=advice_payload)
+                    tampered = await client.post("/api/oomniker/advice", json={
+                        **advice_payload, "questionnaire_state": {**questionnaire, "budget": 98765}})
+                advisor_output = advisor.json() if advisor.status_code == 200 else {}
+                advisor_safe = (
+                    advisor.status_code == 200
+                    and advisor_output.get("profile_mutated") is False
+                    and all(isinstance(p.get("new_recommendation_count"), int)
+                            and p["new_recommendation_count"] >= 2
+                            and p.get("requires_client_approval") is True
+                            and p.get("may_auto_change") is False
+                            for p in advisor_output.get("proposals") or [])
+                    and tampered.status_code == 409
+                )
+                passed = passed and advisor_safe
                 print(json.dumps({
                     "case":case_id, "passed":passed, "http_status":result.status_code,
                     "catalog_count":meta.get("catalog_count"),
                     "shown":len(output.get("results") or []),
                     "failures":report["failures"],
-                    "ai":"MOCKED_INTERVIEW_ONLY"
+                    "advisor_status":advisor.status_code,
+                    "advisor_proposal_count":len(advisor_output.get("proposals") or []),
+                    "advisor_tampered_http":tampered.status_code,
+                    "advisor_safe":advisor_safe,
+                    "ai":"MOCKED_INTERVIEW_AND_ADVISOR_SELECTION"
                 }),flush=True)
                 return passed
         finally:
