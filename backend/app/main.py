@@ -1803,21 +1803,26 @@ def startup() -> None:
         err_msg = smtp_test_result.get("error_message", "unknown")
         print(f"SMTP_TEST: FAILED error_type={err_type} message={err_msg}")
 
-    # Refresh reports continuously in background so user requests never wait on research.
-    start_background_refresh_loop()
-    # Trigger daily executive intelligence report at 08:00 local server time.
-    start_executive_report_scheduler()
-    # Run heartbeat/dependency/full-cycle supervisor sweeps and the daily owner brief.
-    start_supervisor_scheduler()
-    # Track named competitors' public positioning/monetization/feature signals every 6h.
-    start_competitive_intelligence_scheduler()
-    # Weekly: senior-living construction starts, planned openings, and occupancy rates.
-    start_market_supply_intelligence_scheduler()
-    # Monthly public CMS snapshots for the market report, guarded by database freshness.
-    start_official_market_metrics_scheduler()
-    # Annual official state/Census population projections for 65+ and 75+ market context.
-    start_demographic_market_metrics_scheduler()
-    start_supplier_intelligence_scheduler()
+    # Isolated test services exercise matching, not autonomous intelligence workers.
+    # Production behavior is unchanged unless this explicit test-only flag is set.
+    if os.getenv("OOMNIK_ISOLATED_TEST_MODE", "0") == "1":
+        logger.info("isolated_test_mode: background schedulers disabled")
+    else:
+        # Refresh reports continuously in background so user requests never wait on research.
+        start_background_refresh_loop()
+        # Trigger daily executive intelligence report at 08:00 local server time.
+        start_executive_report_scheduler()
+        # Run heartbeat/dependency/full-cycle supervisor sweeps and the daily owner brief.
+        start_supervisor_scheduler()
+        # Track named competitors' public positioning/monetization/feature signals every 6h.
+        start_competitive_intelligence_scheduler()
+        # Weekly: senior-living construction starts, planned openings, and occupancy rates.
+        start_market_supply_intelligence_scheduler()
+        # Monthly public CMS snapshots for the market report, guarded by database freshness.
+        start_official_market_metrics_scheduler()
+        # Annual official state/Census population projections for 65+ and 75+ market context.
+        start_demographic_market_metrics_scheduler()
+        start_supplier_intelligence_scheduler()
     logger.info(
         "startup_completed facilities_imported=%s origins=%s",
         app.state.import_summary.get("facilities_imported"),
