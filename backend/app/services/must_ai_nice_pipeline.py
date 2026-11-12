@@ -343,7 +343,7 @@ def apply_must_ai_nice_pipeline(
     decision["ranking_universe_audit"] = {
         "eligible_candidate_count": len(rankable),
         "eligible_candidate_order": [row.get("canonical_facility_id") for row in rankable],
-        "order": "BUDGET_BAND_THEN_EXPLICIT_PERSON_FIT_THEN_VERIFIED_NICE_THEN_REGULATORY_QUALITY",
+        "order": "BUDGET_BAND_THEN_MATCH_SCORE_THEN_EXPLICIT_PERSON_FIT_THEN_VERIFIED_NICE_THEN_REGULATORY_QUALITY",
         "shortlist_applied_after_full_universe_ranking": True,
     }
     interactive_shortlist_limit = _resolve_interactive_shortlist_limit(limit)
@@ -576,7 +576,7 @@ def apply_must_ai_nice_pipeline(
         if not isinstance(score, (int, float)) or isinstance(score, bool):
             continue
         if mixed_budget_bands:
-            score = score / 2 + (0 if row.get("budget_exception") else 50)
+            score = score * 0.4999 if row.get("budget_exception") else 50 + score / 2
         row["ranking_score"] = round(score, 3)
 
     result["results"] = selected
