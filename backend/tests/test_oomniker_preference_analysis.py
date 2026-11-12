@@ -94,12 +94,19 @@ def test_exact_changed_size_trace_is_recomputed_but_unmapped_narrative_stays_unk
                               "mapped_parameters": ["humanIntelligenceV2.personalityProfile.communitySizePreference"]}]}
     assert analyze(pool(), dynamic_preference_count=1, dynamic_preferences=model)["suggestions"]
     model["preferences"].append({"preference_id": "other", "client_expression": "Quiet at night", "mapped_parameters": []})
-    assert not analyze(pool(), dynamic_preference_count=2, dynamic_preferences=model)["suggestions"]
+    offers = analyze(pool(), dynamic_preference_count=2, dynamic_preferences=model)["suggestions"]
+    assert offers
+    assert all(offer["new_recommendation_count"] >= 2 for offer in offers)
+    assert all("Some other preferences still need confirmation" in offer["message"] for offer in offers)
+    assert all("Quiet at night" in row["unresolved_preferences"] for offer in offers for row in offer["candidates"])
 
 def test_mixed_size_and_other_narrative_cannot_be_silently_dropped():
     model = {"preferences": [{"preference_id": "mixed", "client_expression": "Small and familiar with nightly concerts",
                               "mapped_parameters": ["humanIntelligenceV2.personalityProfile.communitySizePreference"]}]}
-    assert not analyze(pool(), dynamic_preference_count=1, dynamic_preferences=model)["suggestions"]
+    offers = analyze(pool(), dynamic_preference_count=1, dynamic_preferences=model)["suggestions"]
+    assert offers
+    assert all("Small and familiar with nightly concerts" in row["unresolved_preferences"]
+               for offer in offers for row in offer["candidates"])
 
 @pytest.mark.parametrize("value", ["Not important", "No preference", "None", ""])
 def test_neutral_source_is_not_an_advisor_preference_even_if_legacy_intent_says_nice(value):

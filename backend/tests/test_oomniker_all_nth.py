@@ -89,4 +89,6 @@ def test_arbitrary_dynamic_nth_is_analyzed_but_no_rank_effect_is_not_an_offer():
     assert item["label"] == "Quiet nights"
     assert item["status"] == "NO_VERIFIED_RANKING_EFFECT"
     assert item["new_recommendation_count"] == 0
-    assert not out["suggestions"]
+    assert all(offer["parameter"] != "pref:quiet" for offer in out["suggestions"])
+    assert all("Quiet nights" in row["unresolved_preferences"]
+               for offer in out["suggestions"] for row in offer["candidates"])
