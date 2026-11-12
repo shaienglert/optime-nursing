@@ -13,6 +13,7 @@ from urllib.parse import parse_qs, unquote, urlparse
 import requests
 from sqlalchemy.orm import Session
 
+from app.services.market_scope import active_state_code
 from app.models.external_discovery import ExternalSourceConnectorHealth, ExternalSourceRequestLog
 from app.models.facility import AnswerState, Facility, FacilityActivityCategory, FacilityCapability, FacilityDomainAllowlist, FacilityLicenseRecord
 from app.models.knowledge_fabric import KnowledgeEvidence, KnowledgeObject, KnowledgeObjectHistory
@@ -140,7 +141,7 @@ def _load_nevada_facilities(db: Session) -> List[Facility]:
     """Limit live discovery to the Nevada market, without a legacy county list."""
     return (
         db.query(Facility)
-        .filter(Facility.state == "NV")
+        .filter(Facility.state == active_state_code())
         .order_by(Facility.name.asc())
         .all()
     )

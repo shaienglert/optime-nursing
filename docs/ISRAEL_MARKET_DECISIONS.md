@@ -17,9 +17,14 @@ Recorded 2026-11-12. Owner approvals required by AGENTS.md (classes C/D/E).
 - Build: `python scripts/build_israel_universe.py` → `database/israel_facility_universe_canonical.json` (467 records: 255 MoH geriatric nursing institutions, 115 Welfare old-age homes, 97 protected-housing homes).
 - Missing fields (address, coordinates, availability, ward types in the MoH list) stay `null`/`UNKNOWN`; they are not negative evidence.
 
+## Market scope (step 2)
+
+- `market_scope.active_state_code()`: `IL` when `OPTIME_CANONICAL_MARKET=israel`, `NV` for every other market (unchanged behavior).
+- Startup on the Israeli market purges non-IL rows and imports the Israeli universe; facility routes, market reports and external discovery filter on the active market.
+
 ## Not done yet
 
-- Startup still enforces the Nevada scope (`purge_non_nevada_facilities`, Las Vegas runtime import) and routes filter on `NEVADA_STATE_CODE`; these must become market-aware before an Israeli deployment can serve requests.
+- The recommendation engine still reads Nevada-shaped care types; Israeli settings (`IL_*`) are not matched yet.
 - Structured profile fields for functional status and funding pathway.
 - Frontend i18n (he/ru/ar/en, RTL), ₪ and km.
 - Addresses and coordinates for distance filtering.

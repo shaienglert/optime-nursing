@@ -72,7 +72,9 @@ from app.services.demographic_market_metrics_service import (
     collect_official_demographic_market_metrics,
     start_demographic_market_metrics_scheduler,
 )
-from app.services.nevada_facility_scope import NEVADA_STATE_CODE, purge_non_nevada_facilities
+from app.services.nevada_facility_scope import NEVADA_STATE_CODE, purge_facilities_outside_state, purge_non_nevada_facilities
+from app.services.israel_facility_import import import_israel_facilities
+from app.services.market_scope import active_state_code, is_israel_market
 from app.services.nevada_runtime_facility_import import import_las_vegas_runtime_facilities
 from app.services.canonical_universe import configured_canonical_market
 from app.services.nearby_place_service import nearby_places
@@ -1750,9 +1752,14 @@ def startup() -> None:
     ensure_agent_knowledge_report_snapshot_schema(engine)
     db = SessionLocal()
     try:
-        purge_summary = purge_non_nevada_facilities(db)
-        logger.info("nevada_facility_scope_enforced %s", purge_summary)
-        runtime_import = import_las_vegas_runtime_facilities(db)
+        if is_israel_market():
+            purge_summary = purge_facilities_outside_state(db, active_state_code())
+            logger.info("israel_facility_scope_enforced %s", purge_summary)
+            runtime_import = import_israel_facilities(db)
+        else:
+            purge_summary = purge_non_nevada_facilities(db)
+            logger.info("nevada_facility_scope_enforced %s", purge_summary)
+            runtime_import = import_las_vegas_runtime_facilities(db)
         app.state.import_summary = {
             "facilities_imported": runtime_import["facilities_imported"],
             "missing_records": 0,
@@ -2059,7 +2066,7 @@ async def get_governance_runtime_context(db: Session = Depends(get_db)):
     canonical_payload = _load_json_file(canonical_path)
 
     facilities = db.query(Facility).filter(
-        Facility.state == NEVADA_STATE_CODE, Facility.cms_id != DEMO_CMS_ID
+        Facility.state == active_state_code(), Facility.cms_id != DEMO_CMS_ID
     ).order_by(Facility.id.asc()).all()
     profile_rows = db.query(FacilityIntelligenceProfile).filter(
         FacilityIntelligenceProfile.facility_id.in_([facility.id for facility in facilities])
@@ -2179,7 +2186,7 @@ async def get_facilities(q: Optional[str] = Query(default=None), db: Session = D
         return payload
 
     query = db.query(Facility).filter(
-        Facility.state == NEVADA_STATE_CODE, Facility.cms_id != DEMO_CMS_ID
+        Facility.state == active_state_code(), Facility.cms_id != DEMO_CMS_ID
     )
 
     term = (q or "").strip()
@@ -2311,7 +2318,7 @@ async def get_facility(id: int, db: Session = Depends(get_db)):
         )
 
     facility = db.query(Facility).filter(
-        Facility.id == id, Facility.state == NEVADA_STATE_CODE, Facility.cms_id != DEMO_CMS_ID
+        Facility.id == id, Facility.state == active_state_code(), Facility.cms_id != DEMO_CMS_ID
     ).first()
     if not facility:
         raise HTTPException(status_code=404, detail="Facility not found")
@@ -3003,7 +3010,7 @@ def post_patient_decision_recommendations(payload: PatientDecisionEngineRequestI
     ccn_to_facility_id = {
         str(facility.cms_id): int(facility.id)
         for facility in db.query(Facility.id, Facility.cms_id).filter(
-            Facility.state == NEVADA_STATE_CODE, Facility.cms_id != DEMO_CMS_ID
+            Facility.state == active_state_code(), Facility.cms_id != DEMO_CMS_ID
         ).all()
     }
     for result in response.get("results", []):

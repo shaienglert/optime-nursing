@@ -25,9 +25,14 @@ NEVADA_STATE_CODE = "NV"
 
 def purge_non_nevada_facilities(db: Session) -> Dict[str, int]:
     """Delete all facility rows outside Nevada and their facility-specific traces."""
+    return purge_facilities_outside_state(db, NEVADA_STATE_CODE)
+
+
+def purge_facilities_outside_state(db: Session, state_code: str) -> Dict[str, int]:
+    """Delete all facility rows outside one market's state code and their traces."""
     facilities = (
         db.query(Facility)
-        .filter(func.upper(func.trim(Facility.state)) != NEVADA_STATE_CODE)
+        .filter(func.upper(func.trim(Facility.state)) != state_code.upper())
         .order_by(Facility.id.asc())
         .all()
     )
