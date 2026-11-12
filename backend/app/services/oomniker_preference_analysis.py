@@ -190,11 +190,16 @@ def analyze_preferences(rows: list[dict], intent: dict, profile: dict,
                     blockers.add("TIED_DISPLAY_ORDER_ONLY")
                     continue  # A display-order change inside a true tie is not a rank gain.
                 assessments = {str(a.get("preference_id")): a.get("status") for a in (row.get("dynamic_preference_fit") or {}).get("assessments") or []}
-                unknown_ids = [pref_id for pref_id in remaining_dynamic if assessments.get(pref_id) not in {"MATCH", "NOT_APPLICABLE"}]
-                if unknown_ids:
-                    blockers.add("OTHER_DYNAMIC_PREFERENCES_UNRESOLVED")
-                    unresolved.update(str(pref.get("client_expression") or pref.get("semantic_meaning") or pref.get("preference_id")) for pref in (dynamic_preferences or {}).get("preferences") or [] if str(pref.get("preference_id")) in unknown_ids)
+                if any(assessments.get(pref_id) == "MISMATCH" for pref_id in remaining_dynamic):
+                    blockers.add("OTHER_DYNAMIC_PREFERENCES_MISMATCHED")
                     continue
+                unknown_ids = [pref_id for pref_id in remaining_dynamic if assessments.get(pref_id) not in {"MATCH", "NOT_APPLICABLE"}]
+                unverified_labels = {
+                    str(pref.get("client_expression") or pref.get("semantic_meaning") or pref.get("preference_id"))
+                    for pref in (dynamic_preferences or {}).get("preferences") or []
+                    if str(pref.get("preference_id")) in unknown_ids
+                }
+                unresolved.update(unverified_labels)
                 if dynamic_preference_count and dynamic_preferences is None and (row.get("dynamic_preference_fit") or {}).get("status") != "NICE_COMPLETE":
                     continue
                 remaining = nice_keys - _IMPLICIT - {key}
@@ -210,13 +215,15 @@ def analyze_preferences(rows: list[dict], intent: dict, profile: dict,
                     continue
                 proven.append({"canonical_facility_id": _identity(row), "facility_name": row.get("facility_name"),
                                "quality_advantage": advantage, "remaining_preference_matches": sorted(remaining),
-                               "unresolved_preferences": list(fit.get("nice_unknown") or []),
+                               "unresolved_preferences": sorted(unverified_labels | set(fit.get("nice_unknown") or [])),
                                "entrance_fee": row.get("entrance_fee"),
                                "synthetic_pilot": row.get("synthetic_pilot") is True})
             diagnostic["unresolved_other_preferences"] = sorted(unresolved)
             diagnostic["proposal_blockers"] = sorted(set(diagnostic["proposal_blockers"]) | blockers)
             if len(proven) < 2:
                 continue
+            has_unverified_preferences = any(candidate["unresolved_preferences"] for candidate in proven)
+            caveat = " Some other preferences still need confirmation." if has_unverified_preferences else ""
             suggestions.append({"parameter": key, "authority": "PREFERENCE",
                                 "action": "OFFER_PREFERENCE_ALTERNATIVE", "alternative_value": label,
                                 "label": diagnostic["label"],
@@ -226,7 +233,7 @@ def analyze_preferences(rows: list[dict], intent: dict, profile: dict,
                                 "additional_eligible_count": 0, "candidates": proven,
                                 "requires_client_approval": True, "may_auto_change": False,
                                 "basis": "SAME_COMPARATOR_FULL_ELIGIBLE_UNIVERSE",
-                                "message": f"If you are comfortable with {label.lower()}, {len(proven)} additional communities enter the first {window} recommendations. They meet the verified requirements and the other explicit preferences; their quality evidence is shown below. They were already eligible, rather than excluded."})
+                                "message": f"If you are comfortable with {label.lower()}, {len(proven)} additional communities enter the first {window} recommendations. They meet the verified requirements and were already eligible. Their quality evidence is shown below.{caveat}"})
         diagnostic["status"] = "MEASURED_ALTERNATIVES" if any(s["parameter"] == key for s in suggestions) else "NO_PROVEN_MINIMUM_TWO"
     # Open-ended NTHs are included in the advisor's evidence discussion. They do
     # not currently enter the deterministic comparator; removing one therefore
