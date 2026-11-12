@@ -29,7 +29,7 @@ async def run(case_id: str) -> bool:
     questionnaire = case["questionnaire"]
     query = case["query"]
     with patch("app.services.human_intelligence_runtime_verified.interpret_client_intent_with_ai", return_value=FIXED_AI):
-        await app.router.startup()
+        await app.router._startup()
         try:
             transport = ASGITransport(app=app, raise_app_exceptions=False)
             async with AsyncClient(transport=transport, base_url="http://isolated.test", timeout=180) as client:
@@ -58,7 +58,7 @@ async def run(case_id: str) -> bool:
                 }),flush=True)
                 return passed
         finally:
-            await app.router.shutdown()
+            await app.router._shutdown()
 
 if __name__ == "__main__":
     if len(sys.argv)!=2 or sys.argv[1] not in CASES:
