@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from copy import deepcopy
 from typing import Any, Callable
 from app.services.oomniker_nth_contract import LABELS, NEARBY, acceptance_for, remove_nice, safe_nth_keys, waive_nth
@@ -182,6 +183,16 @@ def analyze_preferences(rows: list[dict], intent: dict, profile: dict,
             reranked = full_after[:window]
             promoted = [row for row in reranked if _identity(row) not in baseline_ids]
             diagnostic["new_recommendation_count"] = max(diagnostic["new_recommendation_count"], len(promoted))
+            if key == NEARBY and dynamic_preferences and os.getenv("OPTIME_LIVE_PREFERENCE_VERIFICATION") == "1":
+                # Evaluate only the synthetic candidates promoted by this counterfactual.
+                from app.services.semantic_preference_runtime import verify_dynamic_preferences
+                unchecked = [
+                    row for row in promoted
+                    if row.get("synthetic_pilot") is True
+                    and not (row.get("dynamic_preference_fit") or {}).get("assessments")
+                ]
+                if unchecked:
+                    verify_dynamic_preferences(unchecked, dynamic_preferences)
             displaced = [row for row in baseline if _identity(row) not in {_identity(r) for r in reranked}]
             proven = []
             blockers = set()
