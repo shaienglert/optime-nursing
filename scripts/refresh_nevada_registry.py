@@ -209,7 +209,7 @@ def analyze_credential_rotations(
 
     def key(row: Dict[str, str]) -> tuple[str, str]:
         credential = str(row.get("credential_number") or "")
-        base = re.sub(r"-\\d+$", "", credential)
+        base = re.sub(r"-[0-9]+$", "", credential)
         address = re.sub(r"[^A-Z0-9]", "", str(row.get("address") or "").upper())
         return base, address
 
