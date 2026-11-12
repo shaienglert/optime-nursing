@@ -1,9 +1,12 @@
 """Preference sensitivity over the complete eligible pool; never a ranking authority."""
 from __future__ import annotations
 
+import logging
 from copy import deepcopy
 from typing import Any, Callable
 from app.services.oomniker_nth_contract import LABELS, NEARBY, acceptance_for, remove_nice, safe_nth_keys, waive_nth
+
+logger = logging.getLogger(__name__)
 
 DISPLAY_LIMIT = 5
 _IMPLICIT = {"BUDGET_FIT", "AVAILABILITY_FIT"}
@@ -190,6 +193,13 @@ def analyze_preferences(rows: list[dict], intent: dict, profile: dict,
                     blockers.add("TIED_DISPLAY_ORDER_ONLY")
                     continue  # A display-order change inside a true tie is not a rank gain.
                 assessments = {str(a.get("preference_id")): a.get("status") for a in (row.get("dynamic_preference_fit") or {}).get("assessments") or []}
+                if key == NEARBY and row.get("synthetic_pilot") is True:
+                    logger.warning(
+                        "pilot_nearby_alternative facility=%s option=%s preference_statuses=%s",
+                        _identity(row),
+                        label,
+                        {pref_id: assessments.get(pref_id, "NOT_EVALUATED") for pref_id in sorted(remaining_dynamic)},
+                    )
                 unknown_ids = [pref_id for pref_id in remaining_dynamic if assessments.get(pref_id) not in {"MATCH", "NOT_APPLICABLE"}]
                 if unknown_ids:
                     blockers.add("OTHER_DYNAMIC_PREFERENCES_UNRESOLVED")
