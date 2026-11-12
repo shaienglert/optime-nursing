@@ -44,6 +44,27 @@ def extract_semantic_facility_requirements(result: Dict[str, Any], questionnaire
             "source": "QUESTIONNAIRE_CLIENT_INTENT",
         })
 
+    medical = (questionnaire_state or {}).get("medicalCareProfile") or {}
+    needs = {str(value).strip().lower() for value in medical.get("needs") or []}
+    for service, field, parameter in (
+        ("dialysis", "dialysisFrequency", "dialysis_arrangements"),
+        ("wound care", "woundCareFrequency", "wound_care"),
+    ):
+        if service not in needs:
+            continue
+        key = f"STRUCTURED_{service.upper().replace(' ', '_')}_REQUIRED"
+        frequency = str(medical.get(field) or "").strip()
+        requirements.append({
+            "key": key,
+            "dimension": "clinical_acuity",
+            "reason": f"The structured profile requires {service}.",
+            "research_task": f"Verify {service} capability and the requested schedule with the facility.",
+            "mapped_parameters": [parameter],
+            "source": "QUESTIONNAIRE_CLIENT_INTENT",
+            "frequency": frequency,
+            "transport_required": service == "dialysis" and _upper(medical.get("dialysisTransportation")) == "YES",
+        })
+
     statements = _semantic_result(result).get("statements") or []
     for statement in statements:
         if not isinstance(statement, dict):
@@ -293,6 +314,48 @@ def _pilot_verifies_requirement(row: Dict[str, Any], requirement: Dict[str, Any]
     return _payload_verifies(payload, key) is True
 
 
+def _weekly_schedule(value: str) -> int | None:
+    value = value.strip().lower()
+    if value in {"daily", "every day"}:
+        return 7
+    match = re.fullmatch(r"(\d+|one|two|three|four|five|six|seven)\s*(?:times?|sessions?|x)?\s*(?:(?:a|per)\s+)?(?:week|weekly)", value)
+    if not match:
+        return None
+    number = match.group(1)
+    count = int(number) if number.isdigit() else ("one", "two", "three", "four", "five", "six", "seven").index(number) + 1
+    return count if count > 0 else None
+
+
+def _verifies_structured_treatment(row: Dict[str, Any], requirement: Dict[str, Any]) -> bool:
+    pilot = governed_evidence_runtime.pilot_service_payload(row)
+    provider = row.get("provider_housing_evidence") or {}
+    direct = provider.get("evidence") if provider.get("primary_source_url") else None
+    payloads = [payload for payload in (pilot, direct) if isinstance(payload, dict)]
+    frequency = requirement["frequency"]
+    requested = _weekly_schedule(frequency)
+    if frequency and requested is None:
+        return False
+
+    dialysis = requirement["key"] == "STRUCTURED_DIALYSIS_REQUIRED"
+    for payload in payloads:
+        capability = "dialysis_verified" if dialysis else "wound_care_verified"
+        if payload.get(capability) is not True:
+            continue
+        if requirement["transport_required"] and payload.get("dialysis_transport_verified") is not True:
+            continue
+        if requested is None:
+            return True
+        if dialysis:
+            capacity = payload.get("dialysis_sessions_per_week")
+            if isinstance(capacity, int) and not isinstance(capacity, bool) and capacity >= requested:
+                return True
+        else:
+            capacity = _weekly_schedule(str(payload.get("wound_care_frequency") or ""))
+            if capacity is not None and capacity >= requested:
+                return True
+    return False
+
+
 def _row_verifies_future_care(row: Dict[str, Any]) -> bool:
     """Accept continuum proof only from the evidence record that owns that claim.
 
@@ -475,7 +538,9 @@ def apply_semantic_facility_requirements(result: Dict[str, Any], *, research_lim
                 # blanket True that accepts an unsupported language or treatment.
                 pilot = governed_evidence_runtime.pilot_service_payload(row)
                 verdicts = [_payload_verifies(payload, key) for payload in payloads if payload is not pilot]
-                if key == "SEMANTIC_FUTURE_CARE_PATH":
+                if key in {"STRUCTURED_DIALYSIS_REQUIRED", "STRUCTURED_WOUND_CARE_REQUIRED"}:
+                    verified = _verifies_structured_treatment(row, requirement)
+                elif key == "SEMANTIC_FUTURE_CARE_PATH":
                     verified = _row_verifies_future_care(row)
                 elif key == "SEMANTIC_BUDGET_VERIFICATION":
                     # Disclosure proves that rates are published, not that the
