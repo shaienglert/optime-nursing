@@ -39,6 +39,7 @@ _FAMILY_CRITERIA_LENGTH = 6
 # comparator later changes without updating its explanation contract.
 _FINAL_BASE_DIMENSIONS = (
     ("strict_budget_before_expansion", "This option fits the stated monthly budget; the next option uses the permitted budget expansion."),
+    ("match_score", "This option has a higher match score after the mandatory eligibility and budget checks."),
     ("community_preference_evidence", "Verified evidence for your community preference distinguishes these options."),
     ("community_preference_fit", "This option better matches your stated community preference."),
     ("must_gate", "The recorded requirements gate distinguishes these options."),
@@ -62,7 +63,12 @@ def _family_criteria_key(row: Dict[str, Any]) -> tuple[Any, ...]:
 
 def _layered_rank(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     from app.services.regulatory_quality_layer import rank_with_evidence_layer
-    return rank_with_evidence_layer(rows, lambda row: (1 if row.get("budget_exception") else 0, *_family_criteria_key(row)), base_dimensions=_FINAL_BASE_DIMENSIONS)
+    def base_key(row: Dict[str, Any]) -> tuple[Any, ...]:
+        score = row.get("match_score")
+        score_key = -float(score) if isinstance(score, (int, float)) and not isinstance(score, bool) else 1.0
+        return (bool(row.get("budget_exception")), score_key, *_family_criteria_key(row))
+
+    return rank_with_evidence_layer(rows, base_key, base_dimensions=_FINAL_BASE_DIMENSIONS)
 
 
 def _rank_group_key(row: Dict[str, Any]) -> tuple[Any, ...]:
