@@ -197,6 +197,47 @@ def merge_with_untouched(
     return merged, len(carried)
 
 
+def analyze_credential_rotations(
+    existing_records: List[Dict[str, str]], refreshed_records: List[Dict[str, str]]
+) -> Dict[str, Any]:
+    """Report probable renewals without treating them as proven identity matches.
+
+    Nevada credentials commonly end in a revision suffix. A shared base alone
+    does not authorize merging; require a matching normalized address as well.
+    """
+    import re
+
+    def key(row: Dict[str, str]) -> tuple[str, str]:
+        credential = str(row.get("credential_number") or "")
+        base = re.sub(r"-[0-9]+$", "", credential)
+        address = re.sub(r"[^A-Z0-9]", "", str(row.get("address") or "").upper())
+        return base, address
+
+    old = {str(row.get("credential_number") or ""): row for row in existing_records}
+    new = {str(row.get("credential_number") or ""): row for row in refreshed_records}
+    removed = {number: row for number, row in old.items() if number and number not in new}
+    added = {number: row for number, row in new.items() if number and number not in old}
+    added_by_key: Dict[tuple[str, str], List[str]] = {}
+    for number, row in added.items():
+        base, address = key(row)
+        if base and address:
+            added_by_key.setdefault((base, address), []).append(number)
+
+    candidates = []
+    for number, row in removed.items():
+        base, address = key(row)
+        matches = added_by_key.get((base, address), []) if base and address else []
+        if len(matches) == 1:
+            candidates.append({"previous": number, "current": matches[0]})
+    return {
+        "probable_renewals_count": len(candidates),
+        "probable_renewals_sample": candidates[:50],
+        "unmatched_removed_count": len(removed) - len(candidates),
+        "unmatched_added_count": len(added) - len({row["current"] for row in candidates}),
+        "identity_note": "Probable only: same credential base and normalized address; never auto-merge.",
+    }
+
+
 def credibility_check(new_count: int, previous_count: int) -> tuple[bool, str]:
     if previous_count == 0:
         return True, "no previous registry to compare against"
@@ -310,6 +351,7 @@ def main() -> int:
         summary["licences_removed"] = sorted(previous_credentials - new_credentials)[:50]
         summary["licences_added_count"] = len(new_credentials - previous_credentials)
         summary["licences_removed_count"] = len(previous_credentials - new_credentials)
+        summary["credential_rotation_analysis"] = analyze_credential_rotations(existing_records, merged)
 
         if not args.dry_run:
             document = {
