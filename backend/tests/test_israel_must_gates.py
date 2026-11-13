@@ -72,3 +72,11 @@ def test_shared_evaluator_applies_israeli_gates():
     fits = _registered(MOH_YES, departments=["סיעודית"], moh_agreement="YES")
     fit = evaluate_candidate_intent(fits, intent)
     assert {"IL_FUNCTIONAL_LEVEL", "IL_MOH_CODE_AGREEMENT"} <= set(fit["must_pass"])
+
+
+def test_israeli_answers_survive_the_structured_profile():
+    from app.services.canonical_structured_profile import build_structured_profile, materialize_questionnaire
+
+    answers = {"functionalLevel": "NURSING", "fundingPathway": "MOH_CODE", "city": "חיפה", "maxDistanceKm": 20}
+    restored = materialize_questionnaire(build_structured_profile({"israelMarket": answers}))
+    assert restored["israelMarket"] == answers

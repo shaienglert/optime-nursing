@@ -42,6 +42,16 @@ export type QuestionnaireState = {
   medicaidOriginalBudget?: number;
   moveTiming: string;
   careSearchApproach: string;
+  // Israeli market answers (local layer). Decided by the family's own buttons.
+  israelMarket?: {
+    relationship: string;
+    ageGroup: string;
+    functionalLevel: "INDEPENDENT" | "FRAIL" | "NURSING" | "COGNITIVE_FRAIL" | "UNCLEAR";
+    fundingPathway: "MOH_CODE" | "WELFARE_ASSISTANCE" | "PRIVATE" | "UNCLEAR";
+    city: string;
+    maxDistanceKm: number | null;
+    monthlyBudgetIls: number | null;
+  };
   questionnaireCompletion: {
     // Explicit advisor consent is a UI control, not an AI-extracted resident fact.
     oomnikerRelaxedPreferences?: Array<{ parameter: string; input_fingerprint: string }>;

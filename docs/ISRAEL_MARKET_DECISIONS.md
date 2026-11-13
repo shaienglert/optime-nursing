@@ -49,10 +49,16 @@ The existing `LICENSE_CURRENTLY_VALID` MUST reads license status and expiry; for
 - On the Israeli market the shared evaluator overlays the registration onto the candidate row as `FACILITY_SUPPLIED` facts, including `license_status`/`expiration_date` for `LICENSE_CURRENTLY_VALID`. An unregistered facility stays PENDING.
 - Hebrew RTL form: `/provider/{facilityId}/israel`.
 
+## Family questionnaire (step 5)
+
+- Hebrew RTL intake at `/he/intake`: relationship, age, functional level (with an explicit "not sure"), funding pathway, monthly budget in ₪ (private only), city, maximum distance in km, free text.
+- Writes `questionnaireState.israelMarket` (schema fields allowlisted) and continues to `/results`. Free text goes to `notes` for the shared AI interpreter.
+- "Not sure" is stored as UNCLEAR: the engine keeps every facility PENDING; the page tells the family no facility will be shown as a match until it is clear.
+
 ## Not done yet
 
 - Nevada-specific need gates (ADL, medication, memory care) still read Nevada evidence; for Israel they stay PENDING until Israeli evidence exists.
-- Site shell (header, menu) is still English.
-- Questionnaire screens that collect `israelMarket.functionalLevel` and `israelMarket.fundingPathway` (schema fields exist).
-- Frontend i18n (he/ru/ar/en, RTL), ₪ and km.
-- Addresses and coordinates for distance filtering.
+- Results page, adaptive interview and site shell are still English.
+- A follow-up flow that helps a family who chose "not sure" settle the functional level.
+- Distance filtering in km (needs facility addresses/coordinates).
+- Russian, Arabic and English versions of the Israeli intake.
