@@ -1143,6 +1143,18 @@ class ClaimSearchOut(BaseModel):
     already_claimed: bool
 
 
+class IsraelRegistrationIn(BaseModel):
+    user_id: int
+    functional_levels_served: List[str]
+    moh_code_agreement: str
+    license_id: str
+    license_authority: str
+    license_expiration_date: str
+    monthly_price_ils: Optional[int] = None
+    deposit_ils: Optional[int] = None
+    ip_address: Optional[str] = None
+
+
 class CapabilitySaveIn(BaseModel):
     user_id: int
     answers: Dict[str, str]
@@ -3691,6 +3703,25 @@ async def provider_facility_save_capabilities(
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error)) from error
     return CapabilitySaveOut(**result)
+
+
+@app.put("/provider/facilities/{facility_id}/israel-registration")
+async def provider_facility_save_israel_registration(
+    facility_id: int,
+    payload: IsraelRegistrationIn,
+    db: Session = Depends(get_db),
+):
+    from app.services.israel_facility_registration import save_israel_registration
+
+    data = payload.model_dump() if hasattr(payload, "model_dump") else payload.dict()
+    user_id = data.pop("user_id")
+    ip_address = data.pop("ip_address", None)
+    try:
+        return save_israel_registration(db, facility_id, user_id, data, ip_address=ip_address)
+    except PermissionError as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
 
 
 @app.post("/provider/facilities/{facility_id}/photos")

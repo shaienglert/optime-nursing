@@ -43,10 +43,16 @@ Shared evaluator `client_intent_runtime.evaluate_candidate_intent` handles two I
 
 The existing `LICENSE_CURRENTLY_VALID` MUST reads license status and expiry; for Israel these come from the facility's registration.
 
+## Facility registration (step 4)
+
+- `PUT /provider/facilities/{id}/israel-registration` (same portal identity and role model as capabilities; OWNER/ADMIN/CLINICAL_DIRECTOR). Stores functional levels served, MoH code agreement, license authority/number/expiry, monthly price and deposit (₪) in `facility_market_registrations`, with an audit row per change.
+- On the Israeli market the shared evaluator overlays the registration onto the candidate row as `FACILITY_SUPPLIED` facts, including `license_status`/`expiration_date` for `LICENSE_CURRENTLY_VALID`. An unregistered facility stays PENDING.
+- Hebrew RTL form: `/provider/{facilityId}/israel`.
+
 ## Not done yet
 
 - Nevada-specific need gates (ADL, medication, memory care) still read Nevada evidence; for Israel they stay PENDING until Israeli evidence exists.
-- Facility registration form that writes FACILITY_SUPPLIED levels/wards, MoH agreement, license status/expiry, prices.
+- Site shell (header, menu) is still English.
 - Questionnaire screens that collect `israelMarket.functionalLevel` and `israelMarket.fundingPathway` (schema fields exist).
 - Frontend i18n (he/ru/ar/en, RTL), ₪ and km.
 - Addresses and coordinates for distance filtering.

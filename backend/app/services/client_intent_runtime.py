@@ -270,6 +270,11 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
 
 
 def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Dict[str, Any]:
+    from app.services.market_scope import is_israel_market
+    if is_israel_market():
+        # Israeli matching facts come only from the facility's own registration.
+        from app.services.israel_facility_registration import with_facility_supplied_facts
+        row = with_facility_supplied_facts(row)
     hard_fail: List[str] = []
     must_unknown: List[str] = []
     pending_reasons: Dict[str, str] = {}

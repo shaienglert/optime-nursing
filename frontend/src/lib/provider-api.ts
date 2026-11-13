@@ -187,3 +187,26 @@ export function isDerived(question: ProfileQuestion): boolean {
 export function formatPercent(ratio: number): string {
   return `${Math.round(ratio * 100)}%`;
 }
+
+export type IsraelFunctionalLevel = "INDEPENDENT" | "FRAIL" | "NURSING" | "COGNITIVE_FRAIL";
+
+export type IsraelRegistration = {
+  functional_levels_served: IsraelFunctionalLevel[];
+  moh_code_agreement: "YES" | "NO";
+  license_id: string;
+  license_authority: "MINISTRY_OF_HEALTH" | "MINISTRY_OF_WELFARE";
+  license_expiration_date: string;
+  monthly_price_ils: number | null;
+  deposit_ils: number | null;
+};
+
+export async function saveIsraelRegistration(
+  facilityId: number,
+  userId: number,
+  registration: IsraelRegistration,
+): Promise<{ facility_id: number; registration: IsraelRegistration; changed: boolean }> {
+  return request(`/provider/facilities/${facilityId}/israel-registration`, {
+    method: "PUT",
+    body: JSON.stringify({ user_id: userId, ...registration }),
+  });
+}

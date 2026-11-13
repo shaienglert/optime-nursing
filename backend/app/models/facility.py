@@ -586,3 +586,20 @@ class FacilityProfileCompleteness(Base):
 	)
 
 	facility = relationship("Facility", back_populates="profile_completeness")
+
+
+class FacilityMarketRegistration(Base):
+	"""Market-specific facts a facility fills in itself (e.g. Israel: functional levels,
+	MoH code agreement, license, prices). Stored as JSON because each market's set differs."""
+	__tablename__ = "facility_market_registrations"
+	__table_args__ = (
+		UniqueConstraint("facility_id", "market", name="uq_facility_market_registrations_facility_market"),
+	)
+
+	id = Column(Integer, primary_key=True, index=True)
+	facility_id = Column(Integer, ForeignKey("facilities.id"), index=True, nullable=False)
+	market = Column(String(40), nullable=False)
+	payload_json = Column(Text, nullable=False)
+	submitted_by_user_id = Column(Integer, ForeignKey("facility_users.id"), nullable=True)
+	created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+	updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
