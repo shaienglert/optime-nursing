@@ -10,6 +10,7 @@ Recorded 2026-11-12. Owner approvals required by AGENTS.md (classes C/D/E).
 | 4 | Commission on state-funded placements (MoH code / Welfare) | D | Charge the same as private placements. Legal question remains open and is the owner's accepted risk |
 | 5 | Family interface languages | C | Hebrew, Russian, Arabic, English |
 | 6 | Cross-list facility merging | C | None: every source row is its own facility record |
+| 7 | Role of the source lists (2026-11-13) | C | The lists are an outreach catalog for inviting facilities to register. Matching uses only what the facility fills in at registration (`basis: FACILITY_SUPPLIED`); list data and license type decide nothing |
 
 ## Shared engine vs. Israeli layer (owner, 2026-11-12)
 
@@ -17,7 +18,9 @@ Shared by every market (one implementation, fixes land in both): interpreting th
 
 Israeli layer only: Hebrew (and ru/ar/en) questionnaire, setting types, the facility registry, licensing sources, ILS prices, funding pathways, and facility contact.
 
-Licensing, pricing and care capabilities are stored as separate blocks with a source per field. Being on a list never makes a facility a match (`matching_eligibility: NOT_VERIFIED`); a MUST can pass only on a stated fact.
+Licensing, pricing and care capabilities are stored as separate blocks with a source and basis per field. Every listed facility starts `registration_status: NOT_REGISTERED`; being on a list never makes it a match.
+
+Principle note: AGENTS.md says unverified facility-supplied claims may not improve organic ranking. Decision 7 makes facility-supplied data the basis for MUST eligibility in Israel. It does not change ranking. Whether registered data needs verification before it can pass a MUST is an open owner question.
 
 ## Data (step 1, this branch)
 
@@ -32,16 +35,17 @@ Licensing, pricing and care capabilities are stored as separate blocks with a so
 
 ## MUST gates (step 3)
 
-Shared evaluator `client_intent_runtime.evaluate_candidate_intent` now handles two Israeli keys, added to the intent only when the market is Israel (`israel_must_gates.py`):
+Shared evaluator `client_intent_runtime.evaluate_candidate_intent` handles two Israeli keys, added to the intent only on the Israeli market (`israel_must_gates.py`). Both are decided only by facility-supplied registration data; otherwise PENDING.
 
-- `IL_FUNCTIONAL_LEVEL` from `israelMarket.functionalLevel` (INDEPENDENT / FRAIL / NURSING / COGNITIVE_FRAIL). PASS only on a ward or level stated by a source list; a license type's regulatory scope can only exclude; unknown is PENDING. An unknown family level is PENDING everywhere (ask the family).
-- `IL_MOH_CODE_AGREEMENT` when `israelMarket.fundingPathway` = MOH_CODE. PASS on בהסכם=כן, FAIL on בהסכם=לא, otherwise PENDING.
+- `IL_FUNCTIONAL_LEVEL` from `israelMarket.functionalLevel` (INDEPENDENT / FRAIL / NURSING / COGNITIVE_FRAIL). An unknown family level is PENDING everywhere (ask the family).
+- `IL_MOH_CODE_AGREEMENT` when `israelMarket.fundingPathway` = MOH_CODE.
 
-Open owner question: the existing `LICENSE_CURRENTLY_VALID` MUST needs a license status and expiry date. The Israeli lists give neither, so every Israeli facility is PENDING on it and none can pass yet. Treating presence on a dated official list as license evidence would be a principle change (class C) and was not made.
+The existing `LICENSE_CURRENTLY_VALID` MUST reads license status and expiry; for Israel these come from the facility's registration.
 
 ## Not done yet
 
 - Nevada-specific need gates (ADL, medication, memory care) still read Nevada evidence; for Israel they stay PENDING until Israeli evidence exists.
+- Facility registration form that writes FACILITY_SUPPLIED levels/wards, MoH agreement, license status/expiry, prices.
 - Questionnaire screens that collect `israelMarket.functionalLevel` and `israelMarket.fundingPathway` (schema fields exist).
 - Frontend i18n (he/ru/ar/en, RTL), ₪ and km.
 - Addresses and coordinates for distance filtering.

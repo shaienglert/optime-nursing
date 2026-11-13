@@ -56,13 +56,14 @@ def test_every_stated_field_names_its_source_and_basis():
                     continue
                 if fact["status"] == "STATED":
                     assert fact["source"] in evidence_keys, (r["canonical_id"], block, name)
-                    assert fact["basis"] in {"SOURCE_LIST", "REGULATORY_SCOPE"}
+                    assert fact["basis"] == "SOURCE_LIST"
                 else:
                     assert fact["value"] is None and fact["source"] is None
 
 
-def test_being_listed_never_makes_a_facility_a_match():
+def test_list_is_an_outreach_catalog_not_matching_data():
     for r in _payload()["records"]:
-        assert r["matching_eligibility"] == "NOT_VERIFIED"
+        assert r["registration_status"] == "NOT_REGISTERED"
+        assert r["matching_eligibility"] == "NOT_REGISTERED"
         assert r["pricing"]["currency"] == "ILS"
         assert r["pricing"]["monthly_price"]["status"] == "UNKNOWN"

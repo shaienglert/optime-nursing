@@ -89,7 +89,11 @@ def _unknown() -> dict:
 
 
 def _fact(value: object, source_key: str, basis: str) -> dict:
-    """One field with its own provenance. basis: SOURCE_LIST or REGULATORY_SCOPE."""
+    """One field with its own provenance.
+
+    basis: SOURCE_LIST (an outreach list) or FACILITY_SUPPLIED (the facility's own
+    registration). Only FACILITY_SUPPLIED facts drive matching.
+    """
     if value in (None, [], ""):
         return _unknown()
     return {"value": value, "status": "STATED", "source": source_key, "basis": basis}
@@ -118,7 +122,10 @@ def _base(canonical_id: str, name: str, city: str | None, retrieved_at: str) -> 
         "pricing": {"currency": "ILS", "monthly_price": _unknown(), "deposit": _unknown(), "payment_tracks": _unknown()},
         "care_capabilities": {"functional_levels_served": _unknown(), "departments": _unknown()},
         "lifestyle": {"religion_attitude": _unknown()},
-        "matching_eligibility": "NOT_VERIFIED",
+        # The lists are an outreach catalog. Matching uses what the facility fills in
+        # when it registers on OOMNIK, not what a list says (owner, 2026-11-13).
+        "registration_status": "NOT_REGISTERED",
+        "matching_eligibility": "NOT_REGISTERED",
         "availability": "UNKNOWN",
         "merge_confidence": "NOT_MERGED",
         "data_quality_flags": [],
@@ -175,11 +182,6 @@ def build(raw_dir: Path = RAW_DIR) -> dict:
                         "license_id": _unknown(),
                         "moh_code_agreement": _unknown(),
                     },
-                    # Regulatory scope of a welfare-licensed home, not a facility-verified fact.
-                    "care_capabilities": {
-                        "functional_levels_served": _fact(["INDEPENDENT", "FRAIL"], "welfare", "REGULATORY_SCOPE"),
-                        "departments": _unknown(),
-                    },
                     "source_identity_ids": {"welfare_list_serial": str(serial)},
                     "source_evidence": _evidence("welfare", str(serial), retrieved_at),
                 }
@@ -205,13 +207,13 @@ def build(raw_dir: Path = RAW_DIR) -> dict:
                 "phone": phone.rstrip(":").strip() if phone else None,
                 "website": website,
                 "licensing": {
-                    "authority": _fact("MINISTRY_OF_WELFARE", "protected", "REGULATORY_SCOPE"),
+                    "authority": _unknown(),
                     "license_id": _unknown(),
                     "moh_code_agreement": _unknown(),
                 },
                 "care_capabilities": {
-                    "functional_levels_served": _fact(["INDEPENDENT"], "protected", "REGULATORY_SCOPE"),
-                    # Wards as the list reports them; not verified with the facility or a regulator.
+                    "functional_levels_served": _unknown(),
+                    # Wards as the list reports them: outreach context only, not used for matching.
                     "departments": _fact(_split(_clean(row["treatment"])), "protected", "SOURCE_LIST"),
                 },
                 "lifestyle": {
