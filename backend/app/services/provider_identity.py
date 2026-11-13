@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import os
 import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional
@@ -190,14 +191,34 @@ def start_email_verification(
     db.add(challenge)
     db.commit()
 
-    return {
+    # The code proves control of the mailbox, so it travels only by email. It is never
+    # returned to the caller, except in an explicitly enabled local-development mode.
+    from app.services.email_service import send_email_detailed
+
+    sent = send_email_detailed(
+        subject="OOMNIK verification code",
+        body_text=(
+            f"Your OOMNIK verification code is {code}. It expires in 15 minutes.\n"
+            f"קוד האימות שלכם ב-OOMNIK הוא {code}. הוא בתוקף 15 דקות."
+        ),
+        recipients=[email],
+        max_retries=1,
+    )
+    if not sent.ok:
+        challenge.status = "DELIVERY_FAILED"
+        db.commit()
+        raise ValueError("The verification email could not be sent. Please try again later.")
+
+    result = {
         "facility_id": facility_id,
         "user_id": user.id,
         "email": email,
         "verification_sent_at": challenge.verification_sent_at.isoformat(),
         "verification_method": "EMAIL_OTP",
-        "debug_verification_code": code,
     }
+    if os.getenv("OPTIME_PROVIDER_DEBUG_CODES", "").strip() == "1":
+        result["debug_verification_code"] = code
+    return result
 
 
 def complete_email_verification(db: Session, facility_id: int, email: str, code: str) -> Dict[str, object]:
