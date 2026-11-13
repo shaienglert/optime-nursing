@@ -3705,6 +3705,23 @@ async def provider_facility_save_capabilities(
     return CapabilitySaveOut(**result)
 
 
+@app.get("/api/il/facilities")
+async def israel_facility_directory(city: Optional[str] = None, setting: Optional[str] = None):
+    from app.services.israel_facility_page import list_israel_facilities
+
+    return list_israel_facilities(city=city, setting=setting)
+
+
+@app.get("/api/il/facilities/{canonical_id}")
+async def israel_facility_page(canonical_id: str, db: Session = Depends(get_db)):
+    from app.services.israel_facility_page import build_israel_facility_page
+
+    page = build_israel_facility_page(db, canonical_id)
+    if page is None:
+        raise HTTPException(status_code=404, detail="Facility not found")
+    return page
+
+
 @app.put("/provider/facilities/{facility_id}/israel-registration")
 async def provider_facility_save_israel_registration(
     facility_id: int,

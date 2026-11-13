@@ -55,6 +55,17 @@ The existing `LICENSE_CURRENTLY_VALID` MUST reads license status and expiry; for
 - Writes `questionnaireState.israelMarket` (schema fields allowlisted) and continues to `/results`. Free text goes to `notes` for the shared AI interpreter.
 - "Not sure" is stored as UNCLEAR: the engine keeps every facility PENDING; the page tells the family no facility will be shown as a match until it is clear.
 
+## Facility home pages (step 6)
+
+- One uniform Hebrew home page per registry facility: `/he/facility/{canonical_id}` (API `GET /api/il/facilities/{id}`), directory `/he/facilities` (`GET /api/il/facilities`).
+- Sections: photos, services and licensing (facility-supplied only), activities, and public-list details labelled with their source. Unknown is shown as "not yet updated by the facility" / "not in the list".
+
+## Facility portal: owner requirements (2026-11-13), not built yet
+
+- Each facility receives a personal link from OOMNIK outreach; the link is how it enters the portal.
+- In the portal: fill the facility questionnaire, confirm the information on its page, upload photos, connect a calendar for events or upload a monthly activity plan.
+- Known gaps to close for this: photos are URL-only (no file upload/storage); activity classification only recognises English words; provider write endpoints trust a `user_id` in the request body (no session), and activities import does not check the user.
+
 ## Not done yet
 
 - Nevada-specific need gates (ADL, medication, memory care) still read Nevada evidence; for Israel they stay PENDING until Israeli evidence exists.
