@@ -239,7 +239,27 @@ export type IsraelRegistration = {
   license_expiration_date: string;
   monthly_price_ils: number | null;
   deposit_ils: number | null;
+  questionnaire?: Record<string, unknown>;
 };
+
+export type QuestionOption = { value: string; label: string };
+export type Question = {
+  key: string;
+  label: string;
+  type: "text" | "textarea" | "phone" | "email" | "url" | "int" | "money" | "number" | "single" | "multi" | "per_level" | "date";
+  required: boolean;
+  core: boolean;
+  options?: QuestionOption[];
+  min?: number;
+  max?: number;
+  max_length?: number;
+};
+export type QuestionnaireSection = { key: string; title: string; intro: string; questions: Question[] };
+export type QuestionnaireSchema = { version: string; sections: QuestionnaireSection[] };
+
+export async function fetchIsraelQuestionnaireSchema(): Promise<QuestionnaireSchema> {
+  return request<QuestionnaireSchema>("/api/il/facility-questionnaire");
+}
 
 export async function fetchIsraelRegistration(
   facilityId: number,

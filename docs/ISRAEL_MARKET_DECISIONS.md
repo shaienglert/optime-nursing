@@ -83,6 +83,14 @@ The existing `LICENSE_CURRENTLY_VALID` MUST reads license status and expiry; for
 - Provider writes (registration, photos, capabilities, activities import, identity field updates, staff invites, role changes, audit revert, verification persist) take the acting user from the session; a session for facility A cannot write to B. In the Israeli deployment a session is required (`OPTIME_PROVIDER_SESSION_REQUIRED` defaults to on for `israel`) and the open email-claim flow is closed. Nevada keeps the old body `user_id` behaviour until it is migrated.
 - The portal pre-fills the saved answers; resubmitting unchanged is logged as a confirmation (`israel_registration:confirmed`).
 
+## Full facility questionnaire (step 9)
+
+- Schema: `backend/app/services/israel_facility_questionnaire.py` (`il-facility-questionnaire-v1`), served at `GET /api/il/facility-questionnaire`; the portal renders it and the backend validates with the same definition.
+- 8 sections, 50 questions: contact & address; population & licence (levels, special units, MoH agreement, licence, min age, couples, gender, beds); availability per level and short stays; funding tracks and prices (range, deposit, depreciation, maintenance fee, what is included); medical (24/7 nurse, physician, geriatrician, 12 clinical capabilities, therapists, hospital distance); language, religion and food; rooms and building (incl. shelter/ממ"ד, accessibility); family and visits.
+- Required: address, contact name, phone, funding tracks, staff languages, plus the core licence/level questions. MoH agreement and the "MoH code" funding track must agree.
+- Unanswered = UNKNOWN, never stored as "no". Unchanged resubmission = logged confirmation.
+- Matching use: unchanged. Only the two approved MUST gates read the answers; every other answer is displayed on the facility page. Using any new answer to filter or rank needs owner approval.
+
 ## Not done yet
 
 - Nevada-specific need gates (ADL, medication, memory care) still read Nevada evidence; for Israel they stay PENDING until Israeli evidence exists.

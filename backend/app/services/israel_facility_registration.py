@@ -57,7 +57,17 @@ def validate_registration(payload: Dict[str, Any]) -> Dict[str, Any]:
     except ValueError as error:
         raise ValueError("license_expiration_date must be an ISO date (YYYY-MM-DD).") from error
 
+    from app.services.israel_facility_questionnaire import validate_questionnaire
+
+    questionnaire = validate_questionnaire(payload.get("questionnaire"))
+    tracks = set(questionnaire.get("payment_tracks", []))
+    if agreement == "YES" and "MOH_CODE" not in tracks:
+        raise ValueError("סימנתם שיש הסכם קוד עם משרד הבריאות: יש לסמן גם את מסלול המימון \"קוד משרד הבריאות\".")
+    if agreement == "NO" and "MOH_CODE" in tracks:
+        raise ValueError("סימנתם מסלול \"קוד משרד הבריאות\" אבל אין הסכם קוד. יש לתקן אחת מהתשובות.")
+
     return {
+        "questionnaire": questionnaire,
         "functional_levels_served": levels,
         "moh_code_agreement": agreement,
         "license_id": license_id,

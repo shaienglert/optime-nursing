@@ -14,6 +14,8 @@ from app.services.israel_facility_import import load_israel_records
 from app.services.israel_facility_registration import save_israel_registration, validate_registration
 
 CANONICAL_ID = "IL-MOH-237U6"
+from tests.israel_registration_fixture import REQUIRED_QUESTIONNAIRE
+
 VALID = {
     "functional_levels_served": ["NURSING", "cognitive_frail"],
     "moh_code_agreement": "YES",
@@ -21,6 +23,7 @@ VALID = {
     "license_authority": "MINISTRY_OF_HEALTH",
     "license_expiration_date": "2099-12-31",
     "monthly_price_ils": 18000,
+    "questionnaire": dict(REQUIRED_QUESTIONNAIRE),
 }
 
 

@@ -21,6 +21,8 @@ from app.models.facility import (
     FacilityUser,
 )
 
+from tests.israel_registration_fixture import REQUIRED_QUESTIONNAIRE
+
 PREFIX = "TEST-PORTAL-"
 VALID = {
     "functional_levels_served": ["NURSING"],
@@ -28,6 +30,7 @@ VALID = {
     "license_id": "X1",
     "license_authority": "MINISTRY_OF_HEALTH",
     "license_expiration_date": "2099-12-31",
+    "questionnaire": dict(REQUIRED_QUESTIONNAIRE),
 }
 
 

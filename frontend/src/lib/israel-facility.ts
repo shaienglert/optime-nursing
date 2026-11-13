@@ -25,6 +25,7 @@ export type IsraelFacilityPage = {
     monthly_price_ils: number | null;
     deposit_ils: number | null;
   } | null;
+  facility_details: { key: string; title: string; items: { key: string; label: string; value: string }[] }[];
   photos: { url: string; caption: string | null; category: string }[];
   activities: { category: string; availability: string; confidence: number }[];
   data_quality_flags: string[];

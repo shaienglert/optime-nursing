@@ -1153,6 +1153,7 @@ class IsraelRegistrationIn(BaseModel):
     license_expiration_date: str
     monthly_price_ils: Optional[int] = None
     deposit_ils: Optional[int] = None
+    questionnaire: Dict[str, Any] = Field(default_factory=dict)
     ip_address: Optional[str] = None
 
 
@@ -3831,6 +3832,13 @@ async def provider_portal_me(db: Session = Depends(get_db), authorization: Optio
         "user_id": session.user_id,
         "expires_at": session.expires_at.isoformat(),
     }
+
+
+@app.get("/api/il/facility-questionnaire")
+async def israel_facility_questionnaire_schema():
+    from app.services.israel_facility_questionnaire import public_schema
+
+    return public_schema()
 
 
 @app.get("/provider/facilities/{facility_id}/israel-registration")

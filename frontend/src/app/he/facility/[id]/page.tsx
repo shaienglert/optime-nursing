@@ -91,6 +91,16 @@ export default function IsraelFacilityHome({ params }: { params: Promise<{ id: s
         </dl>
       </section>
 
+      {page.facility_details.map((section) => (
+        <section key={section.key} className="mt-6">
+          <h2 className="text-xl font-semibold">{section.title}</h2>
+          <p className="mt-1 text-sm text-muted">מעודכן על ידי המוסד</p>
+          <dl className="mt-2">
+            {section.items.map((item) => <Row key={item.key} label={item.label} value={item.value} />)}
+          </dl>
+        </section>
+      ))}
+
       <section className="mt-6">
         <h2 className="text-xl font-semibold">פעילויות</h2>
         {activities.length ? (
