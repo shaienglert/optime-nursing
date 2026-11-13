@@ -10,6 +10,7 @@ Recorded 2026-11-12. Owner approvals required by AGENTS.md (classes C/D/E).
 | 4 | Commission on state-funded placements (MoH code / Welfare) | D | Charge the same as private placements. Legal question remains open and is the owner's accepted risk |
 | 5 | Family interface languages | C | Hebrew, Russian, Arabic, English |
 | 6 | Cross-list facility merging | C | None: every source row is its own facility record |
+| 8 | Status of facility-supplied data (2026-11-13) | C | Data the facility fills in itself counts as verified |
 | 7 | Role of the source lists (2026-11-13) | C | The lists are an outreach catalog for inviting facilities to register. Matching uses only what the facility fills in at registration (`basis: FACILITY_SUPPLIED`); list data and license type decide nothing |
 
 ## Shared engine vs. Israeli layer (owner, 2026-11-12)
@@ -20,7 +21,7 @@ Israeli layer only: Hebrew (and ru/ar/en) questionnaire, setting types, the faci
 
 Licensing, pricing and care capabilities are stored as separate blocks with a source and basis per field. Every listed facility starts `registration_status: NOT_REGISTERED`; being on a list never makes it a match.
 
-Principle note: AGENTS.md says unverified facility-supplied claims may not improve organic ranking. Decision 7 makes facility-supplied data the basis for MUST eligibility in Israel. It does not change ranking. Whether registered data needs verification before it can pass a MUST is an open owner question.
+Owner decision (2026-11-13): information the facility fills in itself counts as verified. `FACILITY_SUPPLIED` facts can pass or fail a MUST without further verification.
 
 ## Data (step 1, this branch)
 
