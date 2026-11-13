@@ -16,9 +16,9 @@ from typing import Any, Dict, List, Optional
 
 from sqlalchemy import func, or_
 
-from fastapi import Depends, FastAPI, Header, HTTPException, Query
+from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.orm import Session
 
@@ -99,6 +99,7 @@ from app.services.provider_identity import (
 )
 from app.services.facility_profile_portal import (
     add_photo,
+    add_uploaded_photo,
     deactivate_photo,
     facility_profile_snapshot,
     recompute_completeness,
@@ -3761,6 +3762,57 @@ async def provider_facility_add_photo(
         raise HTTPException(status_code=403, detail=str(error)) from error
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error)) from error
+
+
+@app.post("/provider/facilities/{facility_id}/photos/upload")
+async def provider_facility_upload_photo(
+    facility_id: int,
+    user_id: int = Form(...),
+    category: str = Form("general"),
+    caption: Optional[str] = Form(None),
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+):
+    from app.services.photo_storage import MAX_UPLOAD_BYTES
+
+    data = await file.read(MAX_UPLOAD_BYTES + 1)
+    try:
+        return add_uploaded_photo(
+            db=db,
+            facility_id=facility_id,
+            user_id=user_id,
+            data=data,
+            category=category,
+            caption=caption,
+        )
+    except PermissionError as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+
+
+@app.get("/media/facility_photos/{facility_id}/{name}")
+async def facility_photo_file(facility_id: int, name: str, db: Session = Depends(get_db)):
+    """Serve an uploaded photo only while its record is active (removed photos stop serving)."""
+    from app.models.facility import FacilityPhoto
+    from app.services.photo_storage import media_url, resolve_media_path
+
+    active = (
+        db.query(FacilityPhoto.id)
+        .filter(
+            FacilityPhoto.facility_id == facility_id,
+            FacilityPhoto.url == media_url(facility_id, name),
+            FacilityPhoto.is_active.is_(True),
+        )
+        .first()
+    )
+    if active is None:
+        raise HTTPException(status_code=404, detail="Not found")
+    try:
+        path = resolve_media_path(facility_id, name)
+    except FileNotFoundError as error:
+        raise HTTPException(status_code=404, detail="Not found") from error
+    return FileResponse(path, media_type="image/jpeg", headers={"Cache-Control": "public, max-age=86400"})
 
 
 @app.delete("/provider/facilities/{facility_id}/photos/{photo_id}")

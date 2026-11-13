@@ -2,6 +2,7 @@
 
 import { use, useState, useSyncExternalStore } from "react";
 
+import { IsraelPhotoManager } from "@/components/provider/israel-photo-manager";
 import { saveIsraelRegistration, type IsraelFunctionalLevel, type IsraelRegistration } from "@/lib/provider-api";
 
 const PROVIDER_USER_KEY = "optime_provider_user_id";
@@ -151,6 +152,8 @@ export default function IsraelRegistrationPage({ params }: { params: Promise<{ f
           <p role={status.kind === "error" ? "alert" : "status"} className="text-sm">{status.text}</p>
         ) : null}
       </form>
+
+      <IsraelPhotoManager facilityId={facilityId} userId={userId} />
     </main>
   );
 }

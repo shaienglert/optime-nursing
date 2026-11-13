@@ -177,6 +177,41 @@ export async function removeFacilityPhoto(
   });
 }
 
+/** Uploaded photos are stored by the backend and served under /media/. */
+export function photoSrc(url: string): string {
+  return url.startsWith("/media/") ? joinApiUrl(getApiBaseUrl(), url) : url;
+}
+
+export async function uploadFacilityPhoto(
+  facilityId: number,
+  userId: number,
+  file: Blob,
+  caption?: string,
+): Promise<{ photo_id: number; url: string; completeness: Completeness }> {
+  const form = new FormData();
+  form.set("user_id", String(userId));
+  form.set("category", "general");
+  if (caption) form.set("caption", caption);
+  form.set("file", file, "photo.jpg");
+  // No Content-Type header: the browser sets the multipart boundary itself.
+  const response = await fetch(joinApiUrl(getApiBaseUrl(), `/provider/facilities/${facilityId}/photos/upload`), {
+    method: "POST",
+    body: form,
+    cache: "no-store",
+  });
+  if (!response.ok) {
+    let detail = "";
+    try {
+      const body = (await response.json()) as { detail?: unknown };
+      detail = typeof body?.detail === "string" ? body.detail : "";
+    } catch {
+      detail = "";
+    }
+    throw new Error(detail || `Upload failed (${response.status})`);
+  }
+  return response.json();
+}
+
 export const PORTAL_SOURCE = "provider_portal";
 
 /** An answer we filled in from a licence or certification, not one the provider gave us. */

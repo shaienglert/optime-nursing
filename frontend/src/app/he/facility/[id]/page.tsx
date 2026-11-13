@@ -3,6 +3,7 @@
 import { use, useEffect, useState } from "react";
 
 import { fetchIsraelFacility, type IsraelFacilityPage } from "@/lib/israel-facility";
+import { photoSrc } from "@/lib/provider-api";
 
 const ACTIVITY_LABELS: Record<string, string> = {
   movies: "סרטים",
@@ -70,7 +71,7 @@ export default function IsraelFacilityHome({ params }: { params: Promise<{ id: s
           <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
             {page.photos.map((photo) => (
               // eslint-disable-next-line @next/next/no-img-element
-              <img key={photo.url} src={photo.url} alt={photo.caption ?? page.name} className="aspect-[4/3] w-full rounded-xl object-cover" />
+              <img key={photo.url} src={photoSrc(photo.url)} alt={photo.caption ?? page.name} className="aspect-[4/3] w-full rounded-xl object-cover" />
             ))}
           </div>
         ) : (

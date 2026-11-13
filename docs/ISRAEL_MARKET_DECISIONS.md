@@ -64,7 +64,16 @@ The existing `LICENSE_CURRENTLY_VALID` MUST reads license status and expiry; for
 
 - Each facility receives a personal link from OOMNIK outreach; the link is how it enters the portal.
 - In the portal: fill the facility questionnaire, confirm the information on its page, upload photos, connect a calendar for events or upload a monthly activity plan.
-- Known gaps to close for this: photos are URL-only (no file upload/storage); activity classification only recognises English words; provider write endpoints trust a `user_id` in the request body (no session), and activities import does not check the user.
+- Photo upload: built (see below).
+- Known gaps to close for this: activity classification only recognises English words; provider write endpoints trust a `user_id` in the request body (no session), and activities import does not check the user.
+
+## Photo upload (step 7)
+
+- `POST /provider/facilities/{id}/photos/upload` (multipart). Same role rule as URL photos (OWNER/ADMIN/MARKETING); permission is checked before anything is written.
+- Every file is decoded and re-encoded as JPEG, max 1600px, EXIF stripped (removes phone GPS). Non-images are refused with a Hebrew reason. The browser shrinks to 2000px first because the Vercel proxy limits request size.
+- Files are stored under `OPTIME_UPLOAD_DIR` and served at `/media/facility_photos/{id}/{uuid}.jpg` only while the photo is active.
+- Hosting (owner, 2026-11-13): the Render workspace is on Pro and the existing service is on a paid compute plan, so a disk can be added ($0.25/GB/month per Render's screen). Decision: no disk on the Nevada service; the Israeli service gets a 1GB disk mounted at `/var/data` with `OPTIME_UPLOAD_DIR=/var/data`. Without a disk, uploads are lost on every deploy.
+- Photos do not affect matching or ranking.
 
 ## Not done yet
 
