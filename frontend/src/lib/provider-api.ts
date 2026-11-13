@@ -1,4 +1,5 @@
 import { getApiBaseUrl, joinApiUrl } from "@/lib/api";
+import { providerAuthHeaders, type ProviderSession } from "@/lib/provider-session";
 
 /**
  * Client for the provider-facing portal.
@@ -97,9 +98,9 @@ export type ProfileSnapshot = {
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(joinApiUrl(getApiBaseUrl(), path), {
-    headers: { "Content-Type": "application/json" },
     cache: "no-store",
     ...init,
+    headers: { "Content-Type": "application/json", ...providerAuthHeaders(), ...(init?.headers ?? {}) },
   });
   if (!response.ok) {
     // The backend answers a refused edit with a readable reason ("Role ACTIVITIES may not
@@ -197,6 +198,7 @@ export async function uploadFacilityPhoto(
   const response = await fetch(joinApiUrl(getApiBaseUrl(), `/provider/facilities/${facilityId}/photos/upload`), {
     method: "POST",
     body: form,
+    headers: providerAuthHeaders(),
     cache: "no-store",
   });
   if (!response.ok) {
@@ -210,6 +212,10 @@ export async function uploadFacilityPhoto(
     throw new Error(detail || `Upload failed (${response.status})`);
   }
   return response.json();
+}
+
+export async function redeemPortalLink(token: string): Promise<ProviderSession> {
+  return request<ProviderSession>("/provider/portal/redeem", { method: "POST", body: JSON.stringify({ token }) });
 }
 
 export const PORTAL_SOURCE = "provider_portal";
@@ -234,6 +240,12 @@ export type IsraelRegistration = {
   monthly_price_ils: number | null;
   deposit_ils: number | null;
 };
+
+export async function fetchIsraelRegistration(
+  facilityId: number,
+): Promise<{ facility_id: number; registration: IsraelRegistration | null }> {
+  return request(`/provider/facilities/${facilityId}/israel-registration`);
+}
 
 export async function saveIsraelRegistration(
   facilityId: number,

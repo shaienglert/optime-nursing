@@ -93,18 +93,19 @@ def save_israel_registration(
         db.add(row)
     row.payload_json = new_json
     row.submitted_by_user_id = user.id
-    if previous != new_json:
-        db.add(
-            FacilityAuditLog(
-                facility_id=facility_id,
-                user_id=user.id,
-                field_name="israel_registration",
-                old_value=previous,
-                new_value=new_json,
-                ip_address=ip_address,
-                user_role=user.role,
-            )
+    # An unchanged resubmission is the facility confirming its details are still right;
+    # it is logged so "last confirmed" can be shown and reviewed.
+    db.add(
+        FacilityAuditLog(
+            facility_id=facility_id,
+            user_id=user.id,
+            field_name="israel_registration" if previous != new_json else "israel_registration:confirmed",
+            old_value=previous if previous != new_json else None,
+            new_value=new_json,
+            ip_address=ip_address,
+            user_role=user.role,
         )
+    )
     db.commit()
     return {"facility_id": facility_id, "registration": data, "changed": previous != new_json}
 

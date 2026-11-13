@@ -65,7 +65,8 @@ The existing `LICENSE_CURRENTLY_VALID` MUST reads license status and expiry; for
 - Each facility receives a personal link from OOMNIK outreach; the link is how it enters the portal.
 - In the portal: fill the facility questionnaire, confirm the information on its page, upload photos, connect a calendar for events or upload a monthly activity plan.
 - Photo upload: built (see below).
-- Known gaps to close for this: activity classification only recognises English words; provider write endpoints trust a `user_id` in the request body (no session), and activities import does not check the user.
+- Personal link and sessions: built (see below).
+- Known gap still open: activity classification only recognises English words.
 
 ## Photo upload (step 7)
 
@@ -74,6 +75,13 @@ The existing `LICENSE_CURRENTLY_VALID` MUST reads license status and expiry; for
 - Files are stored under `OPTIME_UPLOAD_DIR` and served at `/media/facility_photos/{id}/{uuid}.jpg` only while the photo is active.
 - Hosting (owner, 2026-11-13): the Render workspace is on Pro and the existing service is on a paid compute plan, so a disk can be added ($0.25/GB/month per Render's screen). Decision: no disk on the Nevada service; the Israeli service gets a 1GB disk mounted at `/var/data` with `OPTIME_UPLOAD_DIR=/var/data`. Without a disk, uploads are lost on every deploy.
 - Photos do not affect matching or ranking.
+
+## Personal portal link (step 8)
+
+- OOMNIK creates a link per facility (`POST /admin/portal/invites`, admin token; bulk: `scripts/create_israel_portal_links.py`, which writes a CSV outside the repo). Link: `/he/portal/{token}`.
+- Opening the link redeems it for a 30-day session (`Authorization: Bearer`); the page then drops the token from the address bar. The link itself is the credential (owner decision): 90-day expiry, stored only as SHA-256, a new link revokes the old one, `POST /admin/portal/invites/{id}/revoke` also ends its sessions.
+- Provider writes (registration, photos, capabilities, activities import, identity field updates, staff invites, role changes, audit revert, verification persist) take the acting user from the session; a session for facility A cannot write to B. In the Israeli deployment a session is required (`OPTIME_PROVIDER_SESSION_REQUIRED` defaults to on for `israel`) and the open email-claim flow is closed. Nevada keeps the old body `user_id` behaviour until it is migrated.
+- The portal pre-fills the saved answers; resubmitting unchanged is logged as a confirmation (`israel_registration:confirmed`).
 
 ## Not done yet
 

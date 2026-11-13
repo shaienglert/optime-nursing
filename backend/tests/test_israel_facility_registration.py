@@ -70,12 +70,17 @@ class IsraelRegistrationTests(unittest.TestCase):
         save_israel_registration(self.db, self.facility.id, self.user.id, {**VALID, "license_expiration_date": "2020-01-01"})
         self.assertEqual(self._fit({"functionalLevel": "NURSING"})["hard_gate"], "FAIL")
 
-    def test_audit_only_on_change_and_role_check(self) -> None:
+    def test_change_and_confirmation_are_audited_separately_and_role_check(self) -> None:
         save_israel_registration(self.db, self.facility.id, self.user.id, VALID)
         again = save_israel_registration(self.db, self.facility.id, self.user.id, VALID)
         self.assertFalse(again["changed"])
-        audits = self.db.query(FacilityAuditLog).filter(FacilityAuditLog.facility_id == self.facility.id).count()
-        self.assertEqual(audits, 1)
+        names = [
+            a.field_name
+            for a in self.db.query(FacilityAuditLog)
+            .filter(FacilityAuditLog.facility_id == self.facility.id)
+            .order_by(FacilityAuditLog.id)
+        ]
+        self.assertEqual(names, ["israel_registration", "israel_registration:confirmed"])
         with self.assertRaises(PermissionError):
             save_israel_registration(self.db, self.facility.id, self.marketing.id, VALID)
 

@@ -1,25 +1,11 @@
 "use client";
 
-import { use, useState, useSyncExternalStore } from "react";
+import Link from "next/link";
+import { use, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 
 import { IsraelPhotoManager } from "@/components/provider/israel-photo-manager";
-import { saveIsraelRegistration, type IsraelFunctionalLevel, type IsraelRegistration } from "@/lib/provider-api";
-
-const PROVIDER_USER_KEY = "optime_provider_user_id";
-
-function subscribe(onChange: () => void): () => void {
-  window.addEventListener("storage", onChange);
-  return () => window.removeEventListener("storage", onChange);
-}
-
-function readUserId(): number | null {
-  try {
-    const parsed = Number(window.localStorage.getItem(PROVIDER_USER_KEY));
-    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
-  } catch {
-    return null;
-  }
-}
+import { providerSessionSnapshot, subscribeProviderSession, type ProviderSession } from "@/lib/provider-session";
+import { fetchIsraelRegistration, saveIsraelRegistration, type IsraelFunctionalLevel, type IsraelRegistration } from "@/lib/provider-api";
 
 const LEVELS: { value: IsraelFunctionalLevel; label: string }[] = [
   { value: "INDEPENDENT", label: "עצמאיים" },
@@ -35,7 +21,16 @@ const LEVELS: { value: IsraelFunctionalLevel; label: string }[] = [
 export default function IsraelRegistrationPage({ params }: { params: Promise<{ facilityId: string }> }) {
   const { facilityId: rawId } = use(params);
   const facilityId = Number(rawId);
-  const userId = useSyncExternalStore(subscribe, readUserId, () => null);
+  const rawSession = useSyncExternalStore(subscribeProviderSession, providerSessionSnapshot, () => null);
+  const session = useMemo<ProviderSession | null>(() => {
+    try {
+      const parsed = rawSession ? (JSON.parse(rawSession) as ProviderSession) : null;
+      return parsed && parsed.facility_id === facilityId ? parsed : null;
+    } catch {
+      return null;
+    }
+  }, [rawSession, facilityId]);
+  const userId = session?.user_id ?? null;
 
   const [levels, setLevels] = useState<IsraelFunctionalLevel[]>([]);
   const [agreement, setAgreement] = useState<"YES" | "NO" | "">("");
@@ -46,6 +41,29 @@ export default function IsraelRegistrationPage({ params }: { params: Promise<{ f
   const [deposit, setDeposit] = useState("");
   const [status, setStatus] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
   const [saving, setSaving] = useState(false);
+  const [hasSaved, setHasSaved] = useState(false);
+
+  // "Confirm the existing information": start from what the facility already saved.
+  useEffect(() => {
+    if (!session) return;
+    let cancelled = false;
+    fetchIsraelRegistration(facilityId)
+      .then(({ registration: saved }) => {
+        if (cancelled || !saved) return;
+        setLevels(saved.functional_levels_served);
+        setAgreement(saved.moh_code_agreement);
+        setAuthority(saved.license_authority);
+        setLicenseId(saved.license_id);
+        setExpires(saved.license_expiration_date);
+        setMonthly(saved.monthly_price_ils != null ? String(saved.monthly_price_ils) : "");
+        setDeposit(saved.deposit_ils != null ? String(saved.deposit_ils) : "");
+        setHasSaved(true);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [session, facilityId]);
 
   const toggle = (level: IsraelFunctionalLevel) =>
     setLevels((current) => (current.includes(level) ? current.filter((l) => l !== level) : [...current, level]));
@@ -68,7 +86,7 @@ export default function IsraelRegistrationPage({ params }: { params: Promise<{ f
     setStatus(null);
     try {
       const result = await saveIsraelRegistration(facilityId, userId, registration);
-      setStatus({ kind: "ok", text: result.changed ? "הפרטים נשמרו. מעכשיו OOMNIK יתאים את המוסד למשפחות לפיהם." : "לא היה שינוי בפרטים." });
+      setStatus({ kind: "ok", text: result.changed ? "הפרטים נשמרו. מעכשיו OOMNIK יתאים את המוסד למשפחות לפיהם." : "הפרטים אושרו ללא שינוי." });
     } catch (error) {
       setStatus({ kind: "error", text: error instanceof Error ? error.message : "השמירה נכשלה." });
     } finally {
@@ -80,12 +98,19 @@ export default function IsraelRegistrationPage({ params }: { params: Promise<{ f
 
   return (
     <main dir="rtl" lang="he" className="mx-auto max-w-2xl p-6">
-      <h1 className="text-2xl font-semibold">הרשמת המוסד ל-OOMNIK</h1>
+      <h1 className="text-2xl font-semibold">{session ? session.name : "הפורטל של המוסד"}</h1>
       <p className="mt-2 text-sm">
         ההתאמה למשפחות נעשית רק לפי הפרטים שתמלאו כאן. מוסד שלא מילא פרטים לא יוצג כמתאים, וגם לא ייפסל.
       </p>
-      {!userId ? (
-        <p role="alert" className="mt-4 rounded-xl border p-3 text-sm">יש להתחבר כמשתמש של המוסד כדי למלא את הטופס.</p>
+      {session ? (
+        <p className="mt-2 text-sm">
+          <Link className="underline" href={`/he/facility/${encodeURIComponent(session.canonical_id)}`}>לצפייה בדף הבית של המוסד</Link>
+        </p>
+      ) : (
+        <p role="alert" className="mt-4 rounded-xl border p-3 text-sm">כדי לערוך, יש להיכנס דרך הקישור האישי שהמוסד קיבל מ-OOMNIK.</p>
+      )}
+      {hasSaved ? (
+        <p className="mt-4 rounded-xl border p-3 text-sm">אלה הפרטים ששמרתם. אם הכול נכון, לחצו על &quot;אישור הפרטים&quot;. אם משהו השתנה, תקנו ושמרו.</p>
       ) : null}
 
       <form onSubmit={submit} className="mt-6 space-y-6">
@@ -146,7 +171,7 @@ export default function IsraelRegistrationPage({ params }: { params: Promise<{ f
         </fieldset>
 
         <button type="submit" disabled={!userId || !complete || saving} className="rounded-xl px-4 py-2 font-medium" style={{ backgroundColor: "var(--primary)", color: "var(--primary-contrast)" }}>
-          {saving ? "שומר…" : "שמירה"}
+          {saving ? "שומר…" : hasSaved ? "אישור הפרטים" : "שמירה"}
         </button>
         {status ? (
           <p role={status.kind === "error" ? "alert" : "status"} className="text-sm">{status.text}</p>

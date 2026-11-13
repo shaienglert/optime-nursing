@@ -23,7 +23,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.orm import Session
 
 from app.database import Base, SessionLocal, engine, database_runtime_status
-from app.models.facility import AdaptiveQuestionResponse, Facility, FacilityIntelligenceProfile, HumanIntelligenceScore, Inspection, QualityMeasure, ResidentOutcome, Staffing
+from app.models.facility import AdaptiveQuestionResponse, Facility, FacilityIntelligenceProfile, FacilityUser, HumanIntelligenceScore, Inspection, QualityMeasure, ResidentOutcome, Staffing
 from app.models.facility_outreach import FacilitySalesCopilotInteraction
 import app.models.clinical_evidence
 import app.models.agent_execution
@@ -1145,7 +1145,7 @@ class ClaimSearchOut(BaseModel):
 
 
 class IsraelRegistrationIn(BaseModel):
-    user_id: int
+    user_id: Optional[int] = None
     functional_levels_served: List[str]
     moh_code_agreement: str
     license_id: str
@@ -1157,7 +1157,7 @@ class IsraelRegistrationIn(BaseModel):
 
 
 class CapabilitySaveIn(BaseModel):
-    user_id: int
+    user_id: Optional[int] = None
     answers: Dict[str, str]
     ip_address: Optional[str] = None
 
@@ -1169,7 +1169,7 @@ class CapabilitySaveOut(BaseModel):
 
 
 class PhotoAddIn(BaseModel):
-    user_id: int
+    user_id: Optional[int] = None
     url: str
     category: str = "general"
     caption: Optional[str] = None
@@ -1177,7 +1177,7 @@ class PhotoAddIn(BaseModel):
 
 
 class PhotoRemoveIn(BaseModel):
-    user_id: int
+    user_id: Optional[int] = None
     ip_address: Optional[str] = None
 
 
@@ -1377,6 +1377,27 @@ def require_admin_token(x_admin_token: Optional[str] = Header(default=None)) -> 
     expected = os.getenv("OPTIME_ADMIN_TOKEN", "").strip()
     if not expected or not x_admin_token or x_admin_token != expected:
         raise HTTPException(status_code=401, detail="Missing or invalid admin token")
+
+
+def _provider_user(db: Session, facility_id: int, authorization: Optional[str], body_user_id: Optional[int]) -> Optional[int]:
+    """Resolve the acting provider user from the portal session (see provider_portal_access)."""
+    from app.services.provider_portal_access import PortalAuthError, acting_user_id
+
+    try:
+        return acting_user_id(db, facility_id, authorization, body_user_id)
+    except PortalAuthError as error:
+        raise HTTPException(status_code=401, detail=str(error)) from error
+    except PermissionError as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
+
+
+def _block_when_invite_only() -> None:
+    """Where portal sessions are required (Israel), facilities enter only through their
+    personal link, so the open email-claim flow is closed."""
+    from app.services.provider_portal_access import session_required
+
+    if session_required():
+        raise HTTPException(status_code=403, detail="Registration is by personal invitation link only.")
 
 
 def require_sales_desk_token(x_sales_desk_token: Optional[str] = Header(default=None)) -> None:
@@ -3397,10 +3418,22 @@ async def import_facility_activities(
     facility_id: int,
     payload: ActivityImportIn,
     db: Session = Depends(get_db),
+    authorization: Optional[str] = Header(default=None),
 ):
     facility = db.query(Facility).filter(Facility.id == facility_id).first()
     if not facility:
         raise HTTPException(status_code=404, detail="Facility not found")
+
+    from app.services.provider_portal_access import session_required
+
+    updated_by_user_id = payload.updated_by_user_id
+    if authorization or session_required():
+        updated_by_user_id = _provider_user(db, facility_id, authorization, None)
+        if updated_by_user_id is None:
+            raise HTTPException(status_code=401, detail="Portal session required.")
+        actor = db.query(FacilityUser).filter(FacilityUser.id == updated_by_user_id).one()
+        if not role_can_edit_category(actor.role, "ACTIVITIES"):
+            raise HTTPException(status_code=403, detail=f"Role {actor.role} may not import activities.")
 
     source_type = (payload.source_type or "").strip().lower()
     if source_type not in {"google_calendar", "ics", "csv", "pdf"}:
@@ -3412,7 +3445,7 @@ async def import_facility_activities(
             facility_id=facility_id,
             source_type=source_type,
             content=payload.content,
-            updated_by_user_id=payload.updated_by_user_id,
+            updated_by_user_id=updated_by_user_id,
         )
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error)) from error
@@ -3452,7 +3485,9 @@ async def persist_provider_verification_answers(
     facility_id: int,
     payload: ProviderPersistIn,
     db: Session = Depends(get_db),
+    authorization: Optional[str] = Header(default=None),
 ):
+    acting_user_id = _provider_user(db, facility_id, authorization, payload.verified_by_user_id)
     facility = db.query(Facility).filter(Facility.id == facility_id).first()
     if not facility:
         raise HTTPException(status_code=404, detail="Facility not found")
@@ -3468,7 +3503,7 @@ async def persist_provider_verification_answers(
             }
             for item in payload.answers
         ],
-        verified_by_user_id=payload.verified_by_user_id,
+        verified_by_user_id=acting_user_id,
         verification_method=payload.verification_method,
         request_subject=payload.request_subject,
         request_body=payload.request_body,
@@ -3505,6 +3540,7 @@ async def provider_identity_register_start(
     payload: IdentityRegistrationStartIn,
     db: Session = Depends(get_db),
 ):
+    _block_when_invite_only()
     try:
         result = start_email_verification(
             db=db,
@@ -3526,6 +3562,7 @@ async def provider_identity_register_verify(
     payload: IdentityVerificationCompleteIn,
     db: Session = Depends(get_db),
 ):
+    _block_when_invite_only()
     try:
         result = complete_email_verification(
             db=db,
@@ -3572,12 +3609,14 @@ async def provider_identity_field_update(
     facility_id: int,
     payload: FieldUpdateIn,
     db: Session = Depends(get_db),
+    authorization: Optional[str] = Header(default=None),
 ):
+    acting_user_id = _provider_user(db, facility_id, authorization, payload.user_id)
     try:
         result = apply_facility_field_update(
             db=db,
             facility_id=facility_id,
-            user_id=payload.user_id,
+            user_id=acting_user_id,
             field_name=payload.field_name,
             new_value=payload.new_value,
             category=payload.category,
@@ -3597,13 +3636,15 @@ async def provider_identity_revert_audit(
     audit_id: int,
     payload: RevertAuditIn,
     db: Session = Depends(get_db),
+    authorization: Optional[str] = Header(default=None),
 ):
+    acting_user_id = _provider_user(db, facility_id, authorization, payload.reverted_by_user_id)
     try:
         result = revert_audit_change(
             db=db,
             facility_id=facility_id,
             audit_id=audit_id,
-            reverted_by_user_id=payload.reverted_by_user_id,
+            reverted_by_user_id=acting_user_id,
             ip_address=payload.ip_address,
         )
     except PermissionError as error:
@@ -3619,12 +3660,14 @@ async def provider_identity_staff_invite(
     facility_id: int,
     payload: StaffInviteIn,
     db: Session = Depends(get_db),
+    authorization: Optional[str] = Header(default=None),
 ):
+    acting_user_id = _provider_user(db, facility_id, authorization, payload.inviter_user_id)
     try:
         result = invite_staff_member(
             db=db,
             facility_id=facility_id,
-            inviter_user_id=payload.inviter_user_id,
+            inviter_user_id=acting_user_id,
             email=payload.email,
             full_name=payload.full_name,
             role=payload.role,
@@ -3643,12 +3686,14 @@ async def provider_identity_role_change(
     facility_id: int,
     payload: RoleChangeIn,
     db: Session = Depends(get_db),
+    authorization: Optional[str] = Header(default=None),
 ):
+    acting_user_id = _provider_user(db, facility_id, authorization, payload.actor_user_id)
     try:
         result = request_role_change(
             db=db,
             facility_id=facility_id,
-            actor_user_id=payload.actor_user_id,
+            actor_user_id=acting_user_id,
             target_user_id=payload.target_user_id,
             new_role=payload.new_role,
         )
@@ -3690,12 +3735,14 @@ async def provider_facility_save_capabilities(
     facility_id: int,
     payload: CapabilitySaveIn,
     db: Session = Depends(get_db),
+    authorization: Optional[str] = Header(default=None),
 ):
+    user_id = _provider_user(db, facility_id, authorization, payload.user_id)
     try:
         result = save_capabilities(
             db=db,
             facility_id=facility_id,
-            user_id=payload.user_id,
+            user_id=user_id,
             answers=payload.answers,
             ip_address=payload.ip_address,
         )
@@ -3723,16 +3770,96 @@ async def israel_facility_page(canonical_id: str, db: Session = Depends(get_db))
     return page
 
 
+class PortalInviteIn(BaseModel):
+    facility_id: Optional[int] = None
+    canonical_id: Optional[str] = None
+    contact_email: Optional[str] = None
+
+
+class PortalRedeemIn(BaseModel):
+    token: str
+
+
+@app.post("/admin/portal/invites", dependencies=[Depends(require_admin_token)])
+async def admin_create_portal_invite(payload: PortalInviteIn, db: Session = Depends(get_db)):
+    """Create (or replace) a facility's personal portal link. The token is returned once."""
+    from app.services.provider_portal_access import create_invite
+
+    facility_id = payload.facility_id
+    if facility_id is None and payload.canonical_id:
+        found = db.query(Facility.id).filter(Facility.cms_id == payload.canonical_id).first()
+        facility_id = found[0] if found else None
+    if facility_id is None:
+        raise HTTPException(status_code=404, detail="Facility not found")
+    try:
+        invite = create_invite(db, facility_id, payload.contact_email)
+    except ValueError as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
+    invite["link_path"] = f"/he/portal/{invite['token']}"
+    return invite
+
+
+@app.post("/admin/portal/invites/{facility_id}/revoke", dependencies=[Depends(require_admin_token)])
+async def admin_revoke_portal_invites(facility_id: int, db: Session = Depends(get_db)):
+    from app.services.provider_portal_access import revoke_invites
+
+    return {"facility_id": facility_id, "revoked_invites": revoke_invites(db, facility_id)}
+
+
+@app.post("/provider/portal/redeem")
+async def provider_portal_redeem(payload: PortalRedeemIn, db: Session = Depends(get_db)):
+    from app.services.provider_portal_access import PortalAuthError, redeem_invite
+
+    try:
+        return redeem_invite(db, payload.token)
+    except PortalAuthError as error:
+        raise HTTPException(status_code=401, detail=str(error)) from error
+
+
+@app.get("/provider/portal/me")
+async def provider_portal_me(db: Session = Depends(get_db), authorization: Optional[str] = Header(default=None)):
+    from app.services.provider_portal_access import PortalAuthError, describe_session
+
+    try:
+        session, facility = describe_session(db, authorization)
+    except PortalAuthError as error:
+        raise HTTPException(status_code=401, detail=str(error)) from error
+    return {
+        "facility_id": facility.id,
+        "canonical_id": facility.cms_id,
+        "name": facility.name,
+        "user_id": session.user_id,
+        "expires_at": session.expires_at.isoformat(),
+    }
+
+
+@app.get("/provider/facilities/{facility_id}/israel-registration")
+async def provider_facility_get_israel_registration(
+    facility_id: int,
+    db: Session = Depends(get_db),
+    authorization: Optional[str] = Header(default=None),
+):
+    """The facility's own saved answers (raw values), for the portal to pre-fill and confirm."""
+    from app.services.israel_facility_registration import load_israel_registration
+
+    _provider_user(db, facility_id, authorization, None)
+    facility = db.query(Facility).filter(Facility.id == facility_id).one_or_none()
+    if facility is None:
+        raise HTTPException(status_code=404, detail="Facility not found")
+    return {"facility_id": facility_id, "registration": load_israel_registration(db, facility.cms_id)}
+
+
 @app.put("/provider/facilities/{facility_id}/israel-registration")
 async def provider_facility_save_israel_registration(
     facility_id: int,
     payload: IsraelRegistrationIn,
     db: Session = Depends(get_db),
+    authorization: Optional[str] = Header(default=None),
 ):
     from app.services.israel_facility_registration import save_israel_registration
 
     data = payload.model_dump() if hasattr(payload, "model_dump") else payload.dict()
-    user_id = data.pop("user_id")
+    user_id = _provider_user(db, facility_id, authorization, data.pop("user_id"))
     ip_address = data.pop("ip_address", None)
     try:
         return save_israel_registration(db, facility_id, user_id, data, ip_address=ip_address)
@@ -3747,12 +3874,14 @@ async def provider_facility_add_photo(
     facility_id: int,
     payload: PhotoAddIn,
     db: Session = Depends(get_db),
+    authorization: Optional[str] = Header(default=None),
 ):
+    user_id = _provider_user(db, facility_id, authorization, payload.user_id)
     try:
         return add_photo(
             db=db,
             facility_id=facility_id,
-            user_id=payload.user_id,
+            user_id=user_id,
             category=payload.category,
             url=payload.url,
             caption=payload.caption,
@@ -3767,13 +3896,16 @@ async def provider_facility_add_photo(
 @app.post("/provider/facilities/{facility_id}/photos/upload")
 async def provider_facility_upload_photo(
     facility_id: int,
-    user_id: int = Form(...),
+    user_id: Optional[int] = Form(None),
     category: str = Form("general"),
     caption: Optional[str] = Form(None),
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
+    authorization: Optional[str] = Header(default=None),
 ):
     from app.services.photo_storage import MAX_UPLOAD_BYTES
+
+    user_id = _provider_user(db, facility_id, authorization, user_id)
 
     data = await file.read(MAX_UPLOAD_BYTES + 1)
     try:
@@ -3821,12 +3953,14 @@ async def provider_facility_remove_photo(
     photo_id: int,
     payload: PhotoRemoveIn,
     db: Session = Depends(get_db),
+    authorization: Optional[str] = Header(default=None),
 ):
+    user_id = _provider_user(db, facility_id, authorization, payload.user_id)
     try:
         return deactivate_photo(
             db=db,
             facility_id=facility_id,
-            user_id=payload.user_id,
+            user_id=user_id,
             photo_id=photo_id,
             ip_address=payload.ip_address,
         )
