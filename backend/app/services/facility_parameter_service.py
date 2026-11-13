@@ -338,6 +338,17 @@ def _build_runtime_payload(market: str, active_signature: tuple[Any, ...]) -> Di
         evidence_payload = _read_json(evidence_path)
         evidence = list(evidence_payload.get("records") or [])
         evidence_generated_at = evidence_payload.get("generated_at_utc")
+    elif market == "israel":
+        # Israeli facts live in per-field blocks on each canonical record
+        # (licensing / care_capabilities / pricing), read by israel_must_gates.
+        evidence_generated_at = canonical_payload.get("generated_at_utc")
+        evidence = []
+        evidence_payload = {
+            "generated_at_utc": evidence_generated_at,
+            "record_count": 0,
+            "records": evidence,
+            "source": "israel_canonical_per_field_blocks",
+        }
     else:
         evidence_generated_at = canonical_payload.get("generated_at_utc")
         evidence = _synthesize_nevada_evidence(canonical, evidence_generated_at)

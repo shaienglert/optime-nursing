@@ -442,6 +442,59 @@ def add_photo(
     }
 
 
+def add_uploaded_photo(
+    db: Session,
+    facility_id: int,
+    user_id: int,
+    data: bytes,
+    category: str = "general",
+    caption: Optional[str] = None,
+    ip_address: Optional[str] = None,
+) -> Dict[str, object]:
+    """Store an uploaded image file and record it like a URL photo.
+
+    Permission is checked before anything touches the disk, so a refused user
+    cannot fill the storage volume.
+    """
+    from app.services.photo_storage import store_facility_photo
+
+    _get_facility(db, facility_id)
+    user = _get_user(db, facility_id, user_id)
+    if not role_can_edit_category(user.role, CATEGORY_PHOTOS):
+        raise PermissionError(f"Role {user.role} may not manage photographs.")
+
+    url = store_facility_photo(facility_id, data)
+    photo = FacilityPhoto(
+        facility_id=facility_id,
+        category=str(category or "").strip() or "general",
+        url=url,
+        caption=(str(caption).strip()[:255] or None) if caption else None,
+        source=PORTAL_SOURCE,
+        uploaded_by_user_id=user.id,
+    )
+    db.add(photo)
+    db.add(
+        FacilityAuditLog(
+            facility_id=facility_id,
+            user_id=user.id,
+            field_name="photo:upload",
+            old_value=None,
+            new_value=url,
+            ip_address=ip_address,
+            user_role=user.role,
+        )
+    )
+    db.commit()
+    db.refresh(photo)
+    return {
+        "photo_id": photo.id,
+        "category": photo.category,
+        "url": photo.url,
+        "caption": photo.caption,
+        "completeness": recompute_completeness(db, facility_id),
+    }
+
+
 def deactivate_photo(
     db: Session,
     facility_id: int,

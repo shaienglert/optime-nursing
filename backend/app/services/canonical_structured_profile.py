@@ -71,6 +71,9 @@ SCHEMA_FIELDS = frozenset(set(SCHEMA_FIELDS) | {
     *(f"humanIntelligenceV2.familyCultureProfile.{k}" for k in ("involvementExpectation","decisionRole")),
 })
 
+# Israeli market answers (owner decision 2026-11-12: MUST filters).
+SCHEMA_FIELDS = frozenset(set(SCHEMA_FIELDS) | {f"israelMarket.{k}" for k in ("functionalLevel", "fundingPathway", "relationship", "ageGroup", "city", "maxDistanceKm", "monthlyBudgetIls")})
+
 def in_schema(path: str) -> bool:
     return path in SCHEMA_FIELDS
 

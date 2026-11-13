@@ -586,3 +586,51 @@ class FacilityProfileCompleteness(Base):
 	)
 
 	facility = relationship("Facility", back_populates="profile_completeness")
+
+
+class FacilityMarketRegistration(Base):
+	"""Market-specific facts a facility fills in itself (e.g. Israel: functional levels,
+	MoH code agreement, license, prices). Stored as JSON because each market's set differs."""
+	__tablename__ = "facility_market_registrations"
+	__table_args__ = (
+		UniqueConstraint("facility_id", "market", name="uq_facility_market_registrations_facility_market"),
+	)
+
+	id = Column(Integer, primary_key=True, index=True)
+	facility_id = Column(Integer, ForeignKey("facilities.id"), index=True, nullable=False)
+	market = Column(String(40), nullable=False)
+	payload_json = Column(Text, nullable=False)
+	submitted_by_user_id = Column(Integer, ForeignKey("facility_users.id"), nullable=True)
+	created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+	updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+
+class FacilityPortalInvite(Base):
+	"""A personal portal link OOMNIK sends a facility. Only the SHA-256 of the token is
+	stored, so a database leak does not leak working links. One active invite per facility."""
+	__tablename__ = "facility_portal_invites"
+
+	id = Column(Integer, primary_key=True, index=True)
+	facility_id = Column(Integer, ForeignKey("facilities.id"), index=True, nullable=False)
+	token_hash = Column(String(64), unique=True, nullable=False)
+	contact_email = Column(String(255), nullable=True)
+	created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+	expires_at = Column(DateTime(timezone=True), nullable=False)
+	revoked_at = Column(DateTime(timezone=True), nullable=True)
+	first_redeemed_at = Column(DateTime(timezone=True), nullable=True)
+	last_redeemed_at = Column(DateTime(timezone=True), nullable=True)
+	redeem_count = Column(Integer, nullable=False, default=0)
+
+
+class FacilityPortalSession(Base):
+	"""A signed-in portal browser. The client holds the raw token; we keep its hash."""
+	__tablename__ = "facility_portal_sessions"
+
+	id = Column(Integer, primary_key=True, index=True)
+	token_hash = Column(String(64), unique=True, nullable=False)
+	facility_id = Column(Integer, ForeignKey("facilities.id"), index=True, nullable=False)
+	user_id = Column(Integer, ForeignKey("facility_users.id"), nullable=False)
+	invite_id = Column(Integer, ForeignKey("facility_portal_invites.id"), nullable=True)
+	created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+	expires_at = Column(DateTime(timezone=True), nullable=False)
+	revoked_at = Column(DateTime(timezone=True), nullable=True)
