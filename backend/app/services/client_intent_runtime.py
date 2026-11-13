@@ -64,6 +64,11 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
     # on missing data -- so a row with no expiration_date recorded still passes.
     add_must("LICENSE_CURRENTLY_VALID", "A facility must hold a currently valid license; one whose license has expired should never be presented as a safe option.", "canonical license expiration_date vs current date")
 
+    from app.services.market_scope import is_israel_market
+    if is_israel_market():
+        from app.services.israel_must_gates import israel_must_haves
+        must.extend(israel_must_haves(questionnaire_state))
+
     if care_delivery_signals is None:
         from app.services.combined_care_solution_runtime import _query_signals
         care_delivery_signals = _query_signals({}, natural_language_query)
@@ -295,6 +300,20 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
                 hard_fail.append(key)
             else:
                 must_unknown.append(key)
+        elif key in {"IL_FUNCTIONAL_LEVEL", "IL_MOH_CODE_AGREEMENT"}:
+            from app.services.israel_must_gates import functional_level_gate, moh_code_agreement_gate
+            outcome, reason = (
+                functional_level_gate(row, must.get("value"))
+                if key == "IL_FUNCTIONAL_LEVEL"
+                else moh_code_agreement_gate(row)
+            )
+            if outcome == "PASS":
+                must_pass.append(key)
+            elif outcome == "FAIL":
+                hard_fail.append(key)
+            else:
+                must_unknown.append(key)
+                pending_reasons[key] = reason
         elif key == "LAS_VEGAS":
             las_vegas_valley_cities = {
                 "LAS VEGAS", "HENDERSON", "NORTH LAS VEGAS", "PARADISE",
