@@ -1043,7 +1043,8 @@ class IdentityRegistrationStartOut(BaseModel):
     email: str
     verification_sent_at: str
     verification_method: str
-    debug_verification_code: str
+    # Only present when OPTIME_PROVIDER_DEBUG_CODES=1 (local development).
+    debug_verification_code: Optional[str] = None
 
 
 class IdentityVerificationCompleteIn(BaseModel):
