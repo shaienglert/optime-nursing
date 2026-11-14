@@ -66,8 +66,15 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
 
     from app.services.market_scope import is_israel_market
     if is_israel_market():
-        from app.services.israel_must_gates import israel_must_haves
+        from app.services.israel_must_gates import (
+            israel_additional_musts,
+            israel_must_haves,
+            israel_nice_to_haves,
+        )
         must.extend(israel_must_haves(questionnaire_state))
+        must.extend(israel_additional_musts(questionnaire_state))
+        for item in israel_nice_to_haves(questionnaire_state):
+            nice.append(item)
 
     if care_delivery_signals is None:
         from app.services.combined_care_solution_runtime import _query_signals
@@ -305,13 +312,9 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
                 hard_fail.append(key)
             else:
                 must_unknown.append(key)
-        elif key in {"IL_FUNCTIONAL_LEVEL", "IL_MOH_CODE_AGREEMENT"}:
-            from app.services.israel_must_gates import functional_level_gate, moh_code_agreement_gate
-            outcome, reason = (
-                functional_level_gate(row, must.get("value"))
-                if key == "IL_FUNCTIONAL_LEVEL"
-                else moh_code_agreement_gate(row)
-            )
+        elif key.startswith("IL_"):
+            from app.services.israel_must_gates import evaluate_israel_must
+            outcome, reason = evaluate_israel_must(row, must)
             if outcome == "PASS":
                 must_pass.append(key)
             elif outcome == "FAIL":
@@ -495,7 +498,19 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
 
     for nice in intent.get("nice_to_haves") or []:
         key = str(nice.get("key") or "")
-        if key == "RICH_CULTURE_AND_ACTIVITIES":
+        if key.startswith("IL_"):
+            # Israeli ranking preferences: a mismatch lowers the facility, never hides it.
+            from app.services.israel_must_gates import MATCH, MISMATCH, evaluate_israel_nice
+            outcome = evaluate_israel_nice(row, nice)
+            if outcome == MATCH:
+                nice_match.append(key)
+                nice_fit_scores[key] = 100.0
+            elif outcome == MISMATCH:
+                nice_mismatch.append(key)
+                nice_fit_scores[key] = 0.0
+            else:
+                nice_unknown.append(key)
+        elif key == "RICH_CULTURE_AND_ACTIVITIES":
             if any(p.get("social_engagement_verified") is True for p in payloads):
                 nice_match.append(key)
                 nice_fit_scores[key] = 100.0

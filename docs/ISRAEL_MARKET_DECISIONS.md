@@ -91,6 +91,22 @@ The existing `LICENSE_CURRENTLY_VALID` MUST reads license status and expiry; for
 - Unanswered = UNKNOWN, never stored as "no". Unchanged resubmission = logged confirmation.
 - Matching use: unchanged. Only the two approved MUST gates read the answers; every other answer is displayed on the facility page. Using any new answer to filter or rank needs owner approval.
 
+## Matching parameters (owner decisions, 2026-11-14)
+
+| Parameter | Use | Family question | Facility answer |
+|---|---|---|---|
+| Ventilation, wandering safety, PEG, NG tube | MUST, only if the family states the need | medicalNeeds | explicit yes/no questions (accepts_ventilated, wandering_safe, accepts_peg, accepts_ng_tube) |
+| Couple | MUST if the family is a couple | isCouple, partnerSameLevel | couples (NO / SAME_LEVEL / MIXED_LEVELS) |
+| Gender | MUST | residentGenders | gender_policy |
+| Community character (secular … Druze) | Ranking only ("שישארו בדרוג נמוך יותר") | community | religious_character; MIXED fits secular/traditional |
+| Kashrut, Shabbat | Ranking only | kashrut, shabbat | kashrut, shabbat |
+| Language, budget (private), availability at level, shelter | Ranking only | language, monthlyBudgetIls, functionalLevel, shelterInRoom | staff_languages, monthly_price_ils, vacancy_by_level, shelter |
+
+- A MUST is decided only by the facility's own answer: YES → pass, NO → fail, unanswered or not registered → pending (never fail).
+- A ranking preference: match ranks higher, mismatch ranks lower, unanswered is neutral. No preference ever hides a facility.
+- Facility questions that decide a MUST are explicit yes/no, so "not ticked" is never read as "no".
+- Distance is collected but not used yet: facility addresses are not geocoded.
+
 ## Not done yet
 
 - Nevada-specific need gates (ADL, medication, memory care) still read Nevada evidence; for Israel they stay PENDING until Israeli evidence exists.

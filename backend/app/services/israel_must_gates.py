@@ -98,3 +98,204 @@ def israel_must_haves(questionnaire_state: Dict[str, Any]) -> list[Dict[str, Any
             "verification": "MoH agreement the facility filled in at registration",
         })
     return musts
+
+
+# ---------------------------------------------------------------------------
+# Owner-approved additional MUSTs (2026-11-14). Each applies only when the family
+# states the need; each reads only the facility's own questionnaire answers.
+# ---------------------------------------------------------------------------
+
+MEDICAL_NEED_GATES = {
+    # family need -> (MUST key, facility yes/no question)
+    "VENTILATION": ("IL_ACCEPTS_VENTILATED", "accepts_ventilated"),
+    "WANDERING": ("IL_WANDERING_SAFE", "wandering_safe"),
+    "PEG": ("IL_ACCEPTS_PEG", "accepts_peg"),
+    "NG_TUBE": ("IL_ACCEPTS_NG_TUBE", "accepts_ng_tube"),
+}
+COUPLE_KEY = "IL_ACCEPTS_COUPLE"
+GENDER_KEY = "IL_GENDER_POLICY"
+GENDERS = {"FEMALE", "MALE"}
+
+ISRAEL_MUST_KEYS = (
+    {FUNCTIONAL_LEVEL_KEY, MOH_CODE_AGREEMENT_KEY, COUPLE_KEY, GENDER_KEY}
+    | {key for key, _ in MEDICAL_NEED_GATES.values()}
+)
+
+
+def _answers(row: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """The facility's own questionnaire, or None if it has not registered."""
+    if str(row.get("registration_status") or "") != "REGISTERED":
+        return None
+    answers = row.get("israel_questionnaire")
+    return answers if isinstance(answers, dict) else {}
+
+
+def yes_no_gate(row: Dict[str, Any], question: str) -> tuple[str, str]:
+    answers = _answers(row)
+    if answers is None:
+        return PENDING, "FACILITY_NOT_REGISTERED"
+    value = str(answers.get(question) or "").upper()
+    if value == "YES":
+        return PASS, f"FACILITY_SUPPLIED_{question.upper()}_YES"
+    if value == "NO":
+        return FAIL, f"FACILITY_SUPPLIED_{question.upper()}_NO"
+    return PENDING, f"FACILITY_DID_NOT_ANSWER_{question.upper()}"
+
+
+def couple_gate(row: Dict[str, Any], same_level: Optional[bool]) -> tuple[str, str]:
+    answers = _answers(row)
+    if answers is None:
+        return PENDING, "FACILITY_NOT_REGISTERED"
+    policy = str(answers.get("couples") or "").upper()
+    if policy == "MIXED_LEVELS":
+        return PASS, "FACILITY_ACCEPTS_COUPLES_ANY_LEVEL"
+    if policy == "NO":
+        return FAIL, "FACILITY_DOES_NOT_ACCEPT_COUPLES"
+    if policy == "SAME_LEVEL":
+        if same_level is True:
+            return PASS, "FACILITY_ACCEPTS_COUPLES_SAME_LEVEL"
+        if same_level is False:
+            return FAIL, "FACILITY_ACCEPTS_ONLY_SAME_LEVEL_COUPLES"
+        return PENDING, "ASK_FAMILY_WHETHER_PARTNERS_SHARE_LEVEL"
+    return PENDING, "FACILITY_DID_NOT_ANSWER_COUPLES"
+
+
+def gender_gate(row: Dict[str, Any], genders: set[str]) -> tuple[str, str]:
+    answers = _answers(row)
+    if answers is None:
+        return PENDING, "FACILITY_NOT_REGISTERED"
+    policy = str(answers.get("gender_policy") or "").upper()
+    if policy == "MIXED":
+        return PASS, "FACILITY_ACCEPTS_ALL_GENDERS"
+    if policy in {"WOMEN_ONLY", "MEN_ONLY"}:
+        allowed = "FEMALE" if policy == "WOMEN_ONLY" else "MALE"
+        return (PASS, "FACILITY_GENDER_POLICY_FITS") if genders == {allowed} else (FAIL, "FACILITY_GENDER_POLICY_EXCLUDES")
+    return PENDING, "FACILITY_DID_NOT_ANSWER_GENDER_POLICY"
+
+
+def evaluate_israel_must(row: Dict[str, Any], must: Dict[str, Any]) -> tuple[str, str]:
+    key = str(must.get("key") or "")
+    if key == FUNCTIONAL_LEVEL_KEY:
+        return functional_level_gate(row, must.get("value"))
+    if key == MOH_CODE_AGREEMENT_KEY:
+        return moh_code_agreement_gate(row)
+    if key == COUPLE_KEY:
+        return couple_gate(row, must.get("same_level"))
+    if key == GENDER_KEY:
+        return gender_gate(row, set(must.get("value") or []))
+    for gate_key, question in MEDICAL_NEED_GATES.values():
+        if key == gate_key:
+            return yes_no_gate(row, question)
+    return PENDING, "UNKNOWN_ISRAEL_MUST"
+
+
+def _family(questionnaire_state: Dict[str, Any]) -> Dict[str, Any]:
+    answers = questionnaire_state.get("israelMarket")
+    return answers if isinstance(answers, dict) else {}
+
+
+def israel_additional_musts(questionnaire_state: Dict[str, Any]) -> list[Dict[str, Any]]:
+    family = _family(questionnaire_state)
+    musts: list[Dict[str, Any]] = []
+    needs = {str(n).upper() for n in family.get("medicalNeeds") or []}
+    for need, (key, question) in MEDICAL_NEED_GATES.items():
+        if need in needs:
+            musts.append({
+                "key": key,
+                "reason": f"The family stated a {need.lower()} need.",
+                "verification": f"facility answer to '{question}'",
+            })
+    if family.get("isCouple") is True:
+        same = family.get("partnerSameLevel")
+        musts.append({
+            "key": COUPLE_KEY,
+            "same_level": same if isinstance(same, bool) else None,
+            "reason": "The family is looking for a place for a couple.",
+            "verification": "facility answer on accepting couples",
+        })
+    genders = {str(g).upper() for g in family.get("residentGenders") or []} & GENDERS
+    if genders:
+        musts.append({
+            "key": GENDER_KEY,
+            "value": sorted(genders),
+            "reason": "A women-only or men-only facility can serve only matching residents.",
+            "verification": "facility gender policy",
+        })
+    return musts
+
+
+# ---------------------------------------------------------------------------
+# Ranking-only preferences (owner decision 2026-11-14: a mismatch ranks lower and
+# never hides a facility). Outcomes: MATCH / MISMATCH / UNKNOWN.
+# ---------------------------------------------------------------------------
+
+MATCH, MISMATCH, UNKNOWN = "MATCH", "MISMATCH", "UNKNOWN"
+COMMUNITIES = {"SECULAR", "TRADITIONAL", "RELIGIOUS", "HAREDI", "MUSLIM", "CHRISTIAN", "DRUZE"}
+# A "mixed" Jewish facility suits families who did not ask for a religious setting.
+MIXED_FITS = {"SECULAR", "TRADITIONAL"}
+
+
+def israel_nice_to_haves(questionnaire_state: Dict[str, Any]) -> list[Dict[str, Any]]:
+    family = _family(questionnaire_state)
+    nice: list[Dict[str, Any]] = []
+    community = str(family.get("community") or "").upper()
+    if community in COMMUNITIES:
+        nice.append({"key": "IL_COMMUNITY", "value": community, "reason": "Preferred community character."})
+    kashrut = str(family.get("kashrut") or "").upper()
+    if kashrut in {"KOSHER", "MEHADRIN"}:
+        nice.append({"key": "IL_KASHRUT", "value": kashrut, "reason": "Kashrut matters to the family."})
+    if str(family.get("shabbat") or "").upper() == "IMPORTANT":
+        nice.append({"key": "IL_SHABBAT", "reason": "Shabbat observance matters to the family."})
+    language = str(family.get("language") or "").upper()
+    if language and language != "HE":
+        nice.append({"key": "IL_LANGUAGE", "value": language, "reason": "The resident's main language."})
+    if str(family.get("shelterInRoom") or "").upper() == "IMPORTANT":
+        nice.append({"key": "IL_SHELTER", "reason": "A protected room close by matters to the family."})
+    budget = family.get("monthlyBudgetIls")
+    if str(family.get("fundingPathway") or "").upper() == "PRIVATE" and isinstance(budget, (int, float)) and budget > 0:
+        nice.append({"key": "IL_BUDGET", "value": float(budget), "reason": "Monthly budget for private payment."})
+    level = str(family.get("functionalLevel") or "").upper()
+    if level in FUNCTIONAL_LEVELS:
+        nice.append({"key": "IL_AVAILABILITY", "value": level, "reason": "A place available soon at the needed level."})
+    return nice
+
+
+def evaluate_israel_nice(row: Dict[str, Any], nice: Dict[str, Any]) -> str:
+    answers = _answers(row)
+    if answers is None:
+        return UNKNOWN
+    key = str(nice.get("key") or "")
+    value = nice.get("value")
+    if key == "IL_COMMUNITY":
+        character = str(answers.get("religious_character") or "").upper()
+        if not character:
+            return UNKNOWN
+        if character == value or (character == "MIXED" and value in MIXED_FITS):
+            return MATCH
+        return MISMATCH
+    if key == "IL_KASHRUT":
+        kashrut = str(answers.get("kashrut") or "").upper()
+        if not kashrut:
+            return UNKNOWN
+        ok = {"KOSHER": {"KOSHER", "MEHADRIN"}, "MEHADRIN": {"MEHADRIN"}}[value]
+        return MATCH if kashrut in ok else MISMATCH
+    if key == "IL_SHABBAT":
+        shabbat = str(answers.get("shabbat") or "").upper()
+        return UNKNOWN if not shabbat else (MATCH if shabbat == "OBSERVED" else MISMATCH)
+    if key == "IL_LANGUAGE":
+        languages = answers.get("staff_languages")
+        return UNKNOWN if not languages else (MATCH if value in languages else MISMATCH)
+    if key == "IL_SHELTER":
+        shelter = str(answers.get("shelter") or "").upper()
+        return UNKNOWN if not shelter else (MATCH if shelter in {"ROOM", "FLOOR"} else MISMATCH)
+    if key == "IL_BUDGET":
+        price = _fact(row, "pricing", "monthly_price")
+        if not _facility_supplied(price):
+            return UNKNOWN
+        return MATCH if float(price["value"]) <= float(value) else MISMATCH
+    if key == "IL_AVAILABILITY":
+        vacancy = str((answers.get("vacancy_by_level") or {}).get(value) or "").upper()
+        if not vacancy:
+            return UNKNOWN
+        return MATCH if vacancy in {"AVAILABLE_NOW", "WITHIN_MONTH"} else MISMATCH
+    return UNKNOWN

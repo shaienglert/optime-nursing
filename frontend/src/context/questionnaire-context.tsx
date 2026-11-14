@@ -51,6 +51,17 @@ export type QuestionnaireState = {
     city: string;
     maxDistanceKm: number | null;
     monthlyBudgetIls: number | null;
+    // Owner-approved MUSTs (2026-11-14): filter only when stated.
+    medicalNeeds?: Array<"VENTILATION" | "WANDERING" | "PEG" | "NG_TUBE">;
+    isCouple?: boolean | null;
+    partnerSameLevel?: boolean | null;
+    residentGenders?: Array<"FEMALE" | "MALE">;
+    // Ranking-only preferences: a mismatch ranks lower, never hides a facility.
+    community?: string;
+    kashrut?: "" | "KOSHER" | "MEHADRIN";
+    shabbat?: "" | "IMPORTANT";
+    language?: string;
+    shelterInRoom?: "" | "IMPORTANT";
   };
   questionnaireCompletion: {
     // Explicit advisor consent is a UI control, not an AI-extracted resident fact.

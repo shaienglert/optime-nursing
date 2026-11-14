@@ -12,8 +12,9 @@ type Option = { value: string; label: string; hint?: string };
 type Step = {
   id: string;
   prompt: string;
-  kind: "single" | "text" | "city";
+  kind: "single" | "multi" | "text" | "city";
   options?: Option[];
+  optionsFor?: (draft: Draft) => Option[];
   show?: (draft: Draft) => boolean;
   get: (draft: Draft) => string;
   set: (draft: Draft, value: string) => Draft;
@@ -75,6 +76,119 @@ const STEPS: Step[] = [
     options: [6000, 9000, 12000, 15000, 20000, 25000, 30000].map((n) => ({ value: String(n), label: `עד ₪${n.toLocaleString("he-IL")}` })),
     ...israelField("monthlyBudgetIls", toNumber),
   },
+  {
+    id: "isCouple",
+    prompt: "המקום מיועד לאדם אחד או לזוג?",
+    kind: "single",
+    options: [
+      { value: "false", label: "לאדם אחד" },
+      { value: "true", label: "לבני זוג", hint: "נציג רק מוסדות שמקבלים זוגות" },
+    ],
+    get: (d) => (d.israel.isCouple === true ? "true" : d.israel.isCouple === false ? "false" : ""),
+    set: (d, v) => ({ ...d, israel: { ...d.israel, isCouple: v === "true", partnerSameLevel: v === "true" ? d.israel.partnerSameLevel : null, residentGenders: [] } }),
+  },
+  {
+    id: "partnerSameLevel",
+    prompt: "שני בני הזוג באותו מצב תפקודי?",
+    kind: "single",
+    show: (d) => d.israel.isCouple === true,
+    options: [
+      { value: "true", label: "כן" },
+      { value: "false", label: "לא", hint: "למשל אחד עצמאי והשני סיעודי" },
+    ],
+    get: (d) => (d.israel.partnerSameLevel === true ? "true" : d.israel.partnerSameLevel === false ? "false" : ""),
+    set: (d, v) => ({ ...d, israel: { ...d.israel, partnerSameLevel: v === "true" } }),
+  },
+  {
+    id: "residentGenders",
+    prompt: "עבור מי המקום?",
+    kind: "single",
+    optionsFor: (d) =>
+      d.israel.isCouple
+        ? [
+            { value: "FEMALE+MALE", label: "אישה וגבר" },
+            { value: "FEMALE", label: "שתי נשים" },
+            { value: "MALE", label: "שני גברים" },
+          ]
+        : [
+            { value: "FEMALE", label: "אישה" },
+            { value: "MALE", label: "גבר" },
+          ],
+    get: (d) => (d.israel.residentGenders ?? []).join("+"),
+    set: (d, v) => ({ ...d, israel: { ...d.israel, residentGenders: (v ? v.split("+") : []) as Israel["residentGenders"] } }),
+  },
+  {
+    id: "medicalNeeds",
+    prompt: "יש צורך רפואי מיוחד?",
+    kind: "multi",
+    optional: true,
+    show: (d) => d.israel.functionalLevel !== "INDEPENDENT",
+    options: [
+      { value: "VENTILATION", label: "מונשם/ת" },
+      { value: "WANDERING", label: "נוטה לשוטט / צריך מחלקה סגורה" },
+      { value: "PEG", label: "הזנה דרך PEG" },
+      { value: "NG_TUBE", label: "זונדה" },
+    ],
+    get: (d) => (d.israel.medicalNeeds ?? []).join(","),
+    set: (d, v) => ({ ...d, israel: { ...d.israel, medicalNeeds: (v ? v.split(",") : []) as Israel["medicalNeeds"] } }),
+  },
+  {
+    id: "language",
+    prompt: "באיזו שפה הכי נוח לדבר?",
+    kind: "single",
+    options: [
+      ["HE", "עברית"], ["RU", "רוסית"], ["AR", "ערבית"], ["EN", "אנגלית"], ["AM", "אמהרית"],
+      ["YI", "יידיש"], ["FR", "צרפתית"], ["ES", "ספרדית"], ["RO", "רומנית"],
+    ].map(([value, label]) => ({ value, label })),
+    ...israelField("language"),
+  },
+  {
+    id: "community",
+    prompt: "איזו אווירה מתאימה לכם?",
+    kind: "single",
+    options: [
+      ["", "אין העדפה"], ["SECULAR", "חילונית"], ["TRADITIONAL", "מסורתית"], ["RELIGIOUS", "דתית"], ["HAREDI", "חרדית"],
+      ["MUSLIM", "מוסלמית"], ["CHRISTIAN", "נוצרית"], ["DRUZE", "דרוזית"],
+    ].map(([value, label]) => ({ value, label, hint: value ? "מוסדות מתאימים יופיעו קודם" : undefined })),
+    ...israelField("community"),
+    optional: true,
+  },
+  {
+    id: "kashrut",
+    prompt: "כשרות",
+    kind: "single",
+    show: (d) => !["MUSLIM", "CHRISTIAN", "DRUZE"].includes(d.israel.community ?? ""),
+    options: [
+      { value: "", label: "לא משנה" },
+      { value: "KOSHER", label: "כשר" },
+      { value: "MEHADRIN", label: "כשר למהדרין" },
+    ],
+    ...israelField("kashrut"),
+    optional: true,
+  },
+  {
+    id: "shabbat",
+    prompt: "חשוב שבמוסד שומרים שבת?",
+    kind: "single",
+    show: (d) => ["TRADITIONAL", "RELIGIOUS", "HAREDI"].includes(d.israel.community ?? ""),
+    options: [
+      { value: "IMPORTANT", label: "כן, חשוב" },
+      { value: "", label: "לא משנה" },
+    ],
+    ...israelField("shabbat"),
+    optional: true,
+  },
+  {
+    id: "shelterInRoom",
+    prompt: "חשוב שיהיה ממ״ד בחדר או מרחב מוגן בקומה?",
+    kind: "single",
+    options: [
+      { value: "IMPORTANT", label: "כן, חשוב" },
+      { value: "", label: "לא קריטי" },
+    ],
+    ...israelField("shelterInRoom"),
+    optional: true,
+  },
   { id: "city", prompt: "באיזה יישוב או אזור?", kind: "city", ...israelField("city") },
   {
     id: "maxDistanceKm",
@@ -109,9 +223,20 @@ const EMPTY: Draft = {
     city: "",
     maxDistanceKm: null,
     monthlyBudgetIls: null,
+    medicalNeeds: [],
+    isCouple: null,
+    partnerSameLevel: null,
+    residentGenders: [],
+    community: "",
+    kashrut: "",
+    shabbat: "",
+    language: "",
+    shelterInRoom: "",
   },
   notes: "",
 };
+
+const optionsOf = (step: Step, draft: Draft): Option[] => step.optionsFor?.(draft) ?? step.options ?? [];
 
 const answered = (step: Step, draft: Draft) => step.optional || step.get(draft).trim() !== "";
 
@@ -143,12 +268,22 @@ export function IsraelIntake() {
   }
 
   function submit() {
+    // Answers to questions that are no longer shown must not act as filters.
+    const visibleIds = new Set(steps.map((s) => s.id));
+    const israel: Israel = {
+      ...draft.israel,
+      medicalNeeds: visibleIds.has("medicalNeeds") ? draft.israel.medicalNeeds : [],
+      kashrut: visibleIds.has("kashrut") ? draft.israel.kashrut : "",
+      shabbat: visibleIds.has("shabbat") ? draft.israel.shabbat : "",
+      partnerSameLevel: visibleIds.has("partnerSameLevel") ? draft.israel.partnerSameLevel : null,
+      monthlyBudgetIls: visibleIds.has("monthlyBudgetIls") ? draft.israel.monthlyBudgetIls : null,
+    };
     const submission: QuestionnaireState = {
       ...state,
       // Free text goes to the shared AI interpreter like any other market.
       notes: draft.notes.trim(),
-      budget: draft.israel.monthlyBudgetIls ?? 0,
-      israelMarket: draft.israel,
+      budget: israel.monthlyBudgetIls ?? 0,
+      israelMarket: israel,
     };
     saveSessionJson(QUESTIONNAIRE_SESSION_KEY, submission);
     setState(submission);
@@ -157,8 +292,13 @@ export function IsraelIntake() {
 
   const label = (s: Step) => {
     const value = s.get(draft);
-    if (!value) return "לא צוין";
-    return s.options?.find((o) => o.value === value)?.label ?? value;
+    const options = optionsOf(s, draft);
+    if (s.kind === "multi") {
+      return value ? value.split(",").map((v) => options.find((o) => o.value === v)?.label ?? v).join(", ") : "אין";
+    }
+    const found = options.find((o) => o.value === value);
+    if (found) return found.label;
+    return value || "לא צוין";
   };
 
   const choiceClass = (active: boolean) =>
@@ -177,12 +317,26 @@ export function IsraelIntake() {
             <h1 className="text-3xl font-semibold">{step.prompt}</h1>
             {step.kind === "single" ? (
               <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                {step.options?.map((option) => (
+                {optionsOf(step, draft).map((option) => (
                   <button key={option.value || "any"} type="button" aria-pressed={step.get(draft) === option.value} onClick={() => choose(option.value)} className={choiceClass(step.get(draft) === option.value)}>
                     {option.label}
                     {option.hint ? <span className="mt-1 block text-sm font-normal">{option.hint}</span> : null}
                   </button>
                 ))}
+              </div>
+            ) : step.kind === "multi" ? (
+              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                <p className="text-sm sm:col-span-2">אפשר לבחור כמה. אם אין צורך כזה, פשוט ממשיכים.</p>
+                {optionsOf(step, draft).map((option) => {
+                  const chosen = step.get(draft).split(",").filter(Boolean);
+                  const active = chosen.includes(option.value);
+                  const next = active ? chosen.filter((v) => v !== option.value) : [...chosen, option.value];
+                  return (
+                    <button key={option.value} type="button" aria-pressed={active} onClick={() => setDraft(step.set(draft, next.join(",")))} className={choiceClass(active)}>
+                      {option.label}
+                    </button>
+                  );
+                })}
               </div>
             ) : step.kind === "city" ? (
               <input aria-label={step.prompt} className="mt-6 w-full rounded-xl border p-3 text-lg" value={step.get(draft)} onChange={(e) => setDraft(step.set(draft, e.target.value))} placeholder="למשל: חיפה" />
@@ -194,7 +348,7 @@ export function IsraelIntake() {
               {index > 0 ? (
                 <button type="button" onClick={() => go(index - 1)} className="rounded-xl border px-4 py-2">חזרה</button>
               ) : null}
-              {step.kind !== "single" || step.optional ? (
+              {step.kind !== "single" || (step.optional && step.get(draft) !== "") ? (
                 <button type="button" onClick={() => (answered(step, draft) ? go(index + 1) : setError(true))} className="rounded-xl bg-forest px-4 py-2 font-semibold text-white">המשך</button>
               ) : null}
             </div>

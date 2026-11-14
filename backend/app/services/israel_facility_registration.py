@@ -153,6 +153,9 @@ def apply_registration(row: Dict[str, Any], registration: Optional[Dict[str, Any
     out["license_status"] = "ACTIVE"
     out["expiration_date"] = registration["license_expiration_date"]
     out.pop("license_standing", None)
+    # Questionnaire answers for the Israeli MUST gates and preferences. Everything here
+    # was filled in by the facility itself (FACILITY_SUPPLIED).
+    out["israel_questionnaire"] = dict(registration.get("questionnaire") or {})
     out["registration_status"] = "REGISTERED"
     out["matching_eligibility"] = "REGISTERED"
     return out

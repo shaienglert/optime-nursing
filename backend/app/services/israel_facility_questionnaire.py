@@ -5,11 +5,14 @@ Core questions (functional levels, MoH agreement, licence, prices) keep their
 original top-level keys because the shared engine's MUST gates read them. Every
 other answer is stored under ``questionnaire`` in the same registration record.
 
-Matching use (governance, AGENTS.md): only the two owner-approved MUST gates read
-these answers today (functional level and funding pathway). The other answers are
-collected and shown on the facility's page; using any of them to filter or rank is
-a product decision that needs owner approval first. An unanswered question is
-UNKNOWN, never a "no".
+Matching use (owner decisions, 2026-11-13/14; see israel_must_gates):
+- MUST (filters, only when the family states the need): functional level, funding
+  pathway, ventilation, wandering safety, PEG, NG tube, couples, gender.
+- Ranking only (a mismatch ranks lower, never hides the facility): religious/
+  community character, kashrut, Shabbat, staff language, price vs budget,
+  availability for the family's level, shelter (ממ"ד).
+- Everything else is displayed only.
+An unanswered question is UNKNOWN, never a "no", and neither raises nor lowers.
 """
 
 from __future__ import annotations
@@ -65,8 +68,6 @@ SECTIONS: List[Dict[str, Any]] = [
                 "multi",
                 options=[
                     ("COMPLEX_NURSING", "סיעוד מורכב"),
-                    ("VENTILATION", "מונשמים"),
-                    ("LOCKED_DEMENTIA", "מחלקה סגורה לתשושי נפש"),
                     ("PSYCHOGERIATRIC", "פסיכוגריאטריה"),
                     ("GERIATRIC_REHAB", "שיקום גריאטרי"),
                     ("HOSPICE", "הוספיס / טיפול תומך"),
@@ -173,21 +174,30 @@ SECTIONS: List[Dict[str, Any]] = [
                 options=[("DAILY", "כל יום"), ("WEEKLY", "כמה פעמים בשבוע"), ("ON_CALL", "לפי קריאה"), ("NONE", "אין")],
             ),
             _q("geriatrician", "רופא גריאטר בצוות", "single", options=[("YES", "כן"), ("NO", "לא")]),
+            # Explicit yes/no: these four decide whether a family that needs them sees the
+            # facility at all (owner-approved MUSTs, 2026-11-14), so "not ticked" must not
+            # be read as "no".
+            _q("accepts_ventilated", "המוסד מקבל מונשמים", "single", options=[("YES", "כן"), ("NO", "לא")]),
+            _q(
+                "wandering_safe",
+                "יש מחלקה סגורה או השגחה מתאימה לדיירים שנוטים לשוטט",
+                "single",
+                options=[("YES", "כן"), ("NO", "לא")],
+            ),
+            _q("accepts_peg", "המוסד מקבל דיירים עם הזנה דרך PEG", "single", options=[("YES", "כן"), ("NO", "לא")]),
+            _q("accepts_ng_tube", "המוסד מקבל דיירים עם זונדה", "single", options=[("YES", "כן"), ("NO", "לא")]),
             _q(
                 "clinical_capabilities",
                 "טיפולים שהמוסד מסוגל לתת",
                 "multi",
                 options=[
                     ("OXYGEN", "חמצן"),
-                    ("PEG", "הזנה דרך PEG"),
-                    ("NG_TUBE", "זונדה"),
                     ("IV", "עירוי תוך-ורידי"),
                     ("INSULIN", "הזרקות אינסולין"),
                     ("CATHETER", "קטטר"),
                     ("TRACHEOSTOMY", "טרכאוסטומיה"),
                     ("PRESSURE_ULCERS", "טיפול בפצעי לחץ"),
                     ("DIALYSIS_ACCESS", "הסעה ומעקב לדיאליזה"),
-                    ("WANDERING", "השגחה על משוטטים"),
                     ("BEHAVIORAL", "התמודדות עם הפרעות התנהגות"),
                     ("PALLIATIVE", "טיפול תומך בסוף החיים"),
                 ],
