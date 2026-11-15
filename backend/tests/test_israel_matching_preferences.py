@@ -294,3 +294,33 @@ def test_shelter_as_condition_or_preference():
     assert "IL_SHELTER" in _fit(outside, preference)["nice_mismatch"]
     assert "IL_SHELTER" in _fit(floor, preference)["nice_match"]
     assert "IL_SHELTER" in _fit(silent, preference)["nice_unknown"]
+
+
+def test_bedridden_resident_requires_a_protection_plan():
+    intent = _intent(bedridden=True)
+    assert _fit(_facility(shelter_bedridden="MOVED_IN_BED"), intent)["hard_gate"] == "PASS"
+    assert _fit(_facility(shelter_bedridden="PROTECTED_IN_ROOM"), intent)["hard_gate"] == "PASS"
+    assert _fit(_facility(shelter_bedridden="NO_SOLUTION"), intent)["hard_gate"] == "FAIL"
+    assert _fit(_facility(shelter_bedridden="NOT_RELEVANT"), intent)["hard_gate"] == "PENDING_VERIFICATION"
+    assert _fit(_facility(), intent)["hard_gate"] == "PENDING_VERIFICATION"
+    assert _fit(_facility(shelter_bedridden="NO_SOLUTION"), _intent())["hard_gate"] == "PASS"
+
+
+def test_up_to_ten_percent_over_budget_is_labelled_and_neutral():
+    row = _priced(_offer("MONTHLY", "SHARED_2", "NURSING", 16000))
+    fit, label, _ = _budget(row, monthlyBudgetIls=15000)  # 6.7% over
+    assert label == "מעל התקציב ב-7% (בתוך סטייה של עד 10%)"
+    assert "IL_BUDGET" in fit["nice_unknown"] and "IL_BUDGET" not in fit["nice_mismatch"]
+    _, label, _ = _budget(row, monthlyBudgetIls=14500)  # 10.3% over
+    assert label == "המחיר ההתחלתי מעל התקציב"
+
+    housing = _priced(_offer("DEPOSIT", "APT_2", "NURSING", 6000, 1_080_000))
+    _, label, _ = _budget(housing, monthlyBudgetIls=8000, depositCapIls=1_000_000)  # deposit 8% over
+    assert label == "מעל התקציב ב-8% (בתוך סטייה של עד 10%)"
+    _, label, _ = _budget(housing, monthlyBudgetIls=8000, depositCapIls=0)  # family wants no deposit
+    assert label == "המחיר ההתחלתי מעל התקציב"
+
+    # In budget still ranks above within-tolerance.
+    within = _fit(_priced(_offer("MONTHLY", "SHARED_2", "NURSING", 14000)), _intent(fundingPathway="PRIVATE", monthlyBudgetIls=15000))
+    near = _fit(row, _intent(fundingPathway="PRIVATE", monthlyBudgetIls=15000))
+    assert intent_rank_key({"client_intent_fit": within}) < intent_rank_key({"client_intent_fit": near})

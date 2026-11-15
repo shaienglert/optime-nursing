@@ -72,7 +72,7 @@ SCHEMA_FIELDS = frozenset(set(SCHEMA_FIELDS) | {
 })
 
 # Israeli market answers (owner decision 2026-11-12: MUST filters).
-SCHEMA_FIELDS = frozenset(set(SCHEMA_FIELDS) | {f"israelMarket.{k}" for k in ("functionalLevel", "fundingPathway", "relationship", "ageGroup", "city", "maxDistanceKm", "monthlyBudgetIls", "medicalNeeds", "isCouple", "partnerSameLevel", "residentGenders", "community", "kashrut", "shabbat", "language", "shelterInRoom", "depositCapIls", "shelterNeed", "shelterIsCondition")})
+SCHEMA_FIELDS = frozenset(set(SCHEMA_FIELDS) | {f"israelMarket.{k}" for k in ("functionalLevel", "fundingPathway", "relationship", "ageGroup", "city", "maxDistanceKm", "monthlyBudgetIls", "medicalNeeds", "isCouple", "partnerSameLevel", "residentGenders", "community", "kashrut", "shabbat", "language", "shelterInRoom", "depositCapIls", "shelterNeed", "shelterIsCondition", "bedridden")})
 
 def in_schema(path: str) -> bool:
     return path in SCHEMA_FIELDS

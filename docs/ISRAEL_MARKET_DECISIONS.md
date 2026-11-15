@@ -128,7 +128,11 @@ The existing `LICENSE_CURRENTLY_VALID` MUST reads license status and expiry; for
 
 - Facility: where the nearest protected space is (in the room/apartment / same floor / shelter elsewhere in the building / outside, walking), minutes for a slow resident from the farthest room, and what happens to bedridden residents.
 - Family: the farthest acceptable option (in the room/apartment, or same floor) and whether that is a condition. As a condition it is a MUST (farther = excluded, unanswered = pending); otherwise it only ranks.
-- Bedridden handling and minutes are displayed, not yet used in matching.
+- Bedridden (owner, 2026-11-15): if the family says the resident is bedridden, the facility must state it protects bedridden residents (in their room, or moved in bed). "No solution" excludes; "no bedridden residents here" or unanswered is pending. Minutes to the protected space are displayed only.
+
+## Budget tolerance (owner, 2026-11-15)
+
+- Up to 10% above the family's monthly budget or deposit ceiling is shown as "מעל התקציב ב-X% (בתוך סטייה של עד 10%)" and is neutral in ranking (in-budget facilities still rank above it). More than 10% above ranks lower. A family that wants no deposit gets no tolerance on deposits.
 
 ## Not done yet
 

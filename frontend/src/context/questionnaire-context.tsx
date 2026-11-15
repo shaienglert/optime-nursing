@@ -65,6 +65,8 @@ export type QuestionnaireState = {
     // Closest acceptable protected space; a condition only if the family says so.
     shelterNeed?: "" | "ROOM" | "FLOOR";
     shelterIsCondition?: boolean | null;
+    // Bedridden residents are shown only where the facility protects residents in bed.
+    bedridden?: boolean | null;
     // Deposit ceiling for protected housing (0 = no deposit at all, null = not asked).
     depositCapIls?: number | null;
   };

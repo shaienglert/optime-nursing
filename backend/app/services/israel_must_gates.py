@@ -115,6 +115,7 @@ MEDICAL_NEED_GATES = {
 COUPLE_KEY = "IL_ACCEPTS_COUPLE"
 FUNDING_TRACK_KEY = "IL_FUNDING_TRACK"
 SHELTER_KEY = "IL_SHELTER_MINIMUM"
+BEDRIDDEN_SHELTER_KEY = "IL_BEDRIDDEN_SHELTER"
 # Closer is safer: in the room/apartment, then the same floor, then elsewhere.
 SHELTER_RANK = {"ROOM": 0, "FLOOR": 1, "BUILDING": 2, "NEARBY": 3}
 # Family funding pathway -> the facility payment track that must be ticked.
@@ -124,7 +125,7 @@ GENDER_KEY = "IL_GENDER_POLICY"
 GENDERS = {"FEMALE", "MALE"}
 
 ISRAEL_MUST_KEYS = (
-    {FUNCTIONAL_LEVEL_KEY, MOH_CODE_AGREEMENT_KEY, COUPLE_KEY, GENDER_KEY, FUNDING_TRACK_KEY, SHELTER_KEY}
+    {FUNCTIONAL_LEVEL_KEY, MOH_CODE_AGREEMENT_KEY, COUPLE_KEY, GENDER_KEY, FUNDING_TRACK_KEY, SHELTER_KEY, BEDRIDDEN_SHELTER_KEY}
     | {key for key, _ in MEDICAL_NEED_GATES.values()}
 )
 
@@ -223,6 +224,17 @@ def evaluate_israel_must(row: Dict[str, Any], must: Dict[str, Any]) -> tuple[str
         return couple_gate(row, must.get("same_level"))
     if key == FUNDING_TRACK_KEY:
         return funding_track_gate(row, str(must.get("value") or ""))
+    if key == BEDRIDDEN_SHELTER_KEY:
+        answers = _answers(row)
+        if answers is None:
+            return PENDING, "FACILITY_NOT_REGISTERED"
+        plan = str(answers.get("shelter_bedridden") or "").upper()
+        if plan in {"PROTECTED_IN_ROOM", "MOVED_IN_BED"}:
+            return PASS, "FACILITY_PROTECTS_BEDRIDDEN_RESIDENTS"
+        if plan == "NO_SOLUTION":
+            return FAIL, "FACILITY_HAS_NO_PROTECTION_FOR_BEDRIDDEN"
+        # "No bedridden residents here" says nothing about whether it could protect one.
+        return PENDING, "FACILITY_DID_NOT_STATE_BEDRIDDEN_PROTECTION"
     if key == SHELTER_KEY:
         outcome = shelter_meets(_answers(row), str(must.get("value") or "FLOOR"))
         return outcome, {PASS: "FACILITY_SHELTER_MEETS_MINIMUM", FAIL: "FACILITY_SHELTER_FARTHER_THAN_MINIMUM"}.get(outcome, "FACILITY_DID_NOT_ANSWER_SHELTER")
@@ -267,6 +279,14 @@ def israel_additional_musts(questionnaire_state: Dict[str, Any]) -> list[Dict[st
             "same_level": same if isinstance(same, bool) else None,
             "reason": "The family is looking for a place for a couple.",
             "verification": "facility answer on accepting couples",
+        })
+    if family.get("bedridden") is True:
+        # Owner, 2026-11-15: a bedridden resident is shown only where the facility has a
+        # protected solution for residents in bed.
+        musts.append({
+            "key": BEDRIDDEN_SHELTER_KEY,
+            "reason": "The resident is bedridden and must be protected during an alert.",
+            "verification": "facility answer on protecting bedridden residents",
         })
     need = _shelter_need(family)
     if need and family.get("shelterIsCondition") is True:
@@ -406,27 +426,43 @@ def evaluate_israel_nice(row: Dict[str, Any], nice: Dict[str, Any]) -> str:
 
 BUDGET_LABELS = {
     "IN_BUDGET": "בתקציב לפי המחיר ההתחלתי",
+    "NEAR": "מעל התקציב ב-{pct}% (בתוך סטייה של עד 10%)",
     "MAY_FIT": "עשוי להתאים לתקציב, בכפוף להצעה",
     "ON_REQUEST": "מחיר בבירור",
     "OVER_BUDGET": "המחיר ההתחלתי מעל התקציב",
 }
+# Owner, 2026-11-15: allow up to 10% above the family's ceilings, and say so.
+BUDGET_TOLERANCE = 0.10
+
+
+def _over_ratio(offer: Dict[str, Any], budget: float, cap: Optional[float]) -> float:
+    """How far the offer's known amounts exceed the family's ceilings (0 = within)."""
+    ratios = [0.0]
+    monthly, deposit = offer.get("monthly_from_ils"), offer.get("deposit_from_ils")
+    if monthly is not None and budget > 0:
+        ratios.append(monthly / budget - 1)
+    if cap is not None and deposit is not None:
+        ratios.append(float("inf") if cap == 0 and deposit > 0 else (deposit / cap - 1 if cap > 0 else 0.0))
+    return max(ratios)
 
 
 def _offer_fit(offer: Dict[str, Any], budget: float, cap: Optional[float]) -> str:
-    monthly, deposit = offer.get("monthly_from_ils"), offer.get("deposit_from_ils")
-    if monthly is not None and monthly > budget:
+    ratio = _over_ratio(offer, budget, cap)
+    if ratio > BUDGET_TOLERANCE + 1e-9:
         return "OVER"
-    if cap is not None and deposit is not None and deposit > cap:
-        return "OVER"
-    if monthly is None:
+    if offer.get("monthly_from_ils") is None:
         return "PARTIAL"  # deposit track without a published maintenance fee
-    if offer.get("track") == "DEPOSIT" and deposit is None and cap is not None:
+    if offer.get("track") == "DEPOSIT" and offer.get("deposit_from_ils") is None and cap is not None:
         return "PARTIAL"
-    return "FITS"
+    return "FITS" if ratio <= 1e-9 else "NEAR"
 
 
 def budget_status(row: Dict[str, Any], nice: Dict[str, Any]) -> tuple[str, str, Optional[Dict[str, Any]]]:
-    """(MATCH/MISMATCH/UNKNOWN, Hebrew status label, the offer it rests on)."""
+    """(MATCH/MISMATCH/UNKNOWN, Hebrew status label, the offer it rests on).
+
+    Within budget ranks higher; up to 10% above is neutral and labelled as above
+    budget; more than 10% above ranks lower. Nothing here hides a facility.
+    """
     answers = _answers(row)
     offers = (answers or {}).get("price_offers") or []
     legacy = _fact(row, "pricing", "monthly_price")
@@ -438,16 +474,22 @@ def budget_status(row: Dict[str, Any], nice: Dict[str, Any]) -> tuple[str, str, 
 
     budget, cap, level = float(nice["value"]), nice.get("deposit_cap"), nice.get("level")
     at_level = [o for o in offers if o.get("level") in (None, level)]
+    fits = {id(o): _offer_fit(o, budget, cap) for o in offers}
     for offer in at_level:
-        if _offer_fit(offer, budget, cap) == "FITS":
+        if fits[id(offer)] == "FITS":
             return MATCH, BUDGET_LABELS["IN_BUDGET"], offer
+    near = [o for o in at_level if fits[id(o)] == "NEAR"]
+    if near:
+        best = min(near, key=lambda o: _over_ratio(o, budget, cap))
+        pct = max(1, round(_over_ratio(best, budget, cap) * 100))
+        return UNKNOWN, BUDGET_LABELS["NEAR"].format(pct=pct), best
     for offer in at_level:
-        if _offer_fit(offer, budget, cap) == "PARTIAL":
+        if fits[id(offer)] == "PARTIAL":
             return UNKNOWN, BUDGET_LABELS["MAY_FIT"], offer
     if not at_level:
         # Prices exist only for other care levels: they say little about this family's.
         cheapest = min(offers, key=lambda o: o.get("monthly_from_ils") or 10**9)
-        if _offer_fit(cheapest, budget, cap) != "OVER":
+        if fits[id(cheapest)] != "OVER":
             return UNKNOWN, BUDGET_LABELS["MAY_FIT"], cheapest
         return UNKNOWN, BUDGET_LABELS["ON_REQUEST"], None
     return MISMATCH, BUDGET_LABELS["OVER_BUDGET"], min(at_level, key=lambda o: o.get("monthly_from_ils") or 10**9)

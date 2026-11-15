@@ -119,6 +119,18 @@ const STEPS: Step[] = [
     set: (d, v) => ({ ...d, israel: { ...d.israel, residentGenders: (v ? v.split("+") : []) as Israel["residentGenders"] } }),
   },
   {
+    id: "bedridden",
+    prompt: "האם ההורה מרותק/ת למיטה?",
+    kind: "single",
+    show: (d) => ["NURSING", "COGNITIVE_FRAIL", "UNCLEAR"].includes(d.israel.functionalLevel),
+    options: [
+      { value: "true", label: "כן", hint: "נציג רק מוסדות שמגינים על מרותקים בזמן אזעקה" },
+      { value: "false", label: "לא" },
+    ],
+    get: (d) => (d.israel.bedridden === true ? "true" : d.israel.bedridden === false ? "false" : ""),
+    set: (d, v) => ({ ...d, israel: { ...d.israel, bedridden: v === "true" } }),
+  },
+  {
     id: "medicalNeeds",
     prompt: "יש צורך רפואי מיוחד?",
     kind: "multi",
@@ -264,6 +276,7 @@ const EMPTY: Draft = {
     shelterInRoom: "",
     shelterNeed: "",
     shelterIsCondition: null,
+    bedridden: null,
     depositCapIls: null,
   },
   notes: "",
@@ -327,6 +340,7 @@ export function IsraelIntake() {
       monthlyBudgetIls: visibleIds.has("monthlyBudgetIls") ? draft.israel.monthlyBudgetIls : null,
       depositCapIls: visibleIds.has("depositCapIls") ? draft.israel.depositCapIls : null,
       shelterIsCondition: draft.israel.shelterNeed ? draft.israel.shelterIsCondition : null,
+      bedridden: visibleIds.has("bedridden") ? draft.israel.bedridden : null,
     };
     const submission: QuestionnaireState = {
       ...state,

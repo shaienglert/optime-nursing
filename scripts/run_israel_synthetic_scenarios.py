@@ -52,6 +52,9 @@ PERSONAS = [
     ("אמא סיעודית בנהריה, תנאי: ממ\"ד בחדר", {
         "functionalLevel": "NURSING", "fundingPathway": "MOH_CODE", "city": "נהריה", "maxDistanceKm": 40,
         "residentGenders": ["FEMALE"], "shelterNeed": "ROOM", "shelterIsCondition": True}),
+    ("אבא סיעודי מרותק למיטה, פרטי עד ₪15,000", {
+        "functionalLevel": "NURSING", "fundingPathway": "PRIVATE", "monthlyBudgetIls": 15000, "city": "פתח תקווה",
+        "maxDistanceKm": 25, "residentGenders": ["MALE"], "bedridden": True}),
     ("זוג עצמאי לדיור מוגן, עד ₪7,000 לחודש ופיקדון עד ₪1,000,000", {
         "functionalLevel": "INDEPENDENT", "fundingPathway": "PRIVATE", "monthlyBudgetIls": 7000, "depositCapIls": 1000000,
         "city": "נתניה", "maxDistanceKm": 30, "isCouple": True, "partnerSameLevel": True, "residentGenders": ["FEMALE", "MALE"]}),
@@ -75,6 +78,7 @@ GATE_HE = {
     "IL_GENDER_POLICY": "מגדר",
     "IL_FUNDING_TRACK": "מסלול מימון",
     "IL_SHELTER_MINIMUM": "מיגון (תנאי)",
+    "IL_BEDRIDDEN_SHELTER": "מיגון למרותקים",
     "LICENSE_CURRENTLY_VALID": "רישיון בתוקף",
     "IL_COMMUNITY": "ציבור",
     "IL_KASHRUT": "כשרות",
@@ -106,7 +110,7 @@ def run(rows, family):
         results.append((row, fit))
     gates = Counter(fit["hard_gate"] for _, fit in results)
     budget = Counter(
-        (fit.get("israel_notes") or {}).get("IL_BUDGET", {}).get("label")
+        __import__("re").sub(r"ב-\d+% ", "", (fit.get("israel_notes") or {}).get("IL_BUDGET", {}).get("label") or "")
         for _, fit in results
         if fit["hard_gate"] != "FAIL" and (fit.get("israel_notes") or {}).get("IL_BUDGET")
     )
