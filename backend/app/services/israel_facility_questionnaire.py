@@ -370,6 +370,47 @@ SECTIONS: List[Dict[str, Any]] = [
         ],
     },
     {
+        "key": "lifestyle",
+        "title": "אווירה ואורח חיים",
+        "intro": "התשובות כאן לא פוסלות אף מוסד. הן עוזרות להציג קודם את המקומות שמתאימים לאופי של כל אחד.",
+        "questions": [
+            _q("setting", "הסביבה", "single", options=[("URBAN", "עירונית"), ("SUBURBAN", "פרברית"), ("RURAL", "כפרית")]),
+            _q(
+                "style",
+                "הסגנון של המקום",
+                "single",
+                options=[("LUXURY", "יוקרתי"), ("MODERN", "מודרני"), ("BOUTIQUE", "בוטיק"), ("HOMEY", "ביתי")],
+            ),
+            _q(
+                "day_style",
+                "סדר היום",
+                "single",
+                options=[("STRUCTURED", "סדר יום קבוע ומוגדר"), ("FLEXIBLE", "גמיש, כל אחד בקצב שלו"), ("BOTH", "גם וגם")],
+            ),
+            _q(
+                "social_atmosphere",
+                "האווירה החברתית",
+                "single",
+                options=[("LIVELY", "תוססת, הרבה פעילות משותפת"), ("QUIET", "שקטה ורגועה"), ("BOTH", "גם וגם")],
+            ),
+            _q(
+                "activities_offered",
+                "פעילויות שמתקיימות באופן קבוע",
+                "multi",
+                options=[
+                    ("GARDENING", "גינון טיפולי"),
+                    ("CRAFTS", "מלאכת יד ויצירה"),
+                    ("GAMES", "משחקים בהפעלה"),
+                    ("MUSIC", "מוזיקה ושירה"),
+                    ("LECTURES", "הרצאות ותרבות"),
+                    ("MOVEMENT", "התעמלות ותנועה"),
+                    ("OUTINGS", "טיולים ויציאות"),
+                    ("SPIRITUAL", "שיעורי תורה ותפילה"),
+                ],
+            ),
+        ],
+    },
+    {
         "key": "family",
         "title": "משפחה וביקורים",
         "intro": "",

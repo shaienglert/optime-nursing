@@ -67,6 +67,12 @@ export type QuestionnaireState = {
     shelterIsCondition?: boolean | null;
     // Bedridden residents are shown only where the facility protects residents in bed.
     bedridden?: boolean | null;
+    // Lifestyle (ranking only).
+    priority?: "" | "MEDICAL" | "SOCIAL" | "SAFETY" | "PEACE_OF_MIND";
+    setting?: "" | "URBAN" | "RURAL";
+    styles?: Array<"LUXURY" | "MODERN" | "BOUTIQUE" | "HOMEY">;
+    dayRhythm?: "" | "PRIVATE_SPACE" | "PEOPLE_AROUND" | "STRUCTURED" | "FLEXIBLE";
+    activities?: string[];
     // Deposit ceiling for protected housing (0 = no deposit at all, null = not asked).
     depositCapIls?: number | null;
   };

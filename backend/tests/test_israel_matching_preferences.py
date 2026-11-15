@@ -324,3 +324,20 @@ def test_up_to_ten_percent_over_budget_is_labelled_and_neutral():
     within = _fit(_priced(_offer("MONTHLY", "SHARED_2", "NURSING", 14000)), _intent(fundingPathway="PRIVATE", monthlyBudgetIls=15000))
     near = _fit(row, _intent(fundingPathway="PRIVATE", monthlyBudgetIls=15000))
     assert intent_rank_key({"client_intent_fit": within}) < intent_rank_key({"client_intent_fit": near})
+
+
+def test_lifestyle_preferences_only_rank():
+    row = _facility(setting="RURAL", style="HOMEY", day_style="FLEXIBLE", social_atmosphere="QUIET",
+                    activities_offered=["GARDENING", "MUSIC"], nurse_24_7="YES", room_types=["SHARED_2"])
+    fit = _fit(row, _intent(priority="MEDICAL", setting="RURAL", styles=["HOMEY", "BOUTIQUE"], dayRhythm="FLEXIBLE",
+                            activities=["MUSIC", "LECTURES"]))
+    assert {"IL_PRIORITY", "IL_SETTING", "IL_STYLE", "IL_DAY_RHYTHM", "IL_ACTIVITIES"} <= set(fit["nice_match"])
+
+    other = _fit(row, _intent(priority="SOCIAL", setting="URBAN", styles=["LUXURY"], dayRhythm="PEOPLE_AROUND",
+                              activities=["OUTINGS"]))
+    assert other["hard_gate"] == "PASS"  # never hides
+    assert {"IL_PRIORITY", "IL_SETTING", "IL_STYLE", "IL_DAY_RHYTHM", "IL_ACTIVITIES"} <= set(other["nice_mismatch"])
+    assert "IL_DAY_RHYTHM" in _fit(row, _intent(dayRhythm="PRIVATE_SPACE"))["nice_mismatch"]
+
+    silent = _fit(_facility(setting="SUBURBAN"), _intent(setting="URBAN", activities=["MUSIC"]))
+    assert {"IL_SETTING", "IL_ACTIVITIES"} <= set(silent["nice_unknown"])

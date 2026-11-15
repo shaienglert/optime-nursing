@@ -141,6 +141,14 @@ The existing `LICENSE_CURRENTLY_VALID` MUST reads license status and expiry; for
 - Not yet measured with a real model: the interpreter is not configured in the test environment. `scripts/compare_israel_structured_vs_freetext.py` uses it automatically once `OPTIME_SEMANTIC_AI_URL`, `_MODEL` and `_API_KEY` are set.
 - The Hebrew intake's free-text step is not yet sent to the interpreter (the results page is still the US one).
 
+## Lifestyle and the intake design (owner, 2026-11-15)
+
+- Family intake redesigned as one question per screen with large icon tiles (inspired by a competitor's tile flow, in a light, minimal style); original line icons; system font stack; reduced motion respected.
+- New family questions, ranking only: what matters most today (medical / social / safety / peace of mind), surroundings (urban / rural), style (luxury / modern / boutique / homey), daily rhythm (private space / people around / structured / flexible), activities.
+- New facility questions (section "אווירה ואורח חיים"): setting, style, day style, social atmosphere, regular activities.
+- Mapping: medical → 24/7 nurse; social → lively atmosphere; safety → protected space in room or on floor; peace of mind → none. Suburban facilities are neutral for urban/rural families. Private space → a room of one's own exists.
+- Note: these add five more equally weighted preferences, so lifestyle as a group now weighs more than any single practical preference.
+
 ## Not done yet
 
 - Nevada-specific need gates (ADL, medication, memory care) still read Nevada evidence; for Israel they stay PENDING until Israeli evidence exists.

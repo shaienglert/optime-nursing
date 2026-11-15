@@ -313,6 +313,7 @@ def israel_additional_musts(questionnaire_state: Dict[str, Any]) -> list[Dict[st
 # ---------------------------------------------------------------------------
 
 MATCH, MISMATCH, UNKNOWN = "MATCH", "MISMATCH", "UNKNOWN"
+ACTIVITY_CODES = {"GARDENING", "CRAFTS", "GAMES", "MUSIC", "LECTURES", "MOVEMENT", "OUTINGS", "SPIRITUAL"}
 COMMUNITIES = {"SECULAR", "TRADITIONAL", "RELIGIOUS", "HAREDI", "MUSLIM", "CHRISTIAN", "DRUZE"}
 # A "mixed" Jewish facility suits families who did not ask for a religious setting.
 MIXED_FITS = {"SECULAR", "TRADITIONAL"}
@@ -358,6 +359,22 @@ def israel_nice_to_haves(questionnaire_state: Dict[str, Any]) -> list[Dict[str, 
                 "value": {"lat": origin[0], "lon": origin[1], "max_km": float(max_km)},
                 "reason": "Within the distance the family chose (ranking only).",
             })
+    # Lifestyle (owner, 2026-11-15: "שאלות על אופי החיים"): ranking only, like community.
+    priority = str(family.get("priority") or "").upper()
+    if priority in {"MEDICAL", "SOCIAL", "SAFETY"}:
+        nice.append({"key": "IL_PRIORITY", "value": priority, "reason": "What matters most today."})
+    setting = str(family.get("setting") or "").upper()
+    if setting in {"URBAN", "RURAL"}:
+        nice.append({"key": "IL_SETTING", "value": setting, "reason": "Preferred surroundings."})
+    styles = sorted({str(v).upper() for v in family.get("styles") or []} & {"LUXURY", "MODERN", "BOUTIQUE", "HOMEY"})
+    if styles:
+        nice.append({"key": "IL_STYLE", "value": styles, "reason": "Preferred style of the place."})
+    rhythm = str(family.get("dayRhythm") or "").upper()
+    if rhythm in {"PRIVATE_SPACE", "PEOPLE_AROUND", "STRUCTURED", "FLEXIBLE"}:
+        nice.append({"key": "IL_DAY_RHYTHM", "value": rhythm, "reason": "Preferred daily rhythm."})
+    activities = sorted({str(v).upper() for v in family.get("activities") or []} & ACTIVITY_CODES)
+    if activities:
+        nice.append({"key": "IL_ACTIVITIES", "value": activities, "reason": "Activities the resident would enjoy."})
     level = str(family.get("functionalLevel") or "").upper()
     if level in FUNCTIONAL_LEVELS:
         nice.append({"key": "IL_AVAILABILITY", "value": level, "reason": "A place available soon at the needed level."})
@@ -410,6 +427,39 @@ def evaluate_israel_nice(row: Dict[str, Any], nice: Dict[str, Any]) -> str:
         return {PASS: MATCH, FAIL: MISMATCH}.get(outcome, UNKNOWN)
     if key == "IL_BUDGET":
         return budget_status(row, nice)[0]
+    if key == "IL_PRIORITY":
+        if value == "MEDICAL":
+            nurse = str(answers.get("nurse_24_7") or "").upper()
+            return UNKNOWN if not nurse else (MATCH if nurse == "YES" else MISMATCH)
+        if value == "SOCIAL":
+            atmosphere = str(answers.get("social_atmosphere") or "").upper()
+            return UNKNOWN if not atmosphere else (MATCH if atmosphere in {"LIVELY", "BOTH"} else MISMATCH)
+        if value == "SAFETY":
+            shelter = str(answers.get("shelter") or "").upper()
+            return UNKNOWN if not shelter else (MATCH if shelter in {"ROOM", "FLOOR"} else MISMATCH)
+        return UNKNOWN
+    if key == "IL_SETTING":
+        setting = str(answers.get("setting") or "").upper()
+        if not setting or setting == "SUBURBAN":
+            return UNKNOWN  # in between: neither a match nor a mismatch
+        return MATCH if setting == value else MISMATCH
+    if key == "IL_STYLE":
+        style = str(answers.get("style") or "").upper()
+        return UNKNOWN if not style else (MATCH if style in value else MISMATCH)
+    if key == "IL_DAY_RHYTHM":
+        if value in {"STRUCTURED", "FLEXIBLE"}:
+            day = str(answers.get("day_style") or "").upper()
+            return UNKNOWN if not day else (MATCH if day in {value, "BOTH"} else MISMATCH)
+        if value == "PEOPLE_AROUND":
+            atmosphere = str(answers.get("social_atmosphere") or "").upper()
+            return UNKNOWN if not atmosphere else (MATCH if atmosphere in {"LIVELY", "BOTH"} else MISMATCH)
+        rooms = answers.get("room_types")  # PRIVATE_SPACE: a room of one's own
+        if not rooms:
+            return UNKNOWN
+        return MATCH if set(rooms) & {"SINGLE", "COUPLE_UNIT", "APARTMENT", "STUDIO", "APT_2", "APT_3"} else MISMATCH
+    if key == "IL_ACTIVITIES":
+        offered = answers.get("activities_offered")
+        return UNKNOWN if not offered else (MATCH if set(offered) & set(value) else MISMATCH)
     if key == "IL_AVAILABILITY":
         vacancy = str((answers.get("vacancy_by_level") or {}).get(value) or "").upper()
         if not vacancy:

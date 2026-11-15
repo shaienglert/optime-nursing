@@ -7,12 +7,18 @@ import { useQuestionnaire, type QuestionnaireState } from "@/context/questionnai
 import { getApiBaseUrl, joinApiUrl } from "@/lib/api";
 import { QUESTIONNAIRE_SESSION_KEY, saveSessionJson } from "@/lib/search-session";
 
+import { IntakeIcon } from "./intake-icons";
+import styles from "./israel-intake.module.css";
+
 type Israel = NonNullable<QuestionnaireState["israelMarket"]>;
 type Draft = { israel: Israel; notes: string };
-type Option = { value: string; label: string; hint?: string };
+type Option = { value: string; label: string; hint?: string; icon?: string };
 type Step = {
   id: string;
   prompt: string;
+  // Short label for the summary screen.
+  short?: string;
+  sub?: string;
   kind: "single" | "multi" | "text" | "city";
   options?: Option[];
   optionsFor?: (draft: Draft) => Option[];
@@ -34,8 +40,33 @@ const STEPS: Step[] = [
     id: "relationship",
     prompt: "עבור מי אתם מחפשים מסגרת?",
     kind: "single",
-    options: ["אמא", "אבא", "סבתא", "סבא", "בן/בת זוג", "עבורי", "קרוב/ה אחר/ת"].map((v) => ({ value: v, label: v })),
-    ...israelField("relationship"),
+    short: "עבור",
+    options: [
+      { value: "אמא", label: "אמא", icon: "mother" },
+      { value: "אבא", label: "אבא", icon: "father" },
+      { value: "סבתא", label: "סבתא", icon: "grandparent" },
+      { value: "סבא", label: "סבא", icon: "grandparent" },
+      { value: "הורים", label: "שני ההורים", icon: "couple" },
+      { value: "בן/בת זוג", label: "בן/בת זוג", icon: "couple" },
+      { value: "עבורי", label: "עבורי", icon: "self" },
+      { value: "קרוב/ה אחר/ת", label: "קרוב/ה אחר/ת", icon: "relative" },
+    ],
+    get: (d) => d.israel.relationship ?? "",
+    set: (d, v) => ({ ...d, israel: { ...d.israel, relationship: v, isCouple: v === "הורים" ? true : d.israel.isCouple } }),
+  },
+  {
+    id: "priority",
+    prompt: "מה הכי חשוב היום?",
+    short: "הכי חשוב",
+    sub: "נתחיל מזה. זה עוזר לנו להציג קודם את המקומות הנכונים.",
+    kind: "single",
+    options: [
+      { value: "MEDICAL", label: "השגחה רפואית", icon: "medical" },
+      { value: "SOCIAL", label: "חברה ועשייה", icon: "social" },
+      { value: "SAFETY", label: "מקום מוגן ובטוח", icon: "shield" },
+      { value: "PEACE_OF_MIND", label: "שקט נפשי למשפחה", icon: "heart" },
+    ],
+    ...israelField("priority"),
   },
   {
     id: "ageGroup",
@@ -144,6 +175,69 @@ const STEPS: Step[] = [
     ],
     get: (d) => (d.israel.medicalNeeds ?? []).join(","),
     set: (d, v) => ({ ...d, israel: { ...d.israel, medicalNeeds: (v ? v.split(",") : []) as Israel["medicalNeeds"] } }),
+  },
+  {
+    id: "setting",
+    prompt: "איזו סביבה מתאימה?",
+    short: "סביבה",
+    kind: "single",
+    options: [
+      { value: "URBAN", label: "עירונית", hint: "קרוב לחנויות ולתחבורה", icon: "city" },
+      { value: "RURAL", label: "כפרית", hint: "ירוק, שקט ומרווח", icon: "village" },
+      { value: "", label: "לא משנה" },
+    ],
+    ...israelField("setting"),
+    optional: true,
+  },
+  {
+    id: "styles",
+    prompt: "איזה סגנון של מקום?",
+    short: "סגנון",
+    sub: "אפשר לבחור יותר מאחד.",
+    kind: "multi",
+    optional: true,
+    options: [
+      { value: "LUXURY", label: "יוקרתי", icon: "luxury" },
+      { value: "MODERN", label: "מודרני", icon: "modern" },
+      { value: "BOUTIQUE", label: "בוטיק", icon: "boutique" },
+      { value: "HOMEY", label: "ביתי", icon: "homey" },
+    ],
+    get: (d) => (d.israel.styles ?? []).join(","),
+    set: (d, v) => ({ ...d, israel: { ...d.israel, styles: (v ? v.split(",") : []) as Israel["styles"] } }),
+  },
+  {
+    id: "dayRhythm",
+    prompt: "מה ישמח יותר ביום-יום?",
+    short: "ביום-יום",
+    kind: "single",
+    options: [
+      { value: "PRIVATE_SPACE", label: "מרחב אישי", hint: "חדר משלו או משלה", icon: "privateSpace" },
+      { value: "PEOPLE_AROUND", label: "אנשים מסביב", hint: "אווירה חברתית ותוססת", icon: "social" },
+      { value: "STRUCTURED", label: "סדר יום מוגדר", hint: "שגרה קבועה וידועה מראש", icon: "structured" },
+      { value: "FLEXIBLE", label: "גמישות וחידושים", hint: "כל יום קצת אחר", icon: "flexible" },
+    ],
+    ...israelField("dayRhythm"),
+    optional: true,
+  },
+  {
+    id: "activities",
+    prompt: "במה ישמח להשתתף?",
+    short: "פעילויות",
+    sub: "אפשר לבחור כמה.",
+    kind: "multi",
+    optional: true,
+    options: [
+      { value: "GARDENING", label: "גינון", icon: "gardening" },
+      { value: "CRAFTS", label: "מלאכת יד", icon: "crafts" },
+      { value: "GAMES", label: "משחקים", icon: "games" },
+      { value: "MUSIC", label: "מוזיקה ושירה", icon: "music" },
+      { value: "LECTURES", label: "הרצאות ותרבות", icon: "lectures" },
+      { value: "MOVEMENT", label: "תנועה והתעמלות", icon: "movement" },
+      { value: "OUTINGS", label: "טיולים ויציאות", icon: "outings" },
+      { value: "SPIRITUAL", label: "שיעורים ותפילה", icon: "spiritual" },
+    ],
+    get: (d) => (d.israel.activities ?? []).join(","),
+    set: (d, v) => ({ ...d, israel: { ...d.israel, activities: v ? v.split(",") : [] } }),
   },
   {
     id: "language",
@@ -365,83 +459,110 @@ export function IsraelIntake() {
     return value || "לא צוין";
   };
 
-  const choiceClass = (active: boolean) =>
-    `rounded-xl border min-h-12 px-4 py-3 text-right text-lg font-semibold transition ${active ? "border-forest bg-forest text-white" : "border-line bg-white text-muted hover:border-forest"}`;
+  const tileClass = (option: Option, active: boolean) =>
+    [styles.tile, option.icon ? "" : styles.tileText, active ? styles.selected : ""].filter(Boolean).join(" ");
+  const wide = (options: Option[]) => options.some((o) => o.hint && !o.icon) || options.some((o) => o.hint && o.hint.length > 24);
+
+  const tile = (option: Option, active: boolean, onClick: () => void) => (
+    <button key={option.value || "any"} type="button" aria-pressed={active} onClick={onClick} className={tileClass(option, active)}>
+      {option.icon ? (
+        <span className={styles.icon}>
+          <IntakeIcon name={option.icon} />
+        </span>
+      ) : null}
+      <span className={styles.label}>{option.label}</span>
+      {option.hint ? <span className={styles.hint}>{option.hint}</span> : null}
+      {active ? (
+        <span className={styles.tick}>
+          <IntakeIcon name="check" size={14} />
+        </span>
+      ) : null}
+    </button>
+  );
 
   return (
-    <main dir="rtl" lang="he" className="min-h-screen bg-canvas px-4 py-8 text-ink sm:px-8">
-      <div className="mx-auto max-w-3xl">
-        <p className="text-sm font-semibold text-forest">השיחה שלכם עם OOMNIK</p>
-        <div className="mt-4 h-1.5 w-full overflow-hidden rounded-xl bg-sand">
-          <div className="h-full rounded-xl bg-forest transition-[width] duration-300" style={{ width: `${progress}%` }} />
+    <main dir="rtl" lang="he" className={styles.page}>
+      <header className={styles.bar}>
+        <div className={styles.barInner}>
+          <span className={styles.brand}>OOMNIK</span>
+          {!summary && index > 0 ? (
+            <button type="button" className={styles.back} onClick={() => go(index - 1)}>
+              הקודם
+            </button>
+          ) : null}
         </div>
+        <div
+          className={styles.track}
+          role="progressbar"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={progress}
+          aria-label="התקדמות בשאלון"
+        >
+          <div className={styles.fill} style={{ width: `${Math.max(progress, 3)}%` }} />
+        </div>
+      </header>
 
+      <div className={styles.stage}>
         {!summary && step ? (
-          <section className="mt-8">
-            <h1 className="text-3xl font-semibold">{step.prompt}</h1>
+          <section key={step.id} className={styles.question} aria-labelledby={`q-${step.id}`}>
+            <h1 id={`q-${step.id}`} className={styles.prompt}>{step.prompt}</h1>
+            {step.sub ? <p className={styles.sub}>{step.sub}</p> : null}
+
             {step.kind === "single" ? (
-              <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                {optionsOf(step, draft).map((option) => (
-                  <button key={option.value || "any"} type="button" aria-pressed={step.get(draft) === option.value} onClick={() => choose(option.value)} className={choiceClass(step.get(draft) === option.value)}>
-                    {option.label}
-                    {option.hint ? <span className="mt-1 block text-sm font-normal">{option.hint}</span> : null}
-                  </button>
-                ))}
+              <div className={`${styles.grid} ${wide(optionsOf(step, draft)) ? styles.gridWide : ""}`}>
+                {optionsOf(step, draft).map((option) => tile(option, step.get(draft) === option.value && (option.value !== "" || answered(step, draft)), () => choose(option.value)))}
               </div>
             ) : step.kind === "multi" ? (
-              <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                <p className="text-sm sm:col-span-2">אפשר לבחור כמה. אם אין צורך כזה, פשוט ממשיכים.</p>
+              <div className={`${styles.grid} ${wide(optionsOf(step, draft)) ? styles.gridWide : ""}`}>
                 {optionsOf(step, draft).map((option) => {
                   const chosen = step.get(draft).split(",").filter(Boolean);
                   const active = chosen.includes(option.value);
                   const next = active ? chosen.filter((v) => v !== option.value) : [...chosen, option.value];
-                  return (
-                    <button key={option.value} type="button" aria-pressed={active} onClick={() => setDraft(step.set(draft, next.join(",")))} className={choiceClass(active)}>
-                      {option.label}
-                    </button>
-                  );
+                  return tile(option, active, () => setDraft(step.set(draft, next.join(","))));
                 })}
               </div>
             ) : step.kind === "city" ? (
               <>
-                <input aria-label={step.prompt} list="il-localities" className="mt-6 w-full rounded-xl border p-3 text-lg" value={step.get(draft)} onChange={(e) => setDraft(step.set(draft, e.target.value))} placeholder="למשל: חיפה" />
+                <input aria-label={step.prompt} list="il-localities" className={styles.input} value={step.get(draft)} onChange={(e) => setDraft(step.set(draft, e.target.value))} placeholder="למשל: חיפה" />
                 <datalist id="il-localities">
                   {localities.map((name) => <option key={name} value={name} />)}
                 </datalist>
                 {step.get(draft).trim() && !cityKnown(step.get(draft)) ? (
-                  <p className="mt-2 text-sm">לא מצאנו יישוב בשם הזה, ולכן לא נוכל לחשב מרחק. כדאי לבחור מהרשימה.</p>
+                  <p className={styles.note}>לא מצאנו יישוב בשם הזה, ולכן לא נוכל לחשב מרחק. כדאי לבחור מהרשימה.</p>
                 ) : null}
               </>
             ) : (
-              <textarea aria-label={step.prompt} className="mt-6 h-40 w-full rounded-xl border p-3 text-lg" value={step.get(draft)} onChange={(e) => setDraft(step.set(draft, e.target.value))} placeholder="למשל: חשוב לנו אוכל כשר ושיהיה צוות שמדבר רוסית" />
+              <textarea aria-label={step.prompt} className={styles.textarea} value={step.get(draft)} onChange={(e) => setDraft(step.set(draft, e.target.value))} placeholder="למשל: חשוב לנו אוכל כשר ושיהיה צוות שמדבר רוסית" />
             )}
-            {error ? <p role="alert" className="mt-3 text-sm text-[#a4501f]">צריך לענות על השאלה כדי להמשיך.</p> : null}
-            <div className="mt-8 flex gap-3">
-              {index > 0 ? (
-                <button type="button" onClick={() => go(index - 1)} className="rounded-xl border px-4 py-2">חזרה</button>
-              ) : null}
-              {step.kind !== "single" || (step.optional && step.get(draft) !== "") ? (
-                <button type="button" onClick={() => (answered(step, draft) ? go(index + 1) : setError(true))} className="rounded-xl bg-forest px-4 py-2 font-semibold text-white">המשך</button>
-              ) : null}
-            </div>
+
+            {error ? <p role="alert" className={styles.alert}>צריך לענות על השאלה כדי להמשיך.</p> : null}
+            {step.kind !== "single" || (step.optional && step.get(draft) !== "") ? (
+              <div className={styles.actions}>
+                <button type="button" className={styles.primary} onClick={() => (answered(step, draft) ? go(index + 1) : setError(true))}>
+                  {step.kind === "multi" && !step.get(draft) ? "דילוג" : "המשך"}
+                </button>
+              </div>
+            ) : null}
           </section>
         ) : (
-          <section className="mt-8">
-            <h1 className="text-3xl font-semibold">זה מה שהבנו</h1>
-            <dl className="mt-6 space-y-2 text-lg">
-              {steps.map((s) => (
-                <div key={s.id} className="flex gap-2">
-                  <dt className="font-semibold">{s.prompt}</dt>
-                  <dd>{label(s)}</dd>
+          <section className={styles.question} aria-labelledby="summary-title">
+            <h1 id="summary-title" className={styles.prompt}>זה מה שהבנו</h1>
+            <p className={styles.sub}>אם משהו לא מדויק, אפשר לחזור ולתקן.</p>
+            <div className={styles.summary}>
+              {steps.filter((s) => s.get(draft) !== "").map((s) => (
+                <div key={s.id} className={styles.row}>
+                  <span className={styles.rowLabel}>{s.short ?? s.prompt}</span>
+                  <span className={styles.rowValue}>{label(s)}</span>
                 </div>
               ))}
-            </dl>
+            </div>
             {draft.israel.functionalLevel === "UNCLEAR" ? (
-              <p className="mt-4 text-sm">המצב התפקודי עוד לא ברור. עד שיתברר, אף מסגרת לא תוצג כמתאימה.</p>
+              <p className={styles.note}>המצב התפקודי עוד לא ברור. עד שיתברר, אף מסגרת לא תוצג כמתאימה.</p>
             ) : null}
-            <div className="mt-8 flex gap-3">
-              <button type="button" onClick={() => { setSummary(false); setStepId(steps[0].id); }} className="rounded-xl border px-4 py-2">לתקן</button>
-              <button type="button" onClick={submit} className="rounded-xl bg-forest px-4 py-2 font-semibold text-white">נכון, להמשיך</button>
+            <div className={styles.actions}>
+              <button type="button" className={styles.primary} onClick={submit}>נכון, להמשיך</button>
+              <button type="button" className={styles.secondaryButton} onClick={() => { setSummary(false); setStepId(steps[0].id); }}>לתקן</button>
             </div>
           </section>
         )}

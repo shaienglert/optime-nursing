@@ -75,6 +75,11 @@ ISRAEL_FIELD_RULES = {
     IL + "shelterNeed": FieldContract(choices=("ROOM", "FLOOR")),
     IL + "shelterIsCondition": FieldContract(kind="Boolean"),
     IL + "bedridden": FieldContract(kind="Boolean"),
+    IL + "priority": FieldContract(choices=("MEDICAL", "SOCIAL", "SAFETY", "PEACE_OF_MIND")),
+    IL + "setting": FieldContract(choices=("URBAN", "RURAL")),
+    IL + "styles": FieldContract(kind="List", choices=("LUXURY", "MODERN", "BOUTIQUE", "HOMEY")),
+    IL + "dayRhythm": FieldContract(choices=("PRIVATE_SPACE", "PEOPLE_AROUND", "STRUCTURED", "FLEXIBLE")),
+    IL + "activities": FieldContract(kind="List", choices=("GARDENING", "CRAFTS", "GAMES", "MUSIC", "LECTURES", "MOVEMENT", "OUTINGS", "SPIRITUAL")),
 }
 FIELD_RULES = {
     "assistanceLevel": FieldContract(kind="Selections"),

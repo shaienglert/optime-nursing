@@ -318,6 +318,18 @@ def build_answers(rng: random.Random, setting: str, community: str, region: str,
         "visiting": pick(rng, {"ANYTIME": 60, "SET_HOURS": 40}),
         "family_overnight": "YES" if chance(rng, 0.2) else "NO",
         "family_updates": subset(rng, {"WHATSAPP": 0.7, "PHONE": 0.9, "MEETINGS": 0.6, "APP": 0.15}),
+        "setting": pick(rng, {"URBAN": 60, "SUBURBAN": 25, "RURAL": 15}),
+        "style": pick(rng, {"LUXURY": 35, "MODERN": 35, "BOUTIQUE": 10, "HOMEY": 20})
+        if setting == "IL_PROTECTED_HOUSING"
+        else pick(rng, {"LUXURY": 8, "MODERN": 30, "BOUTIQUE": 12, "HOMEY": 50}),
+        "day_style": pick(rng, {"STRUCTURED": 45, "FLEXIBLE": 25, "BOTH": 30})
+        if setting != "IL_PROTECTED_HOUSING"
+        else pick(rng, {"STRUCTURED": 10, "FLEXIBLE": 60, "BOTH": 30}),
+        "social_atmosphere": pick(rng, {"LIVELY": 40, "QUIET": 30, "BOTH": 30}),
+        "activities_offered": subset(rng, {
+            "GARDENING": 0.35, "CRAFTS": 0.6, "GAMES": 0.65, "MUSIC": 0.7, "LECTURES": 0.55,
+            "MOVEMENT": 0.75, "OUTINGS": 0.35, "SPIRITUAL": 0.6 if community in {"RELIGIOUS", "HAREDI", "TRADITIONAL"} else 0.15,
+        }),
     }
     if shabbat:
         answers["shabbat"] = shabbat

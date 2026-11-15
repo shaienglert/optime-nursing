@@ -84,6 +84,11 @@ ISRAEL_QUESTIONNAIRE_PATCH = {
         "shelterNeed": "ROOM|FLOOR; farthest acceptable protected space",
         "shelterIsCondition": "boolean; true only when the family says it is a condition",
         "bedridden": "boolean; true only when the resident is explicitly bedridden",
+        "priority": "MEDICAL|SOCIAL|SAFETY|PEACE_OF_MIND; what matters most today",
+        "setting": "URBAN|RURAL",
+        "styles": ["LUXURY|MODERN|BOUTIQUE|HOMEY"],
+        "dayRhythm": "PRIVATE_SPACE|PEOPLE_AROUND|STRUCTURED|FLEXIBLE",
+        "activities": ["GARDENING|CRAFTS|GAMES|MUSIC|LECTURES|MOVEMENT|OUTINGS|SPIRITUAL"],
     }
 }
 
