@@ -124,6 +124,12 @@ The existing `LICENSE_CURRENTLY_VALID` MUST reads license status and expiry; for
 - Focused request: family sends room type, move-in timing, optional monthly and deposit ceilings, name and phone (shown only to that facility). Facility answers in the portal: accept / propose another track (with amounts) / ask for a detail / decline. Family follows and replies through a private link. Requests do not affect matching or ranking.
 - Synthetic data covers: no price (withheld or not answered), cheapest offer at a level with no place, same maintenance with two deposits, deposit without maintenance.
 
+## Shelter (owner, 2026-11-15: "ממ\"ד זה קריטי")
+
+- Facility: where the nearest protected space is (in the room/apartment / same floor / shelter elsewhere in the building / outside, walking), minutes for a slow resident from the farthest room, and what happens to bedridden residents.
+- Family: the farthest acceptable option (in the room/apartment, or same floor) and whether that is a condition. As a condition it is a MUST (farther = excluded, unanswered = pending); otherwise it only ranks.
+- Bedridden handling and minutes are displayed, not yet used in matching.
+
 ## Not done yet
 
 - Nevada-specific need gates (ADL, medication, memory care) still read Nevada evidence; for Israel they stay PENDING until Israeli evidence exists.

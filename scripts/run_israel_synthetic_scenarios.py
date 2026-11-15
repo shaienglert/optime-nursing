@@ -46,9 +46,12 @@ PERSONAS = [
     ("מונשם, קוד משרד הבריאות", {
         "functionalLevel": "NURSING", "fundingPathway": "MOH_CODE", "city": "תל אביב - יפו", "residentGenders": ["MALE"],
         "medicalNeeds": ["VENTILATION"]}),
-    ("אישה עצמאית, דיור מוגן פרטי, חילונית, ממ\"ד חשוב", {
+    ("אישה עצמאית, דיור מוגן פרטי, חילונית, מרחב מוגן בקומה (העדפה)", {
         "functionalLevel": "INDEPENDENT", "fundingPathway": "PRIVATE", "monthlyBudgetIls": 9000, "city": "הרצליה", "maxDistanceKm": 10,
-        "residentGenders": ["FEMALE"], "community": "SECULAR", "shelterInRoom": "IMPORTANT"}),
+        "residentGenders": ["FEMALE"], "community": "SECULAR", "shelterNeed": "FLOOR"}),
+    ("אמא סיעודית בנהריה, תנאי: ממ\"ד בחדר", {
+        "functionalLevel": "NURSING", "fundingPathway": "MOH_CODE", "city": "נהריה", "maxDistanceKm": 40,
+        "residentGenders": ["FEMALE"], "shelterNeed": "ROOM", "shelterIsCondition": True}),
     ("זוג עצמאי לדיור מוגן, עד ₪7,000 לחודש ופיקדון עד ₪1,000,000", {
         "functionalLevel": "INDEPENDENT", "fundingPathway": "PRIVATE", "monthlyBudgetIls": 7000, "depositCapIls": 1000000,
         "city": "נתניה", "maxDistanceKm": 30, "isCouple": True, "partnerSameLevel": True, "residentGenders": ["FEMALE", "MALE"]}),
@@ -71,6 +74,7 @@ GATE_HE = {
     "IL_ACCEPTS_COUPLE": "זוגות",
     "IL_GENDER_POLICY": "מגדר",
     "IL_FUNDING_TRACK": "מסלול מימון",
+    "IL_SHELTER_MINIMUM": "מיגון (תנאי)",
     "LICENSE_CURRENTLY_VALID": "רישיון בתוקף",
     "IL_COMMUNITY": "ציבור",
     "IL_KASHRUT": "כשרות",

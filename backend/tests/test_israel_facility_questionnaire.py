@@ -91,7 +91,7 @@ class QuestionnaireValidationTests(unittest.TestCase):
         )
         flat = {item["key"]: item["value"] for s in sections for item in s["items"]}
         self.assertEqual(flat["staff_languages"], "עברית, רוסית")
-        self.assertEqual(flat["shelter"], 'ממ"ד בחדר')
+        self.assertEqual(flat["shelter"], 'ממ"ד בתוך החדר או הדירה')
         self.assertEqual(flat["deposit_depreciation_pct_per_year"], "3%")
 
 

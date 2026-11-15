@@ -321,15 +321,29 @@ SECTIONS: List[Dict[str, Any]] = [
                 "multi",
                 options=[("AC", "מזגן"), ("KITCHENETTE", "מטבחון"), ("BALCONY", "מרפסת"), ("OWN_FURNITURE", "אפשר להביא רהיטים")],
             ),
+            # Shelter decides real safety for residents who move slowly; a family may make
+            # the minimum level a condition (owner, 2026-11-15).
             _q(
                 "shelter",
-                "מיגון",
+                "איפה המרחב המוגן הקרוב לדיירים?",
                 "single",
                 options=[
-                    ("ROOM", "ממ\"ד בחדר"),
-                    ("FLOOR", "מרחב מוגן בכל קומה"),
-                    ("BUILDING", "מקלט בבניין"),
-                    ("NEARBY", "מקלט בסמוך"),
+                    ("ROOM", "ממ\"ד בתוך החדר או הדירה"),
+                    ("FLOOR", "מרחב מוגן באותה קומה"),
+                    ("BUILDING", "מקלט בבניין, בקומה אחרת"),
+                    ("NEARBY", "מקלט מחוץ לבניין, צריך ללכת אליו"),
+                ],
+            ),
+            _q("shelter_minutes", "כמה דקות לוקח לדייר איטי להגיע למרחב המוגן מהחדר הרחוק ביותר?", "number", min=0, max=30),
+            _q(
+                "shelter_bedridden",
+                "דיירים מרותקים למיטה בזמן אזעקה",
+                "single",
+                options=[
+                    ("PROTECTED_IN_ROOM", "מוגנים בחדר שלהם"),
+                    ("MOVED_IN_BED", "מועברים במיטה למרחב מוגן"),
+                    ("NO_SOLUTION", "אין פתרון מוגן"),
+                    ("NOT_RELEVANT", "אין במוסד דיירים מרותקים"),
                 ],
             ),
             _q(

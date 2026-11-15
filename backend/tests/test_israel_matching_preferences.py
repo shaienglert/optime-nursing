@@ -273,3 +273,24 @@ def test_price_page_texts():
     assert describe_offer(_offer("MONTHLY", "STUDIO", "INDEPENDENT", 12000, 50_000)).startswith(
         "החל מ-₪12,000 לחודש, עם פיקדון נלווה של ₪50,000"
     )
+
+
+def test_shelter_as_condition_or_preference():
+    room, floor, outside = _facility(shelter="ROOM"), _facility(shelter="FLOOR"), _facility(shelter="NEARBY")
+    silent = _facility()
+
+    strict_room = _intent(shelterNeed="ROOM", shelterIsCondition=True)
+    assert _fit(room, strict_room)["hard_gate"] == "PASS"
+    assert _fit(floor, strict_room)["hard_gate"] == "FAIL"
+    assert _fit(silent, strict_room)["hard_gate"] == "PENDING_VERIFICATION"
+
+    strict_floor = _intent(shelterNeed="FLOOR", shelterIsCondition=True)
+    assert _fit(floor, strict_floor)["hard_gate"] == "PASS"
+    assert _fit(room, strict_floor)["hard_gate"] == "PASS"
+    assert _fit(outside, strict_floor)["hard_gate"] == "FAIL"
+
+    preference = _intent(shelterNeed="FLOOR")
+    assert _fit(outside, preference)["hard_gate"] == "PASS"
+    assert "IL_SHELTER" in _fit(outside, preference)["nice_mismatch"]
+    assert "IL_SHELTER" in _fit(floor, preference)["nice_match"]
+    assert "IL_SHELTER" in _fit(silent, preference)["nice_unknown"]

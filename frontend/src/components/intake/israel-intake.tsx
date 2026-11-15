@@ -180,15 +180,28 @@ const STEPS: Step[] = [
     optional: true,
   },
   {
-    id: "shelterInRoom",
-    prompt: "חשוב שיהיה ממ״ד בחדר או מרחב מוגן בקומה?",
+    id: "shelterNeed",
+    prompt: "מיגון: מה הכי רחוק שמקובל עליכם?",
     kind: "single",
     options: [
-      { value: "IMPORTANT", label: "כן, חשוב" },
-      { value: "", label: "לא קריטי" },
+      { value: "ROOM", label: "ממ״ד בתוך החדר או הדירה", hint: "בלי לצאת מהחדר בזמן אזעקה" },
+      { value: "FLOOR", label: "מרחב מוגן באותה קומה", hint: "בלי מדרגות ובלי לצאת מהבניין" },
+      { value: "", label: "לא קריטי לנו" },
     ],
-    ...israelField("shelterInRoom"),
+    ...israelField("shelterNeed"),
     optional: true,
+  },
+  {
+    id: "shelterIsCondition",
+    prompt: "להציג רק מוסדות שעומדים בזה?",
+    kind: "single",
+    show: (d) => Boolean(d.israel.shelterNeed),
+    options: [
+      { value: "true", label: "כן, זה תנאי", hint: "מוסד עם מיגון רחוק יותר לא יוצג" },
+      { value: "false", label: "לא, רק להעדיף", hint: "מוסדות עם מיגון קרוב יופיעו קודם" },
+    ],
+    get: (d) => (d.israel.shelterIsCondition === true ? "true" : d.israel.shelterIsCondition === false ? "false" : ""),
+    set: (d, v) => ({ ...d, israel: { ...d.israel, shelterIsCondition: v === "true" } }),
   },
   {
     id: "depositCapIls",
@@ -249,6 +262,8 @@ const EMPTY: Draft = {
     shabbat: "",
     language: "",
     shelterInRoom: "",
+    shelterNeed: "",
+    shelterIsCondition: null,
     depositCapIls: null,
   },
   notes: "",
@@ -311,6 +326,7 @@ export function IsraelIntake() {
       partnerSameLevel: visibleIds.has("partnerSameLevel") ? draft.israel.partnerSameLevel : null,
       monthlyBudgetIls: visibleIds.has("monthlyBudgetIls") ? draft.israel.monthlyBudgetIls : null,
       depositCapIls: visibleIds.has("depositCapIls") ? draft.israel.depositCapIls : null,
+      shelterIsCondition: draft.israel.shelterNeed ? draft.israel.shelterIsCondition : null,
     };
     const submission: QuestionnaireState = {
       ...state,

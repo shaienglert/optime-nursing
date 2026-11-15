@@ -62,6 +62,9 @@ export type QuestionnaireState = {
     shabbat?: "" | "IMPORTANT";
     language?: string;
     shelterInRoom?: "" | "IMPORTANT";
+    // Closest acceptable protected space; a condition only if the family says so.
+    shelterNeed?: "" | "ROOM" | "FLOOR";
+    shelterIsCondition?: boolean | null;
     // Deposit ceiling for protected housing (0 = no deposit at all, null = not asked).
     depositCapIls?: number | null;
   };

@@ -257,6 +257,7 @@ def build_answers(rng: random.Random, setting: str, community: str, region: str,
         "SECULAR": pick(rng, {"PARTIAL": 30, "NOT": 70}),
     }.get(community)
 
+    shelter = pick(rng, {"ROOM": 30, "FLOOR": 35, "BUILDING": 25, "NEARBY": 10})
     vacancy = {level: pick(rng, {"AVAILABLE_NOW": 25, "WITHIN_MONTH": 20, "WAITLIST": 40, "NONE": 15}) for level in levels}
     phone_area = {"CENTER": "03", "NORTH": "04", "SOUTH": "08"}[region]
     answers = {
@@ -304,7 +305,13 @@ def build_answers(rng: random.Random, setting: str, community: str, region: str,
         ),
         "private_bathroom": pick(rng, {"ALL": 55, "SOME": 35, "NONE": 10}) if setting != "IL_PROTECTED_HOUSING" else "ALL",
         "in_room": sorted({"AC"} | set(subset(rng, {"KITCHENETTE": 0.9 if setting == "IL_PROTECTED_HOUSING" else 0.05, "BALCONY": 0.4, "OWN_FURNITURE": 0.5}))),
-        "shelter": pick(rng, {"ROOM": 30, "FLOOR": 35, "BUILDING": 25, "NEARBY": 10}),
+        "shelter": shelter,
+        "shelter_minutes": {"ROOM": 0, "FLOOR": rng.choice([1, 1, 2]), "BUILDING": rng.choice([2, 3, 4]), "NEARBY": rng.choice([3, 5, 7])}[shelter],
+        "shelter_bedridden": (
+            ("PROTECTED_IN_ROOM" if shelter == "ROOM" else pick(rng, {"MOVED_IN_BED": 75, "NO_SOLUTION": 25}))
+            if "NURSING" in levels
+            else "NOT_RELEVANT"
+        ),
         "accessibility": subset(rng, {"ELEVATOR": 0.92, "WHEELCHAIR": 0.8, "CALL_BUTTON": 0.85}),
         "amenities": subset(rng, {"GARDEN": 0.8, "POOL": 0.25 if setting == "IL_PROTECTED_HOUSING" else 0.05, "GYM": 0.35, "LIBRARY": 0.5, "HAIRDRESSER": 0.6, "CAFE": 0.4, "SHUTTLE": 0.45}),
         "pets": "YES" if chance(rng, 0.25 if setting == "IL_PROTECTED_HOUSING" else 0.05) else "NO",

@@ -114,6 +114,9 @@ MEDICAL_NEED_GATES = {
 }
 COUPLE_KEY = "IL_ACCEPTS_COUPLE"
 FUNDING_TRACK_KEY = "IL_FUNDING_TRACK"
+SHELTER_KEY = "IL_SHELTER_MINIMUM"
+# Closer is safer: in the room/apartment, then the same floor, then elsewhere.
+SHELTER_RANK = {"ROOM": 0, "FLOOR": 1, "BUILDING": 2, "NEARBY": 3}
 # Family funding pathway -> the facility payment track that must be ticked.
 # (MOH_CODE keeps its own gate on the MoH agreement, which validation ties to the track.)
 FUNDING_TRACKS = {"WELFARE_ASSISTANCE": "WELFARE", "PRIVATE": "PRIVATE"}
@@ -121,7 +124,7 @@ GENDER_KEY = "IL_GENDER_POLICY"
 GENDERS = {"FEMALE", "MALE"}
 
 ISRAEL_MUST_KEYS = (
-    {FUNCTIONAL_LEVEL_KEY, MOH_CODE_AGREEMENT_KEY, COUPLE_KEY, GENDER_KEY, FUNDING_TRACK_KEY}
+    {FUNCTIONAL_LEVEL_KEY, MOH_CODE_AGREEMENT_KEY, COUPLE_KEY, GENDER_KEY, FUNDING_TRACK_KEY, SHELTER_KEY}
     | {key for key, _ in MEDICAL_NEED_GATES.values()}
 )
 
@@ -156,6 +159,27 @@ def funding_track_gate(row: Dict[str, Any], track: str) -> tuple[str, str]:
     if not tracks:
         return PENDING, "FACILITY_DID_NOT_ANSWER_PAYMENT_TRACKS"
     return (PASS, f"FACILITY_ACCEPTS_{track}") if track in tracks else (FAIL, f"FACILITY_DOES_NOT_ACCEPT_{track}")
+
+
+def _shelter_need(family: Dict[str, Any]) -> Optional[str]:
+    need = str(family.get("shelterNeed") or "").upper()
+    if need in {"ROOM", "FLOOR"}:
+        return need
+    # Older sessions: "shelter in room or on the floor matters".
+    if str(family.get("shelterInRoom") or "").upper() == "IMPORTANT":
+        return "FLOOR"
+    return None
+
+
+def shelter_meets(answers: Optional[Dict[str, Any]], minimum: str) -> str:
+    """PASS if the facility's protected space is at least as close as the family's
+    minimum; PENDING if the facility has not said."""
+    if answers is None:
+        return PENDING
+    shelter = str(answers.get("shelter") or "").upper()
+    if shelter not in SHELTER_RANK:
+        return PENDING
+    return PASS if SHELTER_RANK[shelter] <= SHELTER_RANK[minimum] else FAIL
 
 
 def couple_gate(row: Dict[str, Any], same_level: Optional[bool]) -> tuple[str, str]:
@@ -199,6 +223,9 @@ def evaluate_israel_must(row: Dict[str, Any], must: Dict[str, Any]) -> tuple[str
         return couple_gate(row, must.get("same_level"))
     if key == FUNDING_TRACK_KEY:
         return funding_track_gate(row, str(must.get("value") or ""))
+    if key == SHELTER_KEY:
+        outcome = shelter_meets(_answers(row), str(must.get("value") or "FLOOR"))
+        return outcome, {PASS: "FACILITY_SHELTER_MEETS_MINIMUM", FAIL: "FACILITY_SHELTER_FARTHER_THAN_MINIMUM"}.get(outcome, "FACILITY_DID_NOT_ANSWER_SHELTER")
     if key == GENDER_KEY:
         return gender_gate(row, set(must.get("value") or []))
     for gate_key, question in MEDICAL_NEED_GATES.values():
@@ -241,6 +268,14 @@ def israel_additional_musts(questionnaire_state: Dict[str, Any]) -> list[Dict[st
             "reason": "The family is looking for a place for a couple.",
             "verification": "facility answer on accepting couples",
         })
+    need = _shelter_need(family)
+    if need and family.get("shelterIsCondition") is True:
+        musts.append({
+            "key": SHELTER_KEY,
+            "value": need,
+            "reason": "The family made a protected space this close a condition.",
+            "verification": "where the facility says its protected space is",
+        })
     genders = {str(g).upper() for g in family.get("residentGenders") or []} & GENDERS
     if genders:
         musts.append({
@@ -277,8 +312,9 @@ def israel_nice_to_haves(questionnaire_state: Dict[str, Any]) -> list[Dict[str, 
     language = str(family.get("language") or "").upper()
     if language and language != "HE":
         nice.append({"key": "IL_LANGUAGE", "value": language, "reason": "The resident's main language."})
-    if str(family.get("shelterInRoom") or "").upper() == "IMPORTANT":
-        nice.append({"key": "IL_SHELTER", "reason": "A protected room close by matters to the family."})
+    need = _shelter_need(family)
+    if need and not family.get("shelterIsCondition"):
+        nice.append({"key": "IL_SHELTER", "value": need, "reason": "Protected space close by matters to the family."})
     budget = family.get("monthlyBudgetIls")
     if str(family.get("fundingPathway") or "").upper() == "PRIVATE" and isinstance(budget, (int, float)) and budget > 0:
         cap = family.get("depositCapIls")
@@ -350,8 +386,8 @@ def evaluate_israel_nice(row: Dict[str, Any], nice: Dict[str, Any]) -> str:
         languages = answers.get("staff_languages")
         return UNKNOWN if not languages else (MATCH if value in languages else MISMATCH)
     if key == "IL_SHELTER":
-        shelter = str(answers.get("shelter") or "").upper()
-        return UNKNOWN if not shelter else (MATCH if shelter in {"ROOM", "FLOOR"} else MISMATCH)
+        outcome = shelter_meets(answers, str(value or "FLOOR"))
+        return {PASS: MATCH, FAIL: MISMATCH}.get(outcome, UNKNOWN)
     if key == "IL_BUDGET":
         return budget_status(row, nice)[0]
     if key == "IL_AVAILABILITY":
