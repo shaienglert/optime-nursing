@@ -53,9 +53,14 @@ export function proxy(request: NextRequest) {
     return enforceAdminAuth(request);
   }
 
+  // The Israeli deployment opens on the Hebrew intake instead of the US home page.
+  if (pathname === "/" && process.env.OOMNIK_MARKET === "israel") {
+    return NextResponse.redirect(new URL("/he/intake", request.url));
+  }
+
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/admin", "/admin/:path*"],
+  matcher: ["/", "/admin", "/admin/:path*"],
 };
