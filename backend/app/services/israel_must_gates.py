@@ -282,13 +282,42 @@ def israel_nice_to_haves(questionnaire_state: Dict[str, Any]) -> list[Dict[str, 
     budget = family.get("monthlyBudgetIls")
     if str(family.get("fundingPathway") or "").upper() == "PRIVATE" and isinstance(budget, (int, float)) and budget > 0:
         nice.append({"key": "IL_BUDGET", "value": float(budget), "reason": "Monthly budget for private payment."})
+    from app.services.israel_geo import locate
+
+    origin = locate(family.get("city"))
+    if origin:
+        # Closer ranks higher among otherwise equal facilities (never a match/mismatch).
+        nice.append({"key": "IL_PROXIMITY", "value": {"lat": origin[0], "lon": origin[1]}, "reason": "Distance from the family's locality."})
+        max_km = family.get("maxDistanceKm")
+        if isinstance(max_km, (int, float)) and max_km > 0:
+            nice.append({
+                "key": "IL_DISTANCE",
+                "value": {"lat": origin[0], "lon": origin[1], "max_km": float(max_km)},
+                "reason": "Within the distance the family chose (ranking only).",
+            })
     level = str(family.get("functionalLevel") or "").upper()
     if level in FUNCTIONAL_LEVELS:
         nice.append({"key": "IL_AVAILABILITY", "value": level, "reason": "A place available soon at the needed level."})
     return nice
 
 
+def distance_km(row: Dict[str, Any], origin: Dict[str, Any]) -> Optional[float]:
+    from app.services.israel_geo import facility_point, km_between
+
+    point, _ = facility_point(row)
+    if point is None:
+        return None
+    return round(km_between((float(origin["lat"]), float(origin["lon"])), point), 1)
+
+
 def evaluate_israel_nice(row: Dict[str, Any], nice: Dict[str, Any]) -> str:
+    if str(nice.get("key")) == "IL_DISTANCE":
+        # Location comes from the list or locality, not the questionnaire, so it applies
+        # to unregistered facilities too.
+        km = distance_km(row, nice["value"])
+        if km is None:
+            return UNKNOWN
+        return MATCH if km <= float(nice["value"]["max_km"]) else MISMATCH
     answers = _answers(row)
     if answers is None:
         return UNKNOWN

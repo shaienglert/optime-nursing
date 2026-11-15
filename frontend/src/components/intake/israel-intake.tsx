@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { useQuestionnaire, type QuestionnaireState } from "@/context/questionnaire-context";
+import { getApiBaseUrl, joinApiUrl } from "@/lib/api";
 import { QUESTIONNAIRE_SESSION_KEY, saveSessionJson } from "@/lib/search-session";
 
 type Israel = NonNullable<QuestionnaireState["israelMarket"]>;
@@ -247,6 +248,21 @@ export function IsraelIntake() {
   const [stepId, setStepId] = useState(STEPS[0].id);
   const [summary, setSummary] = useState(false);
   const [error, setError] = useState(false);
+  const [localities, setLocalities] = useState<string[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(joinApiUrl(getApiBaseUrl(), "/api/il/localities"))
+      .then((response) => (response.ok ? response.json() : { names: [] }))
+      .then((body: { names?: string[] }) => {
+        if (!cancelled) setLocalities(body.names ?? []);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  const cityKnown = (value: string) => localities.length === 0 || localities.includes(value.trim());
 
   const steps = useMemo(() => STEPS.filter((s) => !s.show || s.show(draft)), [draft]);
   const index = Math.max(0, steps.findIndex((s) => s.id === stepId));
@@ -339,7 +355,15 @@ export function IsraelIntake() {
                 })}
               </div>
             ) : step.kind === "city" ? (
-              <input aria-label={step.prompt} className="mt-6 w-full rounded-xl border p-3 text-lg" value={step.get(draft)} onChange={(e) => setDraft(step.set(draft, e.target.value))} placeholder="למשל: חיפה" />
+              <>
+                <input aria-label={step.prompt} list="il-localities" className="mt-6 w-full rounded-xl border p-3 text-lg" value={step.get(draft)} onChange={(e) => setDraft(step.set(draft, e.target.value))} placeholder="למשל: חיפה" />
+                <datalist id="il-localities">
+                  {localities.map((name) => <option key={name} value={name} />)}
+                </datalist>
+                {step.get(draft).trim() && !cityKnown(step.get(draft)) ? (
+                  <p className="mt-2 text-sm">לא מצאנו יישוב בשם הזה, ולכן לא נוכל לחשב מרחק. כדאי לבחור מהרשימה.</p>
+                ) : null}
+              </>
             ) : (
               <textarea aria-label={step.prompt} className="mt-6 h-40 w-full rounded-xl border p-3 text-lg" value={step.get(draft)} onChange={(e) => setDraft(step.set(draft, e.target.value))} placeholder="למשל: חשוב לנו אוכל כשר ושיהיה צוות שמדבר רוסית" />
             )}

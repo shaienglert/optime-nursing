@@ -5,8 +5,8 @@ For each persona: how many facilities pass every MUST, how many are pending
 and the top of the ranking with the preferences each one matched or missed.
 
 Runs fully offline: the synthetic registrations are applied in memory exactly as
-the live engine applies stored registrations. Distance is not used yet (facility
-addresses are not geocoded in the engine), so city appears only in the report.
+the live engine applies stored registrations. Distance: family locality to the facility's
+coordinates (synthetic records carry approximate coordinates).
 
 Usage: python scripts/run_israel_synthetic_scenarios.py [--out reports/israel_synthetic_runs.md]
 """
@@ -35,25 +35,25 @@ DATA = ROOT / "database" / "israel_synthetic"
 
 PERSONAS = [
     ("אמא סיעודית, קוד משרד הבריאות, דוברת רוסית, מסורתית", {
-        "functionalLevel": "NURSING", "fundingPathway": "MOH_CODE", "city": "חיפה", "residentGenders": ["FEMALE"],
+        "functionalLevel": "NURSING", "fundingPathway": "MOH_CODE", "city": "חיפה", "maxDistanceKm": 20, "residentGenders": ["FEMALE"],
         "language": "RU", "community": "TRADITIONAL", "kashrut": "KOSHER"}),
     ("אבא תשוש נפש שנוטה לשוטט, פרטי עד ₪16,000, חרדי", {
-        "functionalLevel": "COGNITIVE_FRAIL", "fundingPathway": "PRIVATE", "monthlyBudgetIls": 16000, "city": "ירושלים",
+        "functionalLevel": "COGNITIVE_FRAIL", "fundingPathway": "PRIVATE", "monthlyBudgetIls": 16000, "city": "ירושלים", "maxDistanceKm": 20,
         "residentGenders": ["MALE"], "medicalNeeds": ["WANDERING"], "community": "HAREDI", "kashrut": "MEHADRIN", "shabbat": "IMPORTANT"}),
     ("זוג: היא עצמאית, הוא סיעודי, פרטי עד ₪20,000", {
-        "functionalLevel": "NURSING", "fundingPathway": "PRIVATE", "monthlyBudgetIls": 20000, "city": "רעננה",
+        "functionalLevel": "NURSING", "fundingPathway": "PRIVATE", "monthlyBudgetIls": 20000, "city": "רעננה", "maxDistanceKm": 40,
         "isCouple": True, "partnerSameLevel": False, "residentGenders": ["FEMALE", "MALE"]}),
     ("מונשם, קוד משרד הבריאות", {
         "functionalLevel": "NURSING", "fundingPathway": "MOH_CODE", "city": "תל אביב - יפו", "residentGenders": ["MALE"],
         "medicalNeeds": ["VENTILATION"]}),
     ("אישה עצמאית, דיור מוגן פרטי, חילונית, ממ\"ד חשוב", {
-        "functionalLevel": "INDEPENDENT", "fundingPathway": "PRIVATE", "monthlyBudgetIls": 9000, "city": "הרצליה",
+        "functionalLevel": "INDEPENDENT", "fundingPathway": "PRIVATE", "monthlyBudgetIls": 9000, "city": "הרצליה", "maxDistanceKm": 10,
         "residentGenders": ["FEMALE"], "community": "SECULAR", "shelterInRoom": "IMPORTANT"}),
     ("אבא דרוזי סיעודי עם PEG, קוד", {
-        "functionalLevel": "NURSING", "fundingPathway": "MOH_CODE", "city": "דלית אל-כרמל", "residentGenders": ["MALE"],
+        "functionalLevel": "NURSING", "fundingPathway": "MOH_CODE", "city": "דלית אל-כרמל", "maxDistanceKm": 40, "residentGenders": ["MALE"],
         "medicalNeeds": ["PEG"], "language": "AR", "community": "DRUZE"}),
     ("אמא מוסלמית תשושה, סיוע רווחה, ערבית", {
-        "functionalLevel": "FRAIL", "fundingPathway": "WELFARE_ASSISTANCE", "city": "נצרת", "residentGenders": ["FEMALE"],
+        "functionalLevel": "FRAIL", "fundingPathway": "WELFARE_ASSISTANCE", "city": "נצרת", "maxDistanceKm": 20, "residentGenders": ["FEMALE"],
         "language": "AR", "community": "MUSLIM"}),
     ("מצב תפקודי לא ברור", {"functionalLevel": "UNCLEAR", "fundingPathway": "UNCLEAR", "city": "באר שבע"}),
 ]
@@ -76,6 +76,8 @@ GATE_HE = {
     "IL_SHELTER": "ממ\"ד",
     "IL_BUDGET": "תקציב",
     "IL_AVAILABILITY": "זמינות",
+    "IL_DISTANCE": "בטווח המרחק",
+    "IL_PROXIMITY": "קרבה (סדר)",
 }
 
 
@@ -115,7 +117,7 @@ def main() -> int:
     lines = [
         "# הרצות על 450 מוסדות סינתטיים",
         "",
-        "נתונים סינתטיים בלבד. המרחק עוד לא משפיע על הדירוג (אין גיאוקוד בכתובות המוסדות במנוע).",
+        "נתונים סינתטיים בלבד. מרחק מחושב ממרכז היישוב של המשפחה לקואורדינטות המוסד (משוער).",
         "",
     ]
     for title, family in PERSONAS:
@@ -129,13 +131,16 @@ def main() -> int:
             f"- סיבות פסילה: {', '.join(f'{GATE_HE.get(k, k)} ({n})' for k, n in fails.most_common()) or '-'}",
             f"- חסר מידע מהמוסד על: {', '.join(f'{GATE_HE.get(k, k)} ({n})' for k, n in pendings.most_common()) or '-'}",
             "",
-            "| # | מוסד | עיר | התאים | לא התאים |",
-            "|---|---|---|---|---|",
+            f"- מקור: {family.get('city')}" + (f", עד {family['maxDistanceKm']} ק\"מ" if family.get("maxDistanceKm") else ", בכל הארץ"),
+            "",
+            "| # | מוסד | עיר | ק\"מ | התאים | לא התאים |",
+            "|---|---|---|---|---|---|",
         ]
         for rank, (row, fit) in enumerate(passing[:5], 1):
-            lines.append(f"| {rank} | {row['facility_name']} | {row['city']} | {he(fit['nice_match'])} | {he(fit['nice_mismatch'])} |")
+            km = fit.get("distance_km")
+            lines.append(f"| {rank} | {row['facility_name']} | {row['city']} | {km if km is not None else '?'} | {he(fit['nice_match'])} | {he(fit['nice_mismatch'])} |")
         if not passing:
-            lines.append("| - | אין מוסד שעובר את כל תנאי החובה | | | |")
+            lines.append("| - | אין מוסד שעובר את כל תנאי החובה | | | | |")
         lines.append("")
     Path(args.out).write_text("\n".join(lines), encoding="utf-8")
     print("\n".join(lines))

@@ -3840,6 +3840,17 @@ async def provider_portal_me(db: Session = Depends(get_db), authorization: Optio
     }
 
 
+@app.get("/api/il/localities")
+async def israel_localities():
+    """Locality names for the family's city field, so distance can be computed."""
+    import json as _json
+
+    from app.services.israel_geo import DATA
+
+    payload = _json.loads(DATA.read_text(encoding="utf-8"))
+    return {"names": sorted(item["name"] for item in payload["localities"])}
+
+
 @app.get("/api/il/facility-questionnaire")
 async def israel_facility_questionnaire_schema():
     from app.services.israel_facility_questionnaire import public_schema

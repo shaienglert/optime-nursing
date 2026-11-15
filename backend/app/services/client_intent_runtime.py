@@ -16,7 +16,7 @@ already has a governed score (for example community-environment congruence).
 """
 
 import re
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from app.services import governed_evidence_runtime
 
@@ -289,6 +289,7 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
     nice_match: List[str] = []
     nice_unknown: List[str] = []
     nice_mismatch: List[str] = []
+    israel_distance_km: Optional[float] = None
     nice_fit_scores: Dict[str, float] = {}
 
     city = str(row.get("city") or "").strip().upper()
@@ -498,6 +499,12 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
 
     for nice in intent.get("nice_to_haves") or []:
         key = str(nice.get("key") or "")
+        if key == "IL_PROXIMITY":
+            from app.services.israel_must_gates import distance_km
+            km = distance_km(row, nice["value"])
+            if km is not None:
+                israel_distance_km = km
+            continue
         if key.startswith("IL_"):
             # Israeli ranking preferences: a mismatch lowers the facility, never hides it.
             from app.services.israel_must_gates import MATCH, MISMATCH, evaluate_israel_nice
@@ -611,6 +618,7 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
         "nice_unknown": nice_unknown,
         "nice_mismatch": nice_mismatch,
         "nice_fit_scores": nice_fit_scores,
+        "distance_km": israel_distance_km,
         "preference_consistency": "MISMATCH" if nice_mismatch else ("UNKNOWN" if nice_unknown else "MATCH"),
         "public_reputation": {"role": "DISPLAY_ONLY", "ranking_eligible": False},
         "relevant_evidence_known_count": relevant_known,
@@ -626,6 +634,10 @@ def intent_rank_key(row: Dict[str, Any]) -> tuple[Any, ...]:
     nice_mismatches = len(fit.get("nice_mismatch") or [])
     nice_scores = fit.get("nice_fit_scores") if isinstance(fit.get("nice_fit_scores"), dict) else {}
     community_fit = nice_scores.get("COMMUNITY_ENVIRONMENT_MATCH")
+    if community_fit is None and isinstance(fit.get("distance_km"), (int, float)):
+        # Israel has no community-environment score; the same family-criteria slot
+        # orders otherwise-equal facilities by distance (closer first).
+        community_fit = -float(fit["distance_km"])
     community_fit_known = isinstance(community_fit, (int, float))
 
     history = row.get("regulatory_history") if isinstance(row.get("regulatory_history"), dict) else {}

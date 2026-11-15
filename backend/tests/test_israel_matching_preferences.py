@@ -162,3 +162,36 @@ def test_welfare_and_private_funding_require_the_matching_track():
     assert _fit(private_only, private)["hard_gate"] == "PASS"
     assert _fit(welfare_only, private)["hard_gate"] == "FAIL"
     assert _fit(BASE, welfare)["hard_gate"] == "PENDING_VERIFICATION"
+
+
+def test_distance_ranks_closer_first_and_out_of_range_lower_but_visible():
+    from app.services.israel_geo import km_between, locate
+
+    def at(city, **answers):
+        row = _facility(**answers)
+        row["city"] = city
+        row["latitude"] = row["longitude"] = None
+        return row
+
+    haifa, tel_aviv, kiryat_ata = at("חיפה"), at("תל אביב - יפו"), at("קרית אתא")
+    intent = _intent(city="חיפה", maxDistanceKm=20)
+    fits = {name: _fit(row, intent) for name, row in (("haifa", haifa), ("ta", tel_aviv), ("ata", kiryat_ata))}
+    assert all(f["hard_gate"] == "PASS" for f in fits.values())
+    assert "IL_DISTANCE" in fits["haifa"]["nice_match"] and "IL_DISTANCE" in fits["ata"]["nice_match"]
+    assert "IL_DISTANCE" in fits["ta"]["nice_mismatch"]
+    assert fits["haifa"]["distance_km"] < fits["ata"]["distance_km"] < fits["ta"]["distance_km"]
+    order = sorted(fits, key=lambda n: intent_rank_key({"client_intent_fit": fits[n]}))
+    assert order == ["haifa", "ata", "ta"]
+    assert 80 < km_between(locate("חיפה"), locate("תל אביב")) < 95
+
+    # "Anywhere in the country": no match/mismatch, closer still first.
+    anywhere = _intent(city="חיפה")
+    fit_ta, fit_haifa = _fit(tel_aviv, anywhere), _fit(haifa, anywhere)
+    assert "IL_DISTANCE" not in fit_ta["nice_mismatch"]
+    assert intent_rank_key({"client_intent_fit": fit_haifa}) < intent_rank_key({"client_intent_fit": fit_ta})
+
+
+def test_unregistered_facility_still_gets_a_distance():
+    fit = _fit(BASE, _intent(city="חיפה", maxDistanceKm=500))
+    assert fit["distance_km"] is not None
+    assert "IL_DISTANCE" in fit["nice_match"]

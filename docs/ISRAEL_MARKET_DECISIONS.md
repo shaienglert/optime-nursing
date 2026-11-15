@@ -105,7 +105,9 @@ The existing `LICENSE_CURRENTLY_VALID` MUST reads license status and expiry; for
 - A MUST is decided only by the facility's own answer: YES → pass, NO → fail, unanswered or not registered → pending (never fail).
 - A ranking preference: match ranks higher, mismatch ranks lower, unanswered is neutral. No preference ever hides a facility.
 - Facility questions that decide a MUST are explicit yes/no, so "not ticked" is never read as "no".
-- Distance is collected but not used yet: facility addresses are not geocoded.
+- Distance (ranking only, owner-approved list 2026-11-14): within the family's chosen radius = match, beyond = mismatch (lower, still shown). Among otherwise-equal facilities, closer ranks first (also when the family chose "anywhere"). Distance is from the family's locality centre to the facility's coordinates, else its locality centre; street addresses are not geocoded. Applies to unregistered facilities too (location comes from the list, not the questionnaire).
+- Locality coordinates: `backend/app/data/israel_localities.json`, 1,264 localities from the MIT-licensed `israel-geolocation` package (settlement list from data.gov.il; coordinates from OpenStreetMap, ODbL, and Google geocoding). Approximate; replace with CBS official coordinates before production use. Regional councils (e.g. עמק יזרעאל) have no point and stay unknown.
+- All ranking preferences currently weigh the same (count of matches, then mismatches, then distance).
 
 ## Synthetic test universe (2026-11-15)
 
