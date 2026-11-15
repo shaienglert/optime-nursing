@@ -7,7 +7,7 @@ other answer is stored under ``questionnaire`` in the same registration record.
 
 Matching use (owner decisions, 2026-11-13/14; see israel_must_gates):
 - MUST (filters, only when the family states the need): functional level, funding
-  pathway, ventilation, wandering safety, PEG, NG tube, couples, gender.
+  pathway, ventilation, wandering safety, PEG, NG tube, couples.
 - Ranking only (a mismatch ranks lower, never hides the facility): religious/
   community character, kashrut, Shabbat, staff language, price vs budget,
   availability for the family's level, shelter (ממ"ד).
@@ -110,12 +110,6 @@ SECTIONS: List[Dict[str, Any]] = [
                     ("SAME_LEVEL", "כן, כששניהם באותה רמת תפקוד"),
                     ("MIXED_LEVELS", "כן, גם ברמות תפקוד שונות"),
                 ],
-            ),
-            _q(
-                "gender_policy",
-                "מגדר",
-                "single",
-                options=[("MIXED", "גברים ונשים"), ("WOMEN_ONLY", "נשים בלבד"), ("MEN_ONLY", "גברים בלבד")],
             ),
             _q("beds_total", "מספר מיטות / יחידות דיור כולל", "int", min=0, max=5000),
         ],
@@ -243,6 +237,12 @@ SECTIONS: List[Dict[str, Any]] = [
         "title": "שפה, דת ואוכל",
         "intro": "",
         "questions": [
+            _q(
+                "same_gender_care",
+                "אפשר לקבל טיפול אישי (רחצה, הלבשה) ממטפל/ת מאותו מגדר?",
+                "single",
+                options=[("YES", "כן"), ("NO", "לא")],
+            ),
             _q(
                 "staff_languages",
                 "באילו שפות הצוות מדבר עם הדיירים?",

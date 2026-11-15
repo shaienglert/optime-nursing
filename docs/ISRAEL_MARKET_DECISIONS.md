@@ -86,7 +86,7 @@ The existing `LICENSE_CURRENTLY_VALID` MUST reads license status and expiry; for
 ## Full facility questionnaire (step 9)
 
 - Schema: `backend/app/services/israel_facility_questionnaire.py` (`il-facility-questionnaire-v1`), served at `GET /api/il/facility-questionnaire`; the portal renders it and the backend validates with the same definition.
-- 8 sections, 50 questions: contact & address; population & licence (levels, special units, MoH agreement, licence, min age, couples, gender, beds); availability per level and short stays; funding tracks and prices (range, deposit, depreciation, maintenance fee, what is included); medical (24/7 nurse, physician, geriatrician, 12 clinical capabilities, therapists, hospital distance); language, religion and food; rooms and building (incl. shelter/ממ"ד, accessibility); family and visits.
+- 8 sections, 50 questions: contact & address; population & licence (levels, special units, MoH agreement, licence, min age, couples, beds); availability per level and short stays; funding tracks and prices (range, deposit, depreciation, maintenance fee, what is included); medical (24/7 nurse, physician, geriatrician, 12 clinical capabilities, therapists, hospital distance); language, religion and food; rooms and building (incl. shelter/ממ"ד, accessibility); family and visits.
 - Required: address, contact name, phone, funding tracks, staff languages, plus the core licence/level questions. MoH agreement and the "MoH code" funding track must agree.
 - Unanswered = UNKNOWN, never stored as "no". Unchanged resubmission = logged confirmation.
 - Matching use: unchanged. Only the two approved MUST gates read the answers; every other answer is displayed on the facility page. Using any new answer to filter or rank needs owner approval.
@@ -97,7 +97,7 @@ The existing `LICENSE_CURRENTLY_VALID` MUST reads license status and expiry; for
 |---|---|---|---|
 | Ventilation, wandering safety, PEG, NG tube | MUST, only if the family states the need | medicalNeeds | explicit yes/no questions (accepts_ventilated, wandering_safe, accepts_peg, accepts_ng_tube) |
 | Couple | MUST if the family is a couple | isCouple, partnerSameLevel | couples (NO / SAME_LEVEL / MIXED_LEVELS) |
-| Gender | MUST | residentGenders | gender_policy |
+| Same-gender personal care | NTH (owner 2026-11-15; replaces the removed gender MUST — no gender-only facilities were found in Israel) | sameGenderCare=IMPORTANT | same_gender_care YES → match, NO → ranks lower, blank → neutral |
 | Community character (secular … Druze) | Ranking only ("שישארו בדרוג נמוך יותר") | community | religious_character; MIXED fits secular/traditional |
 | Kashrut, Shabbat | Ranking only | kashrut, shabbat | kashrut, shabbat |
 | Language, budget (private), availability at level, shelter | Ranking only | language, monthlyBudgetIls, functionalLevel, shelterInRoom | staff_languages, monthly_price_ils, vacancy_by_level, shelter |

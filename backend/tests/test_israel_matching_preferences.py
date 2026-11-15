@@ -53,7 +53,7 @@ def test_medical_needs_filter_only_when_the_family_states_them():
 
 
 def test_unregistered_facility_is_pending_for_every_new_must():
-    intent = _intent(medicalNeeds=["PEG", "WANDERING"], isCouple=True, partnerSameLevel=True, residentGenders=["FEMALE"])
+    intent = _intent(medicalNeeds=["PEG", "WANDERING"], isCouple=True, partnerSameLevel=True)
     fit = _fit(BASE, intent)
     assert fit["hard_gate"] == "PENDING_VERIFICATION"
     assert not fit["must_fail"]
@@ -68,12 +68,22 @@ def test_couples():
     assert _fit(_facility(couples="MIXED_LEVELS"), different)["hard_gate"] == "PASS"
 
 
-def test_gender_policy():
-    women_only = _facility(gender_policy="WOMEN_ONLY")
-    assert _fit(women_only, _intent(residentGenders=["FEMALE"]))["hard_gate"] == "PASS"
-    assert _fit(women_only, _intent(residentGenders=["MALE"]))["hard_gate"] == "FAIL"
-    assert _fit(women_only, _intent(residentGenders=["FEMALE", "MALE"]))["hard_gate"] == "FAIL"
-    assert _fit(_facility(gender_policy="MIXED"), _intent(residentGenders=["MALE"]))["hard_gate"] == "PASS"
+def test_no_gender_condition_and_same_gender_care_is_only_a_preference():
+    from app.services.israel_must_gates import ISRAEL_MUST_KEYS
+
+    assert not any("GENDER" in key for key in ISRAEL_MUST_KEYS)
+    intent = _intent(sameGenderCare="IMPORTANT")
+    rows = {"yes": _facility(same_gender_care="YES"), "no": _facility(same_gender_care="NO"), "silent": _facility()}
+    fits = {name: _fit(row, intent) for name, row in rows.items()}
+    # Never a condition: every facility stays in the results.
+    assert all(fit["hard_gate"] == "PASS" for fit in fits.values())
+    assert "IL_SAME_GENDER_CARE" in fits["yes"]["nice_match"]
+    assert "IL_SAME_GENDER_CARE" in fits["no"]["nice_mismatch"]
+    assert "IL_SAME_GENDER_CARE" not in fits["silent"]["nice_match"] + fits["silent"]["nice_mismatch"]
+    ranked = sorted(fits, key=lambda name: intent_rank_key({"client_intent_fit": fits[name]}))
+    assert ranked == ["yes", "silent", "no"]
+    # Not asked by the family: the facility answer changes nothing.
+    assert "IL_SAME_GENDER_CARE" not in _fit(rows["no"], _intent())["nice_mismatch"]
 
 
 def test_community_mismatch_ranks_lower_but_never_hides():
@@ -141,7 +151,7 @@ def test_new_family_answers_survive_the_structured_profile():
         "medicalNeeds": ["PEG"],
         "isCouple": True,
         "partnerSameLevel": False,
-        "residentGenders": ["FEMALE", "MALE"],
+        "sameGenderCare": "IMPORTANT",
         "community": "TRADITIONAL",
         "kashrut": "KOSHER",
         "shabbat": "IMPORTANT",

@@ -121,11 +121,9 @@ SHELTER_RANK = {"ROOM": 0, "FLOOR": 1, "BUILDING": 2, "NEARBY": 3}
 # Family funding pathway -> the facility payment track that must be ticked.
 # (MOH_CODE keeps its own gate on the MoH agreement, which validation ties to the track.)
 FUNDING_TRACKS = {"WELFARE_ASSISTANCE": "WELFARE", "PRIVATE": "PRIVATE"}
-GENDER_KEY = "IL_GENDER_POLICY"
-GENDERS = {"FEMALE", "MALE"}
 
 ISRAEL_MUST_KEYS = (
-    {FUNCTIONAL_LEVEL_KEY, MOH_CODE_AGREEMENT_KEY, COUPLE_KEY, GENDER_KEY, FUNDING_TRACK_KEY, SHELTER_KEY, BEDRIDDEN_SHELTER_KEY}
+    {FUNCTIONAL_LEVEL_KEY, MOH_CODE_AGREEMENT_KEY, COUPLE_KEY, FUNDING_TRACK_KEY, SHELTER_KEY, BEDRIDDEN_SHELTER_KEY}
     | {key for key, _ in MEDICAL_NEED_GATES.values()}
 )
 
@@ -201,19 +199,6 @@ def couple_gate(row: Dict[str, Any], same_level: Optional[bool]) -> tuple[str, s
     return PENDING, "FACILITY_DID_NOT_ANSWER_COUPLES"
 
 
-def gender_gate(row: Dict[str, Any], genders: set[str]) -> tuple[str, str]:
-    answers = _answers(row)
-    if answers is None:
-        return PENDING, "FACILITY_NOT_REGISTERED"
-    policy = str(answers.get("gender_policy") or "").upper()
-    if policy == "MIXED":
-        return PASS, "FACILITY_ACCEPTS_ALL_GENDERS"
-    if policy in {"WOMEN_ONLY", "MEN_ONLY"}:
-        allowed = "FEMALE" if policy == "WOMEN_ONLY" else "MALE"
-        return (PASS, "FACILITY_GENDER_POLICY_FITS") if genders == {allowed} else (FAIL, "FACILITY_GENDER_POLICY_EXCLUDES")
-    return PENDING, "FACILITY_DID_NOT_ANSWER_GENDER_POLICY"
-
-
 def evaluate_israel_must(row: Dict[str, Any], must: Dict[str, Any]) -> tuple[str, str]:
     key = str(must.get("key") or "")
     if key == FUNCTIONAL_LEVEL_KEY:
@@ -238,8 +223,6 @@ def evaluate_israel_must(row: Dict[str, Any], must: Dict[str, Any]) -> tuple[str
     if key == SHELTER_KEY:
         outcome = shelter_meets(_answers(row), str(must.get("value") or "FLOOR"))
         return outcome, {PASS: "FACILITY_SHELTER_MEETS_MINIMUM", FAIL: "FACILITY_SHELTER_FARTHER_THAN_MINIMUM"}.get(outcome, "FACILITY_DID_NOT_ANSWER_SHELTER")
-    if key == GENDER_KEY:
-        return gender_gate(row, set(must.get("value") or []))
     for gate_key, question in MEDICAL_NEED_GATES.values():
         if key == gate_key:
             return yes_no_gate(row, question)
@@ -296,14 +279,6 @@ def israel_additional_musts(questionnaire_state: Dict[str, Any]) -> list[Dict[st
             "reason": "The family made a protected space this close a condition.",
             "verification": "where the facility says its protected space is",
         })
-    genders = {str(g).upper() for g in family.get("residentGenders") or []} & GENDERS
-    if genders:
-        musts.append({
-            "key": GENDER_KEY,
-            "value": sorted(genders),
-            "reason": "A women-only or men-only facility can serve only matching residents.",
-            "verification": "facility gender policy",
-        })
     return musts
 
 
@@ -330,6 +305,8 @@ def israel_nice_to_haves(questionnaire_state: Dict[str, Any]) -> list[Dict[str, 
         nice.append({"key": "IL_KASHRUT", "value": kashrut, "reason": "Kashrut matters to the family."})
     if str(family.get("shabbat") or "").upper() == "IMPORTANT":
         nice.append({"key": "IL_SHABBAT", "reason": "Shabbat observance matters to the family."})
+    if str(family.get("sameGenderCare") or "").upper() == "IMPORTANT":
+        nice.append({"key": "IL_SAME_GENDER_CARE", "reason": "Personal care by a caregiver of the same gender."})
     language = str(family.get("language") or "").upper()
     if language and language != "HE":
         nice.append({"key": "IL_LANGUAGE", "value": language, "reason": "The resident's main language."})
@@ -419,6 +396,9 @@ def evaluate_israel_nice(row: Dict[str, Any], nice: Dict[str, Any]) -> str:
     if key == "IL_SHABBAT":
         shabbat = str(answers.get("shabbat") or "").upper()
         return UNKNOWN if not shabbat else (MATCH if shabbat == "OBSERVED" else MISMATCH)
+    if key == "IL_SAME_GENDER_CARE":
+        same = str(answers.get("same_gender_care") or "").upper()
+        return UNKNOWN if not same else (MATCH if same == "YES" else MISMATCH)
     if key == "IL_LANGUAGE":
         languages = answers.get("staff_languages")
         return UNKNOWN if not languages else (MATCH if value in languages else MISMATCH)

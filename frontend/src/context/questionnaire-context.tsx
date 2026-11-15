@@ -55,11 +55,11 @@ export type QuestionnaireState = {
     medicalNeeds?: Array<"VENTILATION" | "WANDERING" | "PEG" | "NG_TUBE">;
     isCouple?: boolean | null;
     partnerSameLevel?: boolean | null;
-    residentGenders?: Array<"FEMALE" | "MALE">;
     // Ranking-only preferences: a mismatch ranks lower, never hides a facility.
     community?: string;
     kashrut?: "" | "KOSHER" | "MEHADRIN";
     shabbat?: "" | "IMPORTANT";
+    sameGenderCare?: "" | "IMPORTANT";
     language?: string;
     shelterInRoom?: "" | "IMPORTANT";
     // Closest acceptable protected space; a condition only if the family says so.

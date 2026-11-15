@@ -36,7 +36,8 @@ def test_covers_every_decision_the_engine_makes():
         values = Counter(a.get(key) for a in answers)
         assert values["YES"] and values["NO"] and values[None], key
     assert {"NO", "SAME_LEVEL", "MIXED_LEVELS"} <= {a.get("couples") for a in answers}
-    assert {"MIXED", "WOMEN_ONLY", "MEN_ONLY"} <= {a.get("gender_policy") for a in answers}
+    assert {"YES", "NO"} <= {a.get("same_gender_care") for a in answers}
+    assert not any("gender_policy" in a for a in answers)
     assert any(p["license_expiration_date"] < "2026-11-15" for p in REGISTRATIONS.values())
     assert len(RECORDS) - len(REGISTRATIONS) >= 10  # unregistered facilities exist
 

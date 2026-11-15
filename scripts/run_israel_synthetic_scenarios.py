@@ -35,35 +35,31 @@ DATA = ROOT / "database" / "israel_synthetic"
 
 PERSONAS = [
     ("אמא סיעודית, קוד משרד הבריאות, דוברת רוסית, מסורתית", {
-        "functionalLevel": "NURSING", "fundingPathway": "MOH_CODE", "city": "חיפה", "maxDistanceKm": 20, "residentGenders": ["FEMALE"],
-        "language": "RU", "community": "TRADITIONAL", "kashrut": "KOSHER"}),
+        "functionalLevel": "NURSING", "fundingPathway": "MOH_CODE", "city": "חיפה", "maxDistanceKm": 20, "language": "RU", "community": "TRADITIONAL", "kashrut": "KOSHER"}),
     ("אבא תשוש נפש שנוטה לשוטט, פרטי עד ₪16,000, חרדי", {
         "functionalLevel": "COGNITIVE_FRAIL", "fundingPathway": "PRIVATE", "monthlyBudgetIls": 16000, "city": "ירושלים", "maxDistanceKm": 20,
-        "residentGenders": ["MALE"], "medicalNeeds": ["WANDERING"], "community": "HAREDI", "kashrut": "MEHADRIN", "shabbat": "IMPORTANT"}),
+        "medicalNeeds": ["WANDERING"], "community": "HAREDI", "kashrut": "MEHADRIN", "shabbat": "IMPORTANT", "sameGenderCare": "IMPORTANT"}),
     ("זוג: היא עצמאית, הוא סיעודי, פרטי עד ₪20,000", {
         "functionalLevel": "NURSING", "fundingPathway": "PRIVATE", "monthlyBudgetIls": 20000, "city": "רעננה", "maxDistanceKm": 40,
-        "isCouple": True, "partnerSameLevel": False, "residentGenders": ["FEMALE", "MALE"]}),
+        "isCouple": True, "partnerSameLevel": False}),
     ("מונשם, קוד משרד הבריאות", {
-        "functionalLevel": "NURSING", "fundingPathway": "MOH_CODE", "city": "תל אביב - יפו", "residentGenders": ["MALE"],
-        "medicalNeeds": ["VENTILATION"]}),
+        "functionalLevel": "NURSING", "fundingPathway": "MOH_CODE", "city": "תל אביב - יפו", "medicalNeeds": ["VENTILATION"]}),
     ("אישה עצמאית, דיור מוגן פרטי, חילונית, מרחב מוגן בקומה (העדפה)", {
         "functionalLevel": "INDEPENDENT", "fundingPathway": "PRIVATE", "monthlyBudgetIls": 9000, "city": "הרצליה", "maxDistanceKm": 10,
-        "residentGenders": ["FEMALE"], "community": "SECULAR", "shelterNeed": "FLOOR"}),
+        "community": "SECULAR", "shelterNeed": "FLOOR"}),
     ("אמא סיעודית בנהריה, תנאי: ממ\"ד בחדר", {
         "functionalLevel": "NURSING", "fundingPathway": "MOH_CODE", "city": "נהריה", "maxDistanceKm": 40,
-        "residentGenders": ["FEMALE"], "shelterNeed": "ROOM", "shelterIsCondition": True}),
+        "shelterNeed": "ROOM", "shelterIsCondition": True}),
     ("אבא סיעודי מרותק למיטה, פרטי עד ₪15,000", {
         "functionalLevel": "NURSING", "fundingPathway": "PRIVATE", "monthlyBudgetIls": 15000, "city": "פתח תקווה",
-        "maxDistanceKm": 25, "residentGenders": ["MALE"], "bedridden": True}),
+        "maxDistanceKm": 25, "bedridden": True}),
     ("זוג עצמאי לדיור מוגן, עד ₪7,000 לחודש ופיקדון עד ₪1,000,000", {
         "functionalLevel": "INDEPENDENT", "fundingPathway": "PRIVATE", "monthlyBudgetIls": 7000, "depositCapIls": 1000000,
-        "city": "נתניה", "maxDistanceKm": 30, "isCouple": True, "partnerSameLevel": True, "residentGenders": ["FEMALE", "MALE"]}),
+        "city": "נתניה", "maxDistanceKm": 30, "isCouple": True, "partnerSameLevel": True}),
     ("אבא דרוזי סיעודי עם PEG, קוד", {
-        "functionalLevel": "NURSING", "fundingPathway": "MOH_CODE", "city": "דלית אל-כרמל", "maxDistanceKm": 40, "residentGenders": ["MALE"],
-        "medicalNeeds": ["PEG"], "language": "AR", "community": "DRUZE"}),
+        "functionalLevel": "NURSING", "fundingPathway": "MOH_CODE", "city": "דלית אל-כרמל", "maxDistanceKm": 40, "medicalNeeds": ["PEG"], "language": "AR", "community": "DRUZE"}),
     ("אמא מוסלמית תשושה, סיוע רווחה, ערבית", {
-        "functionalLevel": "FRAIL", "fundingPathway": "WELFARE_ASSISTANCE", "city": "נצרת", "maxDistanceKm": 20, "residentGenders": ["FEMALE"],
-        "language": "AR", "community": "MUSLIM"}),
+        "functionalLevel": "FRAIL", "fundingPathway": "WELFARE_ASSISTANCE", "city": "נצרת", "maxDistanceKm": 20, "language": "AR", "community": "MUSLIM", "sameGenderCare": "IMPORTANT"}),
     ("מצב תפקודי לא ברור", {"functionalLevel": "UNCLEAR", "fundingPathway": "UNCLEAR", "city": "באר שבע"}),
 ]
 
@@ -75,7 +71,6 @@ GATE_HE = {
     "IL_ACCEPTS_PEG": "PEG",
     "IL_ACCEPTS_NG_TUBE": "זונדה",
     "IL_ACCEPTS_COUPLE": "זוגות",
-    "IL_GENDER_POLICY": "מגדר",
     "IL_FUNDING_TRACK": "מסלול מימון",
     "IL_SHELTER_MINIMUM": "מיגון (תנאי)",
     "IL_BEDRIDDEN_SHELTER": "מיגון למרותקים",
@@ -83,6 +78,7 @@ GATE_HE = {
     "IL_COMMUNITY": "ציבור",
     "IL_KASHRUT": "כשרות",
     "IL_SHABBAT": "שבת",
+    "IL_SAME_GENDER_CARE": "טיפול מאותו מגדר",
     "IL_LANGUAGE": "שפה",
     "IL_SHELTER": "ממ\"ד",
     "IL_BUDGET": "תקציב",

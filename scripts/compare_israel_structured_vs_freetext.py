@@ -40,67 +40,66 @@ SEEKERS = [
     {
         "title": "אמא סיעודית בחיפה, קוד, דוברת רוסית",
         "structured": {"relationship": "אמא", "functionalLevel": "NURSING", "fundingPathway": "MOH_CODE", "city": "חיפה",
-                       "maxDistanceKm": 20, "residentGenders": ["FEMALE"], "language": "RU", "community": "TRADITIONAL", "kashrut": "KOSHER"},
+                       "maxDistanceKm": 20, "language": "RU", "community": "TRADITIONAL", "kashrut": "KOSHER"},
         "text": "אני מחפשת מקום לאמא שלי, היא סיעודית לגמרי. יש לנו קוד של משרד הבריאות. אנחנו גרים בחיפה ולא רוצים יותר מ-20 ק\"מ. "
                 "אמא מדברת בעיקר רוסית, אנחנו משפחה מסורתית ואוכל כשר חשוב לנו.",
     },
     {
         "title": "אבא תשוש נפש משוטט, חרדי, ירושלים, פרטי",
         "structured": {"relationship": "אבא", "functionalLevel": "COGNITIVE_FRAIL", "fundingPathway": "PRIVATE", "monthlyBudgetIls": 16000,
-                       "city": "ירושלים", "maxDistanceKm": 20, "residentGenders": ["MALE"], "medicalNeeds": ["WANDERING"],
-                       "community": "HAREDI", "kashrut": "MEHADRIN", "shabbat": "IMPORTANT"},
+                       "city": "ירושלים", "maxDistanceKm": 20, "medicalNeeds": ["WANDERING"],
+                       "community": "HAREDI", "kashrut": "MEHADRIN", "shabbat": "IMPORTANT", "sameGenderCare": "IMPORTANT"},
         "text": "אבא שלי בן 84 עם דמנציה מתקדמת, הוא יוצא מהבית ומסתובב ברחובות ולכן צריך מחלקה סגורה. אנחנו חרדים, צריך כשרות מהדרין "
-                "ושמירת שבת. נשלם באופן פרטי עד 16 אלף בחודש, באזור ירושלים.",
+                "ושמירת שבת, וחשוב שרק גבר ירחץ וילביש אותו. נשלם באופן פרטי עד 16 אלף בחודש, באזור ירושלים.",
     },
     {
         "title": "זוג: היא עצמאית, הוא סיעודי, רעננה",
         "structured": {"relationship": "הורים", "functionalLevel": "NURSING", "fundingPathway": "PRIVATE", "monthlyBudgetIls": 20000,
-                       "city": "רעננה", "maxDistanceKm": 40, "isCouple": True, "partnerSameLevel": False, "residentGenders": ["FEMALE", "MALE"]},
+                       "city": "רעננה", "maxDistanceKm": 40, "isCouple": True, "partnerSameLevel": False},
         "text": "ההורים שלי רוצים לעבור יחד. אמא עצמאית לגמרי ואבא סיעודי אחרי שבץ. אנחנו מרעננה, אפשר עד 40 ק\"מ. "
                 "התקציב שלהם עד 20,000 ש\"ח לחודש, מימון פרטי.",
     },
     {
         "title": "מונשם, קוד, תל אביב",
         "structured": {"relationship": "אבא", "functionalLevel": "NURSING", "fundingPathway": "MOH_CODE", "city": "תל אביב - יפו",
-                       "residentGenders": ["MALE"], "medicalNeeds": ["VENTILATION"]},
+                       "medicalNeeds": ["VENTILATION"]},
         "text": "אבא שלי מונשם מאז האשפוז, יש לו קוד משרד הבריאות. אנחנו בתל אביב אבל מוכנים לכל מקום בארץ שמקבל מונשמים.",
     },
     {
         "title": "אישה עצמאית לדיור מוגן, הרצליה, ממ\"ד בקומה",
         "structured": {"relationship": "עבורי", "functionalLevel": "INDEPENDENT", "fundingPathway": "PRIVATE", "monthlyBudgetIls": 9000,
-                       "depositCapIls": 1500000, "city": "הרצליה", "maxDistanceKm": 10, "residentGenders": ["FEMALE"],
-                       "community": "SECULAR", "shelterNeed": "FLOOR"},
+                       "depositCapIls": 1500000, "city": "הרצליה", "maxDistanceKm": 10, "community": "SECULAR", "shelterNeed": "FLOOR"},
         "text": "אני בת 76, עצמאית, ומחפשת דיור מוגן ליד הרצליה, עד 10 ק\"מ. יכולה להפקיד עד מיליון וחצי ולשלם עד 9,000 בחודש. "
                 "אני חילונית. חשוב לי שיהיה מרחב מוגן באותה קומה.",
     },
     {
         "title": "אבא דרוזי סיעודי עם PEG, קוד, דלית אל-כרמל",
         "structured": {"relationship": "אבא", "functionalLevel": "NURSING", "fundingPathway": "MOH_CODE", "city": "דלית אל-כרמל",
-                       "maxDistanceKm": 40, "residentGenders": ["MALE"], "medicalNeeds": ["PEG"], "language": "AR", "community": "DRUZE"},
+                       "maxDistanceKm": 40, "medicalNeeds": ["PEG"], "language": "AR", "community": "DRUZE"},
         "text": "אבא שלי מדלית אל-כרמל, סיעודי ומוזן דרך PEG. יש קוד של משרד הבריאות. הוא מדבר ערבית, ואנחנו דרוזים. עד 40 ק\"מ מהבית.",
     },
     {
         "title": "אמא מוסלמית תשושה, רווחה, נצרת",
         "structured": {"relationship": "אמא", "functionalLevel": "FRAIL", "fundingPathway": "WELFARE_ASSISTANCE", "city": "נצרת",
-                       "maxDistanceKm": 20, "residentGenders": ["FEMALE"], "language": "AR", "community": "MUSLIM"},
-        "text": "אמא שלי תשושה, צריכה עזרה במקלחת ובלבוש אבל הולכת לבד. המימון דרך הרווחה. אנחנו מנצרת, עד 20 ק\"מ, מוסלמים ודוברי ערבית.",
+                       "maxDistanceKm": 20, "language": "AR", "community": "MUSLIM", "sameGenderCare": "IMPORTANT"},
+        "text": "אמא שלי תשושה, צריכה עזרה במקלחת ובלבוש אבל הולכת לבד. המימון דרך הרווחה. אנחנו מנצרת, עד 20 ק\"מ, מוסלמים ודוברי ערבית. "
+                "חשוב לנו שאישה תעזור לה במקלחת.",
     },
     {
         "title": "אמא סיעודית בנהריה, תנאי: ממ\"ד בחדר",
         "structured": {"relationship": "אמא", "functionalLevel": "NURSING", "fundingPathway": "MOH_CODE", "city": "נהריה", "maxDistanceKm": 40,
-                       "residentGenders": ["FEMALE"], "shelterNeed": "ROOM", "shelterIsCondition": True},
+                       "shelterNeed": "ROOM", "shelterIsCondition": True},
         "text": "אמא סיעודית, יש קוד. אנחנו בנהריה, עד 40 ק\"מ. אחרי השנה האחרונה אני לא מוכנה לשום מקום בלי ממ\"ד בתוך החדר, זה תנאי.",
     },
     {
         "title": "אבא סיעודי מרותק למיטה, פרטי, פתח תקווה",
         "structured": {"relationship": "אבא", "functionalLevel": "NURSING", "fundingPathway": "PRIVATE", "monthlyBudgetIls": 15000,
-                       "city": "פתח תקווה", "maxDistanceKm": 25, "residentGenders": ["MALE"], "bedridden": True},
+                       "city": "פתח תקווה", "maxDistanceKm": 25, "bedridden": True},
         "text": "אבא מרותק למיטה, סיעודי. נשלם פרטי עד 15 אלף. אנחנו בפתח תקווה, עד 25 ק\"מ. חשוב שיהיה פתרון מוגן גם למי שבמיטה.",
     },
     {
         "title": "סבתא, מצב לא ברור, באר שבע",
-        "structured": {"relationship": "סבתא", "functionalLevel": "UNCLEAR", "fundingPathway": "UNCLEAR", "city": "באר שבע",
-                       "residentGenders": ["FEMALE"]},
+        "structured": {"relationship": "סבתא", "functionalLevel": "UNCLEAR", "fundingPathway": "UNCLEAR", "city": "באר שבע"},
         "text": "סבתא שלי מבאר שבע התחילה לשכוח דברים ונפלה פעמיים. אנחנו עוד לא יודעים אם היא תשושה או סיעודית ולא בדקנו מימון.",
     },
 ]
@@ -108,9 +107,9 @@ SEEKERS = [
 GATE_HE = {
     "LICENSE_CURRENTLY_VALID": "רישיון בתוקף", "IL_FUNCTIONAL_LEVEL": "רמת תפקוד", "IL_MOH_CODE_AGREEMENT": "הסכם קוד",
     "IL_FUNDING_TRACK": "מסלול מימון", "IL_ACCEPTS_VENTILATED": "מונשמים", "IL_WANDERING_SAFE": "משוטטים",
-    "IL_ACCEPTS_PEG": "PEG", "IL_ACCEPTS_NG_TUBE": "זונדה", "IL_ACCEPTS_COUPLE": "זוגות", "IL_GENDER_POLICY": "מגדר",
+    "IL_ACCEPTS_PEG": "PEG", "IL_ACCEPTS_NG_TUBE": "זונדה", "IL_ACCEPTS_COUPLE": "זוגות",
     "IL_SHELTER_MINIMUM": "מיגון (תנאי)", "IL_BEDRIDDEN_SHELTER": "מיגון למרותקים", "IL_COMMUNITY": "ציבור",
-    "IL_KASHRUT": "כשרות", "IL_SHABBAT": "שבת", "IL_LANGUAGE": "שפה", "IL_SHELTER": "מיגון (העדפה)", "IL_BUDGET": "תקציב",
+    "IL_KASHRUT": "כשרות", "IL_SHABBAT": "שבת", "IL_SAME_GENDER_CARE": "טיפול מאותו מגדר", "IL_LANGUAGE": "שפה", "IL_SHELTER": "מיגון (העדפה)", "IL_BUDGET": "תקציב",
     "IL_AVAILABILITY": "זמינות", "IL_DISTANCE": "טווח מרחק", "IL_PROXIMITY": "קרבה",
 }
 
@@ -184,10 +183,6 @@ def violations(fam, registration):
         policy = q.get("couples")
         if policy == "NO" or policy is None or (policy == "SAME_LEVEL" and not fam.get("partnerSameLevel")):
             bad.append("זוגות")
-    genders = set(fam.get("residentGenders", []))
-    policy = q.get("gender_policy")
-    if genders and (policy is None or (policy == "WOMEN_ONLY" and genders != {"FEMALE"}) or (policy == "MEN_ONLY" and genders != {"MALE"})):
-        bad.append("מגדר")
     if fam.get("shelterIsCondition") and SHELTER_RANK.get(q.get("shelter"), 9) > SHELTER_RANK[fam["shelterNeed"]]:
         bad.append("מיגון")
     if fam.get("bedridden") and q.get("shelter_bedridden") not in {"PROTECTED_IN_ROOM", "MOVED_IN_BED"}:

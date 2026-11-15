@@ -117,7 +117,7 @@ const STEPS: Step[] = [
       { value: "true", label: "לבני זוג", hint: "נציג רק מוסדות שמקבלים זוגות" },
     ],
     get: (d) => (d.israel.isCouple === true ? "true" : d.israel.isCouple === false ? "false" : ""),
-    set: (d, v) => ({ ...d, israel: { ...d.israel, isCouple: v === "true", partnerSameLevel: v === "true" ? d.israel.partnerSameLevel : null, residentGenders: [] } }),
+    set: (d, v) => ({ ...d, israel: { ...d.israel, isCouple: v === "true", partnerSameLevel: v === "true" ? d.israel.partnerSameLevel : null } }),
   },
   {
     id: "partnerSameLevel",
@@ -130,24 +130,6 @@ const STEPS: Step[] = [
     ],
     get: (d) => (d.israel.partnerSameLevel === true ? "true" : d.israel.partnerSameLevel === false ? "false" : ""),
     set: (d, v) => ({ ...d, israel: { ...d.israel, partnerSameLevel: v === "true" } }),
-  },
-  {
-    id: "residentGenders",
-    prompt: "עבור מי המקום?",
-    kind: "single",
-    optionsFor: (d) =>
-      d.israel.isCouple
-        ? [
-            { value: "FEMALE+MALE", label: "אישה וגבר" },
-            { value: "FEMALE", label: "שתי נשים" },
-            { value: "MALE", label: "שני גברים" },
-          ]
-        : [
-            { value: "FEMALE", label: "אישה" },
-            { value: "MALE", label: "גבר" },
-          ],
-    get: (d) => (d.israel.residentGenders ?? []).join("+"),
-    set: (d, v) => ({ ...d, israel: { ...d.israel, residentGenders: (v ? v.split("+") : []) as Israel["residentGenders"] } }),
   },
   {
     id: "bedridden",
@@ -286,6 +268,17 @@ const STEPS: Step[] = [
     optional: true,
   },
   {
+    id: "sameGenderCare",
+    prompt: "חשוב שהטיפול האישי (רחצה, הלבשה) ייעשה בידי מטפל/ת מאותו מגדר?",
+    kind: "single",
+    options: [
+      { value: "IMPORTANT", label: "כן, חשוב", hint: "מוסדות שמאפשרים זאת יופיעו גבוה יותר" },
+      { value: "", label: "לא משנה" },
+    ],
+    ...israelField("sameGenderCare"),
+    optional: true,
+  },
+  {
     id: "shelterNeed",
     prompt: "מיגון: מה הכי רחוק שמקובל עליכם?",
     kind: "single",
@@ -362,7 +355,7 @@ const EMPTY: Draft = {
     medicalNeeds: [],
     isCouple: null,
     partnerSameLevel: null,
-    residentGenders: [],
+    sameGenderCare: "",
     community: "",
     kashrut: "",
     shabbat: "",
