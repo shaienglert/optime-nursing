@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { use, useMemo, useSyncExternalStore } from "react";
 
+import { IsraelInquiries } from "@/components/provider/israel-inquiries";
 import { IsraelPhotoManager } from "@/components/provider/israel-photo-manager";
 import { IsraelQuestionnaire } from "@/components/provider/israel-questionnaire";
 import { providerSessionSnapshot, subscribeProviderSession, type ProviderSession } from "@/lib/provider-session";
@@ -40,6 +41,7 @@ export default function IsraelFacilityPortalPage({ params }: { params: Promise<{
         <p role="alert" className="mt-4 rounded-xl border p-3 text-sm">כדי לערוך, יש להיכנס דרך הקישור האישי שהמוסד קיבל מ-OOMNIK.</p>
       )}
 
+      <IsraelInquiries facilityId={facilityId} enabled={Boolean(session)} />
       <IsraelQuestionnaire facilityId={facilityId} userId={userId} />
       <IsraelPhotoManager facilityId={facilityId} userId={userId} />
     </main>

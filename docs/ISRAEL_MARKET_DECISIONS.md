@@ -117,6 +117,13 @@ The existing `LICENSE_CURRENTLY_VALID` MUST reads license status and expiry; for
 - `scripts/run_israel_synthetic_scenarios.py` runs 8 family personas offline and writes `reports/israel_synthetic_runs.md`.
 - Funding MUST extended (decision 3): a welfare-funded or private family requires the facility to have ticked that payment track.
 
+## Starting prices and focused requests (owner spec, 2026-11-15)
+
+- A facility publishes a starting price per offer: track (monthly / deposit), room or apartment type, care level. Deposit track: deposit and maintenance belong to the same track and apartment; if one is missing the page says it needs an inquiry. A facility may withhold prices ("מחיר בבירור"). Every save stamps `prices_verified_at`; source is the facility.
+- Budget statuses for a private family (monthly budget, optional deposit ceiling): in budget by starting price (match) / may fit subject to an offer (neutral: price only for another level, or a component missing) / price on request (neutral) / starting price over budget (ranks lower, never hides). Availability is shown per care level next to each price; the questionnaire does not ask availability per room type.
+- Focused request: family sends room type, move-in timing, optional monthly and deposit ceilings, name and phone (shown only to that facility). Facility answers in the portal: accept / propose another track (with amounts) / ask for a detail / decline. Family follows and replies through a private link. Requests do not affect matching or ranking.
+- Synthetic data covers: no price (withheld or not answered), cheapest offer at a level with no place, same maintenance with two deposits, deposit without maintenance.
+
 ## Not done yet
 
 - Nevada-specific need gates (ADL, medication, memory care) still read Nevada evidence; for Israel they stay PENDING until Israeli evidence exists.

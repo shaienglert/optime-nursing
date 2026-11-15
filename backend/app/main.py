@@ -3840,6 +3840,73 @@ async def provider_portal_me(db: Session = Depends(get_db), authorization: Optio
     }
 
 
+@app.post("/api/il/facilities/{canonical_id}/inquiries")
+async def israel_create_inquiry(canonical_id: str, payload: Dict[str, Any], db: Session = Depends(get_db)):
+    from app.services.israel_inquiries import create_inquiry
+
+    try:
+        return create_inquiry(db, canonical_id, payload)
+    except LookupError as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+
+
+@app.get("/api/il/inquiries/{token}")
+async def israel_family_inquiry(token: str, db: Session = Depends(get_db)):
+    from app.services.israel_inquiries import family_view
+
+    try:
+        return family_view(db, token)
+    except LookupError as error:
+        raise HTTPException(status_code=404, detail="Not found") from error
+
+
+@app.post("/api/il/inquiries/{token}/reply")
+async def israel_family_inquiry_reply(token: str, payload: Dict[str, Any], db: Session = Depends(get_db)):
+    from app.services.israel_inquiries import family_reply
+
+    try:
+        return family_reply(db, token, payload.get("text"))
+    except LookupError as error:
+        raise HTTPException(status_code=404, detail="Not found") from error
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+
+
+@app.get("/provider/facilities/{facility_id}/inquiries")
+async def provider_inquiries(
+    facility_id: int, db: Session = Depends(get_db), authorization: Optional[str] = Header(default=None)
+):
+    from app.services.israel_inquiries import facility_list
+
+    user_id = _provider_user(db, facility_id, authorization, None)
+    if user_id is None:
+        raise HTTPException(status_code=401, detail="Portal session required.")
+    return {"inquiries": facility_list(db, facility_id)}
+
+
+@app.post("/provider/facilities/{facility_id}/inquiries/{inquiry_id}/respond")
+async def provider_inquiry_respond(
+    facility_id: int,
+    inquiry_id: int,
+    payload: Dict[str, Any],
+    db: Session = Depends(get_db),
+    authorization: Optional[str] = Header(default=None),
+):
+    from app.services.israel_inquiries import facility_respond
+
+    user_id = _provider_user(db, facility_id, authorization, None)
+    if user_id is None:
+        raise HTTPException(status_code=401, detail="Portal session required.")
+    try:
+        return facility_respond(db, facility_id, user_id, inquiry_id, payload)
+    except LookupError as error:
+        raise HTTPException(status_code=404, detail="Not found") from error
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+
+
 @app.get("/api/il/localities")
 async def israel_localities():
     """Locality names for the family's city field, so distance can be computed."""

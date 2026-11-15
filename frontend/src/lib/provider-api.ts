@@ -288,3 +288,29 @@ export async function saveIsraelRegistration(
     body: JSON.stringify({ user_id: userId, ...registration }),
   });
 }
+
+
+export type ProviderInquiry = {
+  inquiry_id: number;
+  status: string;
+  status_label: string;
+  request: Record<string, string | number | null>;
+  messages: { from: string; kind: string; text?: string | null; monthly_ils?: number | null; deposit_ils?: number | null; at: string }[];
+  created_at: string | null;
+};
+
+export async function fetchProviderInquiries(facilityId: number): Promise<ProviderInquiry[]> {
+  const body = await request<{ inquiries: ProviderInquiry[] }>(`/provider/facilities/${facilityId}/inquiries`);
+  return body.inquiries;
+}
+
+export async function respondToInquiry(
+  facilityId: number,
+  inquiryId: number,
+  response: { kind: string; text?: string; monthly_ils?: number | null; deposit_ils?: number | null },
+): Promise<ProviderInquiry> {
+  return request<ProviderInquiry>(`/provider/facilities/${facilityId}/inquiries/${inquiryId}/respond`, {
+    method: "POST",
+    body: JSON.stringify(response),
+  });
+}

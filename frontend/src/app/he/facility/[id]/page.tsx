@@ -2,6 +2,7 @@
 
 import { use, useEffect, useState } from "react";
 
+import { InquiryForm } from "@/components/il/inquiry-form";
 import { fetchIsraelFacility, type IsraelFacilityPage } from "@/lib/israel-facility";
 import { photoSrc } from "@/lib/provider-api";
 
@@ -96,7 +97,7 @@ export default function IsraelFacilityHome({ params }: { params: Promise<{ id: s
               {page.prices.offers.map((offer, index) => (
                 <li key={index} className="rounded-xl border p-3">
                   <p className="font-semibold">{offer.text}</p>
-                  <p className="mt-1 text-sm">זמינות לחדר ולרמת הטיפול האלה: {offer.availability}</p>
+                  <p className="mt-1 text-sm">זמינות ברמת הטיפול הזו (לא לפי סוג חדר): {offer.availability}</p>
                 </li>
               ))}
             </ul>
@@ -109,6 +110,8 @@ export default function IsraelFacilityHome({ params }: { params: Promise<{ id: s
           <p className="mt-2 font-semibold">{page.prices.label}</p>
         )}
       </section>
+
+      <InquiryForm canonicalId={page.canonical_id} facilityName={page.name} />
 
       {page.facility_details.map((section) => (
         <section key={section.key} className="mt-6">

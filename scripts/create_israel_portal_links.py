@@ -23,6 +23,7 @@ import requests
 
 ROOT = Path(__file__).resolve().parents[1]
 UNIVERSE = ROOT / "database" / "israel_facility_universe_canonical.json"
+SYNTHETIC_UNIVERSE = ROOT / "database" / "israel_synthetic" / "facility_universe.json"
 
 
 def main() -> int:
@@ -31,6 +32,7 @@ def main() -> int:
     parser.add_argument("--site", required=True)
     parser.add_argument("--out", required=True)
     parser.add_argument("--ids", nargs="*", help="canonical ids; default: every facility")
+    parser.add_argument("--synthetic", action="store_true", help="use the synthetic test universe")
     args = parser.parse_args()
 
     token = os.getenv("OPTIME_ADMIN_TOKEN", "").strip()
@@ -42,7 +44,8 @@ def main() -> int:
         print("Refusing to write working links inside the repository.", file=sys.stderr)
         return 2
 
-    records = json.loads(UNIVERSE.read_text(encoding="utf-8"))["records"]
+    universe = SYNTHETIC_UNIVERSE if args.synthetic else UNIVERSE
+    records = json.loads(universe.read_text(encoding="utf-8"))["records"]
     wanted = set(args.ids or [])
     rows = [r for r in records if not wanted or r["canonical_id"] in wanted]
 

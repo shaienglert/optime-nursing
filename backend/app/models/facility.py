@@ -634,3 +634,19 @@ class FacilityPortalSession(Base):
 	created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 	expires_at = Column(DateTime(timezone=True), nullable=False)
 	revoked_at = Column(DateTime(timezone=True), nullable=True)
+
+
+class FacilityInquiry(Base):
+	"""A family's focused request to one facility (room type, move-in, budget it chose to
+	share). The family follows it through a private link (token stored as a hash); the
+	facility answers in its portal. Messages are kept as a JSON list, oldest first."""
+	__tablename__ = "facility_inquiries"
+
+	id = Column(Integer, primary_key=True, index=True)
+	facility_id = Column(Integer, ForeignKey("facilities.id"), index=True, nullable=False)
+	token_hash = Column(String(64), unique=True, nullable=False)
+	status = Column(String(30), nullable=False, default="SENT")
+	request_json = Column(Text, nullable=False)
+	messages_json = Column(Text, nullable=False, default="[]")
+	created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+	updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)

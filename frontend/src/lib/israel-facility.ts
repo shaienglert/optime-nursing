@@ -49,3 +49,92 @@ async function getJson<T>(path: string): Promise<T> {
 export const fetchIsraelFacility = (id: string) => getJson<IsraelFacilityPage>(`/api/il/facilities/${encodeURIComponent(id)}`);
 export const fetchIsraelFacilities = (city?: string) =>
   getJson<IsraelFacilityListItem[]>(`/api/il/facilities${city ? `?city=${encodeURIComponent(city)}` : ""}`);
+
+// ---------------------------------------------------------------------------
+// Focused requests from a family to one facility.
+// ---------------------------------------------------------------------------
+
+export type InquiryRequest = {
+  room_type: string;
+  level: string;
+  move_in: string;
+  monthly_cap_ils: number | null;
+  deposit_cap_ils: number | null;
+  contact_name: string;
+  contact_phone: string;
+  note: string;
+};
+
+export type InquiryMessage = {
+  from: "FAMILY" | "FACILITY";
+  kind: "REQUEST" | "REPLY" | "ACCEPT" | "ALTERNATIVE" | "NEED_INFO" | "DECLINE";
+  text?: string | null;
+  monthly_ils?: number | null;
+  deposit_ils?: number | null;
+  at: string;
+};
+
+export type InquiryView = {
+  inquiry_id: number;
+  facility: { canonical_id: string; name: string };
+  status: string;
+  status_label: string;
+  request: Record<string, string | number | null>;
+  messages: InquiryMessage[];
+  created_at: string | null;
+};
+
+async function sendJson<T>(path: string, body: unknown): Promise<T> {
+  const response = await fetch(`/api/backend${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) {
+    let detail = "";
+    try {
+      const parsed = (await response.json()) as { detail?: unknown };
+      detail = typeof parsed.detail === "string" ? parsed.detail : "";
+    } catch {
+      detail = "";
+    }
+    throw new Error(detail || "השליחה נכשלה. נסו שוב.");
+  }
+  return (await response.json()) as T;
+}
+
+export const sendInquiry = (canonicalId: string, request: InquiryRequest) =>
+  sendJson<{ token: string; link_path: string }>(`/api/il/facilities/${encodeURIComponent(canonicalId)}/inquiries`, request);
+export const fetchInquiry = (token: string) => getJson<InquiryView>(`/api/il/inquiries/${encodeURIComponent(token)}`);
+export const replyToInquiry = (token: string, text: string) =>
+  sendJson<InquiryView>(`/api/il/inquiries/${encodeURIComponent(token)}/reply`, { text });
+
+export const ROOM_LABELS: Record<string, string> = {
+  SINGLE: "חדר ליחיד",
+  SHARED_2: "חדר משותף לשניים",
+  SHARED_3PLUS: "חדר לשלושה ומעלה",
+  COUPLE_UNIT: "יחידה לבני זוג",
+  STUDIO: "דירת חדר",
+  APT_2: "דירת 2 חדרים",
+  APT_3: "דירת 3 חדרים",
+};
+export const LEVEL_LABELS: Record<string, string> = {
+  INDEPENDENT: "עצמאי/ת",
+  FRAIL: "תשוש/ה",
+  NURSING: "סיעודי/ת",
+  COGNITIVE_FRAIL: "תשוש/ת נפש",
+};
+export const MOVE_IN_LABELS: Record<string, string> = {
+  ASAP: "בהקדם",
+  WITHIN_MONTH: "בתוך חודש",
+  WITHIN_3_MONTHS: "בתוך שלושה חודשים",
+  EXPLORING: "רק בודקים",
+};
+export const MESSAGE_LABELS: Record<InquiryMessage["kind"], string> = {
+  REQUEST: "הבקשה נשלחה",
+  REPLY: "תשובת המשפחה",
+  ACCEPT: "המוסד מאשר שיש התאמה",
+  ALTERNATIVE: "המוסד מציע מסלול אחר",
+  NEED_INFO: "המוסד מבקש פרט נוסף",
+  DECLINE: "המוסד לא יכול לקבל כרגע",
+};
