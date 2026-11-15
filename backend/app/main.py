@@ -1791,6 +1791,12 @@ def startup() -> None:
             purge_summary = purge_facilities_outside_state(db, active_state_code())
             logger.info("israel_facility_scope_enforced %s", purge_summary)
             runtime_import = import_israel_facilities(db)
+            from app.services.market_scope import is_israel_synthetic_market
+
+            if is_israel_synthetic_market():
+                from app.services.israel_facility_import import seed_synthetic_registrations
+
+                logger.info("israel_synthetic_registrations_seeded %s", seed_synthetic_registrations(db))
         else:
             purge_summary = purge_non_nevada_facilities(db)
             logger.info("nevada_facility_scope_enforced %s", purge_summary)

@@ -150,3 +150,15 @@ def test_new_family_answers_survive_the_structured_profile():
     }
     restored = materialize_questionnaire(build_structured_profile({"israelMarket": answers}))
     assert restored["israelMarket"] == answers
+
+
+def test_welfare_and_private_funding_require_the_matching_track():
+    welfare_only = _facility(payment_tracks=["MOH_CODE", "WELFARE"])  # no PRIVATE
+    private_only = _facility(payment_tracks=["MOH_CODE", "PRIVATE"])
+    welfare = _intent(fundingPathway="WELFARE_ASSISTANCE")
+    private = _intent(fundingPathway="PRIVATE")
+    assert _fit(welfare_only, welfare)["hard_gate"] == "PASS"
+    assert _fit(private_only, welfare)["hard_gate"] == "FAIL"
+    assert _fit(private_only, private)["hard_gate"] == "PASS"
+    assert _fit(welfare_only, private)["hard_gate"] == "FAIL"
+    assert _fit(BASE, welfare)["hard_gate"] == "PENDING_VERIFICATION"

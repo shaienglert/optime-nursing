@@ -113,11 +113,15 @@ MEDICAL_NEED_GATES = {
     "NG_TUBE": ("IL_ACCEPTS_NG_TUBE", "accepts_ng_tube"),
 }
 COUPLE_KEY = "IL_ACCEPTS_COUPLE"
+FUNDING_TRACK_KEY = "IL_FUNDING_TRACK"
+# Family funding pathway -> the facility payment track that must be ticked.
+# (MOH_CODE keeps its own gate on the MoH agreement, which validation ties to the track.)
+FUNDING_TRACKS = {"WELFARE_ASSISTANCE": "WELFARE", "PRIVATE": "PRIVATE"}
 GENDER_KEY = "IL_GENDER_POLICY"
 GENDERS = {"FEMALE", "MALE"}
 
 ISRAEL_MUST_KEYS = (
-    {FUNCTIONAL_LEVEL_KEY, MOH_CODE_AGREEMENT_KEY, COUPLE_KEY, GENDER_KEY}
+    {FUNCTIONAL_LEVEL_KEY, MOH_CODE_AGREEMENT_KEY, COUPLE_KEY, GENDER_KEY, FUNDING_TRACK_KEY}
     | {key for key, _ in MEDICAL_NEED_GATES.values()}
 )
 
@@ -140,6 +144,18 @@ def yes_no_gate(row: Dict[str, Any], question: str) -> tuple[str, str]:
     if value == "NO":
         return FAIL, f"FACILITY_SUPPLIED_{question.upper()}_NO"
     return PENDING, f"FACILITY_DID_NOT_ANSWER_{question.upper()}"
+
+
+def funding_track_gate(row: Dict[str, Any], track: str) -> tuple[str, str]:
+    """payment_tracks is a required question, so a registered facility always answered
+    it: a track it did not tick is a stated "no"."""
+    answers = _answers(row)
+    if answers is None:
+        return PENDING, "FACILITY_NOT_REGISTERED"
+    tracks = answers.get("payment_tracks")
+    if not tracks:
+        return PENDING, "FACILITY_DID_NOT_ANSWER_PAYMENT_TRACKS"
+    return (PASS, f"FACILITY_ACCEPTS_{track}") if track in tracks else (FAIL, f"FACILITY_DOES_NOT_ACCEPT_{track}")
 
 
 def couple_gate(row: Dict[str, Any], same_level: Optional[bool]) -> tuple[str, str]:
@@ -181,6 +197,8 @@ def evaluate_israel_must(row: Dict[str, Any], must: Dict[str, Any]) -> tuple[str
         return moh_code_agreement_gate(row)
     if key == COUPLE_KEY:
         return couple_gate(row, must.get("same_level"))
+    if key == FUNDING_TRACK_KEY:
+        return funding_track_gate(row, str(must.get("value") or ""))
     if key == GENDER_KEY:
         return gender_gate(row, set(must.get("value") or []))
     for gate_key, question in MEDICAL_NEED_GATES.values():
@@ -197,6 +215,16 @@ def _family(questionnaire_state: Dict[str, Any]) -> Dict[str, Any]:
 def israel_additional_musts(questionnaire_state: Dict[str, Any]) -> list[Dict[str, Any]]:
     family = _family(questionnaire_state)
     musts: list[Dict[str, Any]] = []
+    track = FUNDING_TRACKS.get(str(family.get("fundingPathway") or "").upper())
+    if track:
+        # Owner decision 3 (funding pathway is a MUST), extended from the MoH code to the
+        # welfare and private pathways once facilities report their payment tracks.
+        musts.append({
+            "key": FUNDING_TRACK_KEY,
+            "value": track,
+            "reason": "The facility must accept the family's way of paying.",
+            "verification": "payment tracks the facility ticked",
+        })
     needs = {str(n).upper() for n in family.get("medicalNeeds") or []}
     for need, (key, question) in MEDICAL_NEED_GATES.items():
         if need in needs:

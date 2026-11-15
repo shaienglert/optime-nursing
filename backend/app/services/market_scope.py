@@ -12,10 +12,17 @@ from app.services.canonical_universe import configured_canonical_market
 NEVADA_STATE_CODE = "NV"
 ISRAEL_STATE_CODE = "IL"
 ISRAEL_MARKET = "israel"
+# Test deployment: same Israeli layer, synthetic facilities (never real ones).
+ISRAEL_SYNTHETIC_MARKET = "israel-synthetic"
+ISRAEL_MARKETS = {ISRAEL_MARKET, ISRAEL_SYNTHETIC_MARKET}
 
 
 def is_israel_market(market: str | None = None) -> bool:
-    return (market or configured_canonical_market()) == ISRAEL_MARKET
+    return (market or configured_canonical_market()) in ISRAEL_MARKETS
+
+
+def is_israel_synthetic_market(market: str | None = None) -> bool:
+    return (market or configured_canonical_market()) == ISRAEL_SYNTHETIC_MARKET
 
 
 def active_state_code(market: str | None = None) -> str:

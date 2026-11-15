@@ -9,17 +9,29 @@ from sqlalchemy.orm import Session
 
 from app.models.facility import Facility
 from app.services.canonical_universe import resolve_canonical_universe_path
-from app.services.market_scope import ISRAEL_MARKET, ISRAEL_STATE_CODE
+from app.services.canonical_universe import configured_canonical_market
+from app.services.market_scope import ISRAEL_MARKET, ISRAEL_STATE_CODE, ISRAEL_SYNTHETIC_MARKET
+
+SYNTHETIC_PREFIX = "IL-SYN-"
 
 SOURCE_NAME = "Israel canonical facility universe"
 
 
-def load_israel_records() -> tuple[list[Dict[str, Any]], str | None]:
-    path = resolve_canonical_universe_path(ISRAEL_MARKET)
+def load_israel_records(market: str | None = None) -> tuple[list[Dict[str, Any]], str | None]:
+    market = market or configured_canonical_market()
+    if market not in {ISRAEL_MARKET, ISRAEL_SYNTHETIC_MARKET}:
+        market = ISRAEL_MARKET
+    path = resolve_canonical_universe_path(market)
     payload = json.loads(path.read_text(encoding="utf-8"))
     records = list(payload.get("records") or [])
     if any(str(row.get("state") or "").upper() != ISRAEL_STATE_CODE for row in records):
         raise ValueError("Israel canonical universe contains out-of-scope records")
+    # Synthetic test facilities and real ones must never share a deployment.
+    synthetic = [str(row.get("canonical_id") or "").startswith(SYNTHETIC_PREFIX) for row in records]
+    if market == ISRAEL_SYNTHETIC_MARKET and not all(synthetic):
+        raise ValueError("The synthetic Israeli universe contains a non-synthetic record")
+    if market == ISRAEL_MARKET and any(synthetic):
+        raise ValueError("The real Israeli universe contains a synthetic record")
     return records, str(payload.get("generated_at_utc") or "") or None
 
 
@@ -74,3 +86,38 @@ def import_israel_facilities(
 
     db.commit()
     return {"facilities_imported": len(rows), "facilities_created": created, "facilities_updated": updated}
+
+
+def seed_synthetic_registrations(db: Session) -> int:
+    """Load the synthetic facilities' own questionnaire answers (test deployment only).
+
+    Existing registrations are left alone, so answers edited through the portal during
+    a test run survive a restart.
+    """
+    from app.models.facility import FacilityMarketRegistration
+    from app.services.canonical_universe import resolve_canonical_universe_path
+
+    if configured_canonical_market() != ISRAEL_SYNTHETIC_MARKET:
+        raise RuntimeError("Synthetic registrations may be seeded only in the israel-synthetic market")
+    path = resolve_canonical_universe_path(ISRAEL_SYNTHETIC_MARKET).with_name("registrations.json")
+    registrations = json.loads(path.read_text(encoding="utf-8"))["registrations"]
+    ids = {f.cms_id: f.id for f in db.query(Facility).filter(Facility.cms_id.like(SYNTHETIC_PREFIX + "%"))}
+    existing = {
+        row.facility_id
+        for row in db.query(FacilityMarketRegistration.facility_id).filter(FacilityMarketRegistration.market == ISRAEL_MARKET)
+    }
+    created = 0
+    for canonical_id, payload in registrations.items():
+        facility_id = ids.get(canonical_id)
+        if facility_id is None or facility_id in existing:
+            continue
+        db.add(
+            FacilityMarketRegistration(
+                facility_id=facility_id,
+                market=ISRAEL_MARKET,
+                payload_json=json.dumps(payload, ensure_ascii=False, sort_keys=True),
+            )
+        )
+        created += 1
+    db.commit()
+    return created

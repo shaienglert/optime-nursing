@@ -107,6 +107,14 @@ The existing `LICENSE_CURRENTLY_VALID` MUST reads license status and expiry; for
 - Facility questions that decide a MUST are explicit yes/no, so "not ticked" is never read as "no".
 - Distance is collected but not used yet: facility addresses are not geocoded.
 
+## Synthetic test universe (2026-11-15)
+
+- 450 synthetic facilities (`database/israel_synthetic/`, generator `scripts/generate_israel_synthetic_facilities.py`, seed 20261115): 245 nursing homes, 111 welfare homes, 94 protected housing — the real universe's setting mix and city weights. 377 fully answered, 45 only required answers, 28 never registered; ~3% expired licences.
+- Loaded only by `OPTIME_CANONICAL_MARKET=israel-synthetic` (separate deployment and database). Loading refuses to mix synthetic and real records. Startup seeds the facilities' answers once; portal edits during a test survive restarts.
+- Grounded: setting mix and cities (real lists); price ranges (published directory ranges). Assumed: community, language and capability rates, availability, registration shares.
+- `scripts/run_israel_synthetic_scenarios.py` runs 8 family personas offline and writes `reports/israel_synthetic_runs.md`.
+- Funding MUST extended (decision 3): a welfare-funded or private family requires the facility to have ticked that payment track.
+
 ## Not done yet
 
 - Nevada-specific need gates (ADL, medication, memory care) still read Nevada evidence; for Israel they stay PENDING until Israeli evidence exists.
