@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { use, useEffect, useState } from "react";
 
+import { FeedbackForm } from "@/components/il/feedback-form";
 import { fetchInquiry, MESSAGE_LABELS, replyToInquiry, type InquiryView } from "@/lib/israel-facility";
 
 const ils = (n?: number | null) => (n == null ? null : `₪${n.toLocaleString("he-IL")}`);
@@ -91,6 +92,8 @@ export default function InquiryPage({ params }: { params: Promise<{ token: strin
           </button>
         </div>
       ) : null}
+
+      <FeedbackForm token={token} facilityName={view.facility.name} />
     </main>
   );
 }

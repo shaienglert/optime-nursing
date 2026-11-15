@@ -59,7 +59,7 @@ UNIT_PATTERNS = {
 
 IL = "israelMarket."
 ISRAEL_FIELD_RULES = {
-    IL + "functionalLevel": FieldContract(choices=("INDEPENDENT", "FRAIL", "NURSING", "COGNITIVE_FRAIL", "UNCLEAR")),
+    IL + "functionalLevel": FieldContract(choices=("INDEPENDENT", "FRAIL", "NURSING", "COMPLEX_NURSING", "COGNITIVE_FRAIL", "UNCLEAR")),
     IL + "fundingPathway": FieldContract(choices=("MOH_CODE", "WELFARE_ASSISTANCE", "PRIVATE", "UNCLEAR")),
     IL + "monthlyBudgetIls": FieldContract(kind="Integer", positive=True),
     IL + "depositCapIls": FieldContract(kind="NonNegativeInteger"),

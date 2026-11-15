@@ -650,3 +650,21 @@ class FacilityInquiry(Base):
 	messages_json = Column(Text, nullable=False, default="[]")
 	created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 	updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+
+class FacilityFeedback(Base):
+	"""A family's rating of a facility it visited or moved into, given through its private
+	inquiry link (one per inquiry; a new answer replaces the old one). Shown on the
+	facility page only as an aggregate, and only once enough families have answered.
+	It never affects matching or ranking."""
+	__tablename__ = "facility_feedback"
+
+	id = Column(Integer, primary_key=True, index=True)
+	facility_id = Column(Integer, ForeignKey("facilities.id"), index=True, nullable=False)
+	inquiry_id = Column(Integer, ForeignKey("facility_inquiries.id"), unique=True, nullable=False)
+	relation = Column(String(20), nullable=False)
+	ratings_json = Column(Text, nullable=False)
+	recommend = Column(String(5), nullable=False)
+	comment = Column(Text, nullable=True)
+	created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+	updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)

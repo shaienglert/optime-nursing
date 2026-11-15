@@ -33,6 +33,7 @@ export type IsraelFacilityPage = {
     offers: { text: string; availability: string; track: string; level: string; room_type: string }[];
   };
   facility_details: { key: string; title: string; items: { key: string; label: string; value: string }[] }[];
+  family_feedback: FeedbackSummary;
   photos: { url: string; caption: string | null; category: string }[];
   activities: { category: string; availability: string; confidence: number }[];
   data_quality_flags: string[];
@@ -138,3 +139,25 @@ export const MESSAGE_LABELS: Record<InquiryMessage["kind"], string> = {
   NEED_INFO: "המוסד מבקש פרט נוסף",
   DECLINE: "המוסד לא יכול לקבל כרגע",
 };
+
+export type FeedbackSummary = {
+  count: number;
+  min_to_show: number;
+  shown: boolean;
+  aspects?: { key: string; label: string; average: number | null; answers: number }[];
+  recommend_pct?: number;
+  moved_in?: number;
+};
+export type FeedbackAnswer = {
+  relation: "VISITED" | "MOVED_IN";
+  ratings: Record<string, number>;
+  recommend: "YES" | "NO";
+  comment?: string | null;
+};
+export type FeedbackState = {
+  form: { relations: { value: string; label: string }[]; aspects: { key: string; label: string }[]; scale: number[]; min_to_show: number };
+  mine: FeedbackAnswer | null;
+};
+export const fetchFeedback = (token: string) => getJson<FeedbackState>(`/api/il/inquiries/${encodeURIComponent(token)}/feedback`);
+export const sendFeedback = (token: string, answer: FeedbackAnswer) =>
+  sendJson<FeedbackState>(`/api/il/inquiries/${encodeURIComponent(token)}/feedback`, answer);

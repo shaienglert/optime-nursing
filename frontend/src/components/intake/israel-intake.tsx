@@ -13,13 +13,15 @@ import styles from "./israel-intake.module.css";
 type Israel = NonNullable<QuestionnaireState["israelMarket"]>;
 type Draft = { israel: Israel; notes: string };
 type Option = { value: string; label: string; hint?: string; icon?: string };
+type Info = { points: string[]; source: { label: string; href: string } };
 type Step = {
   id: string;
   prompt: string;
   // Short label for the summary screen.
   short?: string;
   sub?: string;
-  kind: "single" | "multi" | "text" | "city";
+  kind: "single" | "multi" | "text" | "city" | "info";
+  info?: Info;
   options?: Option[];
   optionsFor?: (draft: Draft) => Option[];
   show?: (draft: Draft) => boolean;
@@ -83,15 +85,35 @@ const STEPS: Step[] = [
       { value: "INDEPENDENT", label: "עצמאי/ת", hint: "מתלבש/ת, מתרחץ/ת ואוכל/ת בלי עזרה" },
       { value: "FRAIL", label: "תשוש/ה", hint: "צריך/ה עזרה חלקית, אבל מתנייד/ת בעצמו/ה" },
       { value: "NURSING", label: "סיעודי/ת", hint: "תלוי/ה בעזרה ברוב פעולות היום-יום" },
+      { value: "COMPLEX_NURSING", label: "סיעודי/ת מורכב/ת", hint: "סיעודי עם מצב רפואי מורכב, למשל פצעי לחץ. בדרך כלל נקבע בבית החולים" },
       { value: "COGNITIVE_FRAIL", label: "תשוש/ת נפש", hint: "ירידה קוגניטיבית או דמנציה שמחייבת השגחה" },
       { value: "UNCLEAR", label: "לא בטוחים", hint: "לא נציג מסגרת כמתאימה עד שזה יתברר" },
     ],
     ...israelField("functionalLevel"),
   },
   {
+    id: "complexInfo",
+    prompt: "סיעוד מורכב: הסידור עובר דרך קופת החולים",
+    kind: "info",
+    show: (d) => d.israel.functionalLevel === "COMPLEX_NURSING",
+    info: {
+      points: [
+        "הסידור במחלקה לסיעוד מורכב הוא באחריות קופת החולים, ויש בו השתתפות עצמית של המטופל.",
+        "מי שמאושפז עכשיו בבית חולים פונה לעובד/ת הסוציאלי/ת במחלקה.",
+        "אסור לקופה לעכב את הסידור רק כי ההשתתפות העצמית עוד לא הוסדרה.",
+        "לכן לא נשאל על מימון. נציג רק מוסדות שיש בהם מחלקה לסיעוד מורכב.",
+      ],
+      source: { label: "כל זכות: סידור לחולים סיעודיים מורכבים", href: "https://www.kolzchut.org.il/he/סידור_מוסדי_עבור_חולים_סיעודיים_מורכבים" },
+    },
+    get: () => "",
+    set: (d) => d,
+    optional: true,
+  },
+  {
     id: "fundingPathway",
     prompt: "איך מתכננים לממן את המסגרת?",
     kind: "single",
+    show: (d) => d.israel.functionalLevel !== "COMPLEX_NURSING",
     options: [
       { value: "MOH_CODE", label: "קוד של משרד הבריאות", hint: "השתתפות המדינה באשפוז סיעודי או תשו״ן" },
       { value: "WELFARE_ASSISTANCE", label: "סיוע של משרד הרווחה", hint: "דרך המחלקה לשירותים חברתיים" },
@@ -99,6 +121,25 @@ const STEPS: Step[] = [
       { value: "UNCLEAR", label: "עוד לא יודעים" },
     ],
     ...israelField("fundingPathway"),
+  },
+  {
+    id: "codeInfo",
+    prompt: "כדאי לדעת: קוד של משרד הבריאות",
+    kind: "info",
+    show: (d) => d.israel.functionalLevel !== "COMPLEX_NURSING" && d.israel.fundingPathway === "UNCLEAR",
+    info: {
+      points: [
+        "המדינה מסייעת במימון מקום במוסד לסיעודיים או לתשושי נפש. הדרך עוברת בוועדה גריאטרית שקובעת את המסגרת המתאימה.",
+        "גובה ההשתתפות נקבע במבחן הכנסות של ההורה, בן/בת הזוג והילדים הבגירים. ההשתתפות של כל ילד נקבעת לפי ההכנסות שלו.",
+        "אפשר לממש את הקוד רק במוסד שיש לו הסכם עם משרד הבריאות.",
+        "מי שמקבל גמלת סיעוד מביטוח לאומי לא יהיה זכאי לה במחלקה סיעודית או במחלקה לתשושי נפש.",
+        "בינתיים לא נגביל את התוצאות לפי מימון. אפשר לחזור ולבחור מסלול בכל שלב.",
+      ],
+      source: { label: "כל זכות: אשפוז בקוד", href: "https://www.kolzchut.org.il/he/סיוע_במימון_סידור_מוסדי_לקשישים_סיעודיים_ותשושי_נפש_(אשפוז_בקוד)" },
+    },
+    get: () => "",
+    set: (d) => d,
+    optional: true,
   },
   {
     id: "monthlyBudgetIls",
@@ -135,7 +176,7 @@ const STEPS: Step[] = [
     id: "bedridden",
     prompt: "האם ההורה מרותק/ת למיטה?",
     kind: "single",
-    show: (d) => ["NURSING", "COGNITIVE_FRAIL", "UNCLEAR"].includes(d.israel.functionalLevel),
+    show: (d) => ["NURSING", "COMPLEX_NURSING", "COGNITIVE_FRAIL", "UNCLEAR"].includes(d.israel.functionalLevel),
     options: [
       { value: "true", label: "כן", hint: "נציג רק מוסדות שמגינים על מרותקים בזמן אזעקה" },
       { value: "false", label: "לא" },
@@ -428,6 +469,8 @@ export function IsraelIntake() {
       depositCapIls: visibleIds.has("depositCapIls") ? draft.israel.depositCapIls : null,
       shelterIsCondition: draft.israel.shelterNeed ? draft.israel.shelterIsCondition : null,
       bedridden: visibleIds.has("bedridden") ? draft.israel.bedridden : null,
+      // Complex nursing is arranged through the health fund; funding is explained, never asked.
+      fundingPathway: visibleIds.has("fundingPathway") ? draft.israel.fundingPathway : ("" as Israel["fundingPathway"]),
     };
     const submission: QuestionnaireState = {
       ...state,
@@ -502,7 +545,16 @@ export function IsraelIntake() {
             <h1 id={`q-${step.id}`} className={styles.prompt}>{step.prompt}</h1>
             {step.sub ? <p className={styles.sub}>{step.sub}</p> : null}
 
-            {step.kind === "single" ? (
+            {step.kind === "info" && step.info ? (
+              <div className={styles.info}>
+                <ul className={styles.infoList}>
+                  {step.info.points.map((point) => <li key={point}>{point}</li>)}
+                </ul>
+                <a className={styles.source} href={step.info.source.href} target="_blank" rel="noreferrer">
+                  מקור: {step.info.source.label}
+                </a>
+              </div>
+            ) : step.kind === "single" ? (
               <div className={`${styles.grid} ${wide(optionsOf(step, draft)) ? styles.gridWide : ""}`}>
                 {optionsOf(step, draft).map((option) => tile(option, step.get(draft) === option.value && (option.value !== "" || answered(step, draft)), () => choose(option.value)))}
               </div>
@@ -533,7 +585,7 @@ export function IsraelIntake() {
             {step.kind !== "single" || (step.optional && step.get(draft) !== "") ? (
               <div className={styles.actions}>
                 <button type="button" className={styles.primary} onClick={() => (answered(step, draft) ? go(index + 1) : setError(true))}>
-                  {step.kind === "multi" && !step.get(draft) ? "דילוג" : "המשך"}
+                  {step.kind === "info" ? "הבנתי, נמשיך" : step.kind === "multi" && !step.get(draft) ? "דילוג" : "המשך"}
                 </button>
               </div>
             ) : null}

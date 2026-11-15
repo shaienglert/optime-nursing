@@ -46,8 +46,8 @@ export type QuestionnaireState = {
   israelMarket?: {
     relationship: string;
     ageGroup: string;
-    functionalLevel: "INDEPENDENT" | "FRAIL" | "NURSING" | "COGNITIVE_FRAIL" | "UNCLEAR";
-    fundingPathway: "MOH_CODE" | "WELFARE_ASSISTANCE" | "PRIVATE" | "UNCLEAR";
+    functionalLevel: "INDEPENDENT" | "FRAIL" | "NURSING" | "COMPLEX_NURSING" | "COGNITIVE_FRAIL" | "UNCLEAR";
+    fundingPathway: "" | "MOH_CODE" | "WELFARE_ASSISTANCE" | "PRIVATE" | "UNCLEAR";
     city: string;
     maxDistanceKm: number | null;
     monthlyBudgetIls: number | null;

@@ -111,6 +111,27 @@ export default function IsraelFacilityHome({ params }: { params: Promise<{ id: s
         )}
       </section>
 
+      <section className="mt-6" aria-labelledby="family-feedback">
+        <h2 id="family-feedback" className="text-xl font-semibold">מה משפחות אומרות</h2>
+        {page.family_feedback.shown && page.family_feedback.aspects ? (
+          <>
+            <p className="mt-1 text-sm">
+              לפי {page.family_feedback.count} משפחות שפנו למוסד דרך OOMNIK וביקרו בו או שבן משפחתן גר בו. ציון מ-1 עד 5.
+            </p>
+            <dl className="mt-3 space-y-1">
+              {page.family_feedback.aspects.map((aspect) => (
+                <Row key={aspect.key} label={aspect.label} value={aspect.average === null ? "אין עדיין דירוג" : `${aspect.average} (${aspect.answers} משפחות)`} />
+              ))}
+              <Row label="ממליצים על המקום" value={`${page.family_feedback.recommend_pct}%`} />
+            </dl>
+          </>
+        ) : (
+          <p className="mt-2 text-sm">
+            עדיין אין מספיק משובים. נציג ממוצע אחרי ש־{page.family_feedback.min_to_show} משפחות שביקרו במקום ידרגו אותו.
+          </p>
+        )}
+      </section>
+
       <InquiryForm canonicalId={page.canonical_id} facilityName={page.name} />
 
       {page.facility_details.map((section) => (

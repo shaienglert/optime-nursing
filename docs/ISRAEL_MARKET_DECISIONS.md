@@ -156,3 +156,12 @@ The existing `LICENSE_CURRENTLY_VALID` MUST reads license status and expiry; for
 - A follow-up flow that helps a family who chose "not sure" settle the functional level.
 - Distance filtering in km (needs facility addresses/coordinates).
 - Russian, Arabic and English versions of the Israeli intake.
+
+
+## 2026-11-15: lessons from a competitor's FAQ (owner approved all four)
+
+- **Supportive unit ("דיור מוגן פלוס").** New facility answer `special_units: SUPPORTIVE`. A facility that lists it passes the FRAIL level MUST even if it did not tick FRAIL. It never stretches to NURSING.
+- **Complex nursing as a family level.** `functionalLevel: COMPLEX_NURSING` passes only with a facility-stated complex-nursing ward. FAIL if the facility does not serve NURSING, or listed its units without complex nursing. PENDING if it left the units question blank. Owner: no funding logic. The intake hides the funding and budget questions and shows an explanation instead: arranged and funded through the health fund (קופת חולים) with a co-payment; hospitalised patients go through the ward social worker; the fund may not delay placement only because the co-payment is unsettled (source: Kol Zchut). The interpreter sets it only on an explicit "סיעודי מורכב", never from a ventilator or other medical need.
+- **MoH code explainer.** Shown when funding is "not sure yet". Information only, with no effect on matching. It covers the geriatric committee, the means test of the resident, spouse and adult children (each child separately), use only at facilities with an MoH agreement, and loss of the National Insurance nursing benefit in a nursing or cognitive-frail ward (source: Kol Zchut).
+- **Trust layer: family feedback.** Only a family holding a request link can rate, and it must say it visited or moved in. It rates five aspects 1–5 (blank means not relevant, never a score) plus would-recommend. Averages are public only from 5 families; free-text comments are stored, not published (no moderation yet). Feedback **never affects matching or ranking**.
+- **MoH quality data: not connected.** The national quality-indicator programme covers geriatric hospitals among others. I did not find a per-facility, machine-readable publication for nursing homes, and that remains unverified. Nothing is imported.

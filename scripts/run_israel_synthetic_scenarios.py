@@ -34,6 +34,10 @@ from app.services.israel_facility_registration import apply_registration  # noqa
 DATA = ROOT / "database" / "israel_synthetic"
 
 PERSONAS = [
+    ("תשושה, פרטי עד ₪12,000 (דיור מוגן עם מחלקה תומכת מתאים)", {
+        "functionalLevel": "FRAIL", "fundingPathway": "PRIVATE", "monthlyBudgetIls": 12000, "city": "רעננה", "maxDistanceKm": 30}),
+    ("סיעודי מורכב אחרי אשפוז, מרותק למיטה (בלי שאלת מימון)", {
+        "functionalLevel": "COMPLEX_NURSING", "city": "חיפה", "maxDistanceKm": 40, "bedridden": True}),
     ("אמא סיעודית, קוד משרד הבריאות, דוברת רוסית, מסורתית", {
         "functionalLevel": "NURSING", "fundingPathway": "MOH_CODE", "city": "חיפה", "maxDistanceKm": 20, "language": "RU", "community": "TRADITIONAL", "kashrut": "KOSHER"}),
     ("אבא תשוש נפש שנוטה לשוטט, פרטי עד ₪16,000, חרדי", {

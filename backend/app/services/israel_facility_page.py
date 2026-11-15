@@ -18,6 +18,7 @@ from app.models.facility import Facility, FacilityPhoto
 from app.services.activity_intelligence import get_public_activity_categories
 from app.services.israel_facility_import import load_israel_records
 from app.services.israel_facility_registration import load_israel_registration
+from app.services.israel_feedback import feedback_summary
 
 LEVEL_LABELS = {"INDEPENDENT": "עצמאיים", "FRAIL": "תשושים", "NURSING": "סיעודיים", "COGNITIVE_FRAIL": "תשושי נפש"}
 AUTHORITY_LABELS = {"MINISTRY_OF_HEALTH": "משרד הבריאות", "MINISTRY_OF_WELFARE": "משרד הרווחה"}
@@ -102,6 +103,7 @@ def build_israel_facility_page(db: Session, canonical_id: str) -> Optional[Dict[
         "from_facility": from_facility,
         "facility_details": display_answers((registration or {}).get("questionnaire")),
         "prices": price_display(registration),
+        "family_feedback": feedback_summary(db, facility.id if facility else None),
         "photos": photos,
         "activities": activities,
         "data_quality_flags": record.get("data_quality_flags") or [],

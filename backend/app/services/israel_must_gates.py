@@ -14,6 +14,10 @@ FUNCTIONAL_LEVEL_KEY = "IL_FUNCTIONAL_LEVEL"
 MOH_CODE_AGREEMENT_KEY = "IL_MOH_CODE_AGREEMENT"
 
 FUNCTIONAL_LEVELS = {"INDEPENDENT", "FRAIL", "NURSING", "COGNITIVE_FRAIL"}
+# Family-side only (owner 2026-11-15): served by a facility's complex-nursing ward,
+# not by a level the facility ticks. Funding for it is explained, never gated.
+COMPLEX_NURSING = "COMPLEX_NURSING"
+FAMILY_LEVELS = FUNCTIONAL_LEVELS | {COMPLEX_NURSING}
 FUNDING_PATHWAYS = {"MOH_CODE", "WELFARE_ASSISTANCE", "PRIVATE"}
 
 # Wards as Israeli lists name them -> the functional level each ward serves.
@@ -56,13 +60,40 @@ def _levels_from(row: Dict[str, Any]) -> Optional[set[str]]:
     return found if supplied else None
 
 
+def _special_units(row: Dict[str, Any]) -> Optional[set[str]]:
+    """Units the facility itself listed; None when it has not registered or left the question blank."""
+    if str(row.get("registration_status") or "") != "REGISTERED":
+        return None
+    answers = row.get("israel_questionnaire") if isinstance(row.get("israel_questionnaire"), dict) else {}
+    units = answers.get("special_units")
+    return {str(u).upper() for u in units} if units else None
+
+
+def complex_nursing_gate(row: Dict[str, Any]) -> tuple[str, str]:
+    units = _special_units(row)
+    if units and COMPLEX_NURSING in units:
+        return PASS, "FACILITY_HAS_COMPLEX_NURSING_WARD"
+    served = _levels_from(row)
+    if served is not None and "NURSING" not in served:
+        return FAIL, "FACILITY_DOES_NOT_SERVE_NURSING"
+    if units:
+        # The facility listed its special units and complex nursing is not among them.
+        return FAIL, "FACILITY_LISTED_UNITS_WITHOUT_COMPLEX_NURSING"
+    return PENDING, "FACILITY_DID_NOT_STATE_COMPLEX_NURSING_WARD"
+
+
 def functional_level_gate(row: Dict[str, Any], wanted: Optional[str]) -> tuple[str, str]:
     level = str(wanted or "").upper()
+    if level == COMPLEX_NURSING:
+        return complex_nursing_gate(row)
     if level not in FUNCTIONAL_LEVELS:
         return PENDING, "FUNCTIONAL_LEVEL_UNKNOWN_ASK_FAMILY"
     served = _levels_from(row)
     if served is None:
         return PENDING, "FACILITY_NOT_REGISTERED_OR_LEVELS_NOT_FILLED"
+    if level == "FRAIL" and "FRAIL" not in served and "SUPPORTIVE" in (_special_units(row) or set()):
+        # Protected housing with a supportive unit ("דיור מוגן פלוס") serves frail residents.
+        return PASS, "FACILITY_HAS_SUPPORTIVE_UNIT"
     if level in served:
         return PASS, "FACILITY_SUPPLIED_LEVEL"
     return FAIL, "FACILITY_DOES_NOT_SERVE_LEVEL"
@@ -86,7 +117,7 @@ def israel_must_haves(questionnaire_state: Dict[str, Any]) -> list[Dict[str, Any
     funding = str(answers.get("fundingPathway") or "").upper()
     musts = [{
         "key": FUNCTIONAL_LEVEL_KEY,
-        "value": level if level in FUNCTIONAL_LEVELS else None,
+        "value": level if level in FAMILY_LEVELS else None,
         "reason": "In Israel the resident's functional level decides which licensed setting may serve them.",
         "verification": "levels/wards the facility filled in at registration",
     }]
@@ -353,6 +384,7 @@ def israel_nice_to_haves(questionnaire_state: Dict[str, Any]) -> list[Dict[str, 
     if activities:
         nice.append({"key": "IL_ACTIVITIES", "value": activities, "reason": "Activities the resident would enjoy."})
     level = str(family.get("functionalLevel") or "").upper()
+    level = "NURSING" if level == COMPLEX_NURSING else level
     if level in FUNCTIONAL_LEVELS:
         nice.append({"key": "IL_AVAILABILITY", "value": level, "reason": "A place available soon at the needed level."})
     return nice

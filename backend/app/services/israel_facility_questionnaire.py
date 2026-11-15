@@ -83,7 +83,8 @@ SECTIONS: List[Dict[str, Any]] = [
                 "מחלקות או יחידות מיוחדות",
                 "multi",
                 options=[
-                    ("COMPLEX_NURSING", "סיעוד מורכב"),
+                    ("SUPPORTIVE", "מחלקה תומכת (דיור מוגן פלוס) לדיירים שצריכים עזרה חלקית"),
+                    ("COMPLEX_NURSING", "מחלקה לסיעוד מורכב"),
                     ("PSYCHOGERIATRIC", "פסיכוגריאטריה"),
                     ("GERIATRIC_REHAB", "שיקום גריאטרי"),
                     ("HOSPICE", "הוספיס / טיפול תומך"),

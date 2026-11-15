@@ -13,6 +13,7 @@ import app.models.external_discovery  # noqa: F401
 from app.models.facility import (
     Facility,
     FacilityAuditLog,
+    FacilityFeedback,
     FacilityInquiry,
     FacilityPortalInvite,
     FacilityPortalSession,
@@ -53,7 +54,7 @@ class InquiryTests(unittest.TestCase):
     def _clean(self) -> None:
         ids = [f.id for f in self.db.query(Facility).filter(Facility.cms_id.like(PREFIX + "%"))]
         if ids:
-            for model in (FacilityInquiry, FacilityPortalSession, FacilityPortalInvite, FacilityAuditLog, FacilityUser):
+            for model in (FacilityFeedback, FacilityInquiry, FacilityPortalSession, FacilityPortalInvite, FacilityAuditLog, FacilityUser):
                 self.db.query(model).filter(model.facility_id.in_(ids)).delete(synchronize_session=False)
             self.db.query(Facility).filter(Facility.id.in_(ids)).delete(synchronize_session=False)
         self.db.commit()
@@ -117,3 +118,49 @@ class InquiryTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class FeedbackTests(InquiryTests):
+    RATING = {"relation": "VISITED", "ratings": {"staff": 5, "care": 4, "food": ""}, "recommend": "YES"}
+
+    def _inquiry(self, cid: str) -> str:
+        return self.client.post(f"/api/il/facilities/{cid}/inquiries", json=REQUEST).json()["token"]
+
+    def test_only_a_family_with_a_request_link_can_rate(self):
+        assert self.client.post("/api/il/inquiries/not-a-token/feedback", json=self.RATING).status_code == 404
+
+    def test_validation(self):
+        token = self._inquiry(PREFIX + "A")
+        bad = [
+            {**self.RATING, "relation": "HEARD_ABOUT_IT"},
+            {**self.RATING, "ratings": {}},
+            {**self.RATING, "ratings": {"staff": 6}},
+            {**self.RATING, "recommend": ""},
+        ]
+        for payload in bad:
+            assert self.client.post(f"/api/il/inquiries/{token}/feedback", json=payload).status_code == 400, payload
+
+    def test_one_answer_per_request_and_hidden_until_enough_families(self):
+        from app.services.israel_feedback import MIN_TO_SHOW, feedback_summary
+
+        token = self._inquiry(PREFIX + "A")
+        assert self.client.post(f"/api/il/inquiries/{token}/feedback", json=self.RATING).status_code == 200
+        again = self.client.post(f"/api/il/inquiries/{token}/feedback", json={**self.RATING, "recommend": "NO"}).json()
+        assert again["mine"]["recommend"] == "NO"
+        assert again["mine"]["ratings"] == {"staff": 5, "care": 4}  # "not relevant" is not stored as a score
+        summary = feedback_summary(self.db, self.a.id)
+        assert summary == {"count": 1, "min_to_show": MIN_TO_SHOW, "shown": False}
+
+        for _ in range(MIN_TO_SHOW - 1):
+            t = self._inquiry(PREFIX + "A")
+            self.client.post(f"/api/il/inquiries/{t}/feedback", json={**self.RATING, "relation": "MOVED_IN"})
+        summary = feedback_summary(self.db, self.a.id)
+        assert summary["shown"] and summary["count"] == MIN_TO_SHOW
+        staff = next(a for a in summary["aspects"] if a["key"] == "staff")
+        food = next(a for a in summary["aspects"] if a["key"] == "food")
+        assert staff["average"] == 5 and food["average"] is None and food["answers"] == 0
+        assert summary["recommend_pct"] == round(100 * (MIN_TO_SHOW - 1) / MIN_TO_SHOW)
+        # Feedback belongs to the facility the request was sent to, not another.
+        assert feedback_summary(self.db, self.b.id)["count"] == 0
+        # Comments are never part of the public summary.
+        assert "comment" not in str(summary)

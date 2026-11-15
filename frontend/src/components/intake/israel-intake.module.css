@@ -305,3 +305,26 @@
     transition: none;
   }
 }
+
+.info {
+  margin-top: 8px;
+  padding: 20px 22px;
+  border-radius: 18px;
+  background: var(--surface);
+}
+
+.infoList {
+  margin: 0;
+  padding-inline-start: 20px;
+  display: grid;
+  gap: 10px;
+  font-size: 16px;
+  line-height: 1.55;
+}
+
+.source {
+  display: inline-block;
+  margin-top: 14px;
+  font-size: 14px;
+  color: var(--secondary);
+}

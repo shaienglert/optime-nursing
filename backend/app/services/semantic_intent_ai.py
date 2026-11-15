@@ -67,7 +67,7 @@ SEMANTIC_AI_SYSTEM_RULES = [
 ISRAEL_QUESTIONNAIRE_PATCH = {
     "israelMarket": {
         "relationship": "explicit relationship in the family's words, e.g. אמא, אבא, סבתא, הורים, עבורי",
-        "functionalLevel": "INDEPENDENT|FRAIL|NURSING|COGNITIVE_FRAIL|UNCLEAR",
+        "functionalLevel": "INDEPENDENT|FRAIL|NURSING|COMPLEX_NURSING|COGNITIVE_FRAIL|UNCLEAR",
         "fundingPathway": "MOH_CODE|WELFARE_ASSISTANCE|PRIVATE|UNCLEAR",
         "monthlyBudgetIls": "positive monthly integer in shekels",
         "depositCapIls": "non-negative integer in shekels; 0 only when the family explicitly wants no deposit",
@@ -94,7 +94,7 @@ ISRAEL_QUESTIONNAIRE_PATCH = {
 
 ISRAEL_SEMANTIC_RULES = [
     "Israeli market. The client writes in Hebrew (sometimes Russian, Arabic or English). Fill only israelMarket fields; every value needs an exact Hebrew source quote.",
-    "functionalLevel follows the Israeli licensing terms the client uses: עצמאי/ת = INDEPENDENT; תשוש/ה or needs partial help with bathing or dressing but walks alone = FRAIL; סיעודי/ת, bedridden or dependent in most daily activities = NURSING; תשוש/ת נפש, or dementia that requires supervision or a closed ward = COGNITIVE_FRAIL. When the client says they do not know the level, use UNCLEAR and do not ask.",
+    "functionalLevel follows the Israeli licensing terms the client uses: עצמאי/ת = INDEPENDENT; תשוש/ה or needs partial help with bathing or dressing but walks alone = FRAIL; סיעודי/ת, bedridden or dependent in most daily activities = NURSING; only an explicit סיעודי/ת מורכב/ת or סיעוד מורכב = COMPLEX_NURSING (never inferred from a ventilator or other medical need, which stays in medicalNeeds); תשוש/ת נפש, or dementia that requires supervision or a closed ward = COGNITIVE_FRAIL. When the client says they do not know the level, use UNCLEAR and do not ask.",
     "fundingPathway: קוד / קוד של משרד הבריאות = MOH_CODE; רווחה / סיוע של משרד הרווחה = WELFARE_ASSISTANCE; פרטי / נשלם בעצמנו = PRIVATE; not checked yet = UNCLEAR.",
     "Amounts: '16 אלף' = 16000; 'מיליון וחצי' = 1500000; ש\"ח, ₪ and שקלים are shekels. Never convert from dollars.",
     "medicalNeeds only from explicit statements: מונשם = VENTILATION; wandering, leaving home and getting lost, or an explicit need for a closed ward = WANDERING; PEG = PEG; זונדה = NG_TUBE.",

@@ -220,7 +220,9 @@ def build_answers(rng: random.Random, setting: str, community: str, region: str,
             monthly = round_to(rng.uniform(10000, 18000) * REGION_PRICE[region], 250)
         monthly_max = monthly + round_to(rng.uniform(500, 3000), 100)
         couples = "MIXED_LEVELS" if has_ward else pick(rng, {"SAME_LEVEL": 70, "MIXED_LEVELS": 30})
-        units = []
+        # Supportive unit ("דיור מוגן פלוס"); some such places do not also tick FRAIL,
+        # which exercises the rule that the unit itself serves frail residents.
+        units = ["SUPPORTIVE"] if chance(rng, 0.4) else []
         ventilated = "NO"
         wandering = "YES" if "COGNITIVE_FRAIL" in levels else "NO"
         peg = "YES" if has_ward and chance(rng, 0.5) else "NO"

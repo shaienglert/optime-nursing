@@ -3874,6 +3874,28 @@ async def israel_family_inquiry_reply(token: str, payload: Dict[str, Any], db: S
         raise HTTPException(status_code=400, detail=str(error)) from error
 
 
+@app.get("/api/il/inquiries/{token}/feedback")
+async def israel_family_feedback(token: str, db: Session = Depends(get_db)):
+    from app.services.israel_feedback import family_feedback
+
+    try:
+        return family_feedback(db, token)
+    except LookupError as error:
+        raise HTTPException(status_code=404, detail="Not found") from error
+
+
+@app.post("/api/il/inquiries/{token}/feedback")
+async def israel_submit_feedback(token: str, payload: Dict[str, Any], db: Session = Depends(get_db)):
+    from app.services.israel_feedback import submit_feedback
+
+    try:
+        return submit_feedback(db, token, payload)
+    except LookupError as error:
+        raise HTTPException(status_code=404, detail="Not found") from error
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+
+
 @app.get("/provider/facilities/{facility_id}/inquiries")
 async def provider_inquiries(
     facility_id: int, db: Session = Depends(get_db), authorization: Optional[str] = Header(default=None)

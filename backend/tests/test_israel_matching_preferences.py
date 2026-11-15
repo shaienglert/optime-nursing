@@ -351,3 +351,27 @@ def test_lifestyle_preferences_only_rank():
 
     silent = _fit(_facility(setting="SUBURBAN"), _intent(setting="URBAN", activities=["MUSIC"]))
     assert {"IL_SETTING", "IL_ACTIVITIES"} <= set(silent["nice_unknown"])
+
+
+def _levels(levels, **answers):
+    payload = registration(functional_levels_served=levels, questionnaire={**REQUIRED_QUESTIONNAIRE, **answers})
+    return apply_registration(BASE, validate_registration(payload))
+
+
+def test_supportive_unit_serves_frail_residents():
+    frail = _intent(functionalLevel="FRAIL")
+    assert _fit(_levels(["INDEPENDENT"]), frail)["hard_gate"] == "FAIL"
+    assert _fit(_levels(["INDEPENDENT"], special_units=["SUPPORTIVE"]), frail)["hard_gate"] == "PASS"
+    # The unit does not stretch to nursing residents.
+    assert _fit(_levels(["INDEPENDENT"], special_units=["SUPPORTIVE"]), _intent())["hard_gate"] == "FAIL"
+
+
+def test_complex_nursing_needs_a_complex_ward_and_never_asks_funding():
+    complex_ = _intent(functionalLevel="COMPLEX_NURSING")
+    assert not [m for m in complex_["must_haves"] if m["key"] in {"IL_MOH_CODE_AGREEMENT", "IL_FUNDING_TRACK"}]
+    assert _fit(_facility(special_units=["COMPLEX_NURSING"]), complex_)["hard_gate"] == "PASS"
+    assert _fit(_facility(special_units=["HOSPICE"]), complex_)["hard_gate"] == "FAIL"
+    assert _fit(_levels(["INDEPENDENT"]), complex_)["hard_gate"] == "FAIL"
+    # A nursing home that left the units question blank is unknown, not excluded.
+    assert _fit(_facility(), complex_)["hard_gate"] == "PENDING_VERIFICATION"
+    assert _fit(BASE, complex_)["hard_gate"] == "PENDING_VERIFICATION"
