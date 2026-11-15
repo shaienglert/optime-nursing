@@ -190,6 +190,22 @@ const STEPS: Step[] = [
     ...israelField("shelterInRoom"),
     optional: true,
   },
+  {
+    id: "depositCapIls",
+    prompt: "בדיור מוגן יש לרוב פיקדון. עד כמה אתם מוכנים להפקיד?",
+    kind: "single",
+    show: (d) => d.israel.fundingPathway === "PRIVATE" && ["INDEPENDENT", "FRAIL"].includes(d.israel.functionalLevel),
+    options: [
+      { value: "0", label: "בלי פיקדון", hint: "רק מסלול חודשי" },
+      { value: "500000", label: "עד ₪500,000" },
+      { value: "1000000", label: "עד ₪1,000,000" },
+      { value: "1500000", label: "עד ₪1,500,000" },
+      { value: "2500000", label: "עד ₪2,500,000" },
+      { value: "", label: "עוד לא יודעים" },
+    ],
+    ...israelField("depositCapIls", (v) => (v === "" ? null : Number(v))),
+    optional: true,
+  },
   { id: "city", prompt: "באיזה יישוב או אזור?", kind: "city", ...israelField("city") },
   {
     id: "maxDistanceKm",
@@ -233,6 +249,7 @@ const EMPTY: Draft = {
     shabbat: "",
     language: "",
     shelterInRoom: "",
+    depositCapIls: null,
   },
   notes: "",
 };
@@ -293,6 +310,7 @@ export function IsraelIntake() {
       shabbat: visibleIds.has("shabbat") ? draft.israel.shabbat : "",
       partnerSameLevel: visibleIds.has("partnerSameLevel") ? draft.israel.partnerSameLevel : null,
       monthlyBudgetIls: visibleIds.has("monthlyBudgetIls") ? draft.israel.monthlyBudgetIls : null,
+      depositCapIls: visibleIds.has("depositCapIls") ? draft.israel.depositCapIls : null,
     };
     const submission: QuestionnaireState = {
       ...state,

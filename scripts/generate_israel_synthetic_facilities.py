@@ -129,6 +129,47 @@ def round_to(value: float, step: int) -> int:
     return int(round(value / step) * step)
 
 
+def build_offers(rng, setting, levels, monthly, deposit, vacancy):
+    """Published starting prices, including the three cases the owner asked to test:
+    no price, a starting price whose room/level has no place, and the same monthly
+    payment in two tracks with different deposits."""
+    if chance(rng, 0.1):
+        return "NO_PRICE", "WITHHOLD", []
+    offers = []
+    if setting == "IL_PROTECTED_HOUSING":
+        level = "INDEPENDENT"
+        if deposit:
+            apartment = rng.choice(["STUDIO", "APT_2"])
+            offers.append({"track": "DEPOSIT", "room_type": apartment, "level": level, "monthly_from_ils": monthly, "deposit_from_ils": deposit})
+            if chance(rng, 0.3):
+                # Same maintenance fee, bigger apartment, larger deposit.
+                offers.append({"track": "DEPOSIT", "room_type": "APT_3", "level": level, "monthly_from_ils": monthly, "deposit_from_ils": round_to(deposit * rng.uniform(1.3, 1.8), 10_000)})
+                case = "SAME_MONTHLY_TWO_DEPOSITS"
+            elif chance(rng, 0.12):
+                offers[0]["monthly_from_ils"] = None  # deposit published, maintenance on request
+                case = "DEPOSIT_ONLY"
+            else:
+                case = "PUBLISHED"
+        else:
+            offers.append({"track": "MONTHLY", "room_type": rng.choice(["STUDIO", "APT_2"]), "level": level, "monthly_from_ils": monthly, "deposit_from_ils": None})
+            case = "PUBLISHED"
+        if "NURSING" in levels and chance(rng, 0.6):
+            offers.append({"track": "MONTHLY", "room_type": "SHARED_2", "level": "NURSING", "monthly_from_ils": round_to(monthly * 1.4 + 9000, 250), "deposit_from_ils": None})
+        return case, "PUBLISH", offers
+
+    priced_levels = [lv for lv in ("FRAIL", "NURSING", "COGNITIVE_FRAIL", "INDEPENDENT") if lv in levels]
+    for index, level in enumerate(priced_levels[: rng.choice([1, 2, 2, 3])]):
+        bump = {"INDEPENDENT": 0.85, "FRAIL": 0.9, "NURSING": 1.0, "COGNITIVE_FRAIL": 1.1}[level]
+        shared = round_to(monthly * bump, 250)
+        offers.append({"track": "MONTHLY", "room_type": "SHARED_2", "level": level, "monthly_from_ils": shared, "deposit_from_ils": None})
+        if chance(rng, 0.35):
+            offers.append({"track": "MONTHLY", "room_type": "SINGLE", "level": level, "monthly_from_ils": round_to(shared * rng.uniform(1.2, 1.35), 250), "deposit_from_ils": None})
+    cheapest = min(offers, key=lambda o: o["monthly_from_ils"])
+    if vacancy.get(cheapest["level"]) in {"WAITLIST", "NONE"}:
+        return "CHEAPEST_HAS_NO_PLACE", "PUBLISH", offers
+    return "PUBLISHED", "PUBLISH", offers
+
+
 def build_answers(rng: random.Random, setting: str, community: str, region: str, number: int, city: str):
     arab = community in {"MUSLIM", "CHRISTIAN", "DRUZE"}
     price_factor = REGION_PRICE[region] * rng.uniform(0.85, 1.2)
@@ -231,7 +272,6 @@ def build_answers(rng: random.Random, setting: str, community: str, region: str,
         "beds_total": rng.randint(40, 320),
         "vacancy_by_level": vacancy,
         "short_stays": subset(rng, {"RESPITE": 0.35, "RECOVERY": 0.3 if setting == "IL_NURSING_HOME" else 0.05, "TRIAL": 0.25}),
-        "monthly_price_max_ils": monthly_max,
         "price_includes": subset(rng, {"MEALS": 0.95, "LAUNDRY": 0.8, "CLEANING": 0.85, "ACTIVITIES": 0.8, "MEDICATIONS": 0.3, "NURSING_ON_CALL": 0.5}),
         "nurse_24_7": nurse,
         "physician_presence": pick(rng, {"DAILY": 40, "WEEKLY": 40, "ON_CALL": 20}) if setting == "IL_NURSING_HOME" else pick(rng, {"WEEKLY": 40, "ON_CALL": 50, "NONE": 10}),
@@ -276,7 +316,10 @@ def build_answers(rng: random.Random, setting: str, community: str, region: str,
         answers["shabbat"] = shabbat
     if setting == "IL_PROTECTED_HOUSING" and deposit:
         answers["deposit_depreciation_pct_per_year"] = round(rng.uniform(2.0, 4.0), 1)
-        answers["maintenance_fee_ils"] = monthly
+    case, publication, offers = build_offers(rng, setting, levels, monthly, deposit, vacancy)
+    answers["price_publication"] = publication
+    if offers:
+        answers["price_offers"] = offers
     core = {
         "functional_levels_served": sorted(set(levels)),
         "moh_code_agreement": "YES" if moh else "NO",
@@ -286,10 +329,8 @@ def build_answers(rng: random.Random, setting: str, community: str, region: str,
         "license_expiration_date": (
             date(2026, rng.randint(1, 10), 1) if chance(rng, 0.03) else date(2026 + rng.choice([1, 2, 3]), 11, 15)
         ).isoformat(),
-        "monthly_price_ils": monthly,
-        "deposit_ils": deposit,
     }
-    return core, answers
+    return core, answers, case
 
 
 REQUIRED_ONLY = {"street_address", "contact_name", "contact_phone", "payment_tracks", "staff_languages"}
@@ -312,15 +353,17 @@ def build(seed: int):
             # Registration state mix (assumption): 80% full, 12% only the required
             # answers, 8% never registered (tests "unknown" handling).
             state = pick(rng, {"FULL": 80, "REQUIRED_ONLY": 12, "NOT_REGISTERED": 8})
-            core, answers = build_answers(rng, setting, community, region, number, city)
+            core, answers, price_case = build_answers(rng, setting, community, region, number, city)
             if state != "NOT_REGISTERED":
                 if state == "REQUIRED_ONLY":
                     answers = {k: v for k, v in answers.items() if k in REQUIRED_ONLY}
-                    core["monthly_price_ils"] = None
-                    core["deposit_ils"] = None
+                    price_case = "NO_PRICE"
                 answers = {k: v for k, v in answers.items() if v not in ([], {}, None, "")}
                 payload = validate_registration({**core, "questionnaire": answers})
+                payload["prices_verified_at"] = date(2026, 11, rng.randint(1, 14)).isoformat()
                 registrations[canonical_id] = payload
+            else:
+                price_case = "NOT_REGISTERED"
 
             unknown = {"value": None, "status": "UNKNOWN", "source": None, "basis": "UNKNOWN"}
             records.append({
@@ -365,7 +408,7 @@ def build(seed: int):
                 },
                 "synthetic": True,
             })
-            profile.append({"setting": setting, "community": community, "region": region, "state": state})
+            profile.append({"setting": setting, "community": community, "region": region, "state": state, "price_case": price_case})
     return records, registrations, profile
 
 
@@ -390,7 +433,7 @@ def main() -> int:
         encoding="utf-8",
     )
     print(f"{len(records)} facilities, {len(registrations)} registered")
-    for key in ("setting", "community", "region", "state"):
+    for key in ("setting", "community", "region", "state", "price_case"):
         print(key, dict(Counter(p[key] for p in profile).most_common()))
     return 0
 

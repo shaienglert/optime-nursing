@@ -34,6 +34,22 @@ VACANCY_OPTIONS = [
 ]
 
 
+ROOM_OPTIONS = [
+    ("SINGLE", "חדר ליחיד"),
+    ("SHARED_2", "חדר משותף לשניים"),
+    ("SHARED_3PLUS", "חדר לשלושה ומעלה"),
+    ("COUPLE_UNIT", "יחידה לבני זוג"),
+    ("STUDIO", "דירת חדר"),
+    ("APT_2", "דירת 2 חדרים"),
+    ("APT_3", "דירת 3 חדרים"),
+]
+TRACK_OPTIONS = [
+    ("MONTHLY", "מסלול חודשי"),
+    ("DEPOSIT", "מסלול פיקדון (דיור מוגן)"),
+]
+MAX_PRICE_OFFERS = 6
+
+
 def _q(key: str, label: str, kind: str, **extra: Any) -> Dict[str, Any]:
     question = {"key": key, "label": label, "type": kind, "required": False, "core": False}
     question.update(extra)
@@ -125,7 +141,7 @@ SECTIONS: List[Dict[str, Any]] = [
     {
         "key": "funding",
         "title": "מימון ומחירים",
-        "intro": "המחירים מוצגים למשפחות כטווח. אפשר להשאיר ריק.",
+        "intro": "מספיק מחיר התחלתי אחד לכל מסלול, ועל מה הוא חל (סוג חדר ורמת טיפול). את ההצעה המלאה תבנו מול המשפחה. מוסד שלא מפרסם מחיר מוצג עם \"מחיר בבירור\".",
         "questions": [
             _q(
                 "payment_tracks",
@@ -141,11 +157,14 @@ SECTIONS: List[Dict[str, Any]] = [
                     ("MOD", "משרד הביטחון"),
                 ],
             ),
-            _q("monthly_price_ils", "מחיר חודשי החל מ- (₪)", "money", core=True),
-            _q("monthly_price_max_ils", "מחיר חודשי עד (₪)", "money"),
-            _q("deposit_ils", "פיקדון (₪, בדיור מוגן)", "money", core=True),
+            _q(
+                "price_publication",
+                "האם המוסד מפרסם מחיר התחלתי?",
+                "single",
+                options=[("PUBLISH", "כן, נפרסם מחיר \"החל מ-\""), ("WITHHOLD", "לא, המחיר נמסר רק בפנייה")],
+            ),
+            _q("price_offers", "מחירים התחלתיים", "price_offers"),
             _q("deposit_depreciation_pct_per_year", "שחיקת הפיקדון לשנה (%)", "number", min=0, max=100),
-            _q("maintenance_fee_ils", "דמי אחזקה חודשיים (₪, בדיור מוגן)", "money"),
             _q(
                 "price_includes",
                 "מה כלול במחיר החודשי?",
@@ -361,7 +380,63 @@ _EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
 def public_schema() -> Dict[str, Any]:
-    return {"version": "il-facility-questionnaire-v1", "sections": SECTIONS}
+    return {
+        "version": "il-facility-questionnaire-v2",
+        "sections": SECTIONS,
+        "price_offer_options": {
+            "tracks": [{"value": v, "label": l} for v, l in TRACK_OPTIONS],
+            "rooms": [{"value": v, "label": l} for v, l in ROOM_OPTIONS],
+            "levels": [{"value": v, "label": l} for v, l in LEVEL_OPTIONS],
+            "max": MAX_PRICE_OFFERS,
+        },
+    }
+
+
+def _clean_offers(value: Any) -> List[Dict[str, Any]]:
+    """Each offer is one published starting price and what it applies to.
+
+    MONTHLY: monthly_from_ils is the monthly price; deposit_from_ils is an optional
+    accompanying deposit. DEPOSIT (protected housing): deposit_from_ils and
+    monthly_from_ils (maintenance) belong to the same track and apartment type; either
+    may be missing, in which case the page says the other needs an inquiry.
+    """
+    label = "מחירים התחלתיים"
+    if not isinstance(value, list):
+        raise ValueError(f"{label}: מבנה לא תקין.")
+    if len(value) > MAX_PRICE_OFFERS:
+        raise ValueError(f"{label}: עד {MAX_PRICE_OFFERS} מחירים.")
+    tracks = {v for v, _ in TRACK_OPTIONS}
+    rooms = {v for v, _ in ROOM_OPTIONS}
+    levels = {v for v, _ in LEVEL_OPTIONS}
+    out = []
+    for raw in value:
+        if not isinstance(raw, dict):
+            raise ValueError(f"{label}: מבנה לא תקין.")
+        track = str(raw.get("track") or "").upper()
+        room = str(raw.get("room_type") or "").upper()
+        level = str(raw.get("level") or "").upper()
+        if track not in tracks or room not in rooms or level not in levels:
+            raise ValueError(f"{label}: לכל מחיר צריך לבחור מסלול, סוג חדר ורמת טיפול.")
+
+        def money(key: str) -> Optional[int]:
+            amount = raw.get(key)
+            if amount in (None, ""):
+                return None
+            try:
+                number = int(float(amount))
+            except (TypeError, ValueError) as error:
+                raise ValueError(f"{label}: סכום לא תקין.") from error
+            if number <= 0 or number > 50_000_000:
+                raise ValueError(f"{label}: סכום לא תקין.")
+            return number
+
+        monthly, deposit = money("monthly_from_ils"), money("deposit_from_ils")
+        if track == "MONTHLY" and monthly is None:
+            raise ValueError(f"{label}: במסלול חודשי צריך מחיר חודשי.")
+        if track == "DEPOSIT" and monthly is None and deposit is None:
+            raise ValueError(f"{label}: במסלול פיקדון צריך לפחות פיקדון או דמי אחזקה.")
+        out.append({"track": track, "room_type": room, "level": level, "monthly_from_ils": monthly, "deposit_from_ils": deposit})
+    return out
 
 
 def _empty(value: Any) -> bool:
@@ -434,6 +509,8 @@ def _clean(question: Dict[str, Any], value: Any) -> Any:
         return out
     if kind == "date":
         return str(value)
+    if kind == "price_offers":
+        return _clean_offers(value)
     raise ValueError(f"Unsupported question type for {key}.")
 
 
@@ -453,6 +530,8 @@ def validate_questionnaire(answers: Optional[Dict[str, Any]]) -> Dict[str, Any]:
         cleaned = _clean(question, value)
         if not _empty(cleaned):
             out[key] = cleaned
+    if out.get("price_publication") == "WITHHOLD":
+        out.pop("price_offers", None)
     missing = [q["label"] for q in QUESTIONS.values() if q["required"] and not q["core"] and q["key"] not in out]
     if missing:
         raise ValueError("חסרות תשובות חובה: " + ", ".join(missing))
@@ -468,7 +547,7 @@ def display_answers(questionnaire: Optional[Dict[str, Any]]) -> List[Dict[str, A
     for section in SECTIONS:
         items = []
         for question in section["questions"]:
-            if question["core"] or question["key"] not in questionnaire:
+            if question["core"] or question["key"] not in questionnaire or question["type"] == "price_offers":
                 continue
             value = questionnaire[question["key"]]
             labels = {o["value"]: o["label"] for o in question.get("options", [])}
@@ -489,3 +568,53 @@ def display_answers(questionnaire: Optional[Dict[str, Any]]) -> List[Dict[str, A
         if items:
             sections.append({"key": section["key"], "title": section["title"], "items": items})
     return sections
+
+
+def _ils(amount: int) -> str:
+    return f"₪{amount:,}"
+
+
+def describe_offer(offer: Dict[str, Any]) -> str:
+    """The family-facing sentence for one starting price."""
+    rooms, levels = dict(ROOM_OPTIONS), dict(LEVEL_OPTIONS)
+    scope = f"{rooms[offer['room_type']]}, {levels[offer['level']]}"
+    monthly, deposit = offer.get("monthly_from_ils"), offer.get("deposit_from_ils")
+    if offer["track"] == "DEPOSIT":
+        if monthly and deposit:
+            text = f"פיקדון החל מ-{_ils(deposit)} ודמי אחזקה החל מ-{_ils(monthly)} לחודש"
+        elif deposit:
+            text = f"פיקדון החל מ-{_ils(deposit)}; דמי האחזקה דורשים בירור"
+        else:
+            text = f"דמי אחזקה החל מ-{_ils(monthly)} לחודש; גובה הפיקדון דורש בירור"
+    else:
+        text = f"החל מ-{_ils(monthly)} לחודש"
+        if deposit:
+            text += f", עם פיקדון נלווה של {_ils(deposit)}"
+    return f"{text} ({scope})"
+
+
+def price_display(registration: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    """Prices for the facility page: each offer with its availability, source and date."""
+    if not registration:
+        return {"status": "NOT_REGISTERED", "label": "מחיר בבירור", "offers": []}
+    questionnaire = registration.get("questionnaire") or {}
+    offers = questionnaire.get("price_offers") or []
+    verified_at = registration.get("prices_verified_at")
+    if questionnaire.get("price_publication") == "WITHHOLD" or not offers:
+        return {"status": "ON_REQUEST", "label": "מחיר בבירור", "offers": [], "verified_at": verified_at}
+    vacancy_labels = {**{v: l for v, l in VACANCY_OPTIONS}}
+    vacancy = questionnaire.get("vacancy_by_level") or {}
+    return {
+        "status": "PUBLISHED",
+        "label": None,
+        "verified_at": verified_at,
+        "source": "המוסד",
+        "offers": [
+            {
+                **offer,
+                "text": describe_offer(offer),
+                "availability": vacancy_labels.get(vacancy.get(offer["level"]), "זמינות לא ידועה"),
+            }
+            for offer in offers
+        ],
+    }

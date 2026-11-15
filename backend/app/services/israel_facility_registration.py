@@ -66,7 +66,16 @@ def validate_registration(payload: Dict[str, Any]) -> Dict[str, Any]:
     if agreement == "NO" and "MOH_CODE" in tracks:
         raise ValueError("סימנתם מסלול \"קוד משרד הבריאות\" אבל אין הסכם קוד. יש לתקן אחת מהתשובות.")
 
+    verified = payload.get("prices_verified_at")
+    stamp: Dict[str, Any] = {}
+    if verified:
+        try:
+            stamp["prices_verified_at"] = date.fromisoformat(str(verified)).isoformat()
+        except ValueError as error:
+            raise ValueError("prices_verified_at must be an ISO date.") from error
+
     return {
+        **stamp,
         "questionnaire": questionnaire,
         "functional_levels_served": levels,
         "moh_code_agreement": agreement,
@@ -97,7 +106,20 @@ def save_israel_registration(
         .one_or_none()
     )
     previous = row.payload_json if row else None
+    # Every save is the facility verifying its prices (source: the facility, via the
+    # portal). The date is kept apart from the change check, so a confirmation does
+    # not count as a change.
+    data["prices_verified_at"] = date.today().isoformat()
     new_json = json.dumps(data, ensure_ascii=False, sort_keys=True)
+
+    def _without_date(text: Optional[str]) -> Optional[str]:
+        if text is None:
+            return None
+        loaded = json.loads(text)
+        loaded.pop("prices_verified_at", None)
+        return json.dumps(loaded, ensure_ascii=False, sort_keys=True)
+
+    changed = _without_date(previous) != _without_date(new_json)
     if row is None:
         row = FacilityMarketRegistration(facility_id=facility_id, market=ISRAEL_MARKET, payload_json=new_json)
         db.add(row)
@@ -109,15 +131,15 @@ def save_israel_registration(
         FacilityAuditLog(
             facility_id=facility_id,
             user_id=user.id,
-            field_name="israel_registration" if previous != new_json else "israel_registration:confirmed",
-            old_value=previous if previous != new_json else None,
+            field_name="israel_registration" if changed else "israel_registration:confirmed",
+            old_value=previous if changed else None,
             new_value=new_json,
             ip_address=ip_address,
             user_role=user.role,
         )
     )
     db.commit()
-    return {"facility_id": facility_id, "registration": data, "changed": previous != new_json}
+    return {"facility_id": facility_id, "registration": data, "changed": changed}
 
 
 def load_israel_registration(db: Session, canonical_id: str) -> Optional[Dict[str, Any]]:

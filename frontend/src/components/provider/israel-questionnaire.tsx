@@ -7,6 +7,7 @@ import {
   fetchIsraelRegistration,
   saveIsraelRegistration,
   type IsraelRegistration,
+  type PriceOffer,
   type Question,
   type QuestionnaireSchema,
 } from "@/lib/provider-api";
@@ -167,9 +168,21 @@ export function IsraelQuestionnaire({ facilityId, userId }: { facilityId: number
         <h2 id={`section-${section.key}`} className="text-xl font-semibold">{section.title}</h2>
         {section.intro ? <p className="mt-1 text-sm">{section.intro}</p> : null}
         <div className="mt-4 space-y-6">
-          {section.questions.map((question) => (
-            <QuestionField key={question.key} question={question} value={answers[question.key]} onChange={(v) => set(question.key, v)} />
-          ))}
+          {section.questions
+            .filter((question) => !(question.type === "price_offers" && answers.price_publication === "WITHHOLD"))
+            .map((question) =>
+              question.type === "price_offers" ? (
+                <PriceOffersField
+                  key={question.key}
+                  label={question.label}
+                  options={schema.price_offer_options}
+                  value={(answers[question.key] as PriceOffer[] | undefined) ?? []}
+                  onChange={(v) => set(question.key, v)}
+                />
+              ) : (
+                <QuestionField key={question.key} question={question} value={answers[question.key]} onChange={(v) => set(question.key, v)} />
+              ),
+            )}
         </div>
       </section>
 
@@ -305,5 +318,77 @@ function QuestionField({ question, value, onChange }: { question: Question; valu
         onChange={(e) => onChange(e.target.value)}
       />
     </label>
+  );
+}
+
+const EMPTY_OFFER: PriceOffer = { track: "MONTHLY", room_type: "", level: "", monthly_from_ils: null, deposit_from_ils: null };
+
+function PriceOffersField({
+  label,
+  options,
+  value,
+  onChange,
+}: {
+  label: string;
+  options: QuestionnaireSchema["price_offer_options"];
+  value: PriceOffer[];
+  onChange: (value: PriceOffer[]) => void;
+}) {
+  const update = (index: number, patch: Partial<PriceOffer>) =>
+    onChange(value.map((offer, i) => (i === index ? { ...offer, ...patch } : offer)));
+  const money = (text: string) => (text === "" ? null : Number(text));
+  const select = "mt-1 w-full rounded-xl border p-2";
+
+  return (
+    <fieldset>
+      <legend className="font-medium">{label}</legend>
+      <p className="mt-1 text-sm">
+        מחיר &quot;החל מ-&quot; לכל מסלול, ועל מה הוא חל. בדיור מוגן במסלול פיקדון: הפיקדון ודמי האחזקה צריכים להיות של אותה דירה. אם אחד מהם לא ידוע, השאירו ריק ונציג &quot;דורש בירור&quot;.
+      </p>
+      <div className="mt-3 space-y-4">
+        {value.map((offer, index) => (
+          <div key={index} className="rounded-xl border p-3">
+            <div className="grid gap-2 sm:grid-cols-3">
+              <label className="text-sm">
+                מסלול
+                <select className={select} value={offer.track} onChange={(e) => update(index, { track: e.target.value })}>
+                  {options.tracks.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+              </label>
+              <label className="text-sm">
+                סוג חדר / דירה
+                <select className={select} value={offer.room_type} onChange={(e) => update(index, { room_type: e.target.value })}>
+                  <option value="">בחרו</option>
+                  {options.rooms.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+              </label>
+              <label className="text-sm">
+                רמת טיפול
+                <select className={select} value={offer.level} onChange={(e) => update(index, { level: e.target.value })}>
+                  <option value="">בחרו</option>
+                  {options.levels.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+              </label>
+              <label className="text-sm">
+                {offer.track === "DEPOSIT" ? "דמי אחזקה החל מ- (₪ לחודש)" : "מחיר חודשי החל מ- (₪)"}
+                <input dir="ltr" inputMode="numeric" type="number" min={0} className={select} value={offer.monthly_from_ils ?? ""} onChange={(e) => update(index, { monthly_from_ils: money(e.target.value) })} />
+              </label>
+              <label className="text-sm">
+                {offer.track === "DEPOSIT" ? "פיקדון החל מ- (₪)" : "פיקדון נלווה, אם יש (₪)"}
+                <input dir="ltr" inputMode="numeric" type="number" min={0} className={select} value={offer.deposit_from_ils ?? ""} onChange={(e) => update(index, { deposit_from_ils: money(e.target.value) })} />
+              </label>
+              <div className="flex items-end">
+                <button type="button" className="text-sm underline" onClick={() => onChange(value.filter((_, i) => i !== index))}>הסרת המחיר</button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      {value.length < options.max ? (
+        <button type="button" className="mt-3 rounded-xl border px-3 py-2 text-sm" onClick={() => onChange([...value, { ...EMPTY_OFFER }])}>
+          + הוספת מחיר
+        </button>
+      ) : null}
+    </fieldset>
   );
 }

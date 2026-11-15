@@ -13,7 +13,7 @@ from typing import Any, Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
-from app.services.israel_facility_questionnaire import display_answers
+from app.services.israel_facility_questionnaire import display_answers, price_display
 from app.models.facility import Facility, FacilityPhoto
 from app.services.activity_intelligence import get_public_activity_categories
 from app.services.israel_facility_import import load_israel_records
@@ -101,6 +101,7 @@ def build_israel_facility_page(db: Session, canonical_id: str) -> Optional[Dict[
         "from_list": from_list,
         "from_facility": from_facility,
         "facility_details": display_answers((registration or {}).get("questionnaire")),
+        "prices": price_display(registration),
         "photos": photos,
         "activities": activities,
         "data_quality_flags": record.get("data_quality_flags") or [],

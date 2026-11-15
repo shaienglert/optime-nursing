@@ -25,6 +25,13 @@ export type IsraelFacilityPage = {
     monthly_price_ils: number | null;
     deposit_ils: number | null;
   } | null;
+  prices: {
+    status: "PUBLISHED" | "ON_REQUEST" | "NOT_REGISTERED";
+    label: string | null;
+    verified_at?: string | null;
+    source?: string;
+    offers: { text: string; availability: string; track: string; level: string; room_type: string }[];
+  };
   facility_details: { key: string; title: string; items: { key: string; label: string; value: string }[] }[];
   photos: { url: string; caption: string | null; category: string }[];
   activities: { category: string; availability: string; confidence: number }[];

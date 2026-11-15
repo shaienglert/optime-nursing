@@ -246,7 +246,7 @@ export type QuestionOption = { value: string; label: string };
 export type Question = {
   key: string;
   label: string;
-  type: "text" | "textarea" | "phone" | "email" | "url" | "int" | "money" | "number" | "single" | "multi" | "per_level" | "date";
+  type: "text" | "textarea" | "phone" | "email" | "url" | "int" | "money" | "number" | "single" | "multi" | "per_level" | "date" | "price_offers";
   required: boolean;
   core: boolean;
   options?: QuestionOption[];
@@ -255,7 +255,18 @@ export type Question = {
   max_length?: number;
 };
 export type QuestionnaireSection = { key: string; title: string; intro: string; questions: Question[] };
-export type QuestionnaireSchema = { version: string; sections: QuestionnaireSection[] };
+export type PriceOffer = {
+  track: string;
+  room_type: string;
+  level: string;
+  monthly_from_ils: number | null;
+  deposit_from_ils: number | null;
+};
+export type QuestionnaireSchema = {
+  version: string;
+  sections: QuestionnaireSection[];
+  price_offer_options: { tracks: QuestionOption[]; rooms: QuestionOption[]; levels: QuestionOption[]; max: number };
+};
 
 export async function fetchIsraelQuestionnaireSchema(): Promise<QuestionnaireSchema> {
   return request<QuestionnaireSchema>("/api/il/facility-questionnaire");

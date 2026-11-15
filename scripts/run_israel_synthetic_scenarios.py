@@ -49,6 +49,9 @@ PERSONAS = [
     ("אישה עצמאית, דיור מוגן פרטי, חילונית, ממ\"ד חשוב", {
         "functionalLevel": "INDEPENDENT", "fundingPathway": "PRIVATE", "monthlyBudgetIls": 9000, "city": "הרצליה", "maxDistanceKm": 10,
         "residentGenders": ["FEMALE"], "community": "SECULAR", "shelterInRoom": "IMPORTANT"}),
+    ("זוג עצמאי לדיור מוגן, עד ₪7,000 לחודש ופיקדון עד ₪1,000,000", {
+        "functionalLevel": "INDEPENDENT", "fundingPathway": "PRIVATE", "monthlyBudgetIls": 7000, "depositCapIls": 1000000,
+        "city": "נתניה", "maxDistanceKm": 30, "isCouple": True, "partnerSameLevel": True, "residentGenders": ["FEMALE", "MALE"]}),
     ("אבא דרוזי סיעודי עם PEG, קוד", {
         "functionalLevel": "NURSING", "fundingPathway": "MOH_CODE", "city": "דלית אל-כרמל", "maxDistanceKm": 40, "residentGenders": ["MALE"],
         "medicalNeeds": ["PEG"], "language": "AR", "community": "DRUZE"}),
@@ -98,13 +101,18 @@ def run(rows, family):
         fit = evaluate_candidate_intent(row, intent)
         results.append((row, fit))
     gates = Counter(fit["hard_gate"] for _, fit in results)
+    budget = Counter(
+        (fit.get("israel_notes") or {}).get("IL_BUDGET", {}).get("label")
+        for _, fit in results
+        if fit["hard_gate"] != "FAIL" and (fit.get("israel_notes") or {}).get("IL_BUDGET")
+    )
     fail_reasons = Counter(k for _, fit in results for k in fit["must_fail"])
     pending_reasons = Counter(k for _, fit in results if fit["hard_gate"] != "FAIL" for k in fit["must_unknown"])
     passing = sorted(
         (item for item in results if item[1]["hard_gate"] == "PASS"),
         key=lambda item: intent_rank_key({"client_intent_fit": item[1]}),
     )
-    return intent, gates, fail_reasons, pending_reasons, passing
+    return intent, gates, fail_reasons, pending_reasons, passing, budget
 
 
 def main() -> int:
@@ -121,7 +129,7 @@ def main() -> int:
         "",
     ]
     for title, family in PERSONAS:
-        intent, gates, fails, pendings, passing = run(rows, family)
+        intent, gates, fails, pendings, passing, budget = run(rows, family)
         lines += [
             f"## {title}",
             "",
@@ -130,17 +138,23 @@ def main() -> int:
             f"- עוברים את כל החובה: **{gates.get('PASS', 0)}** · ממתינים למידע: **{gates.get('PENDING_VERIFICATION', 0)}** · נפסלים: **{gates.get('FAIL', 0)}**",
             f"- סיבות פסילה: {', '.join(f'{GATE_HE.get(k, k)} ({n})' for k, n in fails.most_common()) or '-'}",
             f"- חסר מידע מהמוסד על: {', '.join(f'{GATE_HE.get(k, k)} ({n})' for k, n in pendings.most_common()) or '-'}",
+            *( [f"- מחיר מול תקציב (מוסדות שלא נפסלו): {', '.join(f'{k} ({n})' for k, n in budget.most_common())}"] if budget else [] ),
             "",
             f"- מקור: {family.get('city')}" + (f", עד {family['maxDistanceKm']} ק\"מ" if family.get("maxDistanceKm") else ", בכל הארץ"),
             "",
-            "| # | מוסד | עיר | ק\"מ | התאים | לא התאים |",
-            "|---|---|---|---|---|---|",
+            "| # | מוסד | עיר | ק\"מ | התאים | לא התאים | מחיר |",
+            "|---|---|---|---|---|---|---|",
         ]
         for rank, (row, fit) in enumerate(passing[:5], 1):
             km = fit.get("distance_km")
-            lines.append(f"| {rank} | {row['facility_name']} | {row['city']} | {km if km is not None else '?'} | {he(fit['nice_match'])} | {he(fit['nice_mismatch'])} |")
+            note = (fit.get("israel_notes") or {}).get("IL_BUDGET") or {}
+            price = note.get("label") or "-"
+            if note.get("offer"):
+                from app.services.israel_facility_questionnaire import describe_offer
+                price += f": {describe_offer(note['offer'])}"
+            lines.append(f"| {rank} | {row['facility_name']} | {row['city']} | {km if km is not None else '?'} | {he(fit['nice_match'])} | {he(fit['nice_mismatch'])} | {price} |")
         if not passing:
-            lines.append("| - | אין מוסד שעובר את כל תנאי החובה | | | | |")
+            lines.append("| - | אין מוסד שעובר את כל תנאי החובה | | | | | |")
         lines.append("")
     Path(args.out).write_text("\n".join(lines), encoding="utf-8")
     print("\n".join(lines))

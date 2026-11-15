@@ -290,6 +290,7 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
     nice_unknown: List[str] = []
     nice_mismatch: List[str] = []
     israel_distance_km: Optional[float] = None
+    israel_notes: Dict[str, Any] = {}
     nice_fit_scores: Dict[str, float] = {}
 
     city = str(row.get("city") or "").strip().upper()
@@ -507,8 +508,12 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
             continue
         if key.startswith("IL_"):
             # Israeli ranking preferences: a mismatch lowers the facility, never hides it.
-            from app.services.israel_must_gates import MATCH, MISMATCH, evaluate_israel_nice
-            outcome = evaluate_israel_nice(row, nice)
+            from app.services.israel_must_gates import MATCH, MISMATCH, budget_status, evaluate_israel_nice
+            if key == "IL_BUDGET":
+                outcome, budget_label, budget_offer = budget_status(row, nice)
+                israel_notes["IL_BUDGET"] = {"label": budget_label, "offer": budget_offer}
+            else:
+                outcome = evaluate_israel_nice(row, nice)
             if outcome == MATCH:
                 nice_match.append(key)
                 nice_fit_scores[key] = 100.0
@@ -619,6 +624,7 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
         "nice_mismatch": nice_mismatch,
         "nice_fit_scores": nice_fit_scores,
         "distance_km": israel_distance_km,
+        "israel_notes": israel_notes,
         "preference_consistency": "MISMATCH" if nice_mismatch else ("UNKNOWN" if nice_unknown else "MATCH"),
         "public_reputation": {"role": "DISPLAY_ONLY", "ranking_eligible": False},
         "relevant_evidence_known_count": relevant_known,

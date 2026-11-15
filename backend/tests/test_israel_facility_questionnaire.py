@@ -20,7 +20,7 @@ class QuestionnaireSchemaTests(unittest.TestCase):
         for question in QUESTIONS.values():
             for option in question.get("options", []):
                 self.assertTrue(option["label"].strip())
-        self.assertEqual(public_schema()["version"], "il-facility-questionnaire-v1")
+        self.assertEqual(public_schema()["version"], "il-facility-questionnaire-v2")
 
     def test_core_questions_match_registration_fields(self) -> None:
         core = {k for k, q in QUESTIONS.items() if q["core"]}
@@ -32,8 +32,6 @@ class QuestionnaireSchemaTests(unittest.TestCase):
                 "license_authority",
                 "license_id",
                 "license_expiration_date",
-                "monthly_price_ils",
-                "deposit_ils",
             },
         )
 
@@ -59,20 +57,20 @@ class QuestionnaireValidationTests(unittest.TestCase):
                 "staff_languages": ["ru", "he", "ru"],
                 "website": "example.co.il",
                 "vacancy_by_level": {"NURSING": "waitlist"},
-                "maintenance_fee_ils": "3500",
+                "deposit_depreciation_pct_per_year": "2.5",
             }
         )
         self.assertEqual(answers["staff_languages"], ["HE", "RU"])
         self.assertEqual(answers["website"], "https://example.co.il")
         self.assertEqual(answers["vacancy_by_level"], {"NURSING": "WAITLIST"})
-        self.assertEqual(answers["maintenance_fee_ils"], 3500)
+        self.assertEqual(answers["deposit_depreciation_pct_per_year"], 2.5)
 
         for bad in (
             {"staff_languages": ["KLINGON"]},
             {"contact_phone": "call me"},
             {"min_age": 300},
             {"no_such_question": "x"},
-            {"monthly_price_ils": 5},  # core keys belong at the top level, not in questionnaire
+            {"license_id": "5"},  # core keys belong at the top level, not in questionnaire
         ):
             with self.assertRaises(ValueError):
                 validate_questionnaire({**REQUIRED_QUESTIONNAIRE, **bad})
@@ -89,12 +87,12 @@ class QuestionnaireValidationTests(unittest.TestCase):
 
     def test_display_uses_hebrew_labels(self) -> None:
         sections = display_answers(
-            validate_questionnaire({**REQUIRED_QUESTIONNAIRE, "shelter": "ROOM", "maintenance_fee_ils": 3500})
+            validate_questionnaire({**REQUIRED_QUESTIONNAIRE, "shelter": "ROOM", "deposit_depreciation_pct_per_year": 3})
         )
         flat = {item["key"]: item["value"] for s in sections for item in s["items"]}
         self.assertEqual(flat["staff_languages"], "עברית, רוסית")
         self.assertEqual(flat["shelter"], 'ממ"ד בחדר')
-        self.assertEqual(flat["maintenance_fee_ils"], "₪3,500")
+        self.assertEqual(flat["deposit_depreciation_pct_per_year"], "3%")
 
 
 if __name__ == "__main__":

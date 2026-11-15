@@ -281,7 +281,14 @@ def israel_nice_to_haves(questionnaire_state: Dict[str, Any]) -> list[Dict[str, 
         nice.append({"key": "IL_SHELTER", "reason": "A protected room close by matters to the family."})
     budget = family.get("monthlyBudgetIls")
     if str(family.get("fundingPathway") or "").upper() == "PRIVATE" and isinstance(budget, (int, float)) and budget > 0:
-        nice.append({"key": "IL_BUDGET", "value": float(budget), "reason": "Monthly budget for private payment."})
+        cap = family.get("depositCapIls")
+        nice.append({
+            "key": "IL_BUDGET",
+            "value": float(budget),
+            "deposit_cap": float(cap) if isinstance(cap, (int, float)) and cap >= 0 else None,
+            "level": str(family.get("functionalLevel") or "").upper() or None,
+            "reason": "Monthly budget (and deposit ceiling) for private payment.",
+        })
     from app.services.israel_geo import locate
 
     origin = locate(family.get("city"))
@@ -346,13 +353,65 @@ def evaluate_israel_nice(row: Dict[str, Any], nice: Dict[str, Any]) -> str:
         shelter = str(answers.get("shelter") or "").upper()
         return UNKNOWN if not shelter else (MATCH if shelter in {"ROOM", "FLOOR"} else MISMATCH)
     if key == "IL_BUDGET":
-        price = _fact(row, "pricing", "monthly_price")
-        if not _facility_supplied(price):
-            return UNKNOWN
-        return MATCH if float(price["value"]) <= float(value) else MISMATCH
+        return budget_status(row, nice)[0]
     if key == "IL_AVAILABILITY":
         vacancy = str((answers.get("vacancy_by_level") or {}).get(value) or "").upper()
         if not vacancy:
             return UNKNOWN
         return MATCH if vacancy in {"AVAILABLE_NOW", "WITHIN_MONTH"} else MISMATCH
     return UNKNOWN
+
+
+# ---------------------------------------------------------------------------
+# Budget against published starting prices (owner spec, 2026-11-15).
+# A starting price is a floor for one track / room type / care level. The family
+# sees one of four statuses; only "over budget" lowers the ranking.
+# ---------------------------------------------------------------------------
+
+BUDGET_LABELS = {
+    "IN_BUDGET": "בתקציב לפי המחיר ההתחלתי",
+    "MAY_FIT": "עשוי להתאים לתקציב, בכפוף להצעה",
+    "ON_REQUEST": "מחיר בבירור",
+    "OVER_BUDGET": "המחיר ההתחלתי מעל התקציב",
+}
+
+
+def _offer_fit(offer: Dict[str, Any], budget: float, cap: Optional[float]) -> str:
+    monthly, deposit = offer.get("monthly_from_ils"), offer.get("deposit_from_ils")
+    if monthly is not None and monthly > budget:
+        return "OVER"
+    if cap is not None and deposit is not None and deposit > cap:
+        return "OVER"
+    if monthly is None:
+        return "PARTIAL"  # deposit track without a published maintenance fee
+    if offer.get("track") == "DEPOSIT" and deposit is None and cap is not None:
+        return "PARTIAL"
+    return "FITS"
+
+
+def budget_status(row: Dict[str, Any], nice: Dict[str, Any]) -> tuple[str, str, Optional[Dict[str, Any]]]:
+    """(MATCH/MISMATCH/UNKNOWN, Hebrew status label, the offer it rests on)."""
+    answers = _answers(row)
+    offers = (answers or {}).get("price_offers") or []
+    legacy = _fact(row, "pricing", "monthly_price")
+    if not offers and _facility_supplied(legacy):
+        # Registrations saved before price offers existed: one undifferentiated price.
+        offers = [{"track": "MONTHLY", "level": None, "room_type": None, "monthly_from_ils": int(legacy["value"]), "deposit_from_ils": None}]
+    if answers is None or not offers or (answers or {}).get("price_publication") == "WITHHOLD":
+        return UNKNOWN, BUDGET_LABELS["ON_REQUEST"], None
+
+    budget, cap, level = float(nice["value"]), nice.get("deposit_cap"), nice.get("level")
+    at_level = [o for o in offers if o.get("level") in (None, level)]
+    for offer in at_level:
+        if _offer_fit(offer, budget, cap) == "FITS":
+            return MATCH, BUDGET_LABELS["IN_BUDGET"], offer
+    for offer in at_level:
+        if _offer_fit(offer, budget, cap) == "PARTIAL":
+            return UNKNOWN, BUDGET_LABELS["MAY_FIT"], offer
+    if not at_level:
+        # Prices exist only for other care levels: they say little about this family's.
+        cheapest = min(offers, key=lambda o: o.get("monthly_from_ils") or 10**9)
+        if _offer_fit(cheapest, budget, cap) != "OVER":
+            return UNKNOWN, BUDGET_LABELS["MAY_FIT"], cheapest
+        return UNKNOWN, BUDGET_LABELS["ON_REQUEST"], None
+    return MISMATCH, BUDGET_LABELS["OVER_BUDGET"], min(at_level, key=lambda o: o.get("monthly_from_ils") or 10**9)

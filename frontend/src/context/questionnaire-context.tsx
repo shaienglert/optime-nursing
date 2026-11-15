@@ -62,6 +62,8 @@ export type QuestionnaireState = {
     shabbat?: "" | "IMPORTANT";
     language?: string;
     shelterInRoom?: "" | "IMPORTANT";
+    // Deposit ceiling for protected housing (0 = no deposit at all, null = not asked).
+    depositCapIls?: number | null;
   };
   questionnaireCompletion: {
     // Explicit advisor consent is a UI control, not an AI-extracted resident fact.

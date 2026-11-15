@@ -28,7 +28,6 @@ function Row({ label, value, empty = NOT_PROVIDED }: { label: string; value: Rea
   );
 }
 
-const ils = (n: number | null | undefined) => (n == null ? null : `₪${n.toLocaleString("he-IL")}`);
 const hostname = (url: string) => {
   try {
     return new URL(url).hostname.replace(/^www\./, "");
@@ -86,9 +85,29 @@ export default function IsraelFacilityHome({ params }: { params: Promise<{ id: s
           <Row label="אוכלוסיות שהמוסד מקבל" value={own?.functional_levels_served.join(", ") || null} />
           <Row label="הסכם קוד עם משרד הבריאות" value={yesNo(own?.moh_code_agreement)} />
           <Row label="רישיון" value={own ? `${own.license_authority}, מספר ${own.license_id}, בתוקף עד ${own.license_expiration_date}` : null} />
-          <Row label="מחיר חודשי" value={ils(own?.monthly_price_ils)} />
-          <Row label="פיקדון" value={ils(own?.deposit_ils)} />
         </dl>
+      </section>
+
+      <section className="mt-6">
+        <h2 className="text-xl font-semibold">מחירים</h2>
+        {page.prices.status === "PUBLISHED" ? (
+          <>
+            <ul className="mt-2 space-y-3">
+              {page.prices.offers.map((offer, index) => (
+                <li key={index} className="rounded-xl border p-3">
+                  <p className="font-semibold">{offer.text}</p>
+                  <p className="mt-1 text-sm">זמינות לחדר ולרמת הטיפול האלה: {offer.availability}</p>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-2 text-sm text-muted">
+              מקור: {page.prices.source}
+              {page.prices.verified_at ? `, אומת ב-${page.prices.verified_at.split("-").reverse().join(".")}` : ""}. המחיר הסופי נקבע בהצעה מהמוסד.
+            </p>
+          </>
+        ) : (
+          <p className="mt-2 font-semibold">{page.prices.label}</p>
+        )}
       </section>
 
       {page.facility_details.map((section) => (

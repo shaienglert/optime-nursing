@@ -195,3 +195,81 @@ def test_unregistered_facility_still_gets_a_distance():
     fit = _fit(BASE, _intent(city="חיפה", maxDistanceKm=500))
     assert fit["distance_km"] is not None
     assert "IL_DISTANCE" in fit["nice_match"]
+
+
+def _offer(track, room, level, monthly=None, deposit=None):
+    return {"track": track, "room_type": room, "level": level, "monthly_from_ils": monthly, "deposit_from_ils": deposit}
+
+
+def _budget(row, **family):
+    fit = _fit(row, _intent(fundingPathway="PRIVATE", **family))
+    note = fit["israel_notes"].get("IL_BUDGET", {})
+    return fit, note.get("label"), note.get("offer")
+
+
+def _priced(*offers, **answers):
+    return _facility(price_publication="PUBLISH", price_offers=list(offers), **answers)
+
+
+def test_no_price_is_on_request_and_neutral():
+    for row in (_facility(price_publication="WITHHOLD"), _facility(), BASE):
+        fit, label, _ = _budget(row, monthlyBudgetIls=15000)
+        assert label == "מחיר בבירור"
+        assert "IL_BUDGET" in fit["nice_unknown"] and fit["hard_gate"] != "FAIL"
+
+
+def test_starting_price_at_the_family_level():
+    row = _priced(_offer("MONTHLY", "SHARED_2", "NURSING", 14000), _offer("MONTHLY", "SINGLE", "NURSING", 18000))
+    fit, label, offer = _budget(row, monthlyBudgetIls=15000)
+    assert label == "בתקציב לפי המחיר ההתחלתי" and offer["room_type"] == "SHARED_2"
+    fit, label, _ = _budget(row, monthlyBudgetIls=12000)
+    assert label == "המחיר ההתחלתי מעל התקציב" and "IL_BUDGET" in fit["nice_mismatch"]
+    assert fit["hard_gate"] == "PASS"  # over budget ranks lower, never hides
+
+
+def test_price_only_for_another_level_may_fit_subject_to_offer():
+    row = _priced(_offer("MONTHLY", "SHARED_2", "FRAIL", 9000))
+    fit, label, _ = _budget(row, monthlyBudgetIls=15000)  # family needs NURSING
+    assert label == "עשוי להתאים לתקציב, בכפוף להצעה" and "IL_BUDGET" in fit["nice_unknown"]
+
+
+def test_cheapest_room_has_no_place_still_counts_price_but_availability_is_separate():
+    row = _priced(
+        _offer("MONTHLY", "SHARED_2", "NURSING", 14000),
+        vacancy_by_level={"NURSING": "NONE"},
+    )
+    fit, label, _ = _budget(row, monthlyBudgetIls=15000)
+    assert label == "בתקציב לפי המחיר ההתחלתי"
+    assert "IL_AVAILABILITY" in fit["nice_mismatch"]
+
+
+def test_same_monthly_two_tracks_different_deposits_respects_the_deposit_ceiling():
+    housing = _priced(
+        _offer("DEPOSIT", "APT_2", "NURSING", 6000, 900_000),
+        _offer("DEPOSIT", "APT_3", "NURSING", 6000, 1_500_000),
+    )
+    _, label, offer = _budget(housing, monthlyBudgetIls=8000, depositCapIls=1_000_000)
+    assert label == "בתקציב לפי המחיר ההתחלתי" and offer["deposit_from_ils"] == 900_000
+    _, label, _ = _budget(housing, monthlyBudgetIls=8000, depositCapIls=500_000)
+    assert label == "המחיר ההתחלתי מעל התקציב"
+    _, label, _ = _budget(housing, monthlyBudgetIls=8000)  # no ceiling given
+    assert label == "בתקציב לפי המחיר ההתחלתי"
+
+
+def test_deposit_without_maintenance_needs_an_offer():
+    housing = _priced(_offer("DEPOSIT", "APT_2", "NURSING", None, 800_000))
+    _, label, _ = _budget(housing, monthlyBudgetIls=8000, depositCapIls=1_000_000)
+    assert label == "עשוי להתאים לתקציב, בכפוף להצעה"
+
+
+def test_price_page_texts():
+    from app.services.israel_facility_questionnaire import describe_offer
+
+    assert describe_offer(_offer("MONTHLY", "SHARED_2", "FRAIL", 9500)) == "החל מ-₪9,500 לחודש (חדר משותף לשניים, תשושים)"
+    assert describe_offer(_offer("DEPOSIT", "APT_2", "INDEPENDENT", 5500, 1_200_000)) == (
+        "פיקדון החל מ-₪1,200,000 ודמי אחזקה החל מ-₪5,500 לחודש (דירת 2 חדרים, עצמאיים)"
+    )
+    assert "דמי האחזקה דורשים בירור" in describe_offer(_offer("DEPOSIT", "APT_2", "INDEPENDENT", None, 900_000))
+    assert describe_offer(_offer("MONTHLY", "STUDIO", "INDEPENDENT", 12000, 50_000)).startswith(
+        "החל מ-₪12,000 לחודש, עם פיקדון נלווה של ₪50,000"
+    )
