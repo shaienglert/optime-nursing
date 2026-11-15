@@ -30,6 +30,7 @@ from typing import Dict, Iterable, List, Optional
 from sqlalchemy.orm import Session
 
 from app.models.facility import Facility, FacilityLicenseRecord
+from app.services.license_standing import parse_expiration
 
 SOURCE_NAME = "NV DPBH HCQC"
 REGISTRY_PATH = (
@@ -189,7 +190,16 @@ def _upsert_license(db: Session, facility: Facility, row: Dict[str, str]) -> Non
     record.state_source_url = _detail_url(row)
     record.legal_name = _clean(row.get("name")) or None
     record.legal_address = _clean(row.get("address")) or None
-    record.status = "VERIFIED"
+    # A historic registry row is not proof of a currently valid credential.
+    # Fail closed on missing/unparseable expiration dates and expired credentials.
+    from datetime import datetime, timezone
+    expiry = parse_expiration(row.get("expiration_date"))
+    current = (
+        _clean(row.get("status")).upper() == "ACTIVE"
+        and expiry is not None
+        and expiry >= datetime.now(timezone.utc).date()
+    )
+    record.status = "VERIFIED" if current else "UNVERIFIED"
     record.medicare_provider_number = federal_provider_number(row) or None
     record.verification_notes = (
         f"{SOURCE_NAME} active credential {credential}; "
