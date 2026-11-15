@@ -64,7 +64,53 @@ SEMANTIC_AI_SYSTEM_RULES = [
 ]
 
 
+ISRAEL_QUESTIONNAIRE_PATCH = {
+    "israelMarket": {
+        "relationship": "explicit relationship in the family's words, e.g. אמא, אבא, סבתא, הורים, עבורי",
+        "functionalLevel": "INDEPENDENT|FRAIL|NURSING|COGNITIVE_FRAIL|UNCLEAR",
+        "fundingPathway": "MOH_CODE|WELFARE_ASSISTANCE|PRIVATE|UNCLEAR",
+        "monthlyBudgetIls": "positive monthly integer in shekels",
+        "depositCapIls": "non-negative integer in shekels; 0 only when the family explicitly wants no deposit",
+        "city": "explicit Israeli locality name as written",
+        "maxDistanceKm": "positive integer kilometres; only when the text states a distance in km",
+        "medicalNeeds": ["VENTILATION|WANDERING|PEG|NG_TUBE"],
+        "isCouple": "boolean; true only when two people will move together",
+        "partnerSameLevel": "boolean; only when the text says whether both partners have the same functional level",
+        "residentGenders": ["FEMALE|MALE; only an explicit statement such as אישה or גבר, never inferred from kinship words"],
+        "community": "SECULAR|TRADITIONAL|RELIGIOUS|HAREDI|MUSLIM|CHRISTIAN|DRUZE",
+        "kashrut": "KOSHER|MEHADRIN",
+        "shabbat": "IMPORTANT",
+        "language": "HE|RU|AR|EN|AM|YI|FR|ES|RO; the resident's main language",
+        "shelterNeed": "ROOM|FLOOR; farthest acceptable protected space",
+        "shelterIsCondition": "boolean; true only when the family says it is a condition",
+        "bedridden": "boolean; true only when the resident is explicitly bedridden",
+    }
+}
+
+ISRAEL_SEMANTIC_RULES = [
+    "Israeli market. The client writes in Hebrew (sometimes Russian, Arabic or English). Fill only israelMarket fields; every value needs an exact Hebrew source quote.",
+    "functionalLevel follows the Israeli licensing terms the client uses: עצמאי/ת = INDEPENDENT; תשוש/ה or needs partial help with bathing or dressing but walks alone = FRAIL; סיעודי/ת, bedridden or dependent in most daily activities = NURSING; תשוש/ת נפש, or dementia that requires supervision or a closed ward = COGNITIVE_FRAIL. When the client says they do not know the level, use UNCLEAR and do not ask.",
+    "fundingPathway: קוד / קוד של משרד הבריאות = MOH_CODE; רווחה / סיוע של משרד הרווחה = WELFARE_ASSISTANCE; פרטי / נשלם בעצמנו = PRIVATE; not checked yet = UNCLEAR.",
+    "Amounts: '16 אלף' = 16000; 'מיליון וחצי' = 1500000; ש\"ח, ₪ and שקלים are shekels. Never convert from dollars.",
+    "medicalNeeds only from explicit statements: מונשם = VENTILATION; wandering, leaving home and getting lost, or an explicit need for a closed ward = WANDERING; PEG = PEG; זונדה = NG_TUBE.",
+    "For a couple, functionalLevel is the higher care level of the two; partnerSameLevel is false when the text describes different levels.",
+    "community only from an explicit self-description (חילונים, מסורתיים, דתיים, חרדים, מוסלמים, נוצרים, דרוזים). Do not infer community, kashrut or Shabbat from a name, a town or a language.",
+    "shelterNeed: ממ\"ד in the room or apartment = ROOM; protected space on the same floor = FLOOR. shelterIsCondition only when the client says it is a condition or that they will not accept less. A request for protection for a bedridden resident is bedridden=true, not a shelterNeed.",
+    "Minimum dimensions for Israel: location is an Israeli locality; affordability is answered by a monthly budget, or by MOH_CODE or WELFARE_ASSISTANCE funding, or by an explicit statement that funding is not yet known.",
+]
+
+
 def _required_output_schema() -> Dict[str, Any]:
+    from app.services.market_scope import is_israel_market
+
+    if is_israel_market():
+        schema = _base_required_output_schema()
+        schema["questionnaire_patch"] = copy.deepcopy(ISRAEL_QUESTIONNAIRE_PATCH)
+        return schema
+    return _base_required_output_schema()
+
+
+def _base_required_output_schema() -> Dict[str, Any]:
     return {
         "facts": ["string"],
         "preferences": ["string"],
@@ -165,12 +211,18 @@ def _selected_facility_property_traces(state: Dict[str, Any]) -> list[dict[str, 
     return result
 
 
+def _israel() -> bool:
+    from app.services.market_scope import is_israel_market
+
+    return is_israel_market()
+
+
 def _build_prompt(user_text: str, questionnaire_state: Dict[str, Any], learning_advice: Dict[str, Any]) -> Dict[str, Any]:
     from app.services.semantic_field_contract import describe_fields
     return {
         "role": "OPTIME_NURSING_EXPERT_SEMANTIC_INTERPRETER",
         "mission": "Understand the resident/family request at senior-living expert level before matching. Distinguish decision-critical client clarification from downstream facility research and non-blocking NICE/CONTEXT ambiguity.",
-        "rules": SEMANTIC_AI_SYSTEM_RULES,
+        "rules": SEMANTIC_AI_SYSTEM_RULES + (ISRAEL_SEMANTIC_RULES if _israel() else []),
         "response_constraints": {
             "style": "compact JSON; no repeated explanation",
             "facts_max": 10,
@@ -703,7 +755,31 @@ def _answered_minimum_dimensions(questionnaire_state: Dict[str, Any]) -> set[str
     return answered
 
 
+def _israel_minimum_dimension_status(user_text: str, questionnaire_state: Dict[str, Any]) -> Dict[str, bool]:
+    from app.services.israel_geo import locate
+
+    israel = questionnaire_state.get("israelMarket") if isinstance(questionnaire_state.get("israelMarket"), dict) else {}
+    text = str(user_text or "")
+    answered = _answered_minimum_dimensions(questionnaire_state)
+    tokens = re.findall(r"[\u0590-\u05FF\"'\-]+", text)
+    candidates = {" ".join(tokens[i:i + n]) for n in (1, 2, 3) for i in range(len(tokens) - n + 1)}
+    candidates |= {c[1:] for c in candidates if c[:1] in "בלמה" and len(c) > 2}  # בחיפה -> חיפה
+    location = bool(locate(israel.get("city"))) or any(locate(c) for c in candidates) or "market_location" in answered
+    funding = str(israel.get("fundingPathway") or "").upper()
+    budget = israel.get("monthlyBudgetIls")
+    text_budget = bool(re.search(r"\d[\d,]*\s*(?:אלף|ש\"ח|₪|שקל)|(?:קוד|רווחה)|לא (?:בדקנו|יודעים).{0,15}מימון", text))
+    affordability = (
+        funding in {"MOH_CODE", "WELFARE_ASSISTANCE", "UNCLEAR"}
+        or (isinstance(budget, (int, float)) and budget > 0)
+        or text_budget
+        or "monthly_affordability" in answered
+    )
+    return {"market_location": location, "monthly_affordability": affordability}
+
+
 def _minimum_dimension_status(user_text: str, questionnaire_state: Dict[str, Any]) -> Dict[str, bool]:
+    if _israel():
+        return _israel_minimum_dimension_status(user_text, questionnaire_state)
     text = str(user_text or "").lower()
     signals = (((questionnaire_state.get("humanIntelligenceV2") or {}).get("scoringEngine") or {}).get("adaptiveSignals") or [])
     signal_text = " ".join(f"{str(item.get('impactExplanation') or '')} {str(item.get('answer') or '')}" for item in signals if isinstance(item, dict)).lower()

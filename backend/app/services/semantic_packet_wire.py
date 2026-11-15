@@ -68,10 +68,18 @@ def _model(declarations_json):
     groups = {}
     contracts = compile_fields(declarations)
     for path, contract in contracts.items():
-        groups.setdefault((contract.kind, contract.unit, contract.positive), []).append(path)
-    entries = [create_model("Quoted" + kind + (unit or "") + ("Positive" if positive else ""), __config__=CONFIG,
-        path=(Literal[tuple(paths)], ...), value=(contracts[paths[0]].value_type, ...), quote=(StrictStr, ...))
-        for (kind, unit, positive), paths in groups.items()]
+        groups.setdefault((contract.kind, contract.unit, contract.positive, contract.choices), []).append(path)
+
+    def value_type(kind, choices, paths):
+        if not choices:
+            return contracts[paths[0]].value_type
+        # Closed vocabularies go into the grammar, not only into validation.
+        literal = Literal[tuple(choices)]
+        return list[literal] if kind == "List" else literal
+
+    entries = [create_model("Quoted" + kind + (unit or "") + ("Positive" if positive else "") + (f"Choice{index}" if choices else ""),
+        __config__=CONFIG, path=(Literal[tuple(paths)], ...), value=(value_type(kind, choices, paths), ...), quote=(StrictStr, ...))
+        for index, ((kind, unit, positive, choices), paths) in enumerate(groups.items())]
     return create_model("SemanticExtraction", __config__=CONFIG,
         wire_version=(Literal[WIRE_VERSION], ...),
         facts=(list[StrictStr], ...), preferences=(list[StrictStr], ...),

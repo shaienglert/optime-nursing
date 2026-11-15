@@ -7,7 +7,7 @@ from dataclasses import dataclass
 import re
 from typing import Union
 
-from pydantic import StrictInt, StrictStr, TypeAdapter, ValidationError
+from pydantic import StrictBool, StrictInt, StrictStr, TypeAdapter, ValidationError
 
 
 @dataclass(frozen=True)
@@ -17,12 +17,16 @@ class FieldContract:
     positive: bool = False
     dependency: tuple[str, str] | None = None
     owner: str = "FAMILY"
+    # Closed vocabularies (Israeli fields): a value outside them is a contract error,
+    # never silently ignored downstream.
+    choices: tuple[str, ...] | None = None
 
     @property
     def value_type(self):
         return {"Text": StrictStr, "List": list[StrictStr],
                 "Selections": Union[StrictStr, list[StrictStr]],
-                "Integer": StrictInt, "Months": Union[StrictStr, StrictInt]}[self.kind]
+                "Integer": StrictInt, "Months": Union[StrictStr, StrictInt],
+                "Boolean": StrictBool, "NonNegativeInteger": StrictInt}[self.kind]
 
     def accepts_quote(self, quote):
         return self.unit is None or bool(re.search(UNIT_PATTERNS[self.unit], quote, re.IGNORECASE))
@@ -34,6 +38,12 @@ class FieldContract:
             raise RuntimeError(f"SEMANTIC_AI_WIRE_CONTRACT:INVALID_FIELD_VALUE:{path}") from exc
         if self.positive and value <= 0:
             raise RuntimeError(f"SEMANTIC_AI_WIRE_CONTRACT:NONPOSITIVE_VALUE:{path}")
+        if self.kind == "NonNegativeInteger" and value < 0:
+            raise RuntimeError(f"SEMANTIC_AI_WIRE_CONTRACT:NEGATIVE_VALUE:{path}")
+        if self.choices is not None:
+            items = value if isinstance(value, list) else [value]
+            if not items or any(item not in self.choices for item in items):
+                raise RuntimeError(f"SEMANTIC_AI_WIRE_CONTRACT:VALUE_NOT_IN_VOCABULARY:{path}")
         if self.kind == "Selections" and isinstance(value, list):
             if not value:
                 raise RuntimeError("SEMANTIC_AI_WIRE_CONTRACT:EMPTY_ASSISTANCE_SELECTIONS")
@@ -44,6 +54,27 @@ class FieldContract:
 UNIT_PATTERNS = {
     "months": r"\bmonths?\b|חודש(?:ים|יים)?",
     "miles": r"\bmiles?\b|\bmi\b|מייל(?:ים)?",
+    "km": r"ק[\"״']?מ|קילומטר|\bkm\b",
+}
+
+IL = "israelMarket."
+ISRAEL_FIELD_RULES = {
+    IL + "functionalLevel": FieldContract(choices=("INDEPENDENT", "FRAIL", "NURSING", "COGNITIVE_FRAIL", "UNCLEAR")),
+    IL + "fundingPathway": FieldContract(choices=("MOH_CODE", "WELFARE_ASSISTANCE", "PRIVATE", "UNCLEAR")),
+    IL + "monthlyBudgetIls": FieldContract(kind="Integer", positive=True),
+    IL + "depositCapIls": FieldContract(kind="NonNegativeInteger"),
+    IL + "maxDistanceKm": FieldContract(kind="Integer", unit="km", positive=True),
+    IL + "medicalNeeds": FieldContract(kind="List", choices=("VENTILATION", "WANDERING", "PEG", "NG_TUBE")),
+    IL + "isCouple": FieldContract(kind="Boolean"),
+    IL + "partnerSameLevel": FieldContract(kind="Boolean"),
+    IL + "residentGenders": FieldContract(kind="List", choices=("FEMALE", "MALE")),
+    IL + "community": FieldContract(choices=("SECULAR", "TRADITIONAL", "RELIGIOUS", "HAREDI", "MUSLIM", "CHRISTIAN", "DRUZE")),
+    IL + "kashrut": FieldContract(choices=("KOSHER", "MEHADRIN")),
+    IL + "shabbat": FieldContract(choices=("IMPORTANT",)),
+    IL + "language": FieldContract(choices=("HE", "RU", "AR", "EN", "AM", "YI", "FR", "ES", "RO")),
+    IL + "shelterNeed": FieldContract(choices=("ROOM", "FLOOR")),
+    IL + "shelterIsCondition": FieldContract(kind="Boolean"),
+    IL + "bedridden": FieldContract(kind="Boolean"),
 }
 FIELD_RULES = {
     "assistanceLevel": FieldContract(kind="Selections"),
@@ -77,7 +108,7 @@ def compile_fields(declarations):
     for path, declaration in leaves(declarations):
         if not in_schema(path):
             raise RuntimeError(f"SEMANTIC_AI_WIRE_CONTRACT:UNAPPROVED_DECLARATION:{path}")
-        fields[path] = FIELD_RULES.get(path, FieldContract(kind="List" if isinstance(declaration, list) else "Text"))
+        fields[path] = FIELD_RULES.get(path) or ISRAEL_FIELD_RULES.get(path) or FieldContract(kind="List" if isinstance(declaration, list) else "Text")
     return fields
 
 

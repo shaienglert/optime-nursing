@@ -134,6 +134,13 @@ The existing `LICENSE_CURRENTLY_VALID` MUST reads license status and expiry; for
 
 - Up to 10% above the family's monthly budget or deposit ceiling is shown as "מעל התקציב ב-X% (בתוך סטייה של עד 10%)" and is neutral in ranking (in-budget facilities still rank above it). More than 10% above ranks lower. A family that wants no deposit gets no tolerance on deposits.
 
+## Free text (2026-11-15)
+
+- Measured: with no interpreter, Hebrew free text reaches none of the Israeli parameters (10 of 10 seekers: no match shown, 439 pending). The structured questionnaire passed an independent re-check in both directions for all 10 (`reports/israel_structured_vs_freetext.md`).
+- The shared AI interpreter now has an Israeli extraction contract: in the Israeli market its output schema is only `israelMarket.*`, with closed vocabularies in the grammar, a km unit check, shekel amounts, Hebrew mapping rules, and Hebrew-aware minimum dimensions (an Israeli locality; a budget, or MoH/welfare funding, or "funding not yet known"). Gender is never inferred from kinship words (existing principle).
+- Not yet measured with a real model: the interpreter is not configured in the test environment. `scripts/compare_israel_structured_vs_freetext.py` uses it automatically once `OPTIME_SEMANTIC_AI_URL`, `_MODEL` and `_API_KEY` are set.
+- The Hebrew intake's free-text step is not yet sent to the interpreter (the results page is still the US one).
+
 ## Not done yet
 
 - Nevada-specific need gates (ADL, medication, memory care) still read Nevada evidence; for Israel they stay PENDING until Israeli evidence exists.

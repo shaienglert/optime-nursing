@@ -1,10 +1,11 @@
 """10 Israeli seekers, each run twice against the 450 synthetic facilities:
 once through the structured Hebrew questionnaire and once as free text.
 
-The free-text run goes through exactly what the engine does with free text today:
-the text reaches build_client_intent as the natural-language query, with no
-structured answers. (In production the text first goes to the shared AI interpreter;
-see the report for what that interpreter can and cannot map for Israel.)
+The free-text run goes through the shared AI interpreter when it is configured
+(OPTIME_SEMANTIC_AI_URL / _MODEL / _API_KEY): its Israeli fields are merged into the
+questionnaire state exactly as the live intake does. Without the interpreter, the
+text reaches the engine as a plain query, which is what a deployment without the
+interpreter would do.
 
 For each seeker the report compares:
 - what the engine understood (MUST conditions and ranking preferences, with values);
@@ -123,6 +124,26 @@ def _value(item):
     return "" if value is None else value
 
 
+def interpreter_configured() -> bool:
+    return bool(os.getenv("OPTIME_SEMANTIC_AI_URL", "").strip() and os.getenv("OPTIME_SEMANTIC_AI_MODEL", "").strip())
+
+
+def free_text_state(text):
+    """(questionnaire state, interpreter status, clarification question or None)."""
+    if not interpreter_configured():
+        return {"notes": text}, "NOT_CONFIGURED", None
+    from app.services.canonical_structured_profile import build_structured_profile, materialize_questionnaire
+    from app.services.semantic_intent_ai import interpret_client_intent_with_ai
+
+    try:
+        result = interpret_client_intent_with_ai(user_text=text, questionnaire_state={})
+    except RuntimeError as error:
+        return {"notes": text}, f"ERROR:{str(error)[:80]}", None
+    state = materialize_questionnaire(build_structured_profile({}, result, family_text=text))
+    state["notes"] = text
+    return state, str(result.get("decision_readiness")), result.get("next_question")
+
+
 def understood(intent):
     musts = {m["key"]: _value(m) for m in intent["must_haves"]}
     nice = {n["key"]: _value(n) for n in intent["nice_to_haves"] if str(n["key"]).startswith("IL_")}
@@ -193,7 +214,8 @@ def main() -> int:
     detail = []
     for seeker in SEEKERS:
         s_intent = build_client_intent({"israelMarket": seeker["structured"]}, "", {}, {})
-        f_intent = build_client_intent({"notes": seeker["text"]}, seeker["text"], {}, {})
+        f_state, interpreter_status, question = free_text_state(seeker["text"])
+        f_intent = build_client_intent(f_state, seeker["text"], {}, {})
         s_m, s_n, _ = understood(s_intent)
         f_m, f_n, f_other = understood(f_intent)
         s_g, s_pass, s_shown, s_failed = run(rows, s_intent)
@@ -212,6 +234,7 @@ def main() -> int:
             "",
             f"**מלל חופשי:** {seeker['text']}",
             "",
+            f"- **מפענח AI:** {interpreter_status}" + (f" — שאלת הבהרה: {question}" if question else ""),
             f"- **שאלון, תנאי חובה:** {fmt(s_m)}",
             f"- **שאלון, העדפות:** {fmt(s_n)}",
             f"- **מלל חופשי, תנאי חובה:** {fmt(f_m)}",
@@ -228,6 +251,8 @@ def main() -> int:
 
     lines = [
         "# שאלון מול מלל חופשי: 10 מחפשים, 450 מוסדות סינתטיים",
+        "",
+        f"מפענח המלל החופשי (AI): {'מחובר' if interpreter_configured() else 'לא מחובר בסביבת ההרצה הזו, ולכן המלל מגיע למנוע בלי פענוח'}.",
         "",
         "| מחפש | שאלון: חובה / העדפות | מלל: חובה / העדפות | מתאימים (שאלון) | הפרות בבדיקה בלתי תלויה | מתאימים (מלל) | חסר מידע (מלל) | חפיפה ב-5 הראשונים |",
         "|---|---|---|---|---|---|---|---|",
