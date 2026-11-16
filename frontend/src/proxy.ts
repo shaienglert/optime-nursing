@@ -46,8 +46,41 @@ function enforceAdminAuth(request: NextRequest) {
   return response;
 }
 
+/**
+ * Optional whole-site lock (used while a deployment shows synthetic data).
+ * Active only when SITE_GATE_PASSWORD is set; the username is SITE_GATE_USERNAME or "oomnik".
+ */
+function siteGate(request: NextRequest): NextResponse | null {
+  const expectedPassword = process.env.SITE_GATE_PASSWORD;
+  if (!expectedPassword) return null;
+  const expectedUsername = process.env.SITE_GATE_USERNAME || "oomnik";
+  const authorization = request.headers.get("authorization");
+  if (authorization?.startsWith("Basic ")) {
+    try {
+      const decoded = atob(authorization.slice(6));
+      const separator = decoded.indexOf(":");
+      if (separator >= 0 && decoded.slice(0, separator) === expectedUsername && decoded.slice(separator + 1) === expectedPassword) {
+        return null;
+      }
+    } catch {
+      // fall through to the challenge
+    }
+  }
+  return new NextResponse("האתר בהכנה. הגישה בסיסמה בלבד.", {
+    status: 401,
+    headers: {
+      "WWW-Authenticate": 'Basic realm="OOMNIK", charset="UTF-8"',
+      "Cache-Control": "no-store",
+      "Content-Type": "text/plain; charset=utf-8",
+    },
+  });
+}
+
 export function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
+
+  const gated = siteGate(request);
+  if (gated) return gated;
 
   if (pathname === "/admin" || pathname.startsWith("/admin/")) {
     return enforceAdminAuth(request);
@@ -62,5 +95,6 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/", "/admin", "/admin/:path*"],
+  // Every page and API route; static build assets are left out.
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };
