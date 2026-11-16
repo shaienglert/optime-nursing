@@ -521,7 +521,7 @@ export function IsraelIntake() {
     <main dir="rtl" lang="he" className={styles.page}>
       <header className={styles.bar}>
         <div className={styles.barInner}>
-          <OptimeStaticLogo href="/he/intake" height={26} className={styles.brand} />
+          <OptimeStaticLogo href="/he" height={26} className={styles.brand} />
           {!summary && index > 0 ? (
             <button type="button" className={styles.back} onClick={() => go(index - 1)}>
               הקודם

@@ -55,7 +55,7 @@ export function proxy(request: NextRequest) {
 
   // The Israeli deployment opens on the Hebrew intake instead of the US home page.
   if (pathname === "/" && process.env.OOMNIK_MARKET === "israel") {
-    return NextResponse.redirect(new URL("/he/intake", request.url));
+    return NextResponse.redirect(new URL("/he", request.url));
   }
 
   return NextResponse.next();
