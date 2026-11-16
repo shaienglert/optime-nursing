@@ -1,5 +1,6 @@
 "use client";
 
+import { OptimeStaticLogo } from "@/components/brand/optime-static-logo";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -520,7 +521,7 @@ export function IsraelIntake() {
     <main dir="rtl" lang="he" className={styles.page}>
       <header className={styles.bar}>
         <div className={styles.barInner}>
-          <span className={styles.brand}>OOMNIK</span>
+          <OptimeStaticLogo href="/he/intake" height={26} className={styles.brand} />
           {!summary && index > 0 ? (
             <button type="button" className={styles.back} onClick={() => go(index - 1)}>
               הקודם
