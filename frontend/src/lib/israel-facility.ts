@@ -161,3 +161,41 @@ export type FeedbackState = {
 export const fetchFeedback = (token: string) => getJson<FeedbackState>(`/api/il/inquiries/${encodeURIComponent(token)}/feedback`);
 export const sendFeedback = (token: string, answer: FeedbackAnswer) =>
   sendJson<FeedbackState>(`/api/il/inquiries/${encodeURIComponent(token)}/feedback`, answer);
+
+export type IsraelKeyLabel = { key: string; label: string };
+export type IsraelResultCard = {
+  rank: number;
+  canonical_id: string;
+  name: string;
+  facility_type: string | null;
+  city: string | null;
+  distance_km: number | null;
+  musts_met: IsraelKeyLabel[];
+  preferences_met: IsraelKeyLabel[];
+  preferences_not_met: IsraelKeyLabel[];
+  unknown: IsraelKeyLabel[];
+  budget: { label: string | null; offer: string | null } | null;
+  prices: { status: string; label: string | null; verified_at?: string | null; offers: { text: string; availability: string }[] };
+  source: { basis: string; label: string; updated_at: string | null };
+  rank_key: unknown[];
+};
+export type IsraelResults = {
+  status: "OK" | "NEEDS_INPUT";
+  missing?: string[];
+  interpretation: { status: string; message?: string; clarification_question?: string | null; conflicts?: unknown[] };
+  musts?: IsraelKeyLabel[];
+  preferences?: IsraelKeyLabel[];
+  funnel?: {
+    universe: number;
+    passed: number;
+    pending: number;
+    failed: number;
+    shown: number;
+    fail_reasons: (IsraelKeyLabel & { count: number })[];
+    pending_reasons: (IsraelKeyLabel & { count: number })[];
+  };
+  results: IsraelResultCard[];
+  oomniker?: { lines: string[]; actions: string[] };
+};
+export const fetchIsraelResults = (questionnaire_state: Record<string, unknown>, natural_language_query: string) =>
+  sendJson<IsraelResults>("/api/il/recommendations", { questionnaire_state, natural_language_query, limit: 20 });

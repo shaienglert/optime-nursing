@@ -482,7 +482,7 @@ export function IsraelIntake() {
     };
     saveSessionJson(QUESTIONNAIRE_SESSION_KEY, submission);
     setState(submission);
-    router.push("/results");
+    router.push("/he/results");
   }
 
   const label = (s: Step) => {

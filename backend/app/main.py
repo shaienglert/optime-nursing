@@ -3767,6 +3767,22 @@ async def israel_facility_directory(city: Optional[str] = None, setting: Optiona
     return list_israel_facilities(city=city, setting=setting)
 
 
+class IsraelResultsIn(BaseModel):
+    questionnaire_state: Dict[str, Any]
+    natural_language_query: Optional[str] = ""
+    limit: int = 20
+
+
+@app.post("/api/il/recommendations")
+def israel_recommendations(payload: IsraelResultsIn, db: Session = Depends(get_db)):
+    """Israeli family results route; Nevada never reaches it."""
+    if not is_israel_market():
+        raise HTTPException(status_code=404, detail="Not found")
+    from app.services.israel_results import build_israel_results
+
+    return build_israel_results(db, payload.questionnaire_state, payload.natural_language_query or "", max(1, min(payload.limit, 50)))
+
+
 @app.get("/api/il/facilities/{canonical_id}")
 async def israel_facility_page(canonical_id: str, db: Session = Depends(get_db)):
     from app.services.israel_facility_page import build_israel_facility_page
