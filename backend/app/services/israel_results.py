@@ -21,6 +21,7 @@ Nevada does not use this module.
 
 from __future__ import annotations
 
+import logging
 import os
 from collections import Counter
 from typing import Any, Dict, List, Optional, Tuple
@@ -56,6 +57,8 @@ KEY_HE: Dict[str, str] = {
     "IL_ACTIVITIES": "פעילויות",
 }
 
+logger = logging.getLogger(__name__)
+
 def label(key: str) -> str:
     base = str(key).split(":", 1)[0]
     return KEY_HE.get(base, base)
@@ -80,9 +83,12 @@ def interpret(questionnaire_state: Dict[str, Any], text: str) -> Tuple[Dict[str,
 
     try:
         result = interpret_client_intent_with_ai(user_text=text, questionnaire_state=questionnaire_state)
-    except Exception:  # the interpreter must never block the family
+    except Exception as error:  # the interpreter must never block the family
+        reason = str(error).split(":", 1)[0][:60] or type(error).__name__
+        logger.warning("israel_interpreter_failed reason=%s detail=%s", reason, str(error)[:300])
         return questionnaire_state, {
             "status": "UNPROCESSED",
+            "reason": reason,
             "message": "את מה שכתבתם במלל חופשי לא הצלחנו לעבד כרגע, ולכן הוא לא השפיע על התוצאות. התוצאות מבוססות על התשובות בשאלון.",
         }
     profile = build_structured_profile(questionnaire_state, result, family_text=text)
