@@ -18,6 +18,7 @@ from app.models.facility import (
     FacilityPortalInvite,
     FacilityPortalSession,
     FacilityUser,
+    FacilityVisit,
 )
 
 PREFIX = "TEST-INQ-"
@@ -54,7 +55,7 @@ class InquiryTests(unittest.TestCase):
     def _clean(self) -> None:
         ids = [f.id for f in self.db.query(Facility).filter(Facility.cms_id.like(PREFIX + "%"))]
         if ids:
-            for model in (FacilityFeedback, FacilityInquiry, FacilityPortalSession, FacilityPortalInvite, FacilityAuditLog, FacilityUser):
+            for model in (FacilityVisit, FacilityFeedback, FacilityInquiry, FacilityPortalSession, FacilityPortalInvite, FacilityAuditLog, FacilityUser):
                 self.db.query(model).filter(model.facility_id.in_(ids)).delete(synchronize_session=False)
             self.db.query(Facility).filter(Facility.id.in_(ids)).delete(synchronize_session=False)
         self.db.commit()
@@ -164,3 +165,89 @@ class FeedbackTests(InquiryTests):
         assert feedback_summary(self.db, self.b.id)["count"] == 0
         # Comments are never part of the public summary.
         assert "comment" not in str(summary)
+
+
+class VisitTests(InquiryTests):
+    """Owner flow 2026-11-17: results -> facility page -> visit."""
+
+    @staticmethod
+    def _day(offset):
+        from datetime import datetime, timedelta
+        from zoneinfo import ZoneInfo
+
+        return (datetime.now(ZoneInfo("Asia/Jerusalem")).date() + timedelta(days=offset)).isoformat()
+
+    def _inquiry(self) -> str:
+        return self.client.post(f"/api/il/facilities/{self.a.cms_id}/inquiries", json=REQUEST).json()["token"]
+
+    def _ask(self, token, slots, **extra):
+        return self.client.post(f"/api/il/inquiries/{token}/visit", json={"slots": slots, **extra})
+
+    def test_family_proposal_is_validated(self):
+        token = self._inquiry()
+        bad = [
+            [],
+            [{"date": self._day(0), "part": "MORNING"}],  # today is too late
+            [{"date": self._day(90), "part": "MORNING"}],  # beyond the horizon
+            [{"date": self._day(2), "part": "MIDNIGHT"}],
+            [{"date": self._day(d), "part": "MORNING"} for d in (2, 3, 4, 5)],  # more than three
+        ]
+        for slots in bad:
+            self.assertEqual(self._ask(token, slots).status_code, 400, slots)
+        self.assertEqual(self._ask(token, [{"date": self._day(2), "part": "MORNING"}], visitors=12).status_code, 400)
+
+    def test_confirm_one_of_the_family_dates_and_download_calendar(self):
+        from datetime import datetime
+        from zoneinfo import ZoneInfo
+
+        token = self._inquiry()
+        asked = self._ask(token, [{"date": self._day(3), "part": "MORNING"}, {"date": self._day(5), "part": "AFTERNOON"}], visitors=2).json()
+        self.assertEqual(asked["status"], "REQUESTED")
+        self.assertEqual(len(asked["slots"]), 2)
+        inquiry_id = self.client.get(f"/api/il/inquiries/{token}").json()["inquiry_id"]
+        url = f"/provider/facilities/{self.a.id}/inquiries/{inquiry_id}/visit"
+        self.assertEqual(self.client.post(url, json={"action": "CONFIRM", "slot_index": 1, "time": "16:30"}).status_code, 401)
+        headers = self._session(self.a)
+        self.assertEqual(self.client.post(url, json={"action": "CONFIRM", "slot_index": 7, "time": "16:30"}, headers=headers).status_code, 400)
+        self.assertEqual(self.client.post(url, json={"action": "CONFIRM", "slot_index": 1, "time": "25:00"}, headers=headers).status_code, 400)
+        done = self.client.post(url, json={"action": "CONFIRM", "slot_index": 1, "time": "16:30"}, headers=headers).json()
+        self.assertEqual(done["status"], "CONFIRMED")
+        self.assertEqual(done["confirmed"]["date"], self._day(5))
+        family = self.client.get(f"/api/il/inquiries/{token}").json()
+        self.assertEqual(family["visit"]["status"], "CONFIRMED")
+        self.assertNotIn("contact_phone", family["request"])
+        ics = self.client.get(f"/api/il/inquiries/{token}/visit.ics")
+        self.assertEqual(ics.status_code, 200)
+        start = datetime.fromisoformat(f"{self._day(5)}T16:30:00").replace(tzinfo=ZoneInfo("Asia/Jerusalem"))
+        self.assertIn("DTSTART:" + start.astimezone(ZoneInfo("UTC")).strftime("%Y%m%dT%H%M%SZ"), ics.text)
+        # A confirmed visit is changed only after cancelling it.
+        self.assertEqual(self._ask(token, [{"date": self._day(6), "part": "NOON"}]).status_code, 400)
+
+    def test_facility_proposal_needs_the_familys_approval(self):
+        token = self._inquiry()
+        self._ask(token, [{"date": self._day(2), "part": "MORNING"}])
+        inquiry_id = self.client.get(f"/api/il/inquiries/{token}").json()["inquiry_id"]
+        headers = self._session(self.a)
+        url = f"/provider/facilities/{self.a.id}/inquiries/{inquiry_id}/visit"
+        proposed = self.client.post(url, json={"action": "PROPOSE", "date": self._day(4), "time": "11:00", "note": "נוח לנו יותר"}, headers=headers).json()
+        self.assertEqual(proposed["status"], "FACILITY_PROPOSED")
+        self.assertEqual(self.client.get(f"/api/il/inquiries/{token}/visit.ics").status_code, 404)  # not agreed yet
+        accepted = self.client.post(f"/api/il/inquiries/{token}/visit/answer", json={"action": "ACCEPT"}).json()
+        self.assertEqual(accepted["status"], "CONFIRMED")
+        cancelled = self.client.post(f"/api/il/inquiries/{token}/visit/answer", json={"action": "CANCEL"}).json()
+        self.assertEqual(cancelled["status"], "CANCELLED")
+        again = self._ask(token, [{"date": self._day(7), "part": "NOON"}]).json()
+        self.assertEqual(again["status"], "REQUESTED")
+        self.assertEqual([h["action"] for h in again["history"]], ["REQUESTED", "PROPOSE", "ACCEPTED", "CANCELLED", "REQUESTED"])
+
+    def test_another_facility_cannot_touch_the_visit(self):
+        token = self._inquiry()
+        self._ask(token, [{"date": self._day(2), "part": "MORNING"}])
+        inquiry_id = self.client.get(f"/api/il/inquiries/{token}").json()["inquiry_id"]
+        other = self._session(self.b)
+        response = self.client.post(
+            f"/provider/facilities/{self.b.id}/inquiries/{inquiry_id}/visit",
+            json={"action": "CONFIRM", "slot_index": 0, "time": "10:00"},
+            headers=other,
+        )
+        self.assertEqual(response.status_code, 404)

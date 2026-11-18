@@ -3912,6 +3912,68 @@ async def israel_submit_feedback(token: str, payload: Dict[str, Any], db: Sessio
         raise HTTPException(status_code=400, detail=str(error)) from error
 
 
+@app.post("/api/il/inquiries/{token}/visit")
+async def israel_family_request_visit(token: str, payload: Dict[str, Any], db: Session = Depends(get_db)):
+    from app.services.israel_visits import family_request_visit
+
+    try:
+        return family_request_visit(db, token, payload)
+    except LookupError as error:
+        raise HTTPException(status_code=404, detail="Not found") from error
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+
+
+@app.post("/api/il/inquiries/{token}/visit/answer")
+async def israel_family_answer_visit(token: str, payload: Dict[str, Any], db: Session = Depends(get_db)):
+    from app.services.israel_visits import family_answer_visit
+
+    try:
+        return family_answer_visit(db, token, payload)
+    except LookupError as error:
+        raise HTTPException(status_code=404, detail="Not found") from error
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+
+
+@app.get("/api/il/inquiries/{token}/visit.ics")
+async def israel_family_visit_calendar(token: str, db: Session = Depends(get_db)):
+    from fastapi.responses import Response
+
+    from app.services.israel_visits import visit_ics
+
+    try:
+        body = visit_ics(db, token)
+    except LookupError as error:
+        raise HTTPException(status_code=404, detail="Not found") from error
+    return Response(
+        content=body,
+        media_type="text/calendar; charset=utf-8",
+        headers={"Content-Disposition": 'attachment; filename="oomnik-visit.ics"'},
+    )
+
+
+@app.post("/provider/facilities/{facility_id}/inquiries/{inquiry_id}/visit")
+async def provider_inquiry_visit(
+    facility_id: int,
+    inquiry_id: int,
+    payload: Dict[str, Any],
+    db: Session = Depends(get_db),
+    authorization: Optional[str] = Header(default=None),
+):
+    from app.services.israel_visits import facility_answer_visit
+
+    user_id = _provider_user(db, facility_id, authorization, None)
+    if user_id is None:
+        raise HTTPException(status_code=401, detail="Portal session required.")
+    try:
+        return facility_answer_visit(db, facility_id, user_id, inquiry_id, payload)
+    except LookupError as error:
+        raise HTTPException(status_code=404, detail="Not found") from error
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+
+
 @app.get("/provider/facilities/{facility_id}/inquiries")
 async def provider_inquiries(
     facility_id: int, db: Session = Depends(get_db), authorization: Optional[str] = Header(default=None)

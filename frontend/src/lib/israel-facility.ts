@@ -83,6 +83,19 @@ export type InquiryView = {
   request: Record<string, string | number | null>;
   messages: InquiryMessage[];
   created_at: string | null;
+  visit: VisitView | null;
+};
+
+export type VisitSlot = { date: string; part: "MORNING" | "NOON" | "AFTERNOON"; label?: string };
+export type VisitView = {
+  status: "REQUESTED" | "FACILITY_PROPOSED" | "CONFIRMED" | "CANCELLED";
+  status_label: string;
+  mode: "IN_PERSON" | "VIDEO";
+  mode_label: string;
+  visitors: number;
+  note: string | null;
+  slots: (VisitSlot & { label: string })[];
+  confirmed: { date: string; time: string; note: string | null; label: string } | null;
 };
 
 async function sendJson<T>(path: string, body: unknown): Promise<T> {
@@ -199,3 +212,9 @@ export type IsraelResults = {
 };
 export const fetchIsraelResults = (questionnaire_state: Record<string, unknown>, natural_language_query: string) =>
   sendJson<IsraelResults>("/api/il/recommendations", { questionnaire_state, natural_language_query, limit: 20 });
+
+export const requestVisit = (token: string, body: { slots: VisitSlot[]; mode: string; visitors: number; note?: string }) =>
+  sendJson<VisitView>(`/api/il/inquiries/${encodeURIComponent(token)}/visit`, body);
+export const answerVisit = (token: string, action: "ACCEPT" | "CANCEL") =>
+  sendJson<VisitView>(`/api/il/inquiries/${encodeURIComponent(token)}/visit/answer`, { action });
+export const visitCalendarHref = (token: string) => `/api/backend/api/il/inquiries/${encodeURIComponent(token)}/visit.ics`;

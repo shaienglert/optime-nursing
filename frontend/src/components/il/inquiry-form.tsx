@@ -48,7 +48,7 @@ export function InquiryForm({ canonicalId, facilityName }: { canonicalId: string
   if (!open) {
     return (
       <button type="button" onClick={() => setOpen(true)} className="mt-4 rounded-xl bg-black px-4 py-3 font-semibold text-white">
-        שליחת בקשה ממוקדת ל{facilityName}
+        פנייה ל{facilityName} ותיאום ביקור
       </button>
     );
   }
@@ -56,7 +56,7 @@ export function InquiryForm({ canonicalId, facilityName }: { canonicalId: string
   return (
     <form onSubmit={submit} className="mt-4 space-y-3 rounded-xl border p-4">
       <h2 className="text-xl font-semibold">בקשה ממוקדת למוסד</h2>
-      <p className="text-sm">המוסד יוכל לאשר, להציע מסלול אחר או לבקש פרט נוסף. את התשובה תראו בקישור אישי שיופיע אחרי השליחה.</p>
+      <p className="text-sm">המוסד יוכל לאשר, להציע מסלול אחר או לבקש פרט נוסף. את התשובה תראו בקישור אישי שיופיע אחרי השליחה, ושם גם תוכלו להציע מועדים לביקור.</p>
       <label className="block text-sm">
         סוג חדר או דירה
         <select className={field} value={form.room_type} onChange={set("room_type")}>

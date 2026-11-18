@@ -145,7 +145,20 @@ def _view(inquiry: FacilityInquiry, facility: Facility, *, for_facility: bool) -
         "request": shown,
         "messages": json.loads(inquiry.messages_json),
         "created_at": inquiry.created_at.isoformat() if inquiry.created_at else None,
+        "visit": _visit(inquiry),
     }
+
+
+def _visit(inquiry: FacilityInquiry) -> Optional[Dict[str, Any]]:
+    from sqlalchemy.orm import object_session
+
+    from app.models.facility import FacilityVisit
+    from app.services.israel_visits import visit_view
+
+    session = object_session(inquiry)
+    if session is None:
+        return None
+    return visit_view(session.query(FacilityVisit).filter(FacilityVisit.inquiry_id == inquiry.id).one_or_none())
 
 
 def _by_token(db: Session, token: str) -> FacilityInquiry:

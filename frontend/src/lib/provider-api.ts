@@ -297,7 +297,16 @@ export type ProviderInquiry = {
   request: Record<string, string | number | null>;
   messages: { from: string; kind: string; text?: string | null; monthly_ils?: number | null; deposit_ils?: number | null; at: string }[];
   created_at: string | null;
+  visit: import("./israel-facility").VisitView | null;
 };
+
+export async function answerVisitAsFacility(
+  facilityId: number,
+  inquiryId: number,
+  body: { action: "CONFIRM" | "PROPOSE" | "CANCEL"; slot_index?: number; date?: string; time?: string; note?: string },
+): Promise<import("./israel-facility").VisitView> {
+  return request(`/provider/facilities/${facilityId}/inquiries/${inquiryId}/visit`, { method: "POST", body: JSON.stringify(body) });
+}
 
 export async function fetchProviderInquiries(facilityId: number): Promise<ProviderInquiry[]> {
   const body = await request<{ inquiries: ProviderInquiry[] }>(`/provider/facilities/${facilityId}/inquiries`);

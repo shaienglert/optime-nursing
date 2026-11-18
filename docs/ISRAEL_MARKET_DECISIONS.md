@@ -174,3 +174,9 @@ The existing `LICENSE_CURRENTLY_VALID` MUST reads license status and expiry; for
 - Shown = hard gate PASS only. Facilities waiting on information are counted and explained, never shown as matches. A MUST the family left open (functional level "not sure") is the family's question and is never attributed to facilities.
 - Missing required facts (level; funding unless complex nursing; locality) → ask, no matching.
 - Acceptance (local, same code and settings as live): 10 personas through browser → Next proxy → API; independent MUST re-check 0 violations; order equals rank key and explanation counts; every card opens the right facility page; one full click-through of the intake; Nevada identical to before (same 26 pre-existing test failures, same Nevada response).
+
+## 2026-11-18: Visit coordination (last step of the owner-defined family flow)
+
+- Inside the inquiry thread. The family proposes 1-3 dates (tomorrow to +60 days) with a part of day, in person or video, number of visitors. The facility (portal session) confirms one of those dates with an exact time, proposes another date/time, or cancels. The family accepts a facility proposal or cancels; a confirmed visit changes only after cancelling. Calendar file (.ics, Israel time) for a confirmed visit.
+- Facility actions are audit-logged; another facility gets 404. Contact details stay facility-only.
+- Not built: notifications (email/SMS) - both sides see changes only when they open their page.

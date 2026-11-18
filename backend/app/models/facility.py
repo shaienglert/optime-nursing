@@ -668,3 +668,21 @@ class FacilityFeedback(Base):
 	comment = Column(Text, nullable=True)
 	created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 	updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+
+class FacilityVisit(Base):
+	"""Visit coordination inside one family-to-facility inquiry (owner flow, 2026-11-17:
+	intake -> results -> facility page -> visit). The family proposes up to three dates;
+	the facility confirms one with an exact time, proposes another, or cancels. One visit
+	per inquiry; a new family proposal replaces an unconfirmed one. Never affects ranking."""
+	__tablename__ = "facility_visits"
+
+	id = Column(Integer, primary_key=True, index=True)
+	inquiry_id = Column(Integer, ForeignKey("facility_inquiries.id"), unique=True, nullable=False)
+	facility_id = Column(Integer, ForeignKey("facilities.id"), index=True, nullable=False)
+	status = Column(String(30), nullable=False)
+	request_json = Column(Text, nullable=False)
+	confirmed_json = Column(Text, nullable=True)
+	history_json = Column(Text, nullable=False, default="[]")
+	created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+	updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
