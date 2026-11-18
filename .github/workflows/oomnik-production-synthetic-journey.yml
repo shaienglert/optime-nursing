@@ -28,7 +28,7 @@ concurrency:
 
 jobs:
   run-live-journey:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04  # Playwright has no chromium build for ubuntu-26.04 yet
     timeout-minutes: 12
     strategy:
       fail-fast: false

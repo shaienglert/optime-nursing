@@ -613,7 +613,7 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
     )
     relevant_unknown = len(must_unknown) + len(nice_unknown) + len(row.get("unknown_critical_needs") or [])
 
-    return {
+    fit = {
         "hard_gate": "FAIL" if hard_fail else ("PENDING_VERIFICATION" if must_unknown else "PASS"),
         "must_pass": must_pass,
         "must_unknown": must_unknown,
@@ -623,13 +623,16 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
         "nice_unknown": nice_unknown,
         "nice_mismatch": nice_mismatch,
         "nice_fit_scores": nice_fit_scores,
-        "distance_km": israel_distance_km,
-        "israel_notes": israel_notes,
         "preference_consistency": "MISMATCH" if nice_mismatch else ("UNKNOWN" if nice_unknown else "MATCH"),
         "public_reputation": {"role": "DISPLAY_ONLY", "ranking_eligible": False},
         "relevant_evidence_known_count": relevant_known,
         "relevant_evidence_unknown_count": relevant_unknown,
     }
+    # Israel-only output. Nevada's decision output stays byte-identical to main.
+    if israel_distance_km is not None or israel_notes:
+        fit["distance_km"] = israel_distance_km
+        fit["israel_notes"] = israel_notes
+    return fit
 
 
 def intent_rank_key(row: Dict[str, Any]) -> tuple[Any, ...]:
