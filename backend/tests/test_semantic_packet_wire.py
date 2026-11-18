@@ -347,3 +347,20 @@ def test_all_trace_roles_share_genuine_source_grammar():
     empty = provider_schema(_required_output_schema(), family_text='', questionnaire_state={})
     assert empty['properties']['statements']['maxItems'] == 0
     assert 'enum' not in provider_schema(_required_output_schema())['$defs']['Trace']['properties']['raw_text']
+
+
+def test_hebrew_double_quote_never_reaches_enum_literals_and_is_restored():
+    import json as _json
+    from app.services.semantic_packet_wire import restore_wire_quotes, wire_literal
+
+    text = 'אנחנו גרים בחיפה ולא רוצים יותר מ-20 ק"מ. אמא מדברת רוסית.'
+    sentence = 'אנחנו גרים בחיפה ולא רוצים יותר מ-20 ק"מ.'
+    assert '"' not in wire_literal(sentence)
+    packet = {"fields": [{"quote": wire_literal(sentence)}], "statements": [{"raw_text": wire_literal(text)}]}
+    restored = restore_wire_quotes(packet, text)
+    assert restored["fields"][0]["quote"] == sentence
+    assert restored["statements"][0]["raw_text"] == text
+    # A genuine gershayim in the family's own text stays as written.
+    own = "צה״ל"
+    assert restore_wire_quotes({"q": own}, "שירת בצה״ל ו-5 ק\"מ") == {"q": own}
+    assert '\\"' not in _json.dumps(wire_literal(text), ensure_ascii=False)

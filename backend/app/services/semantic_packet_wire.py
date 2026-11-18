@@ -94,6 +94,41 @@ def _key(required_output):
     return json.dumps(required_output["questionnaire_patch"], sort_keys=True)
 
 
+# Strict structured-output grammars reject some characters inside enum string
+# literals (OpenAI: '"' is not allowed). Hebrew uses '"' constantly (ק"מ, צה"ל),
+# so source-quote literals travel with look-alike characters and are restored
+# to the family's exact text before any validation. The family text itself is
+# sent unchanged.
+_WIRE_SWAP = {'"': "\u05f4", "\\": "\u29f5"}
+
+
+def wire_literal(text: str) -> str:
+    for original, substitute in _WIRE_SWAP.items():
+        text = text.replace(original, substitute)
+    return text
+
+
+def _unwire(text: str) -> str:
+    for original, substitute in _WIRE_SWAP.items():
+        text = text.replace(substitute, original)
+    return text
+
+
+def restore_wire_quotes(packet: Any, family_text: str) -> Any:
+    """Map swapped quote literals back to the exact family span they stand for."""
+    if not family_text or not any(ch in family_text for ch in _WIRE_SWAP):
+        return packet
+    if isinstance(packet, dict):
+        return {key: restore_wire_quotes(value, family_text) for key, value in packet.items()}
+    if isinstance(packet, list):
+        return [restore_wire_quotes(value, family_text) for value in packet]
+    if isinstance(packet, str) and packet not in family_text:
+        original = _unwire(packet)
+        if original != packet and original in family_text:
+            return original
+    return packet
+
+
 def provider_schema(required_output, *, family_text: str | None = None, questionnaire_state: dict | None = None):
     schema = _model(_key(required_output)).model_json_schema()
 
@@ -126,7 +161,7 @@ def provider_schema(required_output, *, family_text: str | None = None, question
         quotes = list(dict.fromkeys([family_text.strip(), *[
             part.strip() for part in re.split(r"[\n;]|(?<=[.!?])\s+", family_text)
             if part.strip()]]))
-        schema["$defs"]["SourceQuote"] = {"type": "string", "enum": quotes}
+        schema["$defs"]["SourceQuote"] = {"type": "string", "enum": [wire_literal(q) for q in quotes]}
         excluded = set()
         for name, definition in list(schema["$defs"].items()):
             properties = definition.get("properties", {})
@@ -139,7 +174,7 @@ def provider_schema(required_output, *, family_text: str | None = None, question
                 excluded.add("#/$defs/" + name)
                 del schema["$defs"][name]
                 continue
-            properties["quote"] = {"type": "string", "enum": eligible} if contract.unit else {"$ref": "#/$defs/SourceQuote"}
+            properties["quote"] = {"type": "string", "enum": [wire_literal(q) for q in eligible]} if contract.unit else {"$ref": "#/$defs/SourceQuote"}
         alternatives = schema["properties"]["questionnaire_patch_fields"]["items"]["anyOf"]
         alternatives[:] = [item for item in alternatives if item.get("$ref") not in excluded]
     if family_text is not None:
@@ -158,13 +193,14 @@ def provider_schema(required_output, *, family_text: str | None = None, question
         # syntax instead of the client's actual requirement.
         if preference_quotes:
             schema["$defs"]["Trace"]["properties"]["raw_text"] = {
-                "type": "string", "enum": preference_quotes}
+                "type": "string", "enum": list(dict.fromkeys(wire_literal(q) for q in preference_quotes))}
         else:
             schema["properties"]["statements"]["maxItems"] = 0
     return schema
 
 
 def normalize_wire(packet: Any, required_output: dict, *, family_text: str | None = None) -> dict:
+    packet = restore_wire_quotes(packet, family_text or "")
     try:
         wire = _model(_key(required_output)).model_validate(packet)
     except ValidationError as exc:
