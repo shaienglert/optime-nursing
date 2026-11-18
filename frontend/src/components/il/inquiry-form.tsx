@@ -108,7 +108,7 @@ export function InquiryForm({ canonicalId, facilityName }: { canonicalId: string
         משהו נוסף שחשוב שהמוסד יידע
         <textarea className={`${field} min-h-20`} maxLength={1000} value={form.note} onChange={set("note")} />
       </label>
-      <p className="text-xs">השם, הטלפון והדוא"ל יועברו רק למוסד הזה.</p>
+      <p className="text-xs">השם, הטלפון והדוא&quot;ל יועברו רק למוסד הזה.</p>
       {error ? <p role="alert" className="text-sm">{error}</p> : null}
       <button type="submit" disabled={sending} className="rounded-xl bg-black px-4 py-2 font-semibold text-white disabled:opacity-50">
         {sending ? "שולח…" : "שליחה"}
