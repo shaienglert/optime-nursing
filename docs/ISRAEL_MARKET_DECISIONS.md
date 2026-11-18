@@ -187,3 +187,12 @@ The existing `LICENSE_CURRENTLY_VALID` MUST reads license status and expiry; for
 - The family's inquiry page opens a month calendar of the next 30 days with only open slots (minimum notice, closed dates and capacity applied, Israel time). Picking a day and time books the visit at once (CONFIRMED) and offers the .ics file. A slot that filled meanwhile returns 409 and the calendar reloads.
 - A facility with no published hours falls back to the propose-dates flow above, and the family is told why.
 - Synthetic facilities get synthetic hours (Sun-Thu 10-12 and 16-18:30, Friday morning, Saturday only for some non-observant ones). Real facilities start with none.
+
+## 2026-11-18: Email notifications for inquiries and visits
+
+- Facility hears: new inquiry, family reply, visit requested / booked / accepted / cancelled by the family. Sent to the questionnaire "דוא"ל למשפחות" and the portal-invite contact email. Emails carry the family's name and a portal link, never the family's phone or email.
+- Family hears (only if it gave an optional email): its private link right after sending, facility answer, visit confirmed / proposed / cancelled by the facility, booking confirmation. The private link is stored only as a hash, so only emails sent while the family acts carry it; the others point to the first email.
+- Synthetic facilities are never emailed; `OOMNIK_NOTIFY_SYNTHETIC_TO` redirects their facility notices to one test address.
+- Every notice is recorded (`facility_notifications`: event, audience, SENT / NOT_SENT / SKIPPED_NO_ADDRESS / SKIPPED_SYNTHETIC), without body or link. Sending runs in the background and never fails the action.
+- Transport is the existing SMTP service (`OPTIME_SMTP_HOST/PORT/USERNAME/PASSWORD/FROM`). Without it, notices are recorded as NOT_SENT.
+- Not built: SMS (needs a provider and an owner decision on cost).

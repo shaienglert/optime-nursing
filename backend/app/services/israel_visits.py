@@ -126,6 +126,21 @@ def _visit_for(db: Session, inquiry: FacilityInquiry) -> Optional[FacilityVisit]
     return db.query(FacilityVisit).filter(FacilityVisit.inquiry_id == inquiry.id).one_or_none()
 
 
+def _notice(visit: FacilityVisit) -> Dict[str, Any]:
+    view = visit_view(visit) or {}
+    if view.get("confirmed"):
+        return {"date": view["confirmed"]["date"], "date_label": view["confirmed"]["label"]}
+    if view.get("slots"):
+        return {"date": view["slots"][0]["date"], "date_label": " / ".join(s["label"] for s in view["slots"])}
+    return {}
+
+
+def _tell(db: Session, inquiry: FacilityInquiry, visit: FacilityVisit, audience: str, event: str, token: Optional[str] = None) -> None:
+    from app.services.israel_notifications import notify
+
+    notify(db, inquiry, audience, event, visit=_notice(visit), token=token)
+
+
 def _log(visit: FacilityVisit, actor: str, action: str, **extra: Any) -> None:
     history = json.loads(visit.history_json or "[]")
     history.append({"by": actor, "action": action, "at": _now(), **{k: v for k, v in extra.items() if v is not None}})
@@ -152,6 +167,7 @@ def family_request_visit(db: Session, token: str, payload: Dict[str, Any]) -> Di
     visit.confirmed_json = None
     _log(visit, "FAMILY", "REQUESTED")
     db.commit()
+    _tell(db, inquiry, visit, "FACILITY", "VISIT_REQUESTED")
     return visit_view(visit)
 
 
@@ -169,14 +185,17 @@ def family_answer_visit(db: Session, token: str, payload: Dict[str, Any]) -> Dic
             raise ValueError("המועד שהוצע כבר עבר. אפשר להציע מועדים חדשים.")
         visit.status = "CONFIRMED"
         _log(visit, "FAMILY", "ACCEPTED")
+        event = "VISIT_ACCEPTED"
     elif action == "CANCEL":
         if visit.status == "CANCELLED":
             raise ValueError("הביקור כבר בוטל.")
         visit.status = "CANCELLED"
         _log(visit, "FAMILY", "CANCELLED", note=_text(payload.get("note"), "הערה"))
+        event = "VISIT_CANCELLED"
     else:
         raise ValueError("פעולה לא תקינה.")
     db.commit()
+    _tell(db, inquiry, visit, "FACILITY", event)
     return visit_view(visit)
 
 
@@ -231,6 +250,7 @@ def facility_answer_visit(db: Session, facility_id: int, user_id: int, inquiry_i
         )
     )
     db.commit()
+    _tell(db, inquiry, visit, "FAMILY", {"CONFIRM": "VISIT_CONFIRMED", "PROPOSE": "VISIT_PROPOSED", "CANCEL": "VISIT_CANCELLED"}[action])
     return visit_view(visit)
 
 
@@ -420,6 +440,8 @@ def family_book_visit(db: Session, token: str, payload: Dict[str, Any]) -> Dict[
     visit.confirmed_json = json.dumps({"date": day, "time": hhmm, "note": None}, ensure_ascii=False)
     _log(visit, "FAMILY", "BOOKED")
     db.commit()
+    _tell(db, inquiry, visit, "FACILITY", "VISIT_BOOKED")
+    _tell(db, inquiry, visit, "FAMILY", "VISIT_BOOKED", token=token)
     return visit_view(visit)
 
 

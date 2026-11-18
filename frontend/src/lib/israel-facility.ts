@@ -63,6 +63,7 @@ export type InquiryRequest = {
   deposit_cap_ils: number | null;
   contact_name: string;
   contact_phone: string;
+  contact_email?: string;
   note: string;
 };
 

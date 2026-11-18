@@ -93,7 +93,8 @@ function InquiryCard({ facilityId, inquiry, onUpdated }: { facilityId: number; i
 
   return (
     <li className="rounded-xl border p-4">
-      <p className="font-semibold">{r.contact_name} · <span dir="ltr">{r.contact_phone}</span></p>
+      <p className="font-semibold">{r.contact_name} · <span dir="ltr">{r.contact_phone}</span>
+        {r.contact_email ? <> · <a dir="ltr" className="underline" href={`mailto:${r.contact_email}`}>{r.contact_email}</a></> : null}</p>
       <p className="mt-1 text-sm">
         {r.room_type} · {r.level} · כניסה: {r.move_in}
         {r.monthly_cap_ils ? ` · עד ${ils(r.monthly_cap_ils)} לחודש` : ""}

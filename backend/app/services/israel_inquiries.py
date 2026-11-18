@@ -94,8 +94,20 @@ def validate_request(payload: Dict[str, Any]) -> Dict[str, Any]:
         "deposit_cap_ils": _money(payload.get("deposit_cap_ils"), "פיקדון"),
         "contact_name": _text(payload.get("contact_name"), "שם", required=True, limit=80),
         "contact_phone": phone,
+        "contact_email": _email(payload.get("contact_email")),
         "note": _text(payload.get("note"), "הערה"),
     }
+
+
+def _email(value: Any) -> Optional[str]:
+    from app.services.israel_notifications import valid_email
+
+    if not str(value or "").strip():
+        return None
+    email = valid_email(value)
+    if email is None:
+        raise ValueError("דוא\"ל: כתובת לא תקינה.")
+    return email
 
 
 def _israeli_facility(db: Session, canonical_id: str) -> Facility:
@@ -119,7 +131,11 @@ def create_inquiry(db: Session, canonical_id: str, payload: Dict[str, Any]) -> D
     db.add(inquiry)
     db.commit()
     db.refresh(inquiry)
-    return {"inquiry_id": inquiry.id, "token": token, "link_path": f"/he/inquiry/{token}"}
+    from app.services.israel_notifications import notify
+
+    notify(db, inquiry, "FACILITY", "NEW_INQUIRY")
+    notify(db, inquiry, "FAMILY", "INQUIRY_SENT", token=token)
+    return {"inquiry_id": inquiry.id, "token": token, "link_path": f"/he/inquiry/{token}", "email_sent_to_family": bool(request.get("contact_email"))}
 
 
 def _view(inquiry: FacilityInquiry, facility: Facility, *, for_facility: bool) -> Dict[str, Any]:
@@ -137,6 +153,7 @@ def _view(inquiry: FacilityInquiry, facility: Facility, *, for_facility: bool) -
         # Contact details go only to the facility the family wrote to.
         shown["contact_name"] = request["contact_name"]
         shown["contact_phone"] = request["contact_phone"]
+        shown["contact_email"] = request.get("contact_email")
     return {
         "inquiry_id": inquiry.id,
         "facility": {"canonical_id": facility.cms_id, "name": facility.name},
@@ -182,6 +199,9 @@ def family_reply(db: Session, token: str, text: Any) -> Dict[str, Any]:
     inquiry.messages_json = json.dumps(messages, ensure_ascii=False)
     inquiry.status = "SENT"
     db.commit()
+    from app.services.israel_notifications import notify
+
+    notify(db, inquiry, "FACILITY", "FAMILY_REPLY")
     return family_view(db, token)
 
 
@@ -233,5 +253,8 @@ def facility_respond(
         )
     )
     db.commit()
+    from app.services.israel_notifications import notify
+
+    notify(db, inquiry, "FAMILY", "FACILITY_REPLY")
     facility = db.query(Facility).filter(Facility.id == facility_id).one()
     return _view(inquiry, facility, for_facility=True)

@@ -15,6 +15,7 @@ from app.models.facility import (
     FacilityAuditLog,
     FacilityFeedback,
     FacilityInquiry,
+    FacilityNotification,
     FacilityPortalInvite,
     FacilityPortalSession,
     FacilityUser,
@@ -56,7 +57,7 @@ class InquiryTests(unittest.TestCase):
     def _clean(self) -> None:
         ids = [f.id for f in self.db.query(Facility).filter(Facility.cms_id.like(PREFIX + "%"))]
         if ids:
-            for model in (FacilityVisitSchedule, FacilityVisit, FacilityFeedback, FacilityInquiry, FacilityPortalSession, FacilityPortalInvite, FacilityAuditLog, FacilityUser):
+            for model in (FacilityNotification, FacilityVisitSchedule, FacilityVisit, FacilityFeedback, FacilityInquiry, FacilityPortalSession, FacilityPortalInvite, FacilityAuditLog, FacilityUser):
                 self.db.query(model).filter(model.facility_id.in_(ids)).delete(synchronize_session=False)
             self.db.query(Facility).filter(Facility.id.in_(ids)).delete(synchronize_session=False)
         self.db.commit()
@@ -303,3 +304,97 @@ class VisitCalendarTests(VisitTests):
         # Cancelling frees the slot again.
         self.client.post(f"/api/il/inquiries/{first}/visit/answer", json={"action": "CANCEL"})
         self.assertEqual(self.client.post(f"/api/il/inquiries/{second}/visit/book", json={"date": self._day(4), "time": "10:00"}).status_code, 200)
+
+
+class NotificationTests(VisitTests):
+    """Owner 2026-11-18: facility and family hear about inquiries and visits by email."""
+
+    def setUp(self):
+        super().setUp()
+        from app.services import israel_notifications
+
+        self.sent = []
+        israel_notifications.set_sender(lambda **m: (self.sent.append(m), (True, "OK"))[1])
+        self.notify_env = mock.patch.dict(os.environ, {"OOMNIK_NOTIFY_SYNC": "1", "OOMNIK_PUBLIC_URL": "https://example.test"})
+        self.notify_env.start()
+
+    def tearDown(self):
+        from app.services import israel_notifications
+
+        israel_notifications.set_sender(None)
+        self.notify_env.stop()
+        super().tearDown()
+
+    def _facility_email(self):
+        headers = self._session(self.a)
+        self.db.query(FacilityPortalInvite).filter(FacilityPortalInvite.facility_id == self.a.id).update({"contact_email": "office@facility-a.co.il"})
+        self.db.commit()
+        return headers
+
+    def _rows(self):
+        self.db.expire_all()
+        return [(r.audience, r.event, r.status) for r in self.db.query(FacilityNotification).order_by(FacilityNotification.id)]
+
+    def test_inquiry_notifies_facility_and_gives_family_its_link(self):
+        self._facility_email()
+        created = self.client.post(f"/api/il/facilities/{self.a.cms_id}/inquiries", json={**REQUEST, "contact_email": "ronit@example.com"}).json()
+        token = created["token"]
+        self.assertTrue(created["email_sent_to_family"])
+        self.assertEqual(self._rows(), [("FACILITY", "NEW_INQUIRY", "SENT"), ("FAMILY", "INQUIRY_SENT", "SENT")])
+        facility_mail, family_mail = self.sent
+        self.assertEqual(facility_mail["recipients"], ["office@facility-a.co.il"])
+        self.assertIn(f"https://example.test/provider/{self.a.id}/israel", facility_mail["body_text"])
+        self.assertNotIn("050-1234567", facility_mail["body_text"])  # contact details stay in the portal
+        self.assertNotIn(token, facility_mail["body_text"])
+        self.assertEqual(family_mail["recipients"], ["ronit@example.com"])
+        self.assertIn(f"https://example.test/he/inquiry/{token}", family_mail["body_text"])
+
+    def test_no_family_email_is_recorded_not_sent_and_bad_email_rejected(self):
+        self._facility_email()
+        self.assertEqual(self.client.post(f"/api/il/facilities/{self.a.cms_id}/inquiries", json={**REQUEST, "contact_email": "not-an-email"}).status_code, 400)
+        self._inquiry()
+        self.assertEqual(self._rows(), [("FACILITY", "NEW_INQUIRY", "SENT"), ("FAMILY", "INQUIRY_SENT", "SKIPPED_NO_ADDRESS")])
+
+    def test_facility_without_address_and_synthetic_facility_are_never_emailed(self):
+        self._inquiry()
+        self.assertEqual(self._rows()[0], ("FACILITY", "NEW_INQUIRY", "SKIPPED_NO_ADDRESS"))
+        self.a.cms_id = "IL-SYN-TEST-INQ"
+        self.db.commit()
+        try:
+            self._facility_email()
+            self._inquiry()
+            self.assertEqual(self._rows()[-2], ("FACILITY", "NEW_INQUIRY", "SKIPPED_SYNTHETIC"))
+            with mock.patch.dict(os.environ, {"OOMNIK_NOTIFY_SYNTHETIC_TO": "tester@oomnik.co.il"}):
+                self._inquiry()
+            self.assertEqual(self._rows()[-2], ("FACILITY", "NEW_INQUIRY", "SENT"))
+            self.assertEqual(self.sent[-1]["recipients"], ["tester@oomnik.co.il"])
+        finally:
+            self.a.cms_id = PREFIX + "A"
+            self.db.commit()
+
+    def test_visit_events_reach_the_other_side(self):
+        headers = self._facility_email()
+        token = self.client.post(f"/api/il/facilities/{self.a.cms_id}/inquiries", json={**REQUEST, "contact_email": "ronit@example.com"}).json()["token"]
+        self.sent.clear()
+        self.assertEqual(self._ask(token, [{"date": self._day(3), "part": "MORNING"}]).status_code, 200)
+        iid = self.db.query(FacilityInquiry).filter(FacilityInquiry.facility_id == self.a.id).one().id
+        r = self.client.post(f"/provider/facilities/{self.a.id}/inquiries/{iid}/visit", json={"action": "CONFIRM", "slot_index": 0, "time": "10:30"}, headers=headers)
+        self.assertEqual(r.status_code, 200, r.text)
+        self.client.post(f"/api/il/inquiries/{token}/visit/answer", json={"action": "CANCEL"})
+        events = [(r[0], r[1]) for r in self._rows()[2:]]
+        self.assertEqual(events, [("FACILITY", "VISIT_REQUESTED"), ("FAMILY", "VISIT_CONFIRMED"), ("FACILITY", "VISIT_CANCELLED")])
+        confirmed = self.sent[1]
+        self.assertIn("10:30", confirmed["body_text"])
+        self.assertIn("הקישור האישי מהמייל הראשון", confirmed["body_text"])  # facility-side events never carry the token
+
+    def test_smtp_failure_never_breaks_the_inquiry(self):
+        from app.services import israel_notifications
+
+        def boom(**_):
+            raise RuntimeError("smtp down")
+
+        israel_notifications.set_sender(boom)
+        self._facility_email()
+        created = self.client.post(f"/api/il/facilities/{self.a.cms_id}/inquiries", json=REQUEST)
+        self.assertEqual(created.status_code, 200)
+        self.assertEqual(self._rows()[0][2], "NOT_SENT")

@@ -697,3 +697,19 @@ class FacilityVisitSchedule(Base):
 	facility_id = Column(Integer, ForeignKey("facilities.id"), unique=True, nullable=False)
 	schedule_json = Column(Text, nullable=False)
 	updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+
+class FacilityNotification(Base):
+	"""One email OOMNIK tried to send about an Israeli inquiry or visit. Keeps the event,
+	audience and delivery outcome so a missed notice can be traced; never the family's
+	private link and never the message body."""
+	__tablename__ = "facility_notifications"
+
+	id = Column(Integer, primary_key=True, index=True)
+	inquiry_id = Column(Integer, ForeignKey("facility_inquiries.id"), index=True, nullable=False)
+	facility_id = Column(Integer, ForeignKey("facilities.id"), index=True, nullable=False)
+	audience = Column(String(20), nullable=False)  # FACILITY / FAMILY
+	event = Column(String(40), nullable=False)
+	status = Column(String(30), nullable=False)  # QUEUED / SENT / NOT_SENT / SKIPPED_NO_ADDRESS / SKIPPED_SYNTHETIC
+	detail = Column(String(300), nullable=True)
+	created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

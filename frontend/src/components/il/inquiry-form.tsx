@@ -20,6 +20,7 @@ export function InquiryForm({ canonicalId, facilityName }: { canonicalId: string
     deposit_cap_ils: "",
     contact_name: "",
     contact_phone: "",
+    contact_email: "",
     note: "",
   });
   const [sending, setSending] = useState(false);
@@ -99,10 +100,15 @@ export function InquiryForm({ canonicalId, facilityName }: { canonicalId: string
         </label>
       </div>
       <label className="block text-sm">
+        דוא&quot;ל (לא חובה)
+        <input dir="ltr" type="email" className={field} value={form.contact_email} onChange={set("contact_email")} autoComplete="email" />
+        <span className="mt-1 block text-xs">נשלח אליו את הקישור האישי לפנייה, ונעדכן כשהמוסד עונה או מאשר ביקור.</span>
+      </label>
+      <label className="block text-sm">
         משהו נוסף שחשוב שהמוסד יידע
         <textarea className={`${field} min-h-20`} maxLength={1000} value={form.note} onChange={set("note")} />
       </label>
-      <p className="text-xs">השם והטלפון יועברו רק למוסד הזה.</p>
+      <p className="text-xs">השם, הטלפון והדוא"ל יועברו רק למוסד הזה.</p>
       {error ? <p role="alert" className="text-sm">{error}</p> : null}
       <button type="submit" disabled={sending} className="rounded-xl bg-black px-4 py-2 font-semibold text-white disabled:opacity-50">
         {sending ? "שולח…" : "שליחה"}
