@@ -5,6 +5,7 @@ import { use, useMemo, useSyncExternalStore } from "react";
 
 import { IsraelInquiries } from "@/components/provider/israel-inquiries";
 import { IsraelPhotoManager } from "@/components/provider/israel-photo-manager";
+import { VisitScheduleEditor } from "@/components/provider/visit-schedule-editor";
 import { IsraelQuestionnaire } from "@/components/provider/israel-questionnaire";
 import { providerSessionSnapshot, subscribeProviderSession, type ProviderSession } from "@/lib/provider-session";
 
@@ -42,6 +43,7 @@ export default function IsraelFacilityPortalPage({ params }: { params: Promise<{
       )}
 
       <IsraelInquiries facilityId={facilityId} enabled={Boolean(session)} />
+      <VisitScheduleEditor facilityId={facilityId} enabled={Boolean(session)} />
       <IsraelQuestionnaire facilityId={facilityId} userId={userId} />
       <IsraelPhotoManager facilityId={facilityId} userId={userId} />
     </main>

@@ -3953,6 +3953,53 @@ async def israel_family_visit_calendar(token: str, db: Session = Depends(get_db)
     )
 
 
+@app.get("/api/il/inquiries/{token}/visit/slots")
+async def israel_family_visit_slots(token: str, db: Session = Depends(get_db)):
+    from app.services.israel_visits import family_slots
+
+    try:
+        return family_slots(db, token)
+    except LookupError as error:
+        raise HTTPException(status_code=404, detail="Not found") from error
+
+
+@app.post("/api/il/inquiries/{token}/visit/book")
+async def israel_family_book_visit(token: str, payload: Dict[str, Any], db: Session = Depends(get_db)):
+    from app.services.israel_visits import family_book_visit
+
+    try:
+        return family_book_visit(db, token, payload)
+    except LookupError as error:
+        raise HTTPException(status_code=404, detail="Not found") from error
+    except ValueError as error:
+        raise HTTPException(status_code=409 if "לא פנוי" in str(error) else 400, detail=str(error)) from error
+
+
+@app.get("/provider/facilities/{facility_id}/visit-schedule")
+async def provider_visit_schedule(facility_id: int, db: Session = Depends(get_db), authorization: Optional[str] = Header(default=None)):
+    from app.services.israel_visits import load_schedule, open_slots
+
+    if _provider_user(db, facility_id, authorization, None) is None:
+        raise HTTPException(status_code=401, detail="Portal session required.")
+    return {"schedule": load_schedule(db, facility_id), "calendar": open_slots(db, facility_id)}
+
+
+@app.put("/provider/facilities/{facility_id}/visit-schedule")
+async def provider_save_visit_schedule(
+    facility_id: int, payload: Dict[str, Any], db: Session = Depends(get_db), authorization: Optional[str] = Header(default=None)
+):
+    from app.services.israel_visits import open_slots, save_schedule
+
+    user_id = _provider_user(db, facility_id, authorization, None)
+    if user_id is None:
+        raise HTTPException(status_code=401, detail="Portal session required.")
+    try:
+        schedule = save_schedule(db, facility_id, user_id, payload)
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+    return {"schedule": schedule, "calendar": open_slots(db, facility_id)}
+
+
 @app.post("/provider/facilities/{facility_id}/inquiries/{inquiry_id}/visit")
 async def provider_inquiry_visit(
     facility_id: int,

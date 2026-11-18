@@ -686,3 +686,14 @@ class FacilityVisit(Base):
 	history_json = Column(Text, nullable=False, default="[]")
 	created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 	updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+
+class FacilityVisitSchedule(Base):
+	"""The facility's published visiting hours (weekly hours, slot length, families per
+	slot, closed dates, booking lead time). Families book open slots directly."""
+	__tablename__ = "facility_visit_schedules"
+
+	id = Column(Integer, primary_key=True, index=True)
+	facility_id = Column(Integer, ForeignKey("facilities.id"), unique=True, nullable=False)
+	schedule_json = Column(Text, nullable=False)
+	updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)

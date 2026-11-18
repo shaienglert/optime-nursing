@@ -16,7 +16,7 @@ from __future__ import annotations
 import json
 import re
 from datetime import date, datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 from zoneinfo import ZoneInfo
 
 from sqlalchemy.orm import Session
@@ -268,3 +268,169 @@ def visit_ics(db: Session, token: str) -> str:
         "END:VEVENT", "END:VCALENDAR",
     ]
     return "\r\n".join(line for line in lines if line) + "\r\n"
+
+
+# ---- published visiting hours (facility calendar) -----------------------------
+
+from app.models.facility import FacilityVisitSchedule  # noqa: E402
+
+DAYS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"]  # Israeli week order
+DAYS_HE = {"SUN": "ראשון", "MON": "שני", "TUE": "שלישי", "WED": "רביעי", "THU": "חמישי", "FRI": "שישי", "SAT": "שבת"}
+_PY_WEEKDAY = {"MON": 0, "TUE": 1, "WED": 2, "THU": 3, "FRI": 4, "SAT": 5, "SUN": 6}
+SLOT_MINUTES = (30, 45, 60, 90)
+BOOKING_WINDOW_DAYS = 30
+
+
+def _minutes(value: str) -> int:
+    hours, minutes = _time(value).split(":")
+    return int(hours) * 60 + int(minutes)
+
+
+def validate_schedule(payload: Dict[str, Any]) -> Dict[str, Any]:
+    weekly_in = payload.get("weekly") if isinstance(payload.get("weekly"), dict) else {}
+    weekly: Dict[str, List[List[str]]] = {}
+    for day in DAYS:
+        ranges = []
+        for item in (weekly_in.get(day) or [])[:3]:
+            start, end = _time(item[0]), _time(item[1])
+            if _minutes(end) <= _minutes(start):
+                raise ValueError(f"יום {DAYS_HE[day]}: שעת הסיום צריכה להיות אחרי שעת ההתחלה.")
+            ranges.append([start, end])
+        ranges.sort()
+        for (s1, e1), (s2, _) in zip(ranges, ranges[1:]):
+            if _minutes(s2) < _minutes(e1):
+                raise ValueError(f"יום {DAYS_HE[day]}: טווחי השעות חופפים.")
+        if ranges:
+            weekly[day] = ranges
+    try:
+        slot = int(payload.get("slot_minutes") or 45)
+        capacity = int(payload.get("capacity") or 1)
+        lead = int(payload.get("lead_hours") or 24)
+    except (TypeError, ValueError) as error:
+        raise ValueError("ערך מספרי לא תקין.") from error
+    if slot not in SLOT_MINUTES:
+        raise ValueError("משך ביקור לא תקין.")
+    if not 1 <= capacity <= 10:
+        raise ValueError("מספר המשפחות בכל מועד צריך להיות בין 1 ל-10.")
+    if not 0 <= lead <= 168:
+        raise ValueError("זמן ההתראה המינימלי צריך להיות בין 0 ל-168 שעות.")
+    blocked = sorted({date.fromisoformat(str(d)).isoformat() for d in payload.get("blocked_dates") or []})
+    modes = [m for m in (payload.get("modes") or ["IN_PERSON"]) if m in MODES] or ["IN_PERSON"]
+    return {"weekly": weekly, "slot_minutes": slot, "capacity": capacity, "lead_hours": lead, "blocked_dates": blocked, "modes": modes}
+
+
+def load_schedule(db: Session, facility_id: int) -> Optional[Dict[str, Any]]:
+    row = db.query(FacilityVisitSchedule).filter(FacilityVisitSchedule.facility_id == facility_id).one_or_none()
+    return json.loads(row.schedule_json) if row else None
+
+
+def save_schedule(db: Session, facility_id: int, user_id: int, payload: Dict[str, Any]) -> Dict[str, Any]:
+    data = validate_schedule(payload)
+    row = db.query(FacilityVisitSchedule).filter(FacilityVisitSchedule.facility_id == facility_id).one_or_none()
+    if row is None:
+        row = FacilityVisitSchedule(facility_id=facility_id)
+        db.add(row)
+    row.schedule_json = json.dumps(data, ensure_ascii=False)
+    db.add(
+        FacilityAuditLog(
+            facility_id=facility_id, user_id=user_id, field_name="visit_schedule", old_value=None, new_value="SAVED",
+            user_role=(db.query(FacilityUser.role).filter(FacilityUser.id == user_id).scalar() or "UNKNOWN"),
+        )
+    )
+    db.commit()
+    return data
+
+
+def _booked(db: Session, facility_id: int) -> Dict[Tuple[str, str], int]:
+    counts: Dict[Tuple[str, str], int] = {}
+    for row in db.query(FacilityVisit).filter(FacilityVisit.facility_id == facility_id, FacilityVisit.status == "CONFIRMED"):
+        confirmed = json.loads(row.confirmed_json or "{}")
+        key = (confirmed.get("date"), confirmed.get("time"))
+        counts[key] = counts.get(key, 0) + 1
+    return counts
+
+
+def open_slots(db: Session, facility_id: int, *, now: Optional[datetime] = None) -> Dict[str, Any]:
+    """The facility's calendar for the next BOOKING_WINDOW_DAYS days: every slot within its
+    published hours, minus closed dates, past/too-soon times and full slots."""
+    schedule = load_schedule(db, facility_id)
+    if not schedule or not schedule.get("weekly"):
+        return {"configured": False, "days": []}
+    now = (now or datetime.now(TZ)).astimezone(TZ)
+    earliest = now + timedelta(hours=int(schedule["lead_hours"]))
+    booked = _booked(db, facility_id)
+    by_weekday = {_PY_WEEKDAY[d]: ranges for d, ranges in schedule["weekly"].items()}
+    blocked = set(schedule.get("blocked_dates") or [])
+    days = []
+    for offset in range(BOOKING_WINDOW_DAYS + 1):
+        day = now.date() + timedelta(days=offset)
+        iso = day.isoformat()
+        slots = []
+        if iso not in blocked:
+            for start, end in by_weekday.get(day.weekday(), []):
+                minute = _minutes(start)
+                while minute + schedule["slot_minutes"] <= _minutes(end):
+                    hhmm = f"{minute // 60:02d}:{minute % 60:02d}"
+                    at = datetime.fromisoformat(f"{iso}T{hhmm}:00").replace(tzinfo=TZ)
+                    left = schedule["capacity"] - booked.get((iso, hhmm), 0)
+                    if at >= earliest and left > 0:
+                        slots.append({"time": hhmm, "left": left})
+                    minute += schedule["slot_minutes"]
+        days.append({"date": iso, "label": _he_date(iso), "slots": slots})
+    return {
+        "configured": True,
+        "slot_minutes": schedule["slot_minutes"],
+        "modes": [{"value": m, "label": MODES[m]} for m in schedule.get("modes") or ["IN_PERSON"]],
+        "days": days,
+    }
+
+
+def family_slots(db: Session, token: str) -> Dict[str, Any]:
+    inquiry = _by_token(db, token)
+    return open_slots(db, inquiry.facility_id)
+
+
+def family_book_visit(db: Session, token: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Book one open slot from the facility's calendar; confirmed at once."""
+    inquiry = _by_token(db, token)
+    visit = _visit_for(db, inquiry)
+    if visit is not None and visit.status == "CONFIRMED":
+        raise ValueError("כבר נקבע ביקור. כדי לשנות, בטלו אותו קודם.")
+    day, hhmm = str(payload.get("date") or ""), str(payload.get("time") or "")
+    calendar = open_slots(db, inquiry.facility_id)
+    if not calendar["configured"]:
+        raise ValueError("המוסד עוד לא פרסם שעות ביקור. אפשר להציע מועדים.")
+    if not any(d["date"] == day and any(s["time"] == hhmm for s in d["slots"]) for d in calendar["days"]):
+        raise ValueError("המועד הזה כבר לא פנוי. בחרו מועד אחר.")
+    mode = str(payload.get("mode") or "IN_PERSON").upper()
+    if mode not in {m["value"] for m in calendar["modes"]}:
+        raise ValueError("סוג ביקור לא זמין במוסד הזה.")
+    try:
+        visitors = int(payload.get("visitors") or 1)
+    except (TypeError, ValueError) as error:
+        raise ValueError("מספר מבקרים לא תקין.") from error
+    if not 1 <= visitors <= 8:
+        raise ValueError("מספר המבקרים צריך להיות בין 1 ל-8.")
+    request = {"slots": [], "mode": mode, "visitors": visitors, "note": _text(payload.get("note"), "הערה"), "booked_from_calendar": True}
+    if visit is None:
+        visit = FacilityVisit(inquiry_id=inquiry.id, facility_id=inquiry.facility_id, history_json="[]")
+        db.add(visit)
+    visit.status = "CONFIRMED"
+    visit.request_json = json.dumps(request, ensure_ascii=False)
+    visit.confirmed_json = json.dumps({"date": day, "time": hhmm, "note": None}, ensure_ascii=False)
+    _log(visit, "FAMILY", "BOOKED")
+    db.commit()
+    return visit_view(visit)
+
+
+def synthetic_schedule(canonical_id: str, religious: Optional[str]) -> Dict[str, Any]:
+    """Deterministic visiting hours for synthetic test facilities only."""
+    n = int(re.sub(r"\D", "", canonical_id) or 0)
+    observant = str(religious or "").upper() in {"RELIGIOUS", "HAREDI"}
+    morning, afternoon = ["10:00", "12:00"], ["16:00", "18:30"]
+    weekly = {d: [morning, afternoon] if n % 2 else [afternoon] for d in ["SUN", "MON", "TUE", "WED", "THU"]}
+    weekly["FRI"] = [["09:30", "12:00"]]
+    if not observant and n % 3 == 0:
+        weekly["SAT"] = [["11:00", "13:00"]]
+    return validate_schedule({"weekly": weekly, "slot_minutes": [30, 45, 60][n % 3], "capacity": 1 + n % 2, "lead_hours": 24,
+                              "modes": ["IN_PERSON", "VIDEO"] if n % 4 else ["IN_PERSON"]})

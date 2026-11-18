@@ -218,3 +218,14 @@ export const requestVisit = (token: string, body: { slots: VisitSlot[]; mode: st
 export const answerVisit = (token: string, action: "ACCEPT" | "CANCEL") =>
   sendJson<VisitView>(`/api/il/inquiries/${encodeURIComponent(token)}/visit/answer`, { action });
 export const visitCalendarHref = (token: string) => `/api/backend/api/il/inquiries/${encodeURIComponent(token)}/visit.ics`;
+
+export type VisitCalendarDay = { date: string; label: string; slots: { time: string; left: number }[] };
+export type VisitCalendar = {
+  configured: boolean;
+  slot_minutes?: number;
+  modes?: { value: "IN_PERSON" | "VIDEO"; label: string }[];
+  days: VisitCalendarDay[];
+};
+export const fetchVisitSlots = (token: string) => getJson<VisitCalendar>(`/api/il/inquiries/${encodeURIComponent(token)}/visit/slots`);
+export const bookVisit = (token: string, body: { date: string; time: string; mode: string; visitors: number; note?: string }) =>
+  sendJson<VisitView>(`/api/il/inquiries/${encodeURIComponent(token)}/visit/book`, body);

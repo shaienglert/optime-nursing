@@ -1,8 +1,18 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-import { answerVisit, requestVisit, visitCalendarHref, type VisitSlot, type VisitView } from "@/lib/israel-facility";
+import { VisitCalendarGrid } from "@/components/il/visit-calendar";
+import {
+  answerVisit,
+  bookVisit,
+  fetchVisitSlots,
+  requestVisit,
+  visitCalendarHref,
+  type VisitCalendar,
+  type VisitSlot,
+  type VisitView,
+} from "@/lib/israel-facility";
 
 const PARTS: [VisitSlot["part"], string][] = [
   ["MORNING", "בוקר"],
@@ -26,7 +36,25 @@ export function VisitPlanner({ token, initial }: { token: string; initial: Visit
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [calendar, setCalendar] = useState<VisitCalendar | null>(null);
+  const [pick, setPick] = useState<{ date: string | null; time: string | null }>({ date: null, time: null });
   const min = useMemo(() => israelDate(1), []);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        const loaded = await fetchVisitSlots(token);
+        if (!cancelled) setCalendar(loaded);
+      } catch {
+        if (!cancelled) setCalendar({ configured: false, days: [] });
+      }
+    }
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, [token, visit?.status]);
   const max = useMemo(() => israelDate(60), []);
 
   async function run(action: () => Promise<VisitView>) {
@@ -41,7 +69,10 @@ export function VisitPlanner({ token, initial }: { token: string; initial: Visit
     }
   }
 
-  const canPropose = !visit || visit.status === "CANCELLED" || visit.status === "REQUESTED" || visit.status === "FACILITY_PROPOSED";
+  const open = !visit || visit.status !== "CONFIRMED";
+  const useCalendar = Boolean(calendar?.configured);
+  const canPropose = calendar !== null && !useCalendar && (!visit || visit.status === "CANCELLED" || visit.status === "REQUESTED" || visit.status === "FACILITY_PROPOSED");
+  const openDays = calendar?.days.filter((d) => d.slots.length).length ?? 0;
   const chosen = slots.filter((s) => s.date);
 
   return (
@@ -84,9 +115,60 @@ export function VisitPlanner({ token, initial }: { token: string; initial: Visit
             </button>
           ) : null}
         </div>
-      ) : (
-        <p className="mt-1 text-sm">הציעו עד שלושה מועדים שנוחים לכם. המוסד יבחר אחד ויקבע שעה מדויקת, או יציע מועד אחר.</p>
-      )}
+      ) : useCalendar ? (
+        <p className="mt-1 text-sm">בחרו יום ושעה מתוך שעות הביקור של המוסד. הביקור נקבע מיד, ותוכלו להוסיף אותו ליומן.</p>
+      ) : calendar ? (
+        <p className="mt-1 text-sm">המוסד עוד לא פרסם שעות ביקור. הציעו עד שלושה מועדים שנוחים לכם, והמוסד יבחר אחד ויקבע שעה, או יציע מועד אחר.</p>
+      ) : null}
+
+      {useCalendar && calendar && open ? (
+        <div className="mt-4">
+          {openDays ? (
+            <VisitCalendarGrid calendar={calendar} selectedDate={pick.date} selectedTime={pick.time} onPick={(date, time) => setPick({ date, time })} />
+          ) : (
+            <p className="text-sm">אין כרגע מועדים פנויים ב־30 הימים הקרובים. אפשר לכתוב למוסד בהתכתבות למעלה.</p>
+          )}
+          <div className="mt-4 flex flex-wrap gap-4">
+            {calendar.modes && calendar.modes.length > 1 ? (
+              <fieldset>
+                <legend className="text-sm font-medium">סוג הביקור</legend>
+                <div className="mt-1 flex gap-1">
+                  {calendar.modes.map((m) => (
+                    <button key={m.value} type="button" aria-pressed={mode === m.value} onClick={() => setMode(m.value)} className={`rounded-full border px-3 py-1 text-sm ${mode === m.value ? "bg-black text-white" : ""}`}>
+                      {m.label}
+                    </button>
+                  ))}
+                </div>
+              </fieldset>
+            ) : null}
+            <label className="text-sm font-medium">
+              כמה תגיעו
+              <input type="number" min={1} max={8} value={visitors} onChange={(e) => setVisitors(Number(e.target.value) || 1)} className="ms-2 w-16 rounded-xl border p-1" />
+            </label>
+          </div>
+          <label className="mt-3 block text-sm font-medium" htmlFor="book-note">הערה למוסד (לא חובה)</label>
+          <textarea id="book-note" maxLength={1000} value={note} onChange={(e) => setNote(e.target.value)} className="mt-1 min-h-16 w-full rounded-xl border p-2" />
+          {error ? <p role="alert" className="mt-2 text-sm">{error}</p> : null}
+          <button
+            type="button"
+            disabled={busy || !pick.date || !pick.time}
+            onClick={() =>
+              void run(async () => {
+                try {
+                  return await bookVisit(token, { date: pick.date!, time: pick.time!, mode, visitors, note: note || undefined });
+                } catch (e) {
+                  setCalendar(await fetchVisitSlots(token));
+                  setPick({ date: null, time: null });
+                  throw e;
+                }
+              })
+            }
+            className="mt-3 rounded-xl bg-black px-4 py-2 text-white disabled:opacity-50"
+          >
+            {busy ? "קובע…" : pick.date && pick.time ? `קביעת ביקור, ${pick.time}` : "בחרו יום ושעה"}
+          </button>
+        </div>
+      ) : null}
 
       {canPropose ? (
         <div className="mt-4">

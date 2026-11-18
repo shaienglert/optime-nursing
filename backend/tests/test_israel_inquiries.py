@@ -19,6 +19,7 @@ from app.models.facility import (
     FacilityPortalSession,
     FacilityUser,
     FacilityVisit,
+    FacilityVisitSchedule,
 )
 
 PREFIX = "TEST-INQ-"
@@ -55,7 +56,7 @@ class InquiryTests(unittest.TestCase):
     def _clean(self) -> None:
         ids = [f.id for f in self.db.query(Facility).filter(Facility.cms_id.like(PREFIX + "%"))]
         if ids:
-            for model in (FacilityVisit, FacilityFeedback, FacilityInquiry, FacilityPortalSession, FacilityPortalInvite, FacilityAuditLog, FacilityUser):
+            for model in (FacilityVisitSchedule, FacilityVisit, FacilityFeedback, FacilityInquiry, FacilityPortalSession, FacilityPortalInvite, FacilityAuditLog, FacilityUser):
                 self.db.query(model).filter(model.facility_id.in_(ids)).delete(synchronize_session=False)
             self.db.query(Facility).filter(Facility.id.in_(ids)).delete(synchronize_session=False)
         self.db.commit()
@@ -251,3 +252,54 @@ class VisitTests(InquiryTests):
             headers=other,
         )
         self.assertEqual(response.status_code, 404)
+
+
+class VisitCalendarTests(VisitTests):
+    """The facility publishes visiting hours; families book an open slot directly."""
+
+    SCHEDULE = {
+        "weekly": {d: [["10:00", "12:00"]] for d in ("SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT")},
+        "slot_minutes": 60,
+        "capacity": 1,
+        "lead_hours": 0,
+        "modes": ["IN_PERSON"],
+    }
+
+    def _publish(self, **overrides):
+        return self.client.put(f"/provider/facilities/{self.a.id}/visit-schedule", json={**self.SCHEDULE, **overrides}, headers=self._session(self.a))
+
+    def test_schedule_is_validated_and_needs_a_session(self):
+        self.assertEqual(self.client.put(f"/provider/facilities/{self.a.id}/visit-schedule", json=self.SCHEDULE).status_code, 401)
+        self.assertEqual(self._publish(weekly={"SUN": [["12:00", "10:00"]]}).status_code, 400)
+        self.assertEqual(self._publish(weekly={"SUN": [["10:00", "12:00"], ["11:00", "13:00"]]}).status_code, 400)
+        self.assertEqual(self._publish(slot_minutes=7).status_code, 400)
+        self.assertEqual(self._publish().status_code, 200)
+
+    def test_calendar_respects_hours_closed_dates_and_lead_time(self):
+        token = self._inquiry()
+        self.assertFalse(self.client.get(f"/api/il/inquiries/{token}/visit/slots").json()["configured"])
+        self._publish(blocked_dates=[self._day(3)], lead_hours=48)
+        calendar = self.client.get(f"/api/il/inquiries/{token}/visit/slots").json()
+        by_day = {d["date"]: [s["time"] for s in d["slots"]] for d in calendar["days"]}
+        self.assertEqual(by_day[self._day(3)], [])  # closed date
+        self.assertEqual(by_day[self._day(5)], ["10:00", "11:00"])  # two one-hour slots
+        self.assertEqual(by_day[self._day(0)], [])  # inside the 48h lead time
+        self.assertEqual(len(calendar["days"]), 31)
+
+    def test_booking_confirms_at_once_and_fills_the_slot(self):
+        self._publish()
+        first, second = self._inquiry(), self._inquiry()
+        booked = self.client.post(f"/api/il/inquiries/{first}/visit/book", json={"date": self._day(4), "time": "10:00", "visitors": 2})
+        self.assertEqual(booked.status_code, 200, booked.text)
+        self.assertEqual(booked.json()["status"], "CONFIRMED")
+        self.assertEqual(booked.json()["confirmed"]["time"], "10:00")
+        # The slot held one family; it is gone for the next one.
+        times = {d["date"]: [s["time"] for s in d["slots"]] for d in self.client.get(f"/api/il/inquiries/{second}/visit/slots").json()["days"]}
+        self.assertEqual(times[self._day(4)], ["11:00"])
+        taken = self.client.post(f"/api/il/inquiries/{second}/visit/book", json={"date": self._day(4), "time": "10:00"})
+        self.assertEqual(taken.status_code, 409)
+        self.assertEqual(self.client.post(f"/api/il/inquiries/{second}/visit/book", json={"date": self._day(4), "time": "10:30"}).status_code, 409)  # not a slot
+        self.assertEqual(self.client.post(f"/api/il/inquiries/{second}/visit/book", json={"date": self._day(4), "time": "11:00", "mode": "VIDEO"}).status_code, 400)
+        # Cancelling frees the slot again.
+        self.client.post(f"/api/il/inquiries/{first}/visit/answer", json={"action": "CANCEL"})
+        self.assertEqual(self.client.post(f"/api/il/inquiries/{second}/visit/book", json={"date": self._day(4), "time": "10:00"}).status_code, 200)

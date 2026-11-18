@@ -323,3 +323,21 @@ export async function respondToInquiry(
     body: JSON.stringify(response),
   });
 }
+
+export type VisitSchedule = {
+  weekly: Partial<Record<"SUN" | "MON" | "TUE" | "WED" | "THU" | "FRI" | "SAT", [string, string][]>>;
+  slot_minutes: number;
+  capacity: number;
+  lead_hours: number;
+  blocked_dates: string[];
+  modes: ("IN_PERSON" | "VIDEO")[];
+};
+export type VisitScheduleResponse = { schedule: VisitSchedule | null; calendar: import("./israel-facility").VisitCalendar };
+
+export async function fetchVisitSchedule(facilityId: number): Promise<VisitScheduleResponse> {
+  return request(`/provider/facilities/${facilityId}/visit-schedule`);
+}
+
+export async function saveVisitSchedule(facilityId: number, schedule: VisitSchedule): Promise<VisitScheduleResponse> {
+  return request(`/provider/facilities/${facilityId}/visit-schedule`, { method: "PUT", body: JSON.stringify(schedule) });
+}

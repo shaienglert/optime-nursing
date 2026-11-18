@@ -180,3 +180,10 @@ The existing `LICENSE_CURRENTLY_VALID` MUST reads license status and expiry; for
 - Inside the inquiry thread. The family proposes 1-3 dates (tomorrow to +60 days) with a part of day, in person or video, number of visitors. The facility (portal session) confirms one of those dates with an exact time, proposes another date/time, or cancels. The family accepts a facility proposal or cancels; a confirmed visit changes only after cancelling. Calendar file (.ics, Israel time) for a confirmed visit.
 - Facility actions are audit-logged; another facility gets 404. Contact details stay facility-only.
 - Not built: notifications (email/SMS) - both sides see changes only when they open their page.
+
+## 2026-11-18: Facility visiting calendar (owner: "תיאום ביקור צריך להפתח קלנדר של בית האבות")
+
+- The facility publishes weekly visiting hours in the portal: up to 3 time ranges per weekday, visit length (30/45/60/90 min), families per slot (1-10), minimum notice (0-168 h), closed dates, in person / video. Saving is audit-logged.
+- The family's inquiry page opens a month calendar of the next 30 days with only open slots (minimum notice, closed dates and capacity applied, Israel time). Picking a day and time books the visit at once (CONFIRMED) and offers the .ics file. A slot that filled meanwhile returns 409 and the calendar reloads.
+- A facility with no published hours falls back to the propose-dates flow above, and the family is told why.
+- Synthetic facilities get synthetic hours (Sun-Thu 10-12 and 16-18:30, Friday morning, Saturday only for some non-observant ones). Real facilities start with none.

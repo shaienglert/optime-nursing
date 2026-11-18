@@ -119,5 +119,16 @@ def seed_synthetic_registrations(db: Session) -> int:
             )
         )
         created += 1
+    # Synthetic visiting hours so the visit calendar can be exercised (left alone once set).
+    from app.models.facility import FacilityVisitSchedule
+    from app.services.israel_visits import synthetic_schedule
+
+    scheduled = {row.facility_id for row in db.query(FacilityVisitSchedule.facility_id)}
+    for canonical_id, payload in registrations.items():
+        facility_id = ids.get(canonical_id)
+        if facility_id is None or facility_id in scheduled:
+            continue
+        religious = (payload.get("questionnaire") or {}).get("religious_character")
+        db.add(FacilityVisitSchedule(facility_id=facility_id, schedule_json=json.dumps(synthetic_schedule(canonical_id, religious), ensure_ascii=False)))
     db.commit()
     return created
