@@ -68,7 +68,10 @@ def test_synthetic_registrations_seed_only_in_the_synthetic_market():
             assert created == len(REGISTRATIONS)
             assert seed_synthetic_registrations(db) == 0  # idempotent
     finally:
+        from app.models.facility import FacilityVisitSchedule
+
         ids = [f.id for f in db.query(Facility).filter(Facility.cms_id.like("IL-SYN-%"))]
+        db.query(FacilityVisitSchedule).filter(FacilityVisitSchedule.facility_id.in_(ids)).delete(synchronize_session=False)
         db.query(FacilityMarketRegistration).filter(FacilityMarketRegistration.facility_id.in_(ids)).delete(synchronize_session=False)
         db.query(Facility).filter(Facility.id.in_(ids)).delete(synchronize_session=False)
         db.commit()
