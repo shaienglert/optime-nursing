@@ -71,6 +71,8 @@ export default function IsraelFacilityHome({ params }: { params: Promise<{ id: s
         {page.canonical_id.startsWith("IL-SYN-") ? (
           <div className="mt-3">
             <PilotPhoto facilityId={page.canonical_id} gallery locale="he" />
+            <h3 className="mb-3 text-lg font-semibold">חדרים ודירות</h3>
+            <PilotPhoto facilityId={page.canonical_id} gallery locale="he" rooms />
           </div>
         ) : page.photos.length ? (
           <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">

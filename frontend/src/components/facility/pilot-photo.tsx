@@ -5,6 +5,8 @@ import { useSyncExternalStore } from "react";
 
 const PHOTOS = Array.from({ length: 5 }, (_, index) => `/pilot/photos/album-${index + 1}.webp`);
 const ISRAEL_PHOTOS = Array.from({ length: 7 }, (_, index) => `/pilot/israel/photo-${index + 1}.webp`);
+const ISRAEL_ROOM_PHOTOS = Array.from({ length: 9 }, (_, index) => `/pilot/israel/room-${index + 1}.webp`);
+const ISRAEL_OUTDOOR_PHOTOS = Array.from({ length: 3 }, (_, index) => `/pilot/israel/outdoor-${index + 1}.webp`);
 const assignedPhotos = new Map<string, number>();
 const STORAGE_KEY = "oomnik.pilot-photo-assignments.v1";
 const subscribe = () => () => {};
@@ -26,18 +28,22 @@ function assignedPhoto(facilityId: string): number {
   return index;
 }
 
-export function PilotPhoto({ facilityId, gallery = false, locale = "en" }: { facilityId: string; gallery?: boolean; locale?: "en" | "he" }) {
+export function PilotPhoto({ facilityId, gallery = false, locale = "en", rooms = false }: { facilityId: string; gallery?: boolean; locale?: "en" | "he"; rooms?: boolean }) {
   const isIsrael = locale === "he";
-  const album = isIsrael ? ISRAEL_PHOTOS : PHOTOS;
+  const album = isIsrael ? (rooms ? ISRAEL_ROOM_PHOTOS : ISRAEL_PHOTOS) : PHOTOS;
   const assignedIndex = useSyncExternalStore(
     subscribe,
     () => isIsrael ? null : assignedPhoto(facilityId),
     serverSnapshot,
   );
   // Israeli pilot IDs end in a sequence number shared by results and facility pages.
-  const index = isIsrael ? Number(facilityId.match(/\d+$/)?.[0] ?? 0) % album.length : assignedIndex;
+  const sequence = Number(facilityId.match(/\d+$/)?.[0] ?? 0);
+  const index = isIsrael ? sequence % album.length : assignedIndex;
   if (index === null) return null;
   const photos = gallery ? [0, 1, 2].map(offset => album[(index + offset) % album.length]) : [album[index]];
+  if (gallery && isIsrael && !rooms) {
+    photos[2] = ISRAEL_OUTDOOR_PHOTOS[sequence % ISRAEL_OUTDOOR_PHOTOS.length];
+  }
   const caption = locale === "he"
     ? "תמונת המחשה לפיילוט"
     : "Pilot illustration: randomly selected from the owner-provided photo album. These are not photographs of this community or its rooms.";
