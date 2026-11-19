@@ -184,6 +184,7 @@ export type IsraelResultCard = {
   facility_type: string | null;
   city: string | null;
   distance_km: number | null;
+  photo?: { url: string; caption: string | null } | null;
   musts_met: IsraelKeyLabel[];
   preferences_met: IsraelKeyLabel[];
   preferences_not_met: IsraelKeyLabel[];

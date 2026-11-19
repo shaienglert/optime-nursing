@@ -25,16 +25,19 @@ function assignedPhoto(facilityId: string): number {
   return index;
 }
 
-export function PilotPhoto({ facilityId, gallery = false }: { facilityId: string; gallery?: boolean }) {
+export function PilotPhoto({ facilityId, gallery = false, locale = "en" }: { facilityId: string; gallery?: boolean; locale?: "en" | "he" }) {
   const index = useSyncExternalStore(subscribe, () => assignedPhoto(facilityId), serverSnapshot);
   if (index === null) return null;
   const photos = gallery ? [0, 1, 2].map(offset => PHOTOS[(index + offset) % PHOTOS.length]) : [PHOTOS[index]];
+  const caption = locale === "he"
+    ? "תמונת המחשה לפיילוט"
+    : "Pilot illustration: randomly selected from the owner-provided photo album. These are not photographs of this community or its rooms.";
   return (
     <figure data-testid="pilot-photo" className="mb-6 overflow-hidden rounded-xl border border-line bg-sand">
       <div className={gallery ? "grid gap-2 sm:grid-cols-3" : ""}>
-        {photos.map((src, position) => <Image key={src} src={src} alt="Illustrative city and landscape photograph for the pilot — not this community" width={1400} height={1000} sizes={gallery ? "(max-width: 640px) 100vw, 33vw" : "(max-width: 768px) 100vw, 850px"} className="h-64 w-full object-cover" loading={position === 0 ? "eager" : "lazy"} />)}
+        {photos.map((src, position) => <Image key={src} src={src} alt={locale === "he" ? "" : "Illustrative city and landscape photograph for the pilot — not this community"} width={1400} height={1000} sizes={gallery ? "(max-width: 640px) 100vw, 33vw" : "(max-width: 768px) 100vw, 850px"} className="h-64 w-full object-cover" loading={position === 0 && locale === "en" ? "eager" : "lazy"} />)}
       </div>
-      <figcaption className="px-4 py-3 text-base leading-6 text-muted">Pilot illustration: randomly selected from the owner-provided photo album. These are not photographs of this community or its rooms.</figcaption>
+      <figcaption className="px-4 py-3 text-base leading-6 text-muted">{caption}</figcaption>
     </figure>
   );
 }

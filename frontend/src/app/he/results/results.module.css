@@ -133,6 +133,17 @@
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
+.photo {
+  display: block;
+  width: 100%;
+  margin-top: 16px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+img.photo {
+  max-height: 320px;
+}
 .cardHead {
   display: flex;
   gap: 14px;
