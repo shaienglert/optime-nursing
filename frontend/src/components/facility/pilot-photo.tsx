@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useSyncExternalStore } from "react";
 
 const PHOTOS = Array.from({ length: 5 }, (_, index) => `/pilot/photos/album-${index + 1}.webp`);
+const ISRAEL_PHOTOS = Array.from({ length: 7 }, (_, index) => `/pilot/israel/photo-${index + 1}.webp`);
 const assignedPhotos = new Map<string, number>();
 const STORAGE_KEY = "oomnik.pilot-photo-assignments.v1";
 const subscribe = () => () => {};
@@ -26,9 +27,17 @@ function assignedPhoto(facilityId: string): number {
 }
 
 export function PilotPhoto({ facilityId, gallery = false, locale = "en" }: { facilityId: string; gallery?: boolean; locale?: "en" | "he" }) {
-  const index = useSyncExternalStore(subscribe, () => assignedPhoto(facilityId), serverSnapshot);
+  const isIsrael = locale === "he";
+  const album = isIsrael ? ISRAEL_PHOTOS : PHOTOS;
+  const assignedIndex = useSyncExternalStore(
+    subscribe,
+    () => isIsrael ? null : assignedPhoto(facilityId),
+    serverSnapshot,
+  );
+  // Israeli pilot IDs end in a sequence number shared by results and facility pages.
+  const index = isIsrael ? Number(facilityId.match(/\d+$/)?.[0] ?? 0) % album.length : assignedIndex;
   if (index === null) return null;
-  const photos = gallery ? [0, 1, 2].map(offset => PHOTOS[(index + offset) % PHOTOS.length]) : [PHOTOS[index]];
+  const photos = gallery ? [0, 1, 2].map(offset => album[(index + offset) % album.length]) : [album[index]];
   const caption = locale === "he"
     ? "תמונת המחשה לפיילוט"
     : "Pilot illustration: randomly selected from the owner-provided photo album. These are not photographs of this community or its rooms.";
