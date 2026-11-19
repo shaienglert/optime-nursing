@@ -169,7 +169,11 @@ def notify(
         facility = db.query(Facility).filter(Facility.id == inquiry.facility_id).one()
         if audience == "FACILITY":
             recipients = facility_addresses(db, facility)
-            if _is_synthetic(facility):
+            from app.services.israel_demo_facility import is_demo_facility
+
+            if _is_synthetic(facility) and is_demo_facility(facility):
+                skipped = None if recipients else "SKIPPED_NO_ADDRESS"
+            elif _is_synthetic(facility):
                 redirect = valid_email(os.getenv("OOMNIK_NOTIFY_SYNTHETIC_TO"))
                 recipients = [redirect] if redirect else []
                 skipped = None if redirect else "SKIPPED_SYNTHETIC"

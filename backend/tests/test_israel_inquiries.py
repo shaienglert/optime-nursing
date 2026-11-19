@@ -429,3 +429,35 @@ class InquiryRateLimitTests(InquiryTests):
         self.assertEqual(self.client.post(f"/api/il/facilities/{self.a.cms_id}/inquiries", json=REQUEST, headers=headers).status_code, 200)
         other = self.client.post(f"/api/il/facilities/{self.a.cms_id}/inquiries", json=REQUEST, headers={"x-oomnik-client-ip": "203.0.113.8"})
         self.assertEqual(other.status_code, 200)
+
+
+class DemoFacilityTests(FeedbackTests):
+    """Owner 2026-11-19: one synthetic facility gets the owner's address and a portal link."""
+
+    def test_demo_facility_gets_owner_address_link_once_and_its_own_notices(self):
+        from types import SimpleNamespace
+
+        from app.services import israel_notifications
+        from app.services.israel_demo_facility import ensure_demo_facility
+
+        self.a.cms_id = "IL-SYN-TEST-DEMO"
+        self.db.commit()
+        sent, notices = [], []
+        israel_notifications.set_sender(lambda **m: (notices.append(m), (True, "OK"))[1])
+        env = {"OOMNIK_DEMO_FACILITY": "IL-SYN-TEST-DEMO=owner@example.com", "OOMNIK_NOTIFY_SYNC": "1", "OOMNIK_NOTIFY_SYNTHETIC_TO": "tester@example.com"}
+        fake = lambda **m: (sent.append(m), SimpleNamespace(ok=True, status="SENT", message=""))[1]
+        try:
+            with mock.patch.dict(os.environ, env), mock.patch("app.services.email_service.send_email_detailed", fake):
+                self.assertEqual(ensure_demo_facility(self.db), "LINK_SENT")
+                self.assertEqual(ensure_demo_facility(self.db), "LINK_ALREADY_SENT")  # restarts don't resend
+                self.assertEqual(len(sent), 1)
+                self.assertEqual(sent[0]["recipients"], ["owner@example.com"])
+                self.assertIn("/he/portal/", sent[0]["body_text"])
+                self._inquiry("IL-SYN-TEST-DEMO")
+                self.assertEqual(notices[0]["recipients"], ["owner@example.com"])  # not the synthetic redirect
+            with mock.patch.dict(os.environ, {"OOMNIK_DEMO_FACILITY": "TEST-REAL=owner@example.com"}):
+                self.assertEqual(ensure_demo_facility(self.db), "NOT_CONFIGURED")  # never a real facility
+        finally:
+            israel_notifications.set_sender(None)
+            self.a.cms_id = PREFIX + "A"
+            self.db.commit()

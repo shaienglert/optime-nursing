@@ -1797,6 +1797,13 @@ def startup() -> None:
                 from app.services.israel_facility_import import seed_synthetic_registrations
 
                 logger.info("israel_synthetic_registrations_seeded %s", seed_synthetic_registrations(db))
+                from app.services.israel_demo_facility import ensure_demo_facility
+
+                try:  # the demo facility must never block startup
+                    logger.info("israel_demo_facility %s", ensure_demo_facility(db))
+                except Exception as error:
+                    db.rollback()
+                    logger.warning("israel_demo_facility_failed %s", error)
         else:
             purge_summary = purge_non_nevada_facilities(db)
             logger.info("nevada_facility_scope_enforced %s", purge_summary)
