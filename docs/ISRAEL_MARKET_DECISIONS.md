@@ -201,3 +201,7 @@ The existing `LICENSE_CURRENTLY_VALID` MUST reads license status and expiry; for
 
 - oomnik-il-api now runs on Render Postgres `oomnik-il-db` (Frankfurt, basic 256 MB, 5 GB, owner-approved $7.50/month). Verified live: an inquiry survives a service restart; synthetic registrations are not re-seeded on restart.
 - Public family actions are rate limited per family address (the site proxy forwards it as `x-oomnik-client-ip`): 5 new inquiries per hour and 15 per day; 3 per day to the same facility; 30 per hour per facility from everyone; 20 writes per hour per private link. Only accepted inquiries count, so form mistakes never lock a family out. Refusals return 429 with a Hebrew message. Counts are in memory (single instance, reset on restart). `OOMNIK_RATE_LIMIT_DISABLED=1` turns it off.
+
+## 2026-11-19: Personal links bypass the site password
+
+The site gate (Basic auth) and the facility portal (Bearer session) share the Authorization header, so the portal's calls replaced the Basic credentials and the password prompt looped forever. Personal links now skip the gate: `/he/portal/{token}`, `/he/inquiry/{token}`, `/provider/{id}/israel`, their token-in-path API calls, and `/api/backend/provider/*` calls carrying a Bearer session. They carry their own secret; everything else (landing, intake, results, facility pages, search API) stays behind the password.

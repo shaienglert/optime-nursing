@@ -50,9 +50,23 @@ function enforceAdminAuth(request: NextRequest) {
  * Optional whole-site lock (used while a deployment shows synthetic data).
  * Active only when SITE_GATE_PASSWORD is set; the username is SITE_GATE_USERNAME or "oomnik".
  */
+// Personal links carry their own secret (the token in the address, or the facility's
+// session). They must open without the site password: a facility or family that got the
+// link by email has no site password, and the portal's own "Authorization: Bearer" header
+// replaces the browser's Basic credentials, which made the password prompt loop forever.
+const PERSONAL_LINK_PAGES = /^\/(he\/portal|he\/inquiry)\/[^/]+\/?$|^\/provider\/\d+\/israel\/?$/;
+const PERSONAL_LINK_API = /^\/api\/backend\/(api\/il\/inquiries\/[^/]+(\/.*)?|provider\/portal\/redeem)$/;
+
+export function isPersonalLinkRequest(pathname: string, authorization: string | null): boolean {
+  if (PERSONAL_LINK_PAGES.test(pathname) || PERSONAL_LINK_API.test(pathname)) return true;
+  // Facility portal calls authenticate with the session on the backend.
+  return pathname.startsWith("/api/backend/provider/") && Boolean(authorization?.startsWith("Bearer "));
+}
+
 function siteGate(request: NextRequest): NextResponse | null {
   const expectedPassword = process.env.SITE_GATE_PASSWORD;
   if (!expectedPassword) return null;
+  if (isPersonalLinkRequest(request.nextUrl.pathname, request.headers.get("authorization"))) return null;
   const expectedUsername = process.env.SITE_GATE_USERNAME || "oomnik";
   const authorization = request.headers.get("authorization");
   if (authorization?.startsWith("Basic ")) {
