@@ -486,9 +486,11 @@ def evaluate_israel_nice(row: Dict[str, Any], nice: Dict[str, Any]) -> str:
 # sees one of four statuses; only "over budget" lowers the ranking.
 # ---------------------------------------------------------------------------
 
+COMPATIBLE_PRICE_ON_REQUEST = "מחיר למסלול המתאים בבירור"
+
 BUDGET_LABELS = {
     "IN_BUDGET": "בתקציב לפי המחיר ההתחלתי",
-    "NEAR": "מעל התקציב ב-{pct}% (בתוך סטייה של עד 10%)",
+    "NEAR": "{details} (בתוך סטייה של עד 10%)",
     "MAY_FIT": "עשוי להתאים לתקציב, בכפוף להצעה",
     "ON_REQUEST": "מחיר בבירור",
     "OVER_BUDGET": "המחיר ההתחלתי מעל התקציב",
@@ -536,22 +538,26 @@ def budget_status(row: Dict[str, Any], nice: Dict[str, Any]) -> tuple[str, str, 
 
     budget, cap, level = float(nice["value"]), nice.get("deposit_cap"), nice.get("level")
     at_level = [o for o in offers if o.get("level") in (None, level)]
-    fits = {id(o): _offer_fit(o, budget, cap) for o in offers}
+    if not at_level:
+        return UNKNOWN, COMPATIBLE_PRICE_ON_REQUEST, None
+    fits = {id(o): _offer_fit(o, budget, cap) for o in at_level}
     for offer in at_level:
         if fits[id(offer)] == "FITS":
             return MATCH, BUDGET_LABELS["IN_BUDGET"], offer
     near = [o for o in at_level if fits[id(o)] == "NEAR"]
     if near:
         best = min(near, key=lambda o: _over_ratio(o, budget, cap))
-        pct = max(1, round(_over_ratio(best, budget, cap) * 100))
-        return UNKNOWN, BUDGET_LABELS["NEAR"].format(pct=pct), best
+        excesses = (
+            ("התקציב החודשי", best.get("monthly_from_ils"), budget),
+            ("תקרת הפיקדון", best.get("deposit_from_ils"), cap),
+        )
+        details = " · ".join(
+            f"₪{amount - ceiling:,.0f} מעל {name} ({(amount - ceiling) / ceiling:.1%})"
+            for name, amount, ceiling in excesses
+            if amount is not None and ceiling and amount > ceiling
+        )
+        return UNKNOWN, BUDGET_LABELS["NEAR"].format(details=details), best
     for offer in at_level:
         if fits[id(offer)] == "PARTIAL":
             return UNKNOWN, BUDGET_LABELS["MAY_FIT"], offer
-    if not at_level:
-        # Prices exist only for other care levels: they say little about this family's.
-        cheapest = min(offers, key=lambda o: o.get("monthly_from_ils") or 10**9)
-        if fits[id(cheapest)] != "OVER":
-            return UNKNOWN, BUDGET_LABELS["MAY_FIT"], cheapest
-        return UNKNOWN, BUDGET_LABELS["ON_REQUEST"], None
     return MISMATCH, BUDGET_LABELS["OVER_BUDGET"], min(at_level, key=lambda o: o.get("monthly_from_ils") or 10**9)

@@ -237,10 +237,11 @@ def test_starting_price_at_the_family_level():
     assert fit["hard_gate"] == "PASS"  # over budget ranks lower, never hides
 
 
-def test_price_only_for_another_level_may_fit_subject_to_offer():
+def test_price_only_for_another_level_requires_price_inquiry():
     row = _priced(_offer("MONTHLY", "SHARED_2", "FRAIL", 9000))
-    fit, label, _ = _budget(row, monthlyBudgetIls=15000)  # family needs NURSING
-    assert label == "עשוי להתאים לתקציב, בכפוף להצעה" and "IL_BUDGET" in fit["nice_unknown"]
+    fit, label, offer = _budget(row, monthlyBudgetIls=15000)  # family needs NURSING
+    assert label == "מחיר למסלול המתאים בבירור" and offer is None
+    assert "IL_BUDGET" in fit["nice_unknown"]
 
 
 def test_cheapest_room_has_no_place_still_counts_price_but_availability_is_separate():
@@ -319,14 +320,14 @@ def test_bedridden_resident_requires_a_protection_plan():
 def test_up_to_ten_percent_over_budget_is_labelled_and_neutral():
     row = _priced(_offer("MONTHLY", "SHARED_2", "NURSING", 16000))
     fit, label, _ = _budget(row, monthlyBudgetIls=15000)  # 6.7% over
-    assert label == "מעל התקציב ב-7% (בתוך סטייה של עד 10%)"
+    assert label == "₪1,000 מעל התקציב החודשי (6.7%) (בתוך סטייה של עד 10%)"
     assert "IL_BUDGET" in fit["nice_unknown"] and "IL_BUDGET" not in fit["nice_mismatch"]
     _, label, _ = _budget(row, monthlyBudgetIls=14500)  # 10.3% over
     assert label == "המחיר ההתחלתי מעל התקציב"
 
     housing = _priced(_offer("DEPOSIT", "APT_2", "NURSING", 6000, 1_080_000))
     _, label, _ = _budget(housing, monthlyBudgetIls=8000, depositCapIls=1_000_000)  # deposit 8% over
-    assert label == "מעל התקציב ב-8% (בתוך סטייה של עד 10%)"
+    assert label == "₪80,000 מעל תקרת הפיקדון (8.0%) (בתוך סטייה של עד 10%)"
     _, label, _ = _budget(housing, monthlyBudgetIls=8000, depositCapIls=0)  # family wants no deposit
     assert label == "המחיר ההתחלתי מעל התקציב"
 
@@ -375,3 +376,28 @@ def test_complex_nursing_needs_a_complex_ward_and_never_asks_funding():
     # A nursing home that left the units question blank is unknown, not excluded.
     assert _fit(_facility(), complex_)["hard_gate"] == "PENDING_VERIFICATION"
     assert _fit(BASE, complex_)["hard_gate"] == "PENDING_VERIFICATION"
+
+
+def test_result_card_uses_the_assessed_offer_or_reports_missing_relevant_price():
+    from app.services.israel_results import _card
+
+    frail = _offer("MONTHLY", "SHARED_2", "FRAIL", 9000)
+    nursing = _offer("MONTHLY", "SHARED_2", "NURSING", 15750)
+    record = {"canonical_id": "IL-PRICE-TEST"}
+    registration = {"questionnaire": {"price_offers": [frail, nursing]}}
+
+    fit, _, _ = _budget(_priced(frail, nursing), monthlyBudgetIls=15000)
+    card = _card(record, fit, registration, 1, "NURSING")
+    assert card["prices"]["offers"][0]["text"] == card["budget"]["offer"]
+    assert card["prices"]["offers"][0]["monthly_from_ils"] == 15750
+    assert "₪750 מעל התקציב החודשי (5.0%)" in card["budget"]["label"]
+
+    card = _card(record, {}, registration, 1, "NURSING")
+    assert [offer["level"] for offer in card["prices"]["offers"]] == ["NURSING"]
+
+    registration["questionnaire"]["price_offers"] = [frail]
+    fit, _, _ = _budget(_priced(frail), monthlyBudgetIls=15000)
+    for case_fit in (fit, {}):
+        prices = _card(record, case_fit, registration, 1, "NURSING")["prices"]
+        assert prices["offers"] == []
+        assert prices["label"] == "מחיר למסלול המתאים בבירור"

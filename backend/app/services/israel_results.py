@@ -116,11 +116,23 @@ def missing_required(israel: Dict[str, Any]) -> List[str]:
     return missing
 
 
-def _card(record: Dict[str, Any], fit: Dict[str, Any], registration: Optional[Dict[str, Any]], rank: int) -> Dict[str, Any]:
+def _card(record: Dict[str, Any], fit: Dict[str, Any], registration: Optional[Dict[str, Any]], rank: int, level: str) -> Dict[str, Any]:
     from app.services.israel_facility_questionnaire import describe_offer, price_display
+    from app.services.israel_must_gates import COMPATIBLE_PRICE_ON_REQUEST
 
     notes = fit.get("israel_notes") or {}
     budget = notes.get("IL_BUDGET") or {}
+    prices = price_display(registration)
+    selected = budget.get("offer")
+    if budget:
+        # The headline and the budget assessment must describe the same offer.
+        prices["offers"] = [{**selected, "text": describe_offer(selected)}] if selected else []
+        prices["label"] = None if selected else budget.get("label")
+    elif prices["offers"]:
+        prices["offers"] = [offer for offer in prices["offers"] if offer.get("level") == level]
+        prices["label"] = None if prices["offers"] else COMPATIBLE_PRICE_ON_REQUEST
+    if not prices["offers"] and prices["status"] == "PUBLISHED":
+        prices["status"] = "ON_REQUEST"
     explained_nice = [k for k in fit.get("nice_match") or [] if k != "IL_PROXIMITY"]
     return {
         "rank": rank,
@@ -133,8 +145,8 @@ def _card(record: Dict[str, Any], fit: Dict[str, Any], registration: Optional[Di
         "preferences_met": [{"key": k, "label": label(k)} for k in explained_nice],
         "preferences_not_met": [{"key": k, "label": label(k)} for k in fit.get("nice_mismatch") or []],
         "unknown": [{"key": k, "label": label(k)} for k in fit.get("nice_unknown") or []],
-        "budget": {"label": budget.get("label"), "offer": describe_offer(budget["offer"]) if budget.get("offer") else None} if budget else None,
-        "prices": price_display(registration),
+        "budget": {"label": budget.get("label") if selected else None, "offer": describe_offer(selected) if selected else None} if budget else None,
+        "prices": prices,
         "source": {
             "basis": "FACILITY_SUPPLIED",
             "label": "המידע נמסר על ידי המוסד",
@@ -206,7 +218,11 @@ def build_israel_results(db: Session, questionnaire_state: Dict[str, Any], natur
     passing = sorted((item for item in evaluated if item[1]["hard_gate"] == "PASS"), key=lambda item: _rank_key(item[1]))
 
     shown = passing[:limit]
-    cards = [_card(record, fit, load_israel_registration(db, record["canonical_id"]), rank) for rank, (record, fit) in enumerate(shown, 1)]
+    level = str(israel.get("functionalLevel") or "").upper()
+    cards = [
+        _card(record, fit, load_israel_registration(db, record["canonical_id"]), rank, level)
+        for rank, (record, fit) in enumerate(shown, 1)
+    ]
 
     ledger = [
         {
