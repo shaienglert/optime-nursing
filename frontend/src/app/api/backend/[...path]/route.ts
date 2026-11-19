@@ -24,6 +24,10 @@ async function proxy(request: NextRequest, path: string[]): Promise<NextResponse
   } else if (path.join("/") === "api/user-incidents") {
     return new NextResponse(null, { status: 204 });
   }
+  // The family's own address, for per-family rate limits on the backend. Without it every
+  // request would look like it came from this proxy.
+  const clientIp = (request.headers.get("x-forwarded-for") || "").split(",")[0].trim();
+  if (clientIp) headers.set("x-oomnik-client-ip", clientIp);
   const authorization = request.headers.get("authorization");
   if (authorization) headers.set("authorization", authorization);
   // Staff-only backend endpoints authenticate with this header. Forwarding only

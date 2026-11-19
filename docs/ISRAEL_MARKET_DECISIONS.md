@@ -196,3 +196,8 @@ The existing `LICENSE_CURRENTLY_VALID` MUST reads license status and expiry; for
 - Every notice is recorded (`facility_notifications`: event, audience, SENT / NOT_SENT / SKIPPED_NO_ADDRESS / SKIPPED_SYNTHETIC), without body or link. Sending runs in the background and never fails the action.
 - Transport is the existing SMTP service (`OPTIME_SMTP_HOST/PORT/USERNAME/PASSWORD/FROM`). Without it, notices are recorded as NOT_SENT.
 - Not built: SMS (needs a provider and an owner decision on cost).
+
+## 2026-11-19: Persistent database and rate limits
+
+- oomnik-il-api now runs on Render Postgres `oomnik-il-db` (Frankfurt, basic 256 MB, 5 GB, owner-approved $7.50/month). Verified live: an inquiry survives a service restart; synthetic registrations are not re-seeded on restart.
+- Public family actions are rate limited per family address (the site proxy forwards it as `x-oomnik-client-ip`): 5 new inquiries per hour and 15 per day; 3 per day to the same facility; 30 per hour per facility from everyone; 20 writes per hour per private link. Only accepted inquiries count, so form mistakes never lock a family out. Refusals return 429 with a Hebrew message. Counts are in memory (single instance, reset on restart). `OOMNIK_RATE_LIMIT_DISABLED=1` turns it off.

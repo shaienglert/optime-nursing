@@ -36,8 +36,11 @@ REQUEST = {
 
 class InquiryTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.env = mock.patch.dict(os.environ, {"OPTIME_ADMIN_TOKEN": "adm", "OPTIME_PROVIDER_SESSION_REQUIRED": "1"})
+        self.env = mock.patch.dict(os.environ, {"OPTIME_ADMIN_TOKEN": "adm", "OPTIME_PROVIDER_SESSION_REQUIRED": "1", "OOMNIK_RATE_LIMIT_DISABLED": "1"})
         self.env.start()
+        from app.services import israel_rate_limit
+
+        israel_rate_limit.reset()
         Base.metadata.create_all(bind=engine)
         self.db = SessionLocal()
         self._clean()
@@ -398,3 +401,31 @@ class NotificationTests(VisitTests):
         created = self.client.post(f"/api/il/facilities/{self.a.cms_id}/inquiries", json=REQUEST)
         self.assertEqual(created.status_code, 200)
         self.assertEqual(self._rows()[0][2], "NOT_SENT")
+
+
+class InquiryRateLimitTests(InquiryTests):
+    def setUp(self):
+        super().setUp()
+        from app.services import israel_rate_limit
+
+        israel_rate_limit.reset()
+        self.limit_env = mock.patch.dict(os.environ, {"OOMNIK_RATE_LIMIT_DISABLED": "0"})
+        self.limit_env.start()
+
+    def tearDown(self):
+        self.limit_env.stop()
+        super().tearDown()
+
+    def test_fourth_inquiry_to_one_facility_from_one_address_is_refused(self):
+        headers = {"x-oomnik-client-ip": "203.0.113.7"}
+        codes = [self.client.post(f"/api/il/facilities/{self.a.cms_id}/inquiries", json=REQUEST, headers=headers).status_code for _ in range(4)]
+        self.assertEqual(codes, [200, 200, 200, 429])
+        # Form mistakes never count: a family fixing its form is not locked out.
+        from app.services import israel_rate_limit
+
+        israel_rate_limit.reset()
+        for _ in range(5):
+            self.assertEqual(self.client.post(f"/api/il/facilities/{self.a.cms_id}/inquiries", json={**REQUEST, "contact_phone": "abc"}, headers=headers).status_code, 400)
+        self.assertEqual(self.client.post(f"/api/il/facilities/{self.a.cms_id}/inquiries", json=REQUEST, headers=headers).status_code, 200)
+        other = self.client.post(f"/api/il/facilities/{self.a.cms_id}/inquiries", json=REQUEST, headers={"x-oomnik-client-ip": "203.0.113.8"})
+        self.assertEqual(other.status_code, 200)

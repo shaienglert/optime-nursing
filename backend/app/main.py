@@ -16,7 +16,7 @@ from typing import Any, Dict, List, Optional
 
 from sqlalchemy import func, or_
 
-from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, Query, UploadFile
+from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, Query, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
@@ -3856,12 +3856,40 @@ async def provider_portal_me(db: Session = Depends(get_db), authorization: Optio
     }
 
 
+def _il_rate_limit(request: Request, keys) -> None:
+    from app.services import israel_rate_limit
+
+    if not israel_rate_limit.allowed(keys):
+        raise HTTPException(status_code=429, detail=israel_rate_limit.MESSAGE)
+
+
+def _il_client(request: Request) -> str:
+    from app.services.israel_rate_limit import client_address
+
+    return client_address(request.headers, request.client.host if request.client else None)
+
+
+def _il_token_write(request: Request, token: str) -> None:
+    from app.services import israel_rate_limit
+
+    # Writes through one private link: every attempt counts (20 per hour is far above real use).
+    if not israel_rate_limit.check([("token_write", token[:64])]):
+        raise HTTPException(status_code=429, detail=israel_rate_limit.MESSAGE)
+
+
 @app.post("/api/il/facilities/{canonical_id}/inquiries")
-async def israel_create_inquiry(canonical_id: str, payload: Dict[str, Any], db: Session = Depends(get_db)):
+async def israel_create_inquiry(canonical_id: str, payload: Dict[str, Any], request: Request, db: Session = Depends(get_db)):
     from app.services.israel_inquiries import create_inquiry
 
+    from app.services.israel_rate_limit import record
+
+    ip = _il_client(request)
+    keys = [("inquiry_ip", ip), ("inquiry_ip_facility", f"{ip}|{canonical_id}"), ("inquiry_facility", canonical_id)]
+    _il_rate_limit(request, keys)
     try:
-        return create_inquiry(db, canonical_id, payload)
+        created = create_inquiry(db, canonical_id, payload)
+        record(keys)
+        return created
     except LookupError as error:
         raise HTTPException(status_code=404, detail=str(error)) from error
     except ValueError as error:
@@ -3879,8 +3907,9 @@ async def israel_family_inquiry(token: str, db: Session = Depends(get_db)):
 
 
 @app.post("/api/il/inquiries/{token}/reply")
-async def israel_family_inquiry_reply(token: str, payload: Dict[str, Any], db: Session = Depends(get_db)):
+async def israel_family_inquiry_reply(token: str, payload: Dict[str, Any], request: Request, db: Session = Depends(get_db)):
     from app.services.israel_inquiries import family_reply
+    _il_token_write(request, token)
 
     try:
         return family_reply(db, token, payload.get("text"))
@@ -3901,8 +3930,9 @@ async def israel_family_feedback(token: str, db: Session = Depends(get_db)):
 
 
 @app.post("/api/il/inquiries/{token}/feedback")
-async def israel_submit_feedback(token: str, payload: Dict[str, Any], db: Session = Depends(get_db)):
+async def israel_submit_feedback(token: str, payload: Dict[str, Any], request: Request, db: Session = Depends(get_db)):
     from app.services.israel_feedback import submit_feedback
+    _il_token_write(request, token)
 
     try:
         return submit_feedback(db, token, payload)
@@ -3913,8 +3943,9 @@ async def israel_submit_feedback(token: str, payload: Dict[str, Any], db: Sessio
 
 
 @app.post("/api/il/inquiries/{token}/visit")
-async def israel_family_request_visit(token: str, payload: Dict[str, Any], db: Session = Depends(get_db)):
+async def israel_family_request_visit(token: str, payload: Dict[str, Any], request: Request, db: Session = Depends(get_db)):
     from app.services.israel_visits import family_request_visit
+    _il_token_write(request, token)
 
     try:
         return family_request_visit(db, token, payload)
@@ -3925,8 +3956,9 @@ async def israel_family_request_visit(token: str, payload: Dict[str, Any], db: S
 
 
 @app.post("/api/il/inquiries/{token}/visit/answer")
-async def israel_family_answer_visit(token: str, payload: Dict[str, Any], db: Session = Depends(get_db)):
+async def israel_family_answer_visit(token: str, payload: Dict[str, Any], request: Request, db: Session = Depends(get_db)):
     from app.services.israel_visits import family_answer_visit
+    _il_token_write(request, token)
 
     try:
         return family_answer_visit(db, token, payload)
@@ -3964,8 +3996,9 @@ async def israel_family_visit_slots(token: str, db: Session = Depends(get_db)):
 
 
 @app.post("/api/il/inquiries/{token}/visit/book")
-async def israel_family_book_visit(token: str, payload: Dict[str, Any], db: Session = Depends(get_db)):
+async def israel_family_book_visit(token: str, payload: Dict[str, Any], request: Request, db: Session = Depends(get_db)):
     from app.services.israel_visits import family_book_visit
+    _il_token_write(request, token)
 
     try:
         return family_book_visit(db, token, payload)
