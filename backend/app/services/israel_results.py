@@ -176,6 +176,7 @@ def _oomniker_he(analysis: Dict[str, Any], facility_pending: int, fail: Counter,
 
 
 def build_israel_results(db: Session, questionnaire_state: Dict[str, Any], natural_language_query: str = "", limit: int = 20) -> Dict[str, Any]:
+    from app.models.facility import Facility, FacilityPhoto
     from app.services.client_intent_runtime import build_client_intent, evaluate_candidate_intent
     from app.services.israel_facility_import import load_israel_records
     from app.services.israel_facility_registration import load_israel_registration
@@ -206,7 +207,23 @@ def build_israel_results(db: Session, questionnaire_state: Dict[str, Any], natur
     passing = sorted((item for item in evaluated if item[1]["hard_gate"] == "PASS"), key=lambda item: _rank_key(item[1]))
 
     shown = passing[:limit]
-    cards = [_card(record, fit, load_israel_registration(db, record["canonical_id"]), rank) for rank, (record, fit) in enumerate(shown, 1)]
+    shown_ids = [record["canonical_id"] for record, _ in shown]
+    photos: Dict[str, Dict[str, Any]] = {}
+    if shown_ids:
+        for canonical_id, url, caption in (
+            db.query(Facility.cms_id, FacilityPhoto.url, FacilityPhoto.caption)
+            .join(FacilityPhoto, FacilityPhoto.facility_id == Facility.id)
+            .filter(Facility.cms_id.in_(shown_ids), FacilityPhoto.is_active.is_(True))
+            .order_by(FacilityPhoto.uploaded_at, FacilityPhoto.id)
+        ):
+            photos.setdefault(canonical_id, {"url": url, "caption": caption})
+    cards = [
+        {
+            **_card(record, fit, load_israel_registration(db, record["canonical_id"]), rank),
+            "photo": photos.get(record["canonical_id"]),
+        }
+        for rank, (record, fit) in enumerate(shown, 1)
+    ]
 
     ledger = [
         {

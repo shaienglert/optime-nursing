@@ -4,6 +4,7 @@ import { use, useEffect, useState } from "react";
 
 import { InquiryForm } from "@/components/il/inquiry-form";
 import { fetchIsraelFacility, type IsraelFacilityPage } from "@/lib/israel-facility";
+import { PilotPhoto } from "@/components/facility/pilot-photo";
 import { photoSrc } from "@/lib/provider-api";
 
 const ACTIVITY_LABELS: Record<string, string> = {
@@ -67,7 +68,13 @@ export default function IsraelFacilityHome({ params }: { params: Promise<{ id: s
 
       <section className="mt-6">
         <h2 className="text-xl font-semibold">תמונות</h2>
-        {page.photos.length ? (
+        {page.canonical_id.startsWith("IL-SYN-") ? (
+          <div className="mt-3">
+            <PilotPhoto facilityId={page.canonical_id} gallery locale="he" />
+            <h3 className="mb-3 text-lg font-semibold">חדרים ודירות</h3>
+            <PilotPhoto facilityId={page.canonical_id} gallery locale="he" rooms />
+          </div>
+        ) : page.photos.length ? (
           <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
             {page.photos.map((photo) => (
               // eslint-disable-next-line @next/next/no-img-element

@@ -1,10 +1,13 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { OptimeStaticLogo } from "@/components/brand/optime-static-logo";
+import { PilotPhoto } from "@/components/facility/pilot-photo";
 import { fetchIsraelResults, type IsraelResultCard, type IsraelResults } from "@/lib/israel-facility";
+import { photoSrc } from "@/lib/provider-api";
 import { QUESTIONNAIRE_SESSION_KEY, loadSessionJson } from "@/lib/search-session";
 
 import styles from "./results.module.css";
@@ -39,6 +42,21 @@ function Card({ card }: { card: IsraelResultCard }) {
           </p>
         </div>
       </div>
+
+      {card.canonical_id.startsWith("IL-SYN-") ? (
+        <div className={styles.photo}>
+          <PilotPhoto facilityId={card.canonical_id} locale="he" />
+        </div>
+      ) : card.photo ? (
+        <Image
+          className={styles.photo}
+          src={photoSrc(card.photo.url)}
+          alt={card.photo.caption || card.name}
+          width={850}
+          height={360}
+          unoptimized
+        />
+      ) : null}
 
       <div className={styles.columns}>
         <div>
