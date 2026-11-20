@@ -50,7 +50,7 @@ export function PilotPhoto({ facilityId, gallery = false, locale = "en", rooms =
   return (
     <figure data-testid="pilot-photo" className="mb-6 overflow-hidden rounded-xl border border-line bg-sand">
       <div className={gallery ? "grid gap-2 sm:grid-cols-3" : ""}>
-        {photos.map((src, position) => <Image key={src} src={src} alt={locale === "he" ? "" : "Illustrative city and landscape photograph for the pilot — not this community"} width={1400} height={1000} sizes={gallery ? "(max-width: 640px) 100vw, 33vw" : "(max-width: 768px) 100vw, 850px"} className="h-64 w-full object-cover" loading={position === 0 && locale === "en" ? "eager" : "lazy"} />)}
+        {photos.map((src, position) => <Image key={src} src={src} unoptimized={isIsrael} alt={locale === "he" ? "" : "Illustrative city and landscape photograph for the pilot — not this community"} width={1400} height={1000} sizes={gallery ? "(max-width: 640px) 100vw, 33vw" : "(max-width: 768px) 100vw, 850px"} className="h-64 w-full object-cover" loading={position === 0 && locale === "en" ? "eager" : "lazy"} />)}
       </div>
       <figcaption className="px-4 py-3 text-base leading-6 text-muted">{caption}</figcaption>
     </figure>
