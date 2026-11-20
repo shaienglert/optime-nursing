@@ -84,7 +84,7 @@ ISRAEL_QUESTIONNAIRE_PATCH = {
         "shelterNeed": "ROOM|FLOOR; farthest acceptable protected space",
         "shelterIsCondition": "boolean; true only when the family says it is a condition",
         "minBedrooms": "integer of at least 1; count bedrooms only, excluding living rooms",
-        "privateCaregiver": "VISITS|LIVE_IN|UNCLEAR; explicit need to bring a private external caregiver",
+        "privateCaregiver": "VISITS|LIVE_IN|UNCLEAR; explicit requirement to bring a private external caregiver on admission; a future-only request does not belong in this field",
         "parkingType": "REGULAR|ACCESSIBLE|COVERED; use REGULAR if parking is required with no specific type",
         "petRequired": "boolean; true only if a pet needs to move with the resident",
         "requiredDiets": ["DIABETIC|TEXTURE_MODIFIED|VEGETARIAN|GLUTEN_FREE|LOW_SALT|VEGAN|HALAL"],

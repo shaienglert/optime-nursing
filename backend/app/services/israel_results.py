@@ -76,8 +76,8 @@ def _must_label(must: Dict[str, Any]) -> str:
         return f"לפחות {value} חדרי שינה נפרדים"
     if key == "IL_PRIVATE_CAREGIVER":
         return {
-            "VISITS": "מטפל/ת פרטי/ת שמגיע/ה לביקורים",
-            "LIVE_IN": "מטפל/ת פרטי/ת שמתגורר/ת עם הדייר/ת",
+            "VISITS": "מטפל/ת פרטי/ת שמגיע/ה לביקורים מיום הקליטה",
+            "LIVE_IN": "מטפל/ת פרטי/ת שמתגורר/ת עם הדייר/ת מיום הקליטה",
             "UNCLEAR": "מטפל/ת פרטי/ת — סידור מגורים לבירור",
         }[value]
     if key == "IL_PARKING":

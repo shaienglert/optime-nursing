@@ -273,7 +273,13 @@ def evaluate_israel_must(row: Dict[str, Any], must: Dict[str, Any]) -> tuple[str
         if key == "IL_PRIVATE_CAREGIVER":
             if value == "UNCLEAR":
                 return PENDING, "FAMILY_CAREGIVER_ARRANGEMENT_UNCLEAR"
-            return yes_no_gate(row, "private_caregiver_live_in" if value == "LIVE_IN" else "private_caregiver_visits")
+            policy_field = "private_caregiver_live_in" if value == "LIVE_IN" else "private_caregiver_visits"
+            policy = (_answers(row) or {}).get(policy_field)
+            if policy == "AT_ADMISSION":
+                return PASS, "FACILITY_ALLOWS_PRIVATE_CAREGIVER_AT_ADMISSION"
+            if policy in ("ONLY_AFTER_ADMISSION", "NO"):
+                return FAIL, "FACILITY_DOES_NOT_ALLOW_PRIVATE_CAREGIVER_AT_ADMISSION"
+            return PENDING, "FACILITY_DID_NOT_CONFIRM_PRIVATE_CAREGIVER_AT_ADMISSION"
         if key == "IL_PET":
             return yes_no_gate(row, field)
         answer = (_answers(row) or {}).get(field)

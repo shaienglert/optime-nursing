@@ -135,7 +135,7 @@ def test_explicit_practical_requirements_survive_extraction_and_need_facility_an
 
     answers = {
         "max_bedrooms": 2,
-        "private_caregiver_live_in": "YES",
+        "private_caregiver_live_in": "AT_ADMISSION",
         "parking_types": ["ACCESSIBLE"],
         "pets": "YES",
         "diets": ["GLUTEN_FREE"],
@@ -147,3 +147,11 @@ def test_explicit_practical_requirements_survive_extraction_and_need_facility_an
     outcomes = {must["key"]: evaluate_israel_must(row, must)[0] for must in musts}
     assert outcomes["IL_BEDROOMS"] == "PENDING"
     assert outcomes["IL_PRIVATE_CAREGIVER"] == "FAIL"
+
+    caregiver = next(must for must in musts if must["key"] == "IL_PRIVATE_CAREGIVER")
+    answers["private_caregiver_live_in"] = "ONLY_AFTER_ADMISSION"
+    answers["private_caregiver_visits"] = "AT_ADMISSION"
+    assert evaluate_israel_must(row, caregiver)[0] == "FAIL"
+    assert evaluate_israel_must(row, {**caregiver, "value": "VISITS"})[0] == "PASS"
+    answers["private_caregiver_live_in"] = "YES"  # Old answer without a known admission policy.
+    assert evaluate_israel_must(row, caregiver)[0] == "PENDING"

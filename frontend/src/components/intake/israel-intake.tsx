@@ -371,7 +371,7 @@ const STEPS: Step[] = [
   },
   {
     id: "privateCaregiver",
-    prompt: "האם חייבים לאפשר מטפל/ת פרטי/ת מטעמכם?",
+    prompt: "האם נדרש אישור למטפל/ת פרטי/ת מטעמכם כבר ביום הקליטה?",
     kind: "single",
     optional: true,
     options: [

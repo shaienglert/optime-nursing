@@ -58,6 +58,14 @@ def _q(key: str, label: str, kind: str, **extra: Any) -> Dict[str, Any]:
     return question
 
 
+PRIVATE_CAREGIVER_POLICY_OPTIONS = [
+    ("AT_ADMISSION", "כן, כבר מיום הקליטה"),
+    ("ONLY_AFTER_ADMISSION", "רק בהמשך, אם המצב התפקודי מצריך זאת ובכפוף לאישור"),
+    ("NO", "לא מאפשרים"),
+    ("YES", "מותר, מועד האישור דורש בירור"),
+]
+
+
 SECTIONS: List[Dict[str, Any]] = [
     {
         "key": "contact",
@@ -319,8 +327,8 @@ SECTIONS: List[Dict[str, Any]] = [
                 ],
             ),
             _q("max_bedrooms", "מספר חדרי שינה מרבי בדירת דייר (ללא סלון, 0 אם אין חדר שינה נפרד)", "number", min=0, max=20),
-            _q("private_caregiver_visits", "מותר למטפל פרטי של הדייר להגיע ולטפל במוסד?", "single", options=[("YES", "כן"), ("NO", "לא")]),
-            _q("private_caregiver_live_in", "מותר למטפל פרטי להתגורר עם הדייר?", "single", options=[("YES", "כן"), ("NO", "לא")]),
+            _q("private_caregiver_visits", "מתי מותר למטפל/ת פרטי/ת מטעם הדייר להגיע ולטפל במוסד?", "single", options=PRIVATE_CAREGIVER_POLICY_OPTIONS),
+            _q("private_caregiver_live_in", "מתי מותר לדייר/ת להתגורר עם מטפל/ת פרטי/ת מטעמם?", "single", options=PRIVATE_CAREGIVER_POLICY_OPTIONS),
             _q("parking_types", "חניה לדיירים", "multi", options=[("REGULAR", "רגילה"), ("ACCESSIBLE", "נגישה"), ("COVERED", "מקורה"), ("NONE", "אין חניה")]),
             _q("private_bathroom", "שירותים ומקלחת צמודים", "single", options=[("ALL", "בכל החדרים"), ("SOME", "בחלק מהחדרים"), ("NONE", "משותפים")]),
             _q(
