@@ -72,8 +72,10 @@ def main():
         })
         print(f"{title}: http={status} status={res.get('status')} interp={(res.get('interpretation') or {}).get('status')} shown={len(cards)} violations={len(violations)} {took}s", flush=True)
     json.dump(out, open("israel_complex_personas.json", "w"), ensure_ascii=False, indent=1)
+    for row in out:
+        print("RESULT " + json.dumps(row, ensure_ascii=False), flush=True)
 
 
 if __name__ == "__main__":
     main()
-# run 1
+# run 2
