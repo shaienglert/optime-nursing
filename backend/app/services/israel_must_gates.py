@@ -230,6 +230,15 @@ def couple_gate(row: Dict[str, Any], same_level: Optional[bool]) -> tuple[str, s
     return PENDING, "FACILITY_DID_NOT_ANSWER_COUPLES"
 
 
+FAMILY_REQUIREMENTS = {
+    "minBedrooms": ("IL_BEDROOMS", "max_bedrooms"),
+    "privateCaregiver": ("IL_PRIVATE_CAREGIVER", None),
+    "parkingType": ("IL_PARKING", "parking_types"),
+    "petRequired": ("IL_PET", "pets"),
+    "requiredDiets": ("IL_DIETS", "diets"),
+}
+
+
 def evaluate_israel_must(row: Dict[str, Any], must: Dict[str, Any]) -> tuple[str, str]:
     key = str(must.get("key") or "")
     if key == FUNCTIONAL_LEVEL_KEY:
@@ -257,6 +266,28 @@ def evaluate_israel_must(row: Dict[str, Any], must: Dict[str, Any]) -> tuple[str
     for gate_key, question in MEDICAL_NEED_GATES.values():
         if key == gate_key:
             return yes_no_gate(row, question)
+    for gate_key, field in FAMILY_REQUIREMENTS.values():
+        if key != gate_key:
+            continue
+        value = must["value"]
+        if key == "IL_PRIVATE_CAREGIVER":
+            if value == "UNCLEAR":
+                return PENDING, "FAMILY_CAREGIVER_ARRANGEMENT_UNCLEAR"
+            return yes_no_gate(row, "private_caregiver_live_in" if value == "LIVE_IN" else "private_caregiver_visits")
+        if key == "IL_PET":
+            return yes_no_gate(row, field)
+        answer = (_answers(row) or {}).get(field)
+        if key == "IL_BEDROOMS" and isinstance(answer, (int, float)):
+            return (PASS if answer >= value else FAIL), "FACILITY_STATED_BEDROOM_COUNT"
+        if isinstance(answer, list) and answer:
+            required = {value} if key == "IL_PARKING" else set(value)
+            offered = set(answer)
+            if "NONE" in offered:
+                offered = set()
+            if key == "IL_PARKING" and value == "REGULAR":
+                return (PASS if offered else FAIL), "FACILITY_STATED_PARKING"
+            return (PASS if required <= offered else FAIL), "FACILITY_STATED_OPTIONS"
+        return PENDING, "FACILITY_DID_NOT_ANSWER"
     return PENDING, "UNKNOWN_ISRAEL_MUST"
 
 
@@ -310,6 +341,19 @@ def israel_additional_musts(questionnaire_state: Dict[str, Any]) -> list[Dict[st
             "reason": "The family made a protected space this close a condition.",
             "verification": "where the facility says its protected space is",
         })
+    requirements = {
+        "minBedrooms": lambda v: type(v) is int and 1 <= v <= 20,
+        "privateCaregiver": lambda v: v in ("VISITS", "LIVE_IN", "UNCLEAR"),
+        "parkingType": lambda v: v in ("REGULAR", "ACCESSIBLE", "COVERED"),
+        "petRequired": lambda v: v is True,
+        "requiredDiets": lambda v: isinstance(v, list) and bool(v) and all(
+            d in ("DIABETIC", "TEXTURE_MODIFIED", "VEGETARIAN", "GLUTEN_FREE", "LOW_SALT", "VEGAN", "HALAL") for d in v
+        ),
+    }
+    for field, (key, _) in FAMILY_REQUIREMENTS.items():
+        value = family.get(field)
+        if requirements[field](value):
+            musts.append({"key": key, "value": value, "reason": "Explicit family requirement."})
     return musts
 
 

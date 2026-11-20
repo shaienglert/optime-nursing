@@ -29,6 +29,12 @@ from typing import Any, Dict, List, Optional, Tuple
 from sqlalchemy.orm import Session
 
 KEY_HE: Dict[str, str] = {
+    "IL_BEDROOMS": "מספר חדרי השינה הנדרש",
+    "IL_PRIVATE_CAREGIVER": "אפשרות להביא מטפל/ת פרטי/ת",
+    "IL_PARKING": "סוג החניה הנדרש",
+    "IL_PET": "אפשר להביא חיית מחמד",
+    "IL_DIETS": "תפריט מותאם לדרישות",
+
     "LICENSE_CURRENTLY_VALID": "רישיון בתוקף",
     "IL_FUNCTIONAL_LEVEL": "מקבל את רמת התפקוד",
     "IL_MOH_CODE_AGREEMENT": "הסכם קוד עם משרד הבריאות",
@@ -62,6 +68,26 @@ logger = logging.getLogger(__name__)
 def label(key: str) -> str:
     base = str(key).split(":", 1)[0]
     return KEY_HE.get(base, base)
+
+
+def _must_label(must: Dict[str, Any]) -> str:
+    key, value = must["key"], must.get("value")
+    if key == "IL_BEDROOMS":
+        return f"לפחות {value} חדרי שינה נפרדים"
+    if key == "IL_PRIVATE_CAREGIVER":
+        return {
+            "VISITS": "מטפל/ת פרטי/ת שמגיע/ה לביקורים",
+            "LIVE_IN": "מטפל/ת פרטי/ת שמתגורר/ת עם הדייר/ת",
+            "UNCLEAR": "מטפל/ת פרטי/ת — סידור מגורים לבירור",
+        }[value]
+    if key == "IL_PARKING":
+        return {"REGULAR": "חניה לדיירים", "ACCESSIBLE": "חניה נגישה", "COVERED": "חניה מקורה"}[value]
+    if key == "IL_DIETS":
+        from app.services.israel_facility_questionnaire import QUESTIONS
+
+        options = {entry["value"]: entry["label"] for entry in QUESTIONS["diets"]["options"]}
+        return "תפריט מותאם: " + ", ".join(options[item] for item in value)
+    return label(key)
 
 
 def _interpreter_configured() -> bool:
@@ -185,6 +211,8 @@ def build_israel_results(db: Session, questionnaire_state: Dict[str, Any], natur
     text = natural_language_query or str(questionnaire_state.get("notes") or "")
     state, interpretation = interpret(questionnaire_state, text)
     israel = state.get("israelMarket") if isinstance(state.get("israelMarket"), dict) else {}
+    if israel.get("privateCaregiver") == "UNCLEAR":
+        interpretation["clarification_question"] = "האם המטפל/ת הפרטי/ת מגיע/ה לביקורים או מתגורר/ת עם הדייר/ת?"
     missing = missing_required(israel)
     if missing:
         return {"status": "NEEDS_INPUT", "missing": missing, "interpretation": interpretation, "results": []}
@@ -195,6 +223,8 @@ def build_israel_results(db: Session, questionnaire_state: Dict[str, Any], natur
 
     # MUSTs the family left open; their unknowns belong to the family, not the facilities.
     family_unknown = ["IL_FUNCTIONAL_LEVEL"] if str(israel.get("functionalLevel") or "").upper() == "UNCLEAR" else []
+    if israel.get("privateCaregiver") == "UNCLEAR":
+        family_unknown.append("IL_PRIVATE_CAREGIVER")
     gates = Counter(fit["hard_gate"] for _, fit in evaluated)
     fail = Counter(k for _, fit in evaluated if fit["hard_gate"] == "FAIL" for k in fit.get("must_fail") or [])
     pending = Counter(
@@ -238,7 +268,7 @@ def build_israel_results(db: Session, questionnaire_state: Dict[str, Any], natur
     return {
         "status": "OK",
         "interpretation": interpretation,
-        "musts": [{"key": m["key"], "label": label(m["key"])} for m in intent.get("must_haves") or []],
+        "musts": [{"key": m["key"], "label": _must_label(m)} for m in intent.get("must_haves") or []],
         "preferences": [{"key": n["key"], "label": label(n["key"])} for n in intent.get("nice_to_haves") or [] if str(n.get("key", "")).startswith("IL_") and n["key"] != "IL_PROXIMITY"],
         "funnel": {
             "universe": len(evaluated),

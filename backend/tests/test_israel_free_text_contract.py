@@ -110,3 +110,40 @@ def test_israeli_minimum_dimensions_read_hebrew():
     assert _minimum_dimension_status("נשלם באופן פרטי עד 16 אלף בחודש, באזור ירושלים.", {}) == {
         "market_location": True, "monthly_affordability": True}
     assert _minimum_dimension_status("אמא סיעודית.", {}) == {"market_location": False, "monthly_affordability": False}
+
+
+def test_explicit_practical_requirements_survive_extraction_and_need_facility_answers():
+    from app.services.canonical_structured_profile import build_structured_profile, materialize_questionnaire
+    from app.services.israel_must_gates import evaluate_israel_must, israel_additional_musts
+    from app.services.semantic_intent_ai import _required_output_schema
+    from app.services.semantic_packet_wire import normalize_wire
+
+    quote = "We need two bedrooms, a live-in private caregiver, accessible parking, a cat, and gluten-free meals."
+    values = {
+        "minBedrooms": 2,
+        "privateCaregiver": "LIVE_IN",
+        "parkingType": "ACCESSIBLE",
+        "petRequired": True,
+        "requiredDiets": ["GLUTEN_FREE"],
+    }
+    fields = [{"path": f"israelMarket.{key}", "value": value, "quote": quote} for key, value in values.items()]
+    packet = normalize_wire(_wire(fields, [_trace(quote, [item["path"] for item in fields])]), _required_output_schema(), family_text=quote)
+    state = materialize_questionnaire(build_structured_profile({}, packet, family_text=quote))
+    assert state["israelMarket"] == values
+    musts = israel_additional_musts(state)
+    assert len(musts) == 5
+
+    answers = {
+        "max_bedrooms": 2,
+        "private_caregiver_live_in": "YES",
+        "parking_types": ["ACCESSIBLE"],
+        "pets": "YES",
+        "diets": ["GLUTEN_FREE"],
+    }
+    row = {"registration_status": "REGISTERED", "israel_questionnaire": answers}
+    assert all(evaluate_israel_must(row, must)[0] == "PASS" for must in musts)
+    answers.pop("max_bedrooms")
+    answers["private_caregiver_live_in"] = "NO"
+    outcomes = {must["key"]: evaluate_israel_must(row, must)[0] for must in musts}
+    assert outcomes["IL_BEDROOMS"] == "PENDING"
+    assert outcomes["IL_PRIVATE_CAREGIVER"] == "FAIL"
