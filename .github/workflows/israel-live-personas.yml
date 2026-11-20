@@ -1,6 +1,9 @@
 name: Israel live personas
 on:
   workflow_dispatch:
+  push:
+    branches: [israel-market-universe]
+    paths: [scripts/israel_live/**]
 permissions:
   contents: read
 jobs:
