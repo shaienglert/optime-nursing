@@ -260,6 +260,8 @@ def evaluate_israel_must(row: Dict[str, Any], must: Dict[str, Any]) -> tuple[str
             return FAIL, "FACILITY_HAS_NO_PROTECTION_FOR_BEDRIDDEN"
         # "No bedridden residents here" says nothing about whether it could protect one.
         return PENDING, "FACILITY_DID_NOT_STATE_BEDRIDDEN_PROTECTION"
+    if key == "IL_NURSING_CONTINUITY":
+        return yes_no_gate(row, "on_site_nursing_continuity")
     if key == SHELTER_KEY:
         outcome = shelter_meets(_answers(row), str(must.get("value") or "FLOOR"))
         return outcome, {PASS: "FACILITY_SHELTER_MEETS_MINIMUM", FAIL: "FACILITY_SHELTER_FARTHER_THAN_MINIMUM"}.get(outcome, "FACILITY_DID_NOT_ANSWER_SHELTER")
@@ -347,6 +349,8 @@ def israel_additional_musts(questionnaire_state: Dict[str, Any]) -> list[Dict[st
             "reason": "The family made a protected space this close a condition.",
             "verification": "where the facility says its protected space is",
         })
+    if family.get("functionalLevel") == "INDEPENDENT" and family.get("nursingContinuity") == "REQUIRED":
+        musts.append({"key": "IL_NURSING_CONTINUITY", "reason": "Family requires an on-site nursing transition option."})
     requirements = {
         "minBedrooms": lambda v: type(v) is int and 1 <= v <= 20,
         "privateCaregiver": lambda v: v in ("VISITS", "LIVE_IN", "UNCLEAR"),
@@ -378,6 +382,8 @@ MIXED_FITS = {"SECULAR", "TRADITIONAL"}
 def israel_nice_to_haves(questionnaire_state: Dict[str, Any]) -> list[Dict[str, Any]]:
     family = _family(questionnaire_state)
     nice: list[Dict[str, Any]] = []
+    if family.get("functionalLevel") == "INDEPENDENT" and family.get("nursingContinuity") == "PREFERRED":
+        nice.append({"key": "IL_NURSING_CONTINUITY", "reason": "Family prefers an on-site nursing transition option."})
     community = str(family.get("community") or "").upper()
     if community in COMMUNITIES:
         nice.append({"key": "IL_COMMUNITY", "value": community, "reason": "Preferred community character."})
@@ -462,6 +468,9 @@ def evaluate_israel_nice(row: Dict[str, Any], nice: Dict[str, Any]) -> str:
         return UNKNOWN
     key = str(nice.get("key") or "")
     value = nice.get("value")
+    if key == "IL_NURSING_CONTINUITY":
+        outcome, _ = yes_no_gate(row, "on_site_nursing_continuity")
+        return {PASS: MATCH, FAIL: MISMATCH}.get(outcome, UNKNOWN)
     if key == "IL_COMMUNITY":
         character = str(answers.get("religious_character") or "").upper()
         if not character:

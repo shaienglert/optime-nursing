@@ -3780,6 +3780,21 @@ class IsraelResultsIn(BaseModel):
     limit: int = 20
 
 
+@app.post("/api/il/family-advice")
+def israel_family_advice(payload: IsraelResultsIn, request: Request):
+    if not is_israel_market():
+        raise HTTPException(status_code=404, detail="Not found")
+    from app.services.israel_family_advice import build_family_advice
+    from app.services.israel_rate_limit import check, client_address
+
+    address = client_address(request.headers, request.client.host if request.client else None)
+    family = payload.questionnaire_state.get("israelMarket")
+    return build_family_advice(
+        family if isinstance(family, dict) else {},
+        generate=check([("family_advice_ip", address), ("family_advice_global", "israel")]),
+    )
+
+
 @app.post("/api/il/recommendations")
 def israel_recommendations(payload: IsraelResultsIn, db: Session = Depends(get_db)):
     """Israeli family results route; Nevada never reaches it."""

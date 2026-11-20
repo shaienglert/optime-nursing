@@ -29,6 +29,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from sqlalchemy.orm import Session
 
 KEY_HE: Dict[str, str] = {
+    "IL_NURSING_CONTINUITY": "אפשרות מעבר למחלקה סיעודית באותו מתחם",
     "IL_BEDROOMS": "מספר חדרי השינה הנדרש",
     "IL_PRIVATE_CAREGIVER": "אפשרות להביא מטפל/ת פרטי/ת",
     "IL_PARKING": "סוג החניה הנדרש",
@@ -142,7 +143,7 @@ def missing_required(israel: Dict[str, Any]) -> List[str]:
     return missing
 
 
-def _card(record: Dict[str, Any], fit: Dict[str, Any], registration: Optional[Dict[str, Any]], rank: int) -> Dict[str, Any]:
+def _card(record: Dict[str, Any], fit: Dict[str, Any], registration: Optional[Dict[str, Any]], rank: int, must_labels: Dict[str, str]) -> Dict[str, Any]:
     from app.services.israel_facility_questionnaire import describe_offer, price_display
 
     notes = fit.get("israel_notes") or {}
@@ -155,7 +156,7 @@ def _card(record: Dict[str, Any], fit: Dict[str, Any], registration: Optional[Di
         "facility_type": record.get("facility_type"),
         "city": record.get("city"),
         "distance_km": fit.get("distance_km"),
-        "musts_met": [{"key": k, "label": label(k)} for k in fit.get("must_pass") or []],
+        "musts_met": [{"key": k, "label": must_labels.get(k, label(k))} for k in fit.get("must_pass") or []],
         "preferences_met": [{"key": k, "label": label(k)} for k in explained_nice],
         "preferences_not_met": [{"key": k, "label": label(k)} for k in fit.get("nice_mismatch") or []],
         "unknown": [{"key": k, "label": label(k)} for k in fit.get("nice_unknown") or []],
@@ -237,6 +238,7 @@ def build_israel_results(db: Session, questionnaire_state: Dict[str, Any], natur
     passing = sorted((item for item in evaluated if item[1]["hard_gate"] == "PASS"), key=lambda item: _rank_key(item[1]))
 
     shown = passing[:limit]
+    must_labels = {must["key"]: _must_label(must) for must in intent.get("must_haves") or []}
     shown_ids = [record["canonical_id"] for record, _ in shown]
     photos: Dict[str, Dict[str, Any]] = {}
     if shown_ids:
@@ -249,7 +251,7 @@ def build_israel_results(db: Session, questionnaire_state: Dict[str, Any], natur
             photos.setdefault(canonical_id, {"url": url, "caption": caption})
     cards = [
         {
-            **_card(record, fit, load_israel_registration(db, record["canonical_id"]), rank),
+            **_card(record, fit, load_israel_registration(db, record["canonical_id"]), rank, must_labels),
             "photo": photos.get(record["canonical_id"]),
         }
         for rank, (record, fit) in enumerate(shown, 1)

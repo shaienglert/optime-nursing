@@ -328,3 +328,17 @@
   font-size: 14px;
   color: var(--secondary);
 }
+
+.advice h2 {
+  margin-block: 1.2rem 0.35rem;
+  font-size: 1.1rem;
+  font-weight: 650;
+}
+
+.advice p {
+  line-height: 1.6;
+}
+
+.advice a {
+  text-decoration: underline;
+}

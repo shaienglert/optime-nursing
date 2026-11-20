@@ -212,6 +212,17 @@ export type IsraelResults = {
   results: IsraelResultCard[];
   oomniker?: { lines: string[]; actions: string[] };
 };
+export type IsraelFamilyAdvice = {
+  title: string;
+  reason: string;
+  services: string;
+  check: string;
+  personalized: boolean;
+  ask_continuity: boolean;
+};
+export const fetchIsraelFamilyAdvice = (questionnaire_state: Record<string, unknown>) =>
+  sendJson<IsraelFamilyAdvice>("/api/il/family-advice", { questionnaire_state });
+
 export const fetchIsraelResults = (questionnaire_state: Record<string, unknown>, natural_language_query: string) =>
   sendJson<IsraelResults>("/api/il/recommendations", { questionnaire_state, natural_language_query, limit: 20 });
 

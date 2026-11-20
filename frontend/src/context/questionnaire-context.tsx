@@ -53,6 +53,8 @@ export type QuestionnaireState = {
     monthlyBudgetIls: number | null;
     // Owner-approved MUSTs (2026-11-14): filter only when stated.
     medicalNeeds?: Array<"VENTILATION" | "WANDERING" | "PEG" | "NG_TUBE">;
+    hostsOvernight?: "" | "YES" | "NO";
+    nursingContinuity?: "REQUIRED" | "PREFERRED" | "NO_PREFERENCE";
     minBedrooms?: number | null;
     privateCaregiver?: "" | "VISITS" | "LIVE_IN" | "UNCLEAR";
     parkingType?: "" | "REGULAR" | "ACCESSIBLE" | "COVERED";

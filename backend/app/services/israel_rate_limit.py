@@ -22,6 +22,8 @@ RULES: Dict[str, Tuple[Tuple[int, int], ...]] = {
     "inquiry_ip": ((5, HOUR), (15, DAY)),
     "inquiry_ip_facility": ((3, DAY),),
     "inquiry_facility": ((30, HOUR),),
+    "family_advice_ip": ((20, HOUR),),
+    "family_advice_global": ((120, HOUR),),
     "token_write": ((20, HOUR),),
 }
 MESSAGE = "יותר מדי פניות בזמן קצר. אפשר לנסות שוב מאוחר יותר."
