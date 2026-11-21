@@ -665,13 +665,12 @@ export function IsraelIntake() {
             ) : !adviceLoading ? <p role="status">ההסבר האישי אינו זמין כרגע. אפשר להמשיך לתוצאות.</p> : null}
             {!adviceLoading && askContinuity ? (
               <>
-                <h2>אם בעתיד יידרש טיפול סיעודי, חשוב שתהיה מחלקה סיעודית באותו מתחם?</h2>
+                <h2>האם תרצו שבמוסד תהיה מחלקה סיעודית באותו מתחם, למקרה שתזדקקו לה בעתיד?</h2>
                 <p>המעבר תלוי בתנאי הקבלה, בזמינות ובעלות במועד המעבר.</p>
                 <div className={styles.actions}>
                   {([
-                    ["REQUIRED", "כן, תנאי חובה"],
-                    ["PREFERRED", "עדיף, אבל אפשר גם בלי"],
-                    ["NO_PREFERENCE", "אין העדפה"],
+                    ["REQUIRED", "כן, להציג רק מוסדות עם מחלקה סיעודית"],
+                    ["NO_PREFERENCE", "לא, אפשר להציג גם מוסדות בלי מחלקה סיעודית"],
                   ] as const).map(([value, label]) => tile({ value, label }, continuity === value, () => setContinuity(value)))}
                 </div>
               </>

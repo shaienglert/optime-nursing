@@ -30,7 +30,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from sqlalchemy.orm import Session
 
 KEY_HE: Dict[str, str] = {
-    "IL_NURSING_CONTINUITY": "אפשרות מעבר למחלקה סיעודית באותו מתחם",
+    "IL_NURSING_CONTINUITY": "מחלקה סיעודית באותו מתחם",
     "IL_BEDROOMS": "מספר חדרי השינה הנדרש",
     "IL_PRIVATE_CAREGIVER": "אפשרות להביא מטפל/ת פרטי/ת",
     "IL_PARKING": "סוג החניה הנדרש",
