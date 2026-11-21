@@ -115,3 +115,32 @@ def test_free_text_without_interpreter_is_marked_unprocessed_not_guessed():
 
 def test_nevada_never_reaches_the_israeli_route():
     assert _call(FAMILY, market="NV").status_code == 404
+
+
+def test_advice_covers_every_care_level_and_only_asks_continuity_for_independence():
+    from app.services.israel_family_advice import DIRECTIONS, build_family_advice
+
+    for level, direction in DIRECTIONS.items():
+        advice = build_family_advice({"functionalLevel": level}, generate=False)
+        assert advice["title"] == direction[0]
+        assert advice["reason"] and advice["services"] and advice["check"]
+        assert advice["ask_continuity"] == (level == "INDEPENDENT")
+
+
+def test_nursing_continuity_can_be_required_or_preferred():
+    from app.services.israel_must_gates import (
+        evaluate_israel_must, evaluate_israel_nice, israel_additional_musts, israel_nice_to_haves,
+    )
+
+    key = "IL_NURSING_CONTINUITY"
+    family = {"functionalLevel": "INDEPENDENT", "nursingContinuity": "REQUIRED"}
+    state = {"israelMarket": family}
+    must = next(item for item in israel_additional_musts(state) if item["key"] == key)
+    row = {"registration_status": "REGISTERED", "israel_questionnaire": {}}
+    assert evaluate_israel_must(row, must)[0] == "PENDING"
+    row["israel_questionnaire"]["on_site_nursing_continuity"] = "YES"
+    assert evaluate_israel_must(row, must)[0] == "PASS"
+    family["nursingContinuity"] = "PREFERRED"
+    assert all(item["key"] != key for item in israel_additional_musts(state))
+    nice = next(item for item in israel_nice_to_haves(state) if item["key"] == key)
+    assert evaluate_israel_nice(row, nice) == "MATCH"

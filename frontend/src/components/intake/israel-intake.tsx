@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 
 import { useQuestionnaire, type QuestionnaireState } from "@/context/questionnaire-context";
 import { getApiBaseUrl, joinApiUrl } from "@/lib/api";
+import { fetchIsraelFamilyAdvice, type IsraelFamilyAdvice } from "@/lib/israel-facility";
 import { QUESTIONNAIRE_SESSION_KEY, saveSessionJson } from "@/lib/search-session";
 
 import { IntakeIcon } from "./intake-icons";
@@ -360,6 +361,73 @@ const STEPS: Step[] = [
     ...israelField("depositCapIls", (v) => (v === "" ? null : Number(v))),
     optional: true,
   },
+  {
+    id: "minBedrooms",
+    prompt: "בכמה חדרי שינה נפרדים מעוניינים?",
+    sub: "סופרים חדרי שינה בלבד. כללו גם חדר נפרד לאורחים, אם יש צורך.",
+    kind: "single",
+    optional: true,
+    options: [1, 2, 3, 4].map((n) => ({ value: String(n), label: `לפחות ${n}` })),
+    ...israelField("minBedrooms", toNumber),
+  },
+  {
+    id: "hostsOvernight",
+    prompt: "האם תרצו לארח משפחה או חברים ללינה?",
+    kind: "single",
+    optional: true,
+    options: [{ value: "YES", label: "כן" }, { value: "NO", label: "לא" }],
+    ...israelField("hostsOvernight"),
+  },
+  {
+    id: "privateCaregiver",
+    prompt: "האם נדרש אישור למטפל/ת פרטי/ת מטעמכם כבר ביום הקליטה?",
+    kind: "single",
+    optional: true,
+    options: [
+      { value: "VISITS", label: "כן, מגיע/ה לטפל בביקורים" },
+      { value: "LIVE_IN", label: "כן, מתגורר/ת עם הדייר/ת" },
+      { value: "UNCLEAR", label: "כן, סידור המגורים עוד לא ידוע" },
+    ],
+    ...israelField("privateCaregiver"),
+  },
+  {
+    id: "parkingType",
+    prompt: "איזו חניה נדרשת?",
+    kind: "single",
+    optional: true,
+    options: [
+      { value: "REGULAR", label: "כל חניה לדיירים" },
+      { value: "ACCESSIBLE", label: "חניה נגישה" },
+      { value: "COVERED", label: "חניה מקורה" },
+    ],
+    ...israelField("parkingType"),
+  },
+  {
+    id: "petRequired",
+    prompt: "חיית מחמד חייבת לעבור עם הדייר/ת?",
+    kind: "single",
+    optional: true,
+    options: [{ value: "true", label: "כן, חובה לאפשר חיית מחמד" }, { value: "", label: "לא נדרש" }],
+    get: (d) => d.israel.petRequired ? "true" : "",
+    set: (d, value) => ({ ...d, israel: { ...d.israel, petRequired: value === "true" ? true : undefined } }),
+  },
+  {
+    id: "requiredDiets",
+    prompt: "אילו תפריטים מיוחדים חייבים להיות זמינים?",
+    kind: "multi",
+    optional: true,
+    options: [
+      { value: "DIABETIC", label: "לסוכרתיים" },
+      { value: "TEXTURE_MODIFIED", label: "מרקם מותאם (טחון או רך)" },
+      { value: "VEGETARIAN", label: "צמחוני" },
+      { value: "VEGAN", label: "טבעוני" },
+      { value: "GLUTEN_FREE", label: "ללא גלוטן" },
+      { value: "LOW_SALT", label: "דל מלח" },
+      { value: "HALAL", label: "חלאל" },
+    ],
+    get: (d) => (d.israel.requiredDiets ?? []).join(","),
+    set: (d, value) => ({ ...d, israel: { ...d.israel, requiredDiets: value ? value.split(",") : [] } }),
+  },
   { id: "city", prompt: "באיזה יישוב או אזור?", kind: "city", ...israelField("city") },
   {
     id: "maxDistanceKm",
@@ -421,6 +489,11 @@ export function IsraelIntake() {
   const [draft, setDraft] = useState<Draft>(EMPTY);
   const [stepId, setStepId] = useState(STEPS[0].id);
   const [summary, setSummary] = useState(false);
+  const [advice, setAdvice] = useState<IsraelFamilyAdvice | null>(null);
+  const [adviceLoading, setAdviceLoading] = useState(false);
+  const [confirmed, setConfirmed] = useState<QuestionnaireState | null>(null);
+  const [continuity, setContinuity] = useState<Israel["nursingContinuity"]>();
+  const askContinuity = advice?.ask_continuity ?? confirmed?.israelMarket?.functionalLevel === "INDEPENDENT";
   const [error, setError] = useState(false);
   const [localities, setLocalities] = useState<string[]>([]);
 
@@ -457,7 +530,7 @@ export function IsraelIntake() {
     go(visible.findIndex((s) => s.id === step.id) + 1, next);
   }
 
-  function submit() {
+  async function submit() {
     // Answers to questions that are no longer shown must not act as filters.
     const visibleIds = new Set(steps.map((s) => s.id));
     const israel: Israel = {
@@ -480,6 +553,22 @@ export function IsraelIntake() {
       budget: israel.monthlyBudgetIls ?? 0,
       israelMarket: israel,
     };
+    setAdviceLoading(true);
+    setAdvice(null);
+    setContinuity(undefined);
+    setConfirmed(submission);
+    try {
+      setAdvice(await fetchIsraelFamilyAdvice({ israelMarket: israel }));
+    } catch {
+      setAdvice(null);
+    } finally {
+      setAdviceLoading(false);
+    }
+  }
+
+  function showResults() {
+    if (!confirmed?.israelMarket) return;
+    const submission = { ...confirmed, israelMarket: { ...confirmed.israelMarket, nursingContinuity: continuity } };
     saveSessionJson(QUESTIONNAIRE_SESSION_KEY, submission);
     setState(submission);
     router.push("/he/results");
@@ -541,7 +630,41 @@ export function IsraelIntake() {
       </header>
 
       <div className={styles.stage}>
-        {!summary && step ? (
+        {confirmed ? (
+          <section className={`${styles.question} ${styles.advice}`} aria-labelledby="advice-title">
+            <h1 id="advice-title" className={styles.prompt}>{advice?.title ?? "הכיוון שמתאים לכם"}</h1>
+            {adviceLoading ? <p role="status">מכינים את ההסבר לפי התשובות שלכם…</p> : null}
+            {advice ? (
+              <>
+                <h2>למה הכיוון הזה מתאים לכם</h2>
+                <p>{advice.reason}</p>
+                <h2>מה בדרך כלל מקבלים במסגרת</h2>
+                <p>{advice.services}</p>
+                <h2>מה כדאי לברר או לארגן בעצמכם</h2>
+                <p>{advice.check}</p>
+                {confirmed.israelMarket?.hostsOvernight === "YES" ? <p>ציינתם שתרצו לארח ללינה. בררו את מדיניות הלינה לאורחים ואת התאמת הדירה לכך.</p> : null}
+                {askContinuity ? <p><a href="https://www.gov.il/he/pages/molsa-senior-citizens-housing-assisted-living-about?chapterIndex=2">מידע על דיור מוגן ממשרד הרווחה</a></p> : null}
+              </>
+            ) : !adviceLoading ? <p role="status">ההסבר האישי אינו זמין כרגע. אפשר להמשיך לתוצאות.</p> : null}
+            {!adviceLoading && askContinuity ? (
+              <>
+                <h2>אם בעתיד יידרש טיפול סיעודי, חשוב שתהיה מחלקה סיעודית באותו מתחם?</h2>
+                <p>המעבר תלוי בתנאי הקבלה, בזמינות ובעלות במועד המעבר.</p>
+                <div className={styles.actions}>
+                  {([
+                    ["REQUIRED", "כן, תנאי חובה"],
+                    ["PREFERRED", "עדיף, אבל אפשר גם בלי"],
+                    ["NO_PREFERENCE", "אין העדפה"],
+                  ] as const).map(([value, label]) => tile({ value, label }, continuity === value, () => setContinuity(value)))}
+                </div>
+              </>
+            ) : null}
+            <div className={styles.actions}>
+              <button type="button" className={styles.primary} disabled={adviceLoading || (askContinuity && !continuity)} onClick={showResults}>להצגת התוצאות</button>
+              <button type="button" className={styles.secondaryButton} disabled={adviceLoading} onClick={() => setConfirmed(null)}>חזרה לסיכום</button>
+            </div>
+          </section>
+        ) : !summary && step ? (
           <section key={step.id} className={styles.question} aria-labelledby={`q-${step.id}`}>
             <h1 id={`q-${step.id}`} className={styles.prompt}>{step.prompt}</h1>
             {step.sub ? <p className={styles.sub}>{step.sub}</p> : null}

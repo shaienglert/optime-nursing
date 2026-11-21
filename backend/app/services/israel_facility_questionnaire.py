@@ -58,6 +58,14 @@ def _q(key: str, label: str, kind: str, **extra: Any) -> Dict[str, Any]:
     return question
 
 
+PRIVATE_CAREGIVER_POLICY_OPTIONS = [
+    ("AT_ADMISSION", "כן, כבר מיום הקליטה"),
+    ("ONLY_AFTER_ADMISSION", "רק בהמשך, אם המצב התפקודי מצריך זאת ובכפוף לאישור"),
+    ("NO", "לא מאפשרים"),
+    ("YES", "מותר, מועד האישור דורש בירור"),
+]
+
+
 SECTIONS: List[Dict[str, Any]] = [
     {
         "key": "contact",
@@ -90,6 +98,7 @@ SECTIONS: List[Dict[str, Any]] = [
                     ("HOSPICE", "הוספיס / טיפול תומך"),
                 ],
             ),
+            _q("on_site_nursing_continuity", "האם לדיירי הדיור המוגן יש אפשרות להגיש בקשה למעבר למחלקה סיעודית ברישיון באותו מתחם?", "single", options=[("YES", "כן"), ("NO", "לא")]),
             _q("moh_code_agreement", "האם יש למוסד הסכם קוד עם משרד הבריאות?", "single", required=True, core=True, options=[("YES", "כן"), ("NO", "לא")]),
             _q(
                 "license_authority",
@@ -294,6 +303,9 @@ SECTIONS: List[Dict[str, Any]] = [
                     ("VEGETARIAN", "צמחוני"),
                     ("GLUTEN_FREE", "ללא גלוטן"),
                     ("LOW_SALT", "דל מלח"),
+                    ("VEGAN", "טבעוני"),
+                    ("HALAL", "חלאל"),
+                    ("NONE", "אין תפריטים מיוחדים"),
                 ],
             ),
         ],
@@ -315,6 +327,10 @@ SECTIONS: List[Dict[str, Any]] = [
                     ("APARTMENT", "דירה"),
                 ],
             ),
+            _q("max_bedrooms", "מספר חדרי שינה מרבי בדירת דייר (ללא סלון, 0 אם אין חדר שינה נפרד)", "number", min=0, max=20),
+            _q("private_caregiver_visits", "מתי מותר למטפל/ת פרטי/ת מטעם הדייר להגיע ולטפל במוסד?", "single", options=PRIVATE_CAREGIVER_POLICY_OPTIONS),
+            _q("private_caregiver_live_in", "מתי מותר לדייר/ת להתגורר עם מטפל/ת פרטי/ת מטעמם?", "single", options=PRIVATE_CAREGIVER_POLICY_OPTIONS),
+            _q("parking_types", "חניה לדיירים", "multi", options=[("REGULAR", "רגילה"), ("ACCESSIBLE", "נגישה"), ("COVERED", "מקורה"), ("NONE", "אין חניה")]),
             _q("private_bathroom", "שירותים ומקלחת צמודים", "single", options=[("ALL", "בכל החדרים"), ("SOME", "בחלק מהחדרים"), ("NONE", "משותפים")]),
             _q(
                 "in_room",
@@ -535,7 +551,7 @@ def _clean(question: Dict[str, Any], value: Any) -> Any:
         except (TypeError, ValueError) as error:
             raise ValueError(f"{label}: יש להזין מספר.") from error
         low, high = question.get("min", 0), question.get("max")
-        if number < low or (high is not None and number > high):
+        if number < low or (high is not None and number > high) or (key == "max_bedrooms" and not number.is_integer()):
             raise ValueError(f"{label}: המספר מחוץ לטווח.")
         return number if kind == "number" else int(number)
     if kind == "single":
@@ -550,6 +566,8 @@ def _clean(question: Dict[str, Any], value: Any) -> Any:
         unknown = [v for v in chosen if v not in _option_values(question)]
         if unknown:
             raise ValueError(f"{label}: תשובה לא מוכרת.")
+        if key in {"parking_types", "diets"} and "NONE" in chosen and len(chosen) > 1:
+            raise ValueError(f"{label}: אי אפשר לבחור באפשרות ׳אין׳ יחד עם אפשרויות נוספות.")
         return chosen
     if kind == "per_level":
         if not isinstance(value, dict):

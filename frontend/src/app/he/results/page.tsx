@@ -58,6 +58,17 @@ function Card({ card }: { card: IsraelResultCard }) {
         />
       ) : null}
 
+      <div>
+        <h3 className={styles.groupTitle}>למה המקום הזה מופיע בתוצאות?</h3>
+        <p>
+          {card.musts_met.length
+            ? `לפי המידע שנמסר, המקום עומד בתנאי החובה: ${card.musts_met.map((item) => item.label).join(", ")}.`
+            : "המקום עבר את בדיקות ההתאמה של החיפוש."}
+          {card.preferences_met.length ? ` הוא תואם גם את ההעדפות: ${card.preferences_met.map((item) => item.label).join(", ")}.` : ""}
+          {card.distance_km != null ? ` המרחק שנמדד מהאזור שבחרתם הוא ${card.distance_km} ק״מ.` : ""}
+        </p>
+      </div>
+
       <div className={styles.columns}>
         <div>
           <h3 className={styles.groupTitle}>עומד בכל תנאי החובה</h3>

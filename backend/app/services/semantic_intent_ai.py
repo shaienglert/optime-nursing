@@ -83,6 +83,11 @@ ISRAEL_QUESTIONNAIRE_PATCH = {
         "language": "HE|RU|AR|EN|AM|YI|FR|ES|RO; the resident's main language",
         "shelterNeed": "ROOM|FLOOR; farthest acceptable protected space",
         "shelterIsCondition": "boolean; true only when the family says it is a condition",
+        "minBedrooms": "integer of at least 1; count bedrooms only, excluding living rooms",
+        "privateCaregiver": "VISITS|LIVE_IN|UNCLEAR; explicit requirement to bring a private external caregiver on admission; a future-only request does not belong in this field",
+        "parkingType": "REGULAR|ACCESSIBLE|COVERED; use REGULAR if parking is required with no specific type",
+        "petRequired": "boolean; true only if a pet needs to move with the resident",
+        "requiredDiets": ["DIABETIC|TEXTURE_MODIFIED|VEGETARIAN|GLUTEN_FREE|LOW_SALT|VEGAN|HALAL"],
         "bedridden": "boolean; true only when the resident is explicitly bedridden",
         "priority": "MEDICAL|SOCIAL|SAFETY|PEACE_OF_MIND; what matters most today",
         "setting": "URBAN|RURAL",
@@ -93,7 +98,7 @@ ISRAEL_QUESTIONNAIRE_PATCH = {
 }
 
 ISRAEL_SEMANTIC_RULES = [
-    "Israeli market. The client writes in Hebrew (sometimes Russian, Arabic or English). Fill only israelMarket fields; every value needs an exact Hebrew source quote.",
+    "Israeli market. The client writes in Hebrew (sometimes Russian, Arabic or English). Fill only israelMarket fields; every value needs an exact source quote in the original language.",
     "functionalLevel follows the Israeli licensing terms the client uses: עצמאי/ת = INDEPENDENT; תשוש/ה or needs partial help with bathing or dressing but walks alone = FRAIL; סיעודי/ת, bedridden or dependent in most daily activities = NURSING; only an explicit סיעודי/ת מורכב/ת or סיעוד מורכב = COMPLEX_NURSING (never inferred from a ventilator or other medical need, which stays in medicalNeeds); תשוש/ת נפש, or dementia that requires supervision or a closed ward = COGNITIVE_FRAIL. When the client says they do not know the level, use UNCLEAR and do not ask.",
     "fundingPathway: קוד / קוד של משרד הבריאות = MOH_CODE; רווחה / סיוע של משרד הרווחה = WELFARE_ASSISTANCE; פרטי / נשלם בעצמנו = PRIVATE; not checked yet = UNCLEAR.",
     "Amounts: '16 אלף' = 16000; 'מיליון וחצי' = 1500000; ש\"ח, ₪ and שקלים are shekels. Never convert from dollars.",
@@ -101,6 +106,7 @@ ISRAEL_SEMANTIC_RULES = [
     "For a couple, functionalLevel is the higher care level of the two; partnerSameLevel is false when the text describes different levels.",
     "community only from an explicit self-description (חילונים, מסורתיים, דתיים, חרדים, מוסלמים, נוצרים, דרוזים). Do not infer community, kashrut or Shabbat from a name, a town or a language.",
     "shelterNeed: ממ\"ד in the room or apartment = ROOM; protected space on the same floor = FLOOR. shelterIsCondition only when the client says it is a condition or that they will not accept less. A request for protection for a bedridden resident is bedridden=true, not a shelterNeed.",
+    "For minBedrooms, privateCaregiver, parkingType, petRequired and requiredDiets, only extract explicit requirements, never optional preferences. Two bedrooms is 2; three rooms alone does not establish bedrooms. For a required private caregiver with no specified arrangement, set UNCLEAR and ask whether the caregiver visits or lives with the resident. These terms can be stated in Hebrew or English.",
     "Minimum dimensions for Israel: location is an Israeli locality; affordability is answered by a monthly budget, or by MOH_CODE or WELFARE_ASSISTANCE funding, or by an explicit statement that funding is not yet known.",
 ]
 

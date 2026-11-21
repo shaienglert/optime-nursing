@@ -29,6 +29,13 @@ from typing import Any, Dict, List, Optional, Tuple
 from sqlalchemy.orm import Session
 
 KEY_HE: Dict[str, str] = {
+    "IL_NURSING_CONTINUITY": "אפשרות מעבר למחלקה סיעודית באותו מתחם",
+    "IL_BEDROOMS": "מספר חדרי השינה הנדרש",
+    "IL_PRIVATE_CAREGIVER": "אפשרות להביא מטפל/ת פרטי/ת",
+    "IL_PARKING": "סוג החניה הנדרש",
+    "IL_PET": "אפשר להביא חיית מחמד",
+    "IL_DIETS": "תפריט מותאם לדרישות",
+
     "LICENSE_CURRENTLY_VALID": "רישיון בתוקף",
     "IL_FUNCTIONAL_LEVEL": "מקבל את רמת התפקוד",
     "IL_MOH_CODE_AGREEMENT": "הסכם קוד עם משרד הבריאות",
@@ -62,6 +69,26 @@ logger = logging.getLogger(__name__)
 def label(key: str) -> str:
     base = str(key).split(":", 1)[0]
     return KEY_HE.get(base, base)
+
+
+def _must_label(must: Dict[str, Any]) -> str:
+    key, value = must["key"], must.get("value")
+    if key == "IL_BEDROOMS":
+        return f"לפחות {value} חדרי שינה נפרדים"
+    if key == "IL_PRIVATE_CAREGIVER":
+        return {
+            "VISITS": "מטפל/ת פרטי/ת שמגיע/ה לביקורים מיום הקליטה",
+            "LIVE_IN": "מטפל/ת פרטי/ת שמתגורר/ת עם הדייר/ת מיום הקליטה",
+            "UNCLEAR": "מטפל/ת פרטי/ת — סידור מגורים לבירור",
+        }[value]
+    if key == "IL_PARKING":
+        return {"REGULAR": "חניה לדיירים", "ACCESSIBLE": "חניה נגישה", "COVERED": "חניה מקורה"}[value]
+    if key == "IL_DIETS":
+        from app.services.israel_facility_questionnaire import QUESTIONS
+
+        options = {entry["value"]: entry["label"] for entry in QUESTIONS["diets"]["options"]}
+        return "תפריט מותאם: " + ", ".join(options[item] for item in value)
+    return label(key)
 
 
 def _interpreter_configured() -> bool:
@@ -116,7 +143,7 @@ def missing_required(israel: Dict[str, Any]) -> List[str]:
     return missing
 
 
-def _card(record: Dict[str, Any], fit: Dict[str, Any], registration: Optional[Dict[str, Any]], rank: int) -> Dict[str, Any]:
+def _card(record: Dict[str, Any], fit: Dict[str, Any], registration: Optional[Dict[str, Any]], rank: int, must_labels: Dict[str, str]) -> Dict[str, Any]:
     from app.services.israel_facility_questionnaire import describe_offer, price_display
 
     notes = fit.get("israel_notes") or {}
@@ -129,7 +156,7 @@ def _card(record: Dict[str, Any], fit: Dict[str, Any], registration: Optional[Di
         "facility_type": record.get("facility_type"),
         "city": record.get("city"),
         "distance_km": fit.get("distance_km"),
-        "musts_met": [{"key": k, "label": label(k)} for k in fit.get("must_pass") or []],
+        "musts_met": [{"key": k, "label": must_labels.get(k, label(k))} for k in fit.get("must_pass") or []],
         "preferences_met": [{"key": k, "label": label(k)} for k in explained_nice],
         "preferences_not_met": [{"key": k, "label": label(k)} for k in fit.get("nice_mismatch") or []],
         "unknown": [{"key": k, "label": label(k)} for k in fit.get("nice_unknown") or []],
@@ -185,6 +212,8 @@ def build_israel_results(db: Session, questionnaire_state: Dict[str, Any], natur
     text = natural_language_query or str(questionnaire_state.get("notes") or "")
     state, interpretation = interpret(questionnaire_state, text)
     israel = state.get("israelMarket") if isinstance(state.get("israelMarket"), dict) else {}
+    if israel.get("privateCaregiver") == "UNCLEAR":
+        interpretation["clarification_question"] = "האם המטפל/ת הפרטי/ת מגיע/ה לביקורים או מתגורר/ת עם הדייר/ת?"
     missing = missing_required(israel)
     if missing:
         return {"status": "NEEDS_INPUT", "missing": missing, "interpretation": interpretation, "results": []}
@@ -195,6 +224,8 @@ def build_israel_results(db: Session, questionnaire_state: Dict[str, Any], natur
 
     # MUSTs the family left open; their unknowns belong to the family, not the facilities.
     family_unknown = ["IL_FUNCTIONAL_LEVEL"] if str(israel.get("functionalLevel") or "").upper() == "UNCLEAR" else []
+    if israel.get("privateCaregiver") == "UNCLEAR":
+        family_unknown.append("IL_PRIVATE_CAREGIVER")
     gates = Counter(fit["hard_gate"] for _, fit in evaluated)
     fail = Counter(k for _, fit in evaluated if fit["hard_gate"] == "FAIL" for k in fit.get("must_fail") or [])
     pending = Counter(
@@ -207,6 +238,7 @@ def build_israel_results(db: Session, questionnaire_state: Dict[str, Any], natur
     passing = sorted((item for item in evaluated if item[1]["hard_gate"] == "PASS"), key=lambda item: _rank_key(item[1]))
 
     shown = passing[:limit]
+    must_labels = {must["key"]: _must_label(must) for must in intent.get("must_haves") or []}
     shown_ids = [record["canonical_id"] for record, _ in shown]
     photos: Dict[str, Dict[str, Any]] = {}
     if shown_ids:
@@ -219,7 +251,7 @@ def build_israel_results(db: Session, questionnaire_state: Dict[str, Any], natur
             photos.setdefault(canonical_id, {"url": url, "caption": caption})
     cards = [
         {
-            **_card(record, fit, load_israel_registration(db, record["canonical_id"]), rank),
+            **_card(record, fit, load_israel_registration(db, record["canonical_id"]), rank, must_labels),
             "photo": photos.get(record["canonical_id"]),
         }
         for rank, (record, fit) in enumerate(shown, 1)
@@ -238,7 +270,7 @@ def build_israel_results(db: Session, questionnaire_state: Dict[str, Any], natur
     return {
         "status": "OK",
         "interpretation": interpretation,
-        "musts": [{"key": m["key"], "label": label(m["key"])} for m in intent.get("must_haves") or []],
+        "musts": [{"key": m["key"], "label": _must_label(m)} for m in intent.get("must_haves") or []],
         "preferences": [{"key": n["key"], "label": label(n["key"])} for n in intent.get("nice_to_haves") or [] if str(n.get("key", "")).startswith("IL_") and n["key"] != "IL_PROXIMITY"],
         "funnel": {
             "universe": len(evaluated),
