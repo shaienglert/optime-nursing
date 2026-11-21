@@ -42,7 +42,8 @@ def call(method, path, body=None):
 
 def main():
     out = []
-    for title, text in PERSONAS:
+    rounds = int(sys.argv[2]) if len(sys.argv) > 2 else 1
+    for title, text in [p for p in PERSONAS for _ in range(rounds)]:
         t0 = time.time()
         status, res = call("POST", "/api/il/recommendations", {"questionnaire_state": {"israelMarket": {}}, "natural_language_query": text, "limit": 20})
         took = round(time.time() - t0, 1)
@@ -69,6 +70,8 @@ def main():
                      "unknown": [p["label"] for p in c.get("unknown") or []]} for c in cards[:3]],
             "checks": {"must_violations": violations, "ranking_monotone": ranks_ok, "pages": pages},
             "raw_keys": sorted(res.keys()),
+            "understood": [f"{u.get('label')}={u.get('value_he')}" + (f" [{u.get('basis')}]" if u.get('basis') != "TEXT" else "") for u in (res.get("interpretation") or {}).get("understood") or []],
+            "not_used": [f"{n.get('importance')}: {n.get('text')}" for n in (res.get("interpretation") or {}).get("not_used") or []],
         })
         print(f"{title}: http={status} status={res.get('status')} interp={(res.get('interpretation') or {}).get('status')} shown={len(cards)} violations={len(violations)} {took}s", flush=True)
     json.dump(out, open("israel_complex_personas.json", "w"), ensure_ascii=False, indent=1)
@@ -78,4 +81,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-# run 2
+# run 3: after fixes, 3 rounds

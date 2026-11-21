@@ -65,6 +65,7 @@ ISRAEL_FIELD_RULES = {
     IL + "depositCapIls": FieldContract(kind="NonNegativeInteger"),
     IL + "maxDistanceKm": FieldContract(kind="Integer", unit="km", positive=True),
     IL + "medicalNeeds": FieldContract(kind="List", choices=("VENTILATION", "WANDERING", "PEG", "NG_TUBE")),
+    IL + "specialUnits": FieldContract(kind="List", choices=("PSYCHOGERIATRIC",)),
     IL + "isCouple": FieldContract(kind="Boolean"),
     IL + "partnerSameLevel": FieldContract(kind="Boolean"),
     IL + "community": FieldContract(choices=("SECULAR", "TRADITIONAL", "RELIGIOUS", "HAREDI", "MUSLIM", "CHRISTIAN", "DRUZE")),

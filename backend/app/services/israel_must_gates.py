@@ -82,6 +82,22 @@ def complex_nursing_gate(row: Dict[str, Any]) -> tuple[str, str]:
     return PENDING, "FACILITY_DID_NOT_STATE_COMPLEX_NURSING_WARD"
 
 
+# Family need for a special unit -> MUST key. Owner 2026-11-20: a psychogeriatric
+# framework stated in free text was silently dropped; it is a MUST like complex nursing.
+SPECIAL_UNIT_NEEDS = {"PSYCHOGERIATRIC": "IL_PSYCHOGERIATRIC_UNIT"}
+
+
+def special_unit_gate(row: Dict[str, Any], unit: str) -> tuple[str, str]:
+    """PASS only when the facility listed the unit; FAIL when it listed its units without
+    it; PENDING when it did not answer (missing information is not negative evidence)."""
+    units = _special_units(row)
+    if units and unit in units:
+        return PASS, f"FACILITY_HAS_{unit}_UNIT"
+    if units:
+        return FAIL, f"FACILITY_LISTED_UNITS_WITHOUT_{unit}"
+    return PENDING, f"FACILITY_DID_NOT_STATE_{unit}_UNIT"
+
+
 def functional_level_gate(row: Dict[str, Any], wanted: Optional[str]) -> tuple[str, str]:
     level = str(wanted or "").upper()
     if level == COMPLEX_NURSING:
@@ -156,6 +172,7 @@ FUNDING_TRACKS = {"WELFARE_ASSISTANCE": "WELFARE", "PRIVATE": "PRIVATE"}
 ISRAEL_MUST_KEYS = (
     {FUNCTIONAL_LEVEL_KEY, MOH_CODE_AGREEMENT_KEY, COUPLE_KEY, FUNDING_TRACK_KEY, SHELTER_KEY, BEDRIDDEN_SHELTER_KEY}
     | {key for key, _ in MEDICAL_NEED_GATES.values()}
+    | set(SPECIAL_UNIT_NEEDS.values())
 )
 
 
@@ -268,6 +285,9 @@ def evaluate_israel_must(row: Dict[str, Any], must: Dict[str, Any]) -> tuple[str
     for gate_key, question in MEDICAL_NEED_GATES.values():
         if key == gate_key:
             return yes_no_gate(row, question)
+    for unit, gate_key in SPECIAL_UNIT_NEEDS.items():
+        if key == gate_key:
+            return special_unit_gate(row, unit)
     for gate_key, field in FAMILY_REQUIREMENTS.values():
         if key != gate_key:
             continue
@@ -324,6 +344,14 @@ def israel_additional_musts(questionnaire_state: Dict[str, Any]) -> list[Dict[st
                 "key": key,
                 "reason": f"The family stated a {need.lower()} need.",
                 "verification": f"facility answer to '{question}'",
+            })
+    units = {str(u).upper() for u in family.get("specialUnits") or []}
+    for unit, key in SPECIAL_UNIT_NEEDS.items():
+        if unit in units:
+            musts.append({
+                "key": key,
+                "reason": f"The family needs a {unit.lower()} unit.",
+                "verification": "special units the facility listed",
             })
     if family.get("isCouple") is True:
         same = family.get("partnerSameLevel")

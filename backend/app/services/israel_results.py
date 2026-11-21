@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 from collections import Counter
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -45,6 +46,7 @@ KEY_HE: Dict[str, str] = {
     "IL_ACCEPTS_PEG": "מקבל הזנה ב־PEG",
     "IL_ACCEPTS_NG_TUBE": "מקבל זונדה",
     "IL_ACCEPTS_COUPLE": "מקבל זוגות",
+    "IL_PSYCHOGERIATRIC_UNIT": "מחלקה פסיכוגריאטרית",
     "IL_SHELTER_MINIMUM": "מרחב מוגן ברמה שביקשתם",
     "IL_BEDRIDDEN_SHELTER": "פתרון מיגון למרותקים למיטה",
     "IL_COMMUNITY": "אופי המוסד",
@@ -95,40 +97,186 @@ def _interpreter_configured() -> bool:
     return bool(os.getenv("OPTIME_SEMANTIC_AI_URL", "").strip() and os.getenv("OPTIME_SEMANTIC_AI_MODEL", "").strip())
 
 
+UNPROCESSED_MESSAGE = "את מה שכתבתם במלל חופשי לא הצלחנו לעבד כרגע, ולכן הוא לא השפיע על התוצאות. התוצאות מבוססות על התשובות בשאלון."
+
+# What the family sees under "מה הבנו מכם": field label and Hebrew value names.
+FIELD_HE = {
+    "functionalLevel": "רמת תפקוד", "fundingPathway": "מימון", "monthlyBudgetIls": "תקציב חודשי",
+    "depositCapIls": "פיקדון מרבי", "city": "יישוב", "maxDistanceKm": "מרחק מרבי", "medicalNeeds": "צרכים רפואיים",
+    "specialUnits": "מחלקה מיוחדת", "isCouple": "זוג", "partnerSameLevel": "אותה רמת תפקוד לשניהם",
+    "community": "אופי", "kashrut": "כשרות", "shabbat": "שבת", "sameGenderCare": "טיפול אישי מאותו מגדר",
+    "language": "שפה", "shelterNeed": "מרחב מוגן", "shelterIsCondition": "מרחב מוגן כתנאי", "bedridden": "מרותק/ת למיטה",
+    "relationship": "קרבה", "requiredDiets": "תזונה", "privateCaregiver": "מטפל/ת פרטי/ת", "priority": "הכי חשוב",
+    "setting": "סביבה", "styles": "סגנון", "dayRhythm": "סדר יום", "activities": "פעילויות", "petRequired": "חיית מחמד",
+    "parkingType": "חניה", "minBedrooms": "חדרי שינה",
+}
+VALUE_HE = {
+    "INDEPENDENT": "עצמאי/ת", "FRAIL": "תשוש/ה", "NURSING": "סיעודי/ת", "COMPLEX_NURSING": "סיעוד מורכב",
+    "COGNITIVE_FRAIL": "תשוש/ת נפש", "UNCLEAR": "עוד לא ידוע", "MOH_CODE": "קוד משרד הבריאות",
+    "WELFARE_ASSISTANCE": "סיוע משרד הרווחה", "PRIVATE": "פרטי", "VENTILATION": "הנשמה", "WANDERING": "שוטטות / מחלקה סגורה",
+    "PEG": "הזנה ב־PEG", "NG_TUBE": "זונדה", "PSYCHOGERIATRIC": "פסיכוגריאטרית", "SECULAR": "חילוני", "TRADITIONAL": "מסורתי",
+    "RELIGIOUS": "דתי", "HAREDI": "חרדי", "MUSLIM": "מוסלמי", "CHRISTIAN": "נוצרי", "DRUZE": "דרוזי", "KOSHER": "כשר",
+    "MEHADRIN": "כשר מהדרין", "IMPORTANT": "חשוב", "HE": "עברית", "RU": "רוסית", "AR": "ערבית", "EN": "אנגלית", "AM": "אמהרית",
+    "YI": "יידיש", "FR": "צרפתית", "ES": "ספרדית", "RO": "רומנית", "ROOM": "ממ\"ד בחדר", "FLOOR": "מרחב מוגן בקומה",
+}
+IMPORTANCE_HE = {"MUST": "חובה", "NICE": "רצוי", "CONTEXT": "רקע", "UNKNOWN": "לא ברור"}
+
+
+def _value_he(key: str, value: Any) -> str:
+    if isinstance(value, bool):
+        return "כן" if value else "לא"
+    if isinstance(value, list):
+        return ", ".join(_value_he(key, v) for v in value)
+    if key in {"monthlyBudgetIls", "depositCapIls"} and isinstance(value, (int, float)):
+        return f"{int(value):,} ₪"
+    if key == "maxDistanceKm" and isinstance(value, (int, float)):
+        return f"{int(value)} ק\"מ"
+    return VALUE_HE.get(str(value), str(value))
+
+
+def _locality_from(value: Any) -> Optional[str]:
+    """A locatable locality from what the interpreter wrote: the name itself, an abbreviation,
+    or the first locatable name in a list ("אשדוד או אשקלון")."""
+    from app.services.israel_geo import canonical_locality, locate
+
+    text = str(value or "").strip()
+    if not text:
+        return None
+    if locate(text):
+        return canonical_locality(text)
+    for part in re.split(r"\s+או\s+|,|/|\s+ו(?=[\u0590-\u05FF])", text):
+        part = part.strip()
+        for candidate in (part, part[1:] if part[:1] in "במלה" and len(part) > 2 else None):
+            if candidate and locate(candidate):
+                return canonical_locality(candidate)
+    return None
+
+
+def _locality_in_text(text: str) -> Optional[Tuple[str, str]]:
+    """(locality, words) for the first Israeli locality written in the family text."""
+    from app.services.israel_geo import canonical_locality, locate
+
+    tokens = re.findall(r"[\u0590-\u05FF\"'״׳\-]+", text or "")
+    for i in range(len(tokens)):
+        for n in (3, 2, 1):
+            words = " ".join(tokens[i:i + n])
+            if len(tokens[i:i + n]) < n:
+                continue
+            for candidate in (words, words[1:] if words[:1] in "במלה" and len(words) > 2 else None):
+                if candidate and len(candidate) > 1 and locate(candidate):
+                    return canonical_locality(candidate), words
+    return None
+
+
+def _call_interpreter(text: str, questionnaire_state: Dict[str, Any]) -> Dict[str, Any]:
+    from app.services.semantic_intent_ai import interpret_client_intent_with_ai
+
+    try:
+        return interpret_client_intent_with_ai(user_text=text, questionnaire_state=questionnaire_state)
+    except Exception as error:
+        # One retry for an invalid model packet (not for transport failures, which the
+        # interpreter already retries): a second sample usually validates.
+        if "TRANSPORT" in str(error) or "HTTP_4" in str(error):
+            raise
+        logger.warning("israel_interpreter_retry reason=%s", str(error)[:120])
+        return interpret_client_intent_with_ai(user_text=text, questionnaire_state=questionnaire_state)
+
+
 def interpret(questionnaire_state: Dict[str, Any], text: str) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """Buttons + family text -> decision questionnaire, through the shared interpreter."""
     text = (text or "").strip()
     if not text:
         return questionnaire_state, {"status": "NO_TEXT"}
     if not _interpreter_configured():
-        return questionnaire_state, {
-            "status": "UNPROCESSED",
-            "message": "את מה שכתבתם במלל חופשי לא הצלחנו לעבד כרגע, ולכן הוא לא השפיע על התוצאות. התוצאות מבוססות על התשובות בשאלון.",
-        }
+        return questionnaire_state, {"status": "UNPROCESSED", "message": UNPROCESSED_MESSAGE}
     from app.services.canonical_structured_profile import build_structured_profile, materialize_questionnaire
-    from app.services.semantic_intent_ai import interpret_client_intent_with_ai
 
     try:
-        result = interpret_client_intent_with_ai(user_text=text, questionnaire_state=questionnaire_state)
+        result = _call_interpreter(text, questionnaire_state)
     except Exception as error:  # the interpreter must never block the family
         reason = str(error).split(":", 1)[0][:60] or type(error).__name__
         logger.warning("israel_interpreter_failed reason=%s detail=%s", reason, str(error)[:300])
-        return questionnaire_state, {
-            "status": "UNPROCESSED",
-            "reason": reason,
-            "message": "את מה שכתבתם במלל חופשי לא הצלחנו לעבד כרגע, ולכן הוא לא השפיע על התוצאות. התוצאות מבוססות על התשובות בשאלון.",
-        }
+        return questionnaire_state, {"status": "UNPROCESSED", "reason": reason, "message": UNPROCESSED_MESSAGE}
     profile = build_structured_profile(questionnaire_state, result, family_text=text)
     state = materialize_questionnaire(profile)
     for key, value in questionnaire_state.items():
         if key != "israelMarket":
             state.setdefault(key, value)
+    israel = state.get("israelMarket")
+    if not isinstance(israel, dict):
+        israel = state["israelMarket"] = {}
+    buttons = questionnaire_state.get("israelMarket") if isinstance(questionnaire_state.get("israelMarket"), dict) else {}
+
+    understood: List[Dict[str, Any]] = []
+    fields = profile.get("fields") or {}
+    for path, field in fields.items():
+        if not path.startswith("israelMarket.") or field.get("provenance") != "AI_EXTRACTED" or field.get("state") != "EXPLICIT":
+            continue
+        key = path.split(".", 1)[1]
+        if key not in israel or key not in FIELD_HE:
+            continue
+        understood.append({"field": key, "label": FIELD_HE[key], "value": israel[key], "value_he": _value_he(key, israel[key]), "quote": field.get("quote"), "basis": "TEXT"})
+
+    # Locality: the questionnaire needs one locatable place. The interpreter sometimes writes
+    # two ("אשדוד או אשקלון"), an abbreviation, or nothing for "5 ק"מ מקריית שמונה".
+    if not str(buttons.get("city") or "").strip():
+        written = israel.get("city")
+        located = _locality_from(written)
+        if located and located != written:
+            israel["city"] = located
+            for row in understood:
+                if row["field"] == "city":
+                    row.update(value=located, value_he=located, basis="TEXT_FIRST_LOCALITY")
+        elif not located:
+            found = _locality_in_text(text)
+            if found:
+                israel["city"] = found[0]
+                understood = [r for r in understood if r["field"] != "city"]
+                understood.append({"field": "city", "label": FIELD_HE["city"], "value": found[0], "value_he": found[0], "quote": found[1], "basis": "TEXT_LOCALITY_MATCH"})
+
+    # A monthly budget with no MoH code or welfare mentioned means paying privately. Shown
+    # as an inference so the family can correct it.
+    if (
+        not str(buttons.get("fundingPathway") or "").strip()
+        and not str(israel.get("fundingPathway") or "").strip()
+        and isinstance(israel.get("monthlyBudgetIls"), (int, float)) and israel["monthlyBudgetIls"] > 0
+        and not re.search(r"קוד|רווחה|משרד הבריאות", text)
+    ):
+        israel["fundingPathway"] = "PRIVATE"
+        understood.append({"field": "fundingPathway", "label": FIELD_HE["fundingPathway"], "value": "PRIVATE", "value_he": "פרטי", "quote": None, "basis": "INFERRED_FROM_BUDGET"})
+
+    # Everything the family wrote that has no field is shown, never dropped. A requirement
+    # (importance MUST) without a field is flagged: we cannot check it for them.
+    importance = {str(s.get("raw_text") or "").strip(): str(s.get("importance") or "UNKNOWN").upper() for s in result.get("statements") or [] if isinstance(s, dict)}
+    not_used: List[Dict[str, Any]] = []
+    seen = set()
+    for item in profile.get("out_of_schema") or []:
+        quote = str(item.get("quote") or item.get("text") or "").strip()
+        if not quote or quote in seen:
+            continue
+        seen.add(quote)
+        level = importance.get(quote, "UNKNOWN")
+        not_used.append({"text": quote, "importance": level, "importance_he": IMPORTANCE_HE.get(level, "לא ברור")})
+
+    order = list(FIELD_HE)
+    understood.sort(key=lambda r: order.index(r["field"]) if r["field"] in order else 99)
     return state, {
         "status": "INTERPRETED",
         "conflicts": profile.get("conflicts") or [],
         "unprocessed": profile.get("unprocessed") or [],
         "clarification_question": result.get("next_question"),
+        "understood": understood,
+        "understood_state": {r["field"]: r["value"] for r in understood},
+        "not_used": not_used,
+        "unchecked_requirements": [n["text"] for n in not_used if n["importance"] == "MUST"],
     }
+
+
+MISSING_QUESTION_HE = {
+    "functionalLevel": "מה המצב התפקודי היום: עצמאי/ת, תשוש/ה, סיעודי/ת, סיעוד מורכב, תשוש/ת נפש, או שעוד לא ידוע?",
+    "fundingPathway": "איך מתכננים לממן: קוד של משרד הבריאות, סיוע של משרד הרווחה, תשלום פרטי (ואם כן, עד כמה בחודש), או שעוד לא ידוע?",
+    "city": "באיזה יישוב בישראל לחפש?",
+}
 
 
 def missing_required(israel: Dict[str, Any]) -> List[str]:
@@ -138,7 +286,9 @@ def missing_required(israel: Dict[str, Any]) -> List[str]:
         missing.append("functionalLevel")
     if level.upper() != "COMPLEX_NURSING" and not str(israel.get("fundingPathway") or "").strip():
         missing.append("fundingPathway")
-    if not str(israel.get("city") or "").strip():
+    from app.services.israel_geo import locate
+
+    if not locate(str(israel.get("city") or "").strip()):
         missing.append("city")
     return missing
 
@@ -216,6 +366,13 @@ def build_israel_results(db: Session, questionnaire_state: Dict[str, Any], natur
         interpretation["clarification_question"] = "האם המטפל/ת הפרטי/ת מגיע/ה לביקורים או מתגורר/ת עם הדייר/ת?"
     missing = missing_required(israel)
     if missing:
+        # Never leave the family stuck without a question: ask for the first missing item.
+        if not str(interpretation.get("clarification_question") or "").strip():
+            interpretation["clarification_question"] = MISSING_QUESTION_HE.get(missing[0])
+        written_city = str(israel.get("city") or "").strip()
+        if "city" in missing and written_city:
+            interpretation["city_unrecognized"] = written_city
+            interpretation["clarification_question"] = f"לא זיהינו את היישוב \"{written_city}\". באיזה יישוב בישראל לחפש?"
         return {"status": "NEEDS_INPUT", "missing": missing, "interpretation": interpretation, "results": []}
 
     intent = build_client_intent({"israelMarket": israel}, text, {}, {})

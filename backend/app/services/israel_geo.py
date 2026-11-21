@@ -61,9 +61,34 @@ def _index() -> Dict[str, Tuple[float, float, str]]:
     return index
 
 
+# Common written abbreviations (with ״ or "). Used only when the name itself carries the
+# quote mark, so a plain word such as "פת" never becomes a city.
+_ABBREVIATIONS = {
+    "פת": "פתח תקווה",
+    "תא": "תל אביב - יפו",
+    "בש": "באר שבע",
+    "רג": "רמת גן",
+    "ראשלצ": "ראשון לציון",
+    "בב": "בני ברק",
+    "קג": "קרית גת",
+}
+
+
+def canonical_locality(name: Optional[str]) -> Optional[str]:
+    """The locality name to store for a written name: expands abbreviations, else as written."""
+    if not name:
+        return None
+    if re.search(r"[\"״]", str(name)):
+        expanded = _ABBREVIATIONS.get(_key(name))
+        if expanded:
+            return expanded
+    return str(name).strip()
+
+
 def locate(name: Optional[str]) -> Optional[Tuple[float, float]]:
     if not name:
         return None
+    name = canonical_locality(name)
     key = _key(name)
     alias = _ALIAS_KEYS.get(key)
     for candidate in (key, _key(alias) if alias else None):

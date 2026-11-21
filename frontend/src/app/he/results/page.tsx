@@ -2,13 +2,14 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { OptimeStaticLogo } from "@/components/brand/optime-static-logo";
 import { PilotPhoto } from "@/components/facility/pilot-photo";
 import { fetchIsraelResults, type IsraelResultCard, type IsraelResults } from "@/lib/israel-facility";
 import { photoSrc } from "@/lib/provider-api";
-import { QUESTIONNAIRE_SESSION_KEY, loadSessionJson } from "@/lib/search-session";
+import { QUESTIONNAIRE_SESSION_KEY, loadSessionJson, saveSessionJson } from "@/lib/search-session";
 
 import styles from "./results.module.css";
 
@@ -17,6 +18,61 @@ const MISSING_HE: Record<string, string> = {
   fundingPathway: "מסלול המימון",
   city: "היישוב שממנו מחפשים",
 };
+
+const BASIS_HE: Record<string, string> = {
+  TEXT_FIRST_LOCALITY: "כתבתם כמה יישובים; חיפשנו מהראשון",
+  TEXT_LOCALITY_MATCH: "זיהינו את היישוב מתוך הטקסט",
+  INFERRED_FROM_BUDGET: "הסקנו מהתקציב שכתבתם, כי לא הוזכר קוד או סיוע",
+};
+
+/** What the free text was understood as, what was not used, and a way to correct it. */
+function Understood({ interpretation, onFix }: { interpretation: IsraelResults["interpretation"]; onFix: () => void }) {
+  const understood = interpretation.understood ?? [];
+  const notUsed = interpretation.not_used ?? [];
+  const unchecked = interpretation.unchecked_requirements ?? [];
+  if (!understood.length && !notUsed.length) return null;
+  return (
+    <section className={styles.understood} aria-labelledby="understood-title">
+      <h2 id="understood-title" className={styles.understoodTitle}>
+        מה הבנו ממה שכתבתם
+      </h2>
+      {understood.length ? (
+        <dl className={styles.understoodList}>
+          {understood.map((u) => (
+            <div key={u.field} className={styles.understoodRow}>
+              <dt>{u.label}</dt>
+              <dd>
+                {u.value_he}
+                {BASIS_HE[u.basis] ? <span className={styles.basis}> ({BASIS_HE[u.basis]})</span> : null}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      ) : null}
+      {unchecked.length ? (
+        <div className={styles.unchecked} role="note">
+          <strong>תנאים שכתבתם ואנחנו לא יכולים לבדוק:</strong>
+          <ul>
+            {unchecked.map((t) => (
+              <li key={t}>{t}</li>
+            ))}
+          </ul>
+          <p>המקומות כאן לא נבדקו לגביהם. שאלו כל מוסד לפני ביקור.</p>
+        </div>
+      ) : null}
+      {notUsed.filter((n) => n.importance !== "MUST").length ? (
+        <p className={styles.notUsed}>
+          כתבתם גם, ולא השפיע על הבדיקה: {notUsed.filter((n) => n.importance !== "MUST").map((n) => `"${n.text}"`).join(" ")}
+        </p>
+      ) : null}
+      {understood.length ? (
+        <button type="button" className={styles.fix} onClick={onFix}>
+          משהו לא נכון? לתיקון
+        </button>
+      ) : null}
+    </section>
+  );
+}
 
 function formatDate(value: string | null | undefined) {
   if (!value) return null;
@@ -121,6 +177,7 @@ function Card({ card }: { card: IsraelResultCard }) {
 }
 
 export default function HebrewResults() {
+  const router = useRouter();
   const [data, setData] = useState<IsraelResults | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [noAnswers, setNoAnswers] = useState(false);
@@ -146,6 +203,19 @@ export default function HebrewResults() {
       cancelled = true;
     };
   }, []);
+
+  // Correcting: what was understood becomes questionnaire answers the family can edit.
+  // Answers the family gave with buttons are kept; only empty ones are filled.
+  function fixUnderstood() {
+    const state = loadSessionJson<Record<string, unknown>>(QUESTIONNAIRE_SESSION_KEY) ?? {};
+    const israel = { ...((state.israelMarket as Record<string, unknown>) ?? {}) };
+    for (const [key, value] of Object.entries(data?.interpretation.understood_state ?? {})) {
+      const current = israel[key];
+      if (current === undefined || current === null || current === "" || (Array.isArray(current) && !current.length)) israel[key] = value;
+    }
+    saveSessionJson(QUESTIONNAIRE_SESSION_KEY, { ...state, israelMarket: israel });
+    router.push("/he/intake?review=1");
+  }
 
   return (
     <main dir="rtl" lang="he" className={styles.page}>
@@ -179,9 +249,11 @@ export default function HebrewResults() {
           <section className={styles.notice}>
             <h1 className={styles.title}>חסר לנו עוד פרט אחד לפני שבודקים</h1>
             <p>כדי להציג רק מקומות שבאמת יכולים לקבל את ההורה, אנחנו צריכים לדעת: {(data.missing ?? []).map((m) => MISSING_HE[m] ?? m).join(", ")}.</p>
-            <Link href="/he/intake" className={styles.primary}>
-              חזרה לשאלון
-            </Link>
+            {data.interpretation.clarification_question ? <p className={styles.warn}>{data.interpretation.clarification_question}</p> : null}
+            <Understood interpretation={data.interpretation} onFix={fixUnderstood} />
+            <button type="button" className={styles.primary} onClick={fixUnderstood}>
+              להשלמה בשאלון
+            </button>
           </section>
         ) : (
           <>
@@ -214,6 +286,7 @@ export default function HebrewResults() {
               {data.interpretation.clarification_question ? (
                 <p className={styles.warn}>שאלה שתעזור לדייק: {data.interpretation.clarification_question}</p>
               ) : null}
+              <Understood interpretation={data.interpretation} onFix={fixUnderstood} />
             </section>
 
             {data.oomniker && (data.oomniker.lines.length || data.oomniker.actions.length) ? (

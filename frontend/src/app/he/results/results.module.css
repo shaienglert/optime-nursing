@@ -301,3 +301,84 @@ img.photo {
     grid-template-columns: 1fr;
   }
 }
+
+/* What the free text was understood as. */
+.understood {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--hairline);
+}
+
+.understoodTitle {
+  margin: 0 0 10px;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.understoodList {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+}
+
+.understoodRow {
+  display: grid;
+  grid-template-columns: minmax(110px, 30%) 1fr;
+  gap: 12px;
+  font-size: 15px;
+}
+
+.understoodRow dt {
+  color: var(--secondary);
+}
+
+.understoodRow dd {
+  margin: 0;
+  color: var(--ink);
+}
+
+.basis {
+  color: var(--secondary);
+  font-size: 13px;
+}
+
+.unchecked {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #fff6e8;
+  color: var(--warm);
+  font-size: 15px;
+}
+
+.unchecked ul {
+  margin: 6px 0;
+  padding-inline-start: 20px;
+}
+
+.unchecked p {
+  margin: 0;
+}
+
+.notUsed {
+  margin: 12px 0 0;
+  color: var(--secondary);
+  font-size: 14px;
+}
+
+.fix {
+  margin-top: 12px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: 15px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.fix:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}

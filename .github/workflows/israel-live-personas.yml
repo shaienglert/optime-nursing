@@ -15,7 +15,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: python scripts/israel_live/complex_freetext_personas.py https://oomnik-il-api.onrender.com
+      - run: python scripts/israel_live/complex_freetext_personas.py https://oomnik-il-api.onrender.com 3
       - uses: actions/upload-artifact@v4
         with:
           name: israel-complex-personas

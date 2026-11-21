@@ -194,10 +194,29 @@ export type IsraelResultCard = {
   source: { basis: string; label: string; updated_at: string | null };
   rank_key: unknown[];
 };
+export type IsraelUnderstood = {
+  field: string;
+  label: string;
+  value: unknown;
+  value_he: string;
+  quote: string | null;
+  basis: "TEXT" | "TEXT_FIRST_LOCALITY" | "TEXT_LOCALITY_MATCH" | "INFERRED_FROM_BUDGET";
+};
+
 export type IsraelResults = {
   status: "OK" | "NEEDS_INPUT";
   missing?: string[];
-  interpretation: { status: string; message?: string; clarification_question?: string | null; conflicts?: unknown[] };
+  interpretation: {
+    status: string;
+    message?: string;
+    clarification_question?: string | null;
+    conflicts?: unknown[];
+    understood?: IsraelUnderstood[];
+    understood_state?: Record<string, unknown>;
+    not_used?: { text: string; importance: string; importance_he: string }[];
+    unchecked_requirements?: string[];
+    city_unrecognized?: string;
+  };
   musts?: IsraelKeyLabel[];
   preferences?: IsraelKeyLabel[];
   funnel?: {

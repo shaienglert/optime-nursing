@@ -205,3 +205,13 @@ The existing `LICENSE_CURRENTLY_VALID` MUST reads license status and expiry; for
 ## 2026-11-19: Personal links bypass the site password
 
 The site gate (Basic auth) and the facility portal (Bearer session) share the Authorization header, so the portal's calls replaced the Basic credentials and the password prompt looped forever. Personal links now skip the gate: `/he/portal/{token}`, `/he/inquiry/{token}`, `/provider/{id}/israel`, their token-in-path API calls, and `/api/backend/provider/*` calls carrying a Bearer session. They carry their own secret; everything else (landing, intake, results, facility pages, search API) stays behind the password.
+
+## 2026-11-21: Free text is never dropped; families see what was understood (owner-approved)
+
+From the live run of 10 complex free-text cases (2026-11-20):
+- Anything the family wrote that no field holds is returned as `not_used`. A requirement among them (importance MUST) is shown as "a condition we cannot check": results stay, with a clear note to ask each facility. Before, such text was dropped silently (a psychogeriatric framework).
+- New MUST `IL_PSYCHOGERIATRIC_UNIT` from `israelMarket.specialUnits = [PSYCHOGERIATRIC]`, checked against the special units the facility listed (listed -> PASS, units listed without it -> FAIL, not answered -> PENDING).
+- "מה הבנו ממה שכתבתם": every field the interpreter filled, in Hebrew, with how it was read. "לתיקון" copies it into the questionnaire (only where the family left a button answer empty) and opens the editable summary. The intake now restores the previous answers instead of starting empty.
+- Locality: two localities keep the first; abbreviations (פ"ת, ת"א, ב"ש, ראשל"צ...) expand; a locality written in the text with a preposition (מקריית שמונה) is found when the interpreter left the city empty; a city that cannot be located is asked for by name instead of searching nationwide.
+- A monthly budget with no mention of קוד, רווחה or משרד הבריאות is read as private payment, shown as an inference the family can correct.
+- A missing required item always comes with a question. An invalid interpreter packet is retried once.

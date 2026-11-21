@@ -74,6 +74,7 @@ ISRAEL_QUESTIONNAIRE_PATCH = {
         "city": "explicit Israeli locality name as written",
         "maxDistanceKm": "positive integer kilometres; only when the text states a distance in km",
         "medicalNeeds": ["VENTILATION|WANDERING|PEG|NG_TUBE"],
+        "specialUnits": ["PSYCHOGERIATRIC; only when the text asks for a psychogeriatric ward or framework (פסיכוגריאטרי/ת), or for a closed psychiatric framework for an elderly person"],
         "isCouple": "boolean; true only when two people will move together",
         "partnerSameLevel": "boolean; only when the text says whether both partners have the same functional level",
         "community": "SECULAR|TRADITIONAL|RELIGIOUS|HAREDI|MUSLIM|CHRISTIAN|DRUZE",
@@ -107,6 +108,11 @@ ISRAEL_SEMANTIC_RULES = [
     "community only from an explicit self-description (חילונים, מסורתיים, דתיים, חרדים, מוסלמים, נוצרים, דרוזים). Do not infer community, kashrut or Shabbat from a name, a town or a language.",
     "shelterNeed: ממ\"ד in the room or apartment = ROOM; protected space on the same floor = FLOOR. shelterIsCondition only when the client says it is a condition or that they will not accept less. A request for protection for a bedridden resident is bedridden=true, not a shelterNeed.",
     "For minBedrooms, privateCaregiver, parkingType, petRequired and requiredDiets, only extract explicit requirements, never optional preferences. Two bedrooms is 2; three rooms alone does not establish bedrooms. For a required private caregiver with no specified arrangement, set UNCLEAR and ask whether the caregiver visits or lives with the resident. These terms can be stated in Hebrew or English.",
+    "city is one Israeli locality without a leading preposition letter: מקריית שמונה -> קריית שמונה, בחיפה -> חיפה. When several localities are named (אשדוד או אשקלון), city is the first; record the others in a statement. Written abbreviations are localities: פ\"ת = פתח תקווה, ת\"א = תל אביב, ב\"ש = באר שבע, ראשל\"צ = ראשון לציון.",
+    "Short or telegraphic messages are normal: 'קוד יש' = MOH_CODE; ממ\"ד = protected room; a number next to אמא/אבא is an age. Interpret them; do not reject them.",
+    "fundingPathway PRIVATE also when the client states a monthly budget or says they will pay, and mentions no קוד and no רווחה; quote the budget phrase.",
+    "specialUnits PSYCHOGERIATRIC for a psychogeriatric ward or framework, or a closed psychiatric framework for an elderly person (for example after psychiatric hospitalization). Dementia alone is COGNITIVE_FRAIL, not PSYCHOGERIATRIC.",
+    "Never drop a request. Every need, condition or wish the client states that no israelMarket field can hold gets its own statement with mapped_parameters empty and importance MUST when the client presents it as required (חייב, חובה, צריך מסגרת, לא נסכים בלי), else NICE.",
     "Minimum dimensions for Israel: location is an Israeli locality; affordability is answered by a monthly budget, or by MOH_CODE or WELFARE_ASSISTANCE funding, or by an explicit statement that funding is not yet known.",
 ]
 

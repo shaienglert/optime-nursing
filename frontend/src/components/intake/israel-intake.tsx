@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { useQuestionnaire, type QuestionnaireState } from "@/context/questionnaire-context";
 import { getApiBaseUrl, joinApiUrl } from "@/lib/api";
 import { fetchIsraelFamilyAdvice, type IsraelFamilyAdvice } from "@/lib/israel-facility";
-import { QUESTIONNAIRE_SESSION_KEY, saveSessionJson } from "@/lib/search-session";
+import { QUESTIONNAIRE_SESSION_KEY, loadSessionJson, saveSessionJson } from "@/lib/search-session";
 
 import { IntakeIcon } from "./intake-icons";
 import styles from "./israel-intake.module.css";
@@ -496,6 +496,23 @@ export function IsraelIntake() {
   const askContinuity = advice?.ask_continuity ?? confirmed?.israelMarket?.functionalLevel === "INDEPENDENT";
   const [error, setError] = useState(false);
   const [localities, setLocalities] = useState<string[]>([]);
+
+  // Changing answers starts from the family's previous answers, not an empty form. With
+  // ?review=1 (sent from "מה הבנו מכם") it opens the summary, where every answer is editable.
+  useEffect(() => {
+    let cancelled = false;
+    async function restore() {
+      await Promise.resolve();
+      const saved = loadSessionJson<QuestionnaireState>(QUESTIONNAIRE_SESSION_KEY);
+      if (cancelled || !saved?.israelMarket) return;
+      setDraft({ israel: { ...EMPTY.israel, ...(saved.israelMarket as Israel) }, notes: String(saved.notes ?? "") });
+      if (new URLSearchParams(window.location.search).get("review") === "1") setSummary(true);
+    }
+    void restore();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
