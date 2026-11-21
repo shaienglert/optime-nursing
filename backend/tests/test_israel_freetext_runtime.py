@@ -124,3 +124,13 @@ def test_english_clarification_is_never_shown():
     packet["next_question"] = "What is the monthly budget?"
     _, info = _run(text, packet)
     assert info["clarification_question"] is None
+
+
+def test_every_value_shown_to_the_family_is_hebrew():
+    from app.services.semantic_field_contract import ISRAEL_FIELD_RULES
+
+    for path, rule in ISRAEL_FIELD_RULES.items():
+        for choice in rule.choices or ():
+            if choice in {"UNCLEAR"} or path.endswith(("partnerSameLevel",)):
+                continue
+            assert r.VALUE_HE.get(choice), f"{path}={choice} has no Hebrew"

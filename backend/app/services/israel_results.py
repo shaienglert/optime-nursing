@@ -117,7 +117,14 @@ VALUE_HE = {
     "PEG": "הזנה ב־PEG", "NG_TUBE": "זונדה", "PSYCHOGERIATRIC": "פסיכוגריאטרית", "SECULAR": "חילוני", "TRADITIONAL": "מסורתי",
     "RELIGIOUS": "דתי", "HAREDI": "חרדי", "MUSLIM": "מוסלמי", "CHRISTIAN": "נוצרי", "DRUZE": "דרוזי", "KOSHER": "כשר",
     "MEHADRIN": "כשר מהדרין", "IMPORTANT": "חשוב", "HE": "עברית", "RU": "רוסית", "AR": "ערבית", "EN": "אנגלית", "AM": "אמהרית",
-    "YI": "יידיש", "FR": "צרפתית", "ES": "ספרדית", "RO": "רומנית", "ROOM": "ממ\"ד בחדר", "FLOOR": "מרחב מוגן בקומה",
+    "YI": "יידיש", "FR": "צרפתית", "ES": "ספרדית", "RO": "רומנית",
+    "LUXURY": "יוקרתי", "MODERN": "מודרני", "BOUTIQUE": "בוטיק", "HOMEY": "ביתי", "URBAN": "עירונית", "RURAL": "כפרית",
+    "GARDENING": "גינון", "CRAFTS": "יצירה", "GAMES": "משחקים", "MUSIC": "מוזיקה", "LECTURES": "הרצאות", "MOVEMENT": "תנועה",
+    "OUTINGS": "יציאות", "SPIRITUAL": "רוחניות", "MEDICAL": "טיפול רפואי", "SOCIAL": "חיי חברה", "SAFETY": "בטיחות",
+    "PEACE_OF_MIND": "שקט נפשי", "PRIVATE_SPACE": "פרטיות", "PEOPLE_AROUND": "אנשים מסביב", "STRUCTURED": "סדר יום קבוע",
+    "FLEXIBLE": "סדר יום גמיש", "DIABETIC": "סוכרתי", "TEXTURE_MODIFIED": "מרקם מותאם", "VEGETARIAN": "צמחוני",
+    "GLUTEN_FREE": "ללא גלוטן", "LOW_SALT": "דל מלח", "VEGAN": "טבעוני", "HALAL": "חלאל", "VISITS": "מגיע/ה לביקורים",
+    "LIVE_IN": "מתגורר/ת", "REGULAR": "רגילה", "ACCESSIBLE": "נגישה", "COVERED": "מקורה", "ROOM": "ממ\"ד בחדר", "FLOOR": "מרחב מוגן בקומה",
 }
 IMPORTANCE_HE = {"MUST": "חובה", "NICE": "רצוי", "CONTEXT": "רקע", "UNKNOWN": "לא ברור"}
 
@@ -397,6 +404,12 @@ def build_israel_results(db: Session, questionnaire_state: Dict[str, Any], natur
             interpretation["city_unrecognized"] = written_city
             interpretation["clarification_question"] = f"לא זיהינו את היישוב \"{written_city}\". באיזה יישוב בישראל לחפש?"
         return {"status": "NEEDS_INPUT", "missing": missing, "interpretation": interpretation, "results": []}
+
+    # A budget question is noise when the code, welfare or complex nursing already covers funding.
+    question = str(interpretation.get("clarification_question") or "")
+    covered = str(israel.get("fundingPathway") or "").upper() in {"MOH_CODE", "WELFARE_ASSISTANCE"} or str(israel.get("functionalLevel") or "").upper() == "COMPLEX_NURSING"
+    if covered and re.search(r"תקציב|מימון|לממן|פרטי", question):
+        interpretation["clarification_question"] = None
 
     intent = build_client_intent({"israelMarket": israel}, text, {}, {})
     records, generated_at = load_israel_records()
