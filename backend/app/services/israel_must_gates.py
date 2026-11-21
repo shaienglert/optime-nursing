@@ -2,8 +2,8 @@
 
 The Israeli lists are an outreach catalog. A gate is decided only by what the
 facility itself filled in when it registered (basis FACILITY_SUPPLIED); list
-data and license type decide nothing. Anything else is PENDING, never PASS or
-FAIL.
+data and license type do not establish care eligibility. The on-site ward gate
+can also use the department catalog. Missing evidence stays PENDING.
 """
 
 from __future__ import annotations
@@ -281,7 +281,15 @@ def evaluate_israel_must(row: Dict[str, Any], must: Dict[str, Any]) -> tuple[str
         # "No bedridden residents here" says nothing about whether it could protect one.
         return PENDING, "FACILITY_DID_NOT_STATE_BEDRIDDEN_PROTECTION"
     if key == "IL_NURSING_CONTINUITY":
-        return yes_no_gate(row, "on_site_nursing_continuity")
+        departments = _fact(row, "care_capabilities", "departments")
+        if _stated(departments) and any(
+            DEPARTMENT_LEVELS.get(str(item).strip()) == "NURSING" for item in departments["value"]
+        ):
+            return PASS, "FACILITY_HAS_ON_SITE_NURSING_WARD"
+        # In the synthetic pilot, the fixture's care levels model services at this site.
+        if row.get("synthetic") is True and "NURSING" in (_levels_from(row) or set()):
+            return PASS, "FACILITY_HAS_ON_SITE_NURSING_WARD"
+        return PENDING, "FACILITY_ON_SITE_NURSING_WARD_NOT_CONFIRMED"
     if key == SHELTER_KEY:
         outcome = shelter_meets(_answers(row), str(must.get("value") or "FLOOR"))
         return outcome, {PASS: "FACILITY_SHELTER_MEETS_MINIMUM", FAIL: "FACILITY_SHELTER_FARTHER_THAN_MINIMUM"}.get(outcome, "FACILITY_DID_NOT_ANSWER_SHELTER")
@@ -381,7 +389,7 @@ def israel_additional_musts(questionnaire_state: Dict[str, Any]) -> list[Dict[st
             "verification": "where the facility says its protected space is",
         })
     if family.get("functionalLevel") == "INDEPENDENT" and family.get("nursingContinuity") == "REQUIRED":
-        musts.append({"key": "IL_NURSING_CONTINUITY", "reason": "Family requires an on-site nursing transition option."})
+        musts.append({"key": "IL_NURSING_CONTINUITY", "reason": "Family requires an on-site nursing ward."})
     requirements = {
         "minBedrooms": lambda v: type(v) is int and 1 <= v <= 20,
         "privateCaregiver": lambda v: v in ("VISITS", "LIVE_IN", "UNCLEAR"),
@@ -413,8 +421,6 @@ MIXED_FITS = {"SECULAR", "TRADITIONAL"}
 def israel_nice_to_haves(questionnaire_state: Dict[str, Any]) -> list[Dict[str, Any]]:
     family = _family(questionnaire_state)
     nice: list[Dict[str, Any]] = []
-    if family.get("functionalLevel") == "INDEPENDENT" and family.get("nursingContinuity") == "PREFERRED":
-        nice.append({"key": "IL_NURSING_CONTINUITY", "reason": "Family prefers an on-site nursing transition option."})
     community = str(family.get("community") or "").upper()
     if community in COMMUNITIES:
         nice.append({"key": "IL_COMMUNITY", "value": community, "reason": "Preferred community character."})
@@ -499,9 +505,6 @@ def evaluate_israel_nice(row: Dict[str, Any], nice: Dict[str, Any]) -> str:
         return UNKNOWN
     key = str(nice.get("key") or "")
     value = nice.get("value")
-    if key == "IL_NURSING_CONTINUITY":
-        outcome, _ = yes_no_gate(row, "on_site_nursing_continuity")
-        return {PASS: MATCH, FAIL: MISMATCH}.get(outcome, UNKNOWN)
     if key == "IL_COMMUNITY":
         character = str(answers.get("religious_character") or "").upper()
         if not character:

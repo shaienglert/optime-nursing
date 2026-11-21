@@ -98,7 +98,6 @@ SECTIONS: List[Dict[str, Any]] = [
                     ("HOSPICE", "הוספיס / טיפול תומך"),
                 ],
             ),
-            _q("on_site_nursing_continuity", "האם לדיירי הדיור המוגן יש אפשרות להגיש בקשה למעבר למחלקה סיעודית ברישיון באותו מתחם?", "single", options=[("YES", "כן"), ("NO", "לא")]),
             _q("moh_code_agreement", "האם יש למוסד הסכם קוד עם משרד הבריאות?", "single", required=True, core=True, options=[("YES", "כן"), ("NO", "לא")]),
             _q(
                 "license_authority",
