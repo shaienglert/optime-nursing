@@ -879,8 +879,58 @@ def _repair_clarification_contract_with_ai(*, result: Dict[str, Any], payload: D
     return repaired
 
 
+# A detail field names its parent need in its own words ("He uses oxygen at night" is an
+# oxygen use AND an oxygen need). When the model emits the detail but forgets the parent,
+# the parent is completed from that same quote, only if the quote names the need itself.
+# Nothing is inferred: without the word, the packet is still rejected as before.
+_PARENT_NEED_WORDS = {
+    "Oxygen": r"oxygen|חמצן",
+    "Dialysis": r"dialysis|דיאליז",
+    "Wound care": r"wound|פצע",
+}
+
+
+def _complete_stated_parent_needs(packet: Dict[str, Any], user_text: str) -> None:
+    from app.services.semantic_field_contract import FIELD_RULES
+
+    patch = packet.get("questionnaire_patch")
+    sources = packet.get("questionnaire_patch_sources")
+    if not isinstance(patch, dict) or not isinstance(sources, dict):
+        return
+    for path, rule in FIELD_RULES.items():
+        if not rule.dependency or "." not in path:
+            continue
+        parent_path, expected = rule.dependency
+        group, leaf = path.split(".", 1)
+        block = patch.get(group)
+        quote = sources.get(path)
+        if not isinstance(block, dict) or leaf not in block or not isinstance(quote, str):
+            continue
+        if str(block.get(leaf)).strip().lower() in {"not sure", "unknown", "none", "no"}:
+            continue  # an unknown or negative detail never establishes the need
+        uncertain = any(
+            str(t.get("raw_text") or "") == quote and str(t.get("knowledge_state") or "").upper() in {"UNKNOWN", "AMBIGUOUS"}
+            for t in packet.get("statements") or [] if isinstance(t, dict)
+        )
+        if uncertain:
+            continue
+        words = _PARENT_NEED_WORDS.get(expected)
+        if not words or quote not in user_text or not re.search(words, quote, re.IGNORECASE):
+            continue
+        parent_leaf = parent_path.split(".", 1)[1]
+        needs = block.get(parent_leaf)
+        needs = list(needs) if isinstance(needs, list) else []
+        if expected in needs:
+            continue
+        block[parent_leaf] = needs + [expected]
+        sources.setdefault(parent_path, quote)
+        packet.setdefault("parent_need_completion", []).append({"field": parent_path, "value": expected, "quote": quote})
+
+
 def _validate_patch_contract(packet: Dict[str, Any], user_text: str, state: Dict[str, Any]) -> None:
     from app.services.canonical_structured_profile import build_structured_profile, in_schema
+
+    _complete_stated_parent_needs(packet, user_text)
 
     profile = build_structured_profile(state, packet, family_text=user_text)
     issues = [f"OUT_OF_SCHEMA:{item['field']}" for item in profile["out_of_schema"] if item.get("field")]
