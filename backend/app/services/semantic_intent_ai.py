@@ -112,6 +112,9 @@ ISRAEL_SEMANTIC_RULES = [
     "Short or telegraphic messages are normal: 'קוד יש' = MOH_CODE; ממ\"ד = protected room; a number next to אמא/אבא is an age. Interpret them; do not reject them.",
     "fundingPathway PRIVATE also when the client states a monthly budget or says they will pay, and mentions no קוד and no רווחה; quote the budget phrase.",
     "specialUnits PSYCHOGERIATRIC for a psychogeriatric ward or framework, or a closed psychiatric framework for an elderly person (for example after psychiatric hospitalization). Dementia alone is COGNITIVE_FRAIL, not PSYCHOGERIATRIC.",
+    "כשר / מהדרין / בד\"ץ is kashrut, never requiredDiets HALAL; HALAL only when the client writes חלאל.",
+    "When the text contradicts itself about the functional level (עצמאית לגמרי but needs full help and cannot get out of bed), use functionalLevel UNCLEAR and ask which is true; never resolve the contradiction yourself.",
+    "Ask clarification questions in Hebrew only.",
     "Never drop a request. Every need, condition or wish the client states that no israelMarket field can hold gets its own statement with mapped_parameters empty and importance MUST when the client presents it as required (חייב, חובה, צריך מסגרת, לא נסכים בלי), else NICE.",
     "Minimum dimensions for Israel: location is an Israeli locality; affordability is answered by a monthly budget, or by MOH_CODE or WELFARE_ASSISTANCE funding, or by an explicit statement that funding is not yet known.",
 ]

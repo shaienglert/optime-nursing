@@ -134,6 +134,10 @@ def _value_he(key: str, value: Any) -> str:
     return VALUE_HE.get(str(value), str(value))
 
 
+def _squash(text: Any) -> str:
+    return re.sub(r"[\s\"'״׳.,!?]", "", str(text or ""))
+
+
 def _locality_from(value: Any) -> Optional[str]:
     """A locatable locality from what the interpreter wrote: the name itself, an abbreviation,
     or the first locatable name in a list ("אשדוד או אשקלון")."""
@@ -234,6 +238,17 @@ def interpret(questionnaire_state: Dict[str, Any], text: str) -> Tuple[Dict[str,
                 understood = [r for r in understood if r["field"] != "city"]
                 understood.append({"field": "city", "label": FIELD_HE["city"], "value": found[0], "value_he": found[0], "quote": found[1], "basis": "TEXT_LOCALITY_MATCH"})
 
+    # "כשר" is kashrut, never a halal diet: keep HALAL only when the family wrote it.
+    diets = israel.get("requiredDiets")
+    if isinstance(diets, list) and "HALAL" in diets and not re.search(r"חלאל|halal|حلال", text, re.I):
+        israel["requiredDiets"] = [d for d in diets if d != "HALAL"]
+        if not israel["requiredDiets"]:
+            israel.pop("requiredDiets")
+        understood = [u for u in understood if u["field"] != "requiredDiets"] + (
+            [{"field": "requiredDiets", "label": FIELD_HE["requiredDiets"], "value": israel["requiredDiets"], "value_he": _value_he("requiredDiets", israel["requiredDiets"]), "quote": None, "basis": "TEXT"}]
+            if israel.get("requiredDiets") else []
+        )
+
     # A monthly budget with no MoH code or welfare mentioned means paying privately. Shown
     # as an inference so the family can correct it.
     if (
@@ -250,21 +265,28 @@ def interpret(questionnaire_state: Dict[str, Any], text: str) -> Tuple[Dict[str,
     importance = {str(s.get("raw_text") or "").strip(): str(s.get("importance") or "UNKNOWN").upper() for s in result.get("statements") or [] if isinstance(s, dict)}
     not_used: List[Dict[str, Any]] = []
     seen = set()
+    used_quotes = [_squash(u.get("quote")) for u in understood if u.get("quote")]
     for item in profile.get("out_of_schema") or []:
         quote = str(item.get("quote") or item.get("text") or "").strip()
         if not quote or quote in seen:
             continue
+        squashed = _squash(quote)
+        if any(q and (q in squashed or squashed in q) for q in used_quotes):
+            continue  # this sentence was used for a field shown under "מה הבנו"
         seen.add(quote)
         level = importance.get(quote, "UNKNOWN")
         not_used.append({"text": quote, "importance": level, "importance_he": IMPORTANCE_HE.get(level, "לא ברור")})
 
     order = list(FIELD_HE)
     understood.sort(key=lambda r: order.index(r["field"]) if r["field"] in order else 99)
+    question = result.get("next_question")
+    if question and not re.search(r"[\u0590-\u05FF]", str(question)):
+        question = None  # the family is asked in Hebrew only; a missing item gets a Hebrew question below
     return state, {
         "status": "INTERPRETED",
         "conflicts": profile.get("conflicts") or [],
         "unprocessed": profile.get("unprocessed") or [],
-        "clarification_question": result.get("next_question"),
+        "clarification_question": question,
         "understood": understood,
         "understood_state": {r["field"]: r["value"] for r in understood},
         "not_used": not_used,
@@ -282,7 +304,8 @@ MISSING_QUESTION_HE = {
 def missing_required(israel: Dict[str, Any]) -> List[str]:
     level = str(israel.get("functionalLevel") or "").strip()
     missing = []
-    if not level:
+    unit_defines_setting = "PSYCHOGERIATRIC" in {str(u).upper() for u in israel.get("specialUnits") or []}
+    if not level and not unit_defines_setting:
         missing.append("functionalLevel")
     if level.upper() != "COMPLEX_NURSING" and not str(israel.get("fundingPathway") or "").strip():
         missing.append("fundingPathway")

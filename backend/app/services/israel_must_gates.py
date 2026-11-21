@@ -131,7 +131,10 @@ def israel_must_haves(questionnaire_state: Dict[str, Any]) -> list[Dict[str, Any
     answers = questionnaire_state.get("israelMarket") if isinstance(questionnaire_state.get("israelMarket"), dict) else {}
     level = str(answers.get("functionalLevel") or "").upper()
     funding = str(answers.get("fundingPathway") or "").upper()
-    musts = [{
+    units = {str(u).upper() for u in answers.get("specialUnits") or []}
+    musts = [] if (not level and units & set(SPECIAL_UNIT_NEEDS)) else [{
+        # A psychogeriatric unit defines the setting itself (as complex nursing does), so a
+        # family that asks for one is not also asked for a functional level.
         "key": FUNCTIONAL_LEVEL_KEY,
         "value": level if level in FAMILY_LEVELS else None,
         "reason": "In Israel the resident's functional level decides which licensed setting may serve them.",

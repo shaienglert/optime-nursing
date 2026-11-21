@@ -90,3 +90,37 @@ def test_psychogeriatric_is_a_must_checked_against_listed_units():
     assert special_unit_gate(row(["SUPPORTIVE"]), "PSYCHOGERIATRIC")[0] == FAIL
     assert special_unit_gate(row([]), "PSYCHOGERIATRIC")[0] == PENDING  # not answered is not a no
     assert special_unit_gate({"registration_status": "SYNTHETIC"}, "PSYCHOGERIATRIC")[0] == PENDING
+
+
+def test_kosher_is_never_turned_into_halal():
+    text = 'אמא סיעודית בחיפה. אוכל כשר.'
+    state, info = _run(text, _packet({"city": "חיפה", "requiredDiets": ["HALAL"]}, [{"raw_text": text, "importance": "MUST", "mapped_parameters": ["israelMarket.requiredDiets"], "status": "USED"}], {"israelMarket.requiredDiets": "אוכל כשר.", "israelMarket.city": text}))
+    assert "requiredDiets" not in state["israelMarket"]
+    assert not any(u["field"] == "requiredDiets" for u in info["understood"])
+
+
+def test_psychogeriatric_unit_needs_no_functional_level():
+    from app.services.israel_must_gates import israel_must_haves
+
+    israel = {"specialUnits": ["PSYCHOGERIATRIC"], "fundingPathway": "MOH_CODE", "city": "כפר סבא"}
+    assert r.missing_required(israel) == []
+    assert [m["key"] for m in israel_must_haves({"israelMarket": israel})] == ["IL_MOH_CODE_AGREEMENT"]
+
+
+def test_sentence_used_for_a_field_is_not_reported_as_unused():
+    text = "היא תשושה, הולכת עם הליכון ונפלה פעמיים. בחיפה."
+    packet = _packet(
+        {"functionalLevel": "FRAIL", "city": "חיפה"},
+        [{"raw_text": "היא תשושה, הולכת עם הליכון ונפלה פעמיים.", "importance": "MUST", "mapped_parameters": [], "status": "USED"}, {"raw_text": "בחיפה.", "importance": "MUST", "mapped_parameters": ["israelMarket.city"], "status": "USED"}],
+        {"israelMarket.functionalLevel": "היא תשושה, הולכת עם הליכון ונפלה פעמיים.", "israelMarket.city": "בחיפה."},
+    )
+    _, info = _run(text, packet)
+    assert info["not_used"] == [] and info["unchecked_requirements"] == []
+
+
+def test_english_clarification_is_never_shown():
+    text = "אמא סיעודית בחיפה."
+    packet = _packet({"city": "חיפה"}, [{"raw_text": text, "importance": "MUST", "mapped_parameters": ["israelMarket.city"], "status": "USED"}], {"israelMarket.city": text})
+    packet["next_question"] = "What is the monthly budget?"
+    _, info = _run(text, packet)
+    assert info["clarification_question"] is None
