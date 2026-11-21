@@ -41,12 +41,16 @@ LAS_VEGAS_OVERLAY_VERSION = "verified-housing-overlay-v1"
 MARKET_UNIVERSE_FILES = {
     "florida": "florida_facility_universe_canonical.json",
     "nevada": "nevada_facility_universe_canonical.json",
+    "israel": "israel_facility_universe_canonical.json",
+    "israel-synthetic": "israel_synthetic/facility_universe.json",
     "synthetic-pilot": "synthetic_pilot/facility_universe.json.gz.b64",
 }
 MARKET_ALIASES = {
     "fl": "florida",
     "miami": "florida",
     "nv": "nevada",
+    "il": "israel",
+    "il-synthetic": "israel-synthetic",
     "las vegas": "las-vegas",
     "las_vegas": "las-vegas",
     "las-vegas-nevada": "las-vegas",

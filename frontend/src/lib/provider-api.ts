@@ -1,4 +1,5 @@
 import { getApiBaseUrl, joinApiUrl } from "@/lib/api";
+import { providerAuthHeaders, type ProviderSession } from "@/lib/provider-session";
 
 /**
  * Client for the provider-facing portal.
@@ -97,9 +98,9 @@ export type ProfileSnapshot = {
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(joinApiUrl(getApiBaseUrl(), path), {
-    headers: { "Content-Type": "application/json" },
     cache: "no-store",
     ...init,
+    headers: { "Content-Type": "application/json", ...providerAuthHeaders(), ...(init?.headers ?? {}) },
   });
   if (!response.ok) {
     // The backend answers a refused edit with a readable reason ("Role ACTIVITIES may not
@@ -177,6 +178,46 @@ export async function removeFacilityPhoto(
   });
 }
 
+/** Uploaded photos are stored by the backend and served under /media/. */
+export function photoSrc(url: string): string {
+  return url.startsWith("/media/") ? joinApiUrl(getApiBaseUrl(), url) : url;
+}
+
+export async function uploadFacilityPhoto(
+  facilityId: number,
+  userId: number,
+  file: Blob,
+  caption?: string,
+): Promise<{ photo_id: number; url: string; completeness: Completeness }> {
+  const form = new FormData();
+  form.set("user_id", String(userId));
+  form.set("category", "general");
+  if (caption) form.set("caption", caption);
+  form.set("file", file, "photo.jpg");
+  // No Content-Type header: the browser sets the multipart boundary itself.
+  const response = await fetch(joinApiUrl(getApiBaseUrl(), `/provider/facilities/${facilityId}/photos/upload`), {
+    method: "POST",
+    body: form,
+    headers: providerAuthHeaders(),
+    cache: "no-store",
+  });
+  if (!response.ok) {
+    let detail = "";
+    try {
+      const body = (await response.json()) as { detail?: unknown };
+      detail = typeof body?.detail === "string" ? body.detail : "";
+    } catch {
+      detail = "";
+    }
+    throw new Error(detail || `Upload failed (${response.status})`);
+  }
+  return response.json();
+}
+
+export async function redeemPortalLink(token: string): Promise<ProviderSession> {
+  return request<ProviderSession>("/provider/portal/redeem", { method: "POST", body: JSON.stringify({ token }) });
+}
+
 export const PORTAL_SOURCE = "provider_portal";
 
 /** An answer we filled in from a licence or certification, not one the provider gave us. */
@@ -186,4 +227,117 @@ export function isDerived(question: ProfileQuestion): boolean {
 
 export function formatPercent(ratio: number): string {
   return `${Math.round(ratio * 100)}%`;
+}
+
+export type IsraelFunctionalLevel = "INDEPENDENT" | "FRAIL" | "NURSING" | "COGNITIVE_FRAIL";
+
+export type IsraelRegistration = {
+  functional_levels_served: IsraelFunctionalLevel[];
+  moh_code_agreement: "YES" | "NO";
+  license_id: string;
+  license_authority: "MINISTRY_OF_HEALTH" | "MINISTRY_OF_WELFARE";
+  license_expiration_date: string;
+  monthly_price_ils: number | null;
+  deposit_ils: number | null;
+  questionnaire?: Record<string, unknown>;
+};
+
+export type QuestionOption = { value: string; label: string };
+export type Question = {
+  key: string;
+  label: string;
+  type: "text" | "textarea" | "phone" | "email" | "url" | "int" | "money" | "number" | "single" | "multi" | "per_level" | "date" | "price_offers";
+  required: boolean;
+  core: boolean;
+  options?: QuestionOption[];
+  min?: number;
+  max?: number;
+  max_length?: number;
+};
+export type QuestionnaireSection = { key: string; title: string; intro: string; questions: Question[] };
+export type PriceOffer = {
+  track: string;
+  room_type: string;
+  level: string;
+  monthly_from_ils: number | null;
+  deposit_from_ils: number | null;
+};
+export type QuestionnaireSchema = {
+  version: string;
+  sections: QuestionnaireSection[];
+  price_offer_options: { tracks: QuestionOption[]; rooms: QuestionOption[]; levels: QuestionOption[]; max: number };
+};
+
+export async function fetchIsraelQuestionnaireSchema(): Promise<QuestionnaireSchema> {
+  return request<QuestionnaireSchema>("/api/il/facility-questionnaire");
+}
+
+export async function fetchIsraelRegistration(
+  facilityId: number,
+): Promise<{ facility_id: number; registration: IsraelRegistration | null }> {
+  return request(`/provider/facilities/${facilityId}/israel-registration`);
+}
+
+export async function saveIsraelRegistration(
+  facilityId: number,
+  userId: number,
+  registration: IsraelRegistration,
+): Promise<{ facility_id: number; registration: IsraelRegistration; changed: boolean }> {
+  return request(`/provider/facilities/${facilityId}/israel-registration`, {
+    method: "PUT",
+    body: JSON.stringify({ user_id: userId, ...registration }),
+  });
+}
+
+
+export type ProviderInquiry = {
+  inquiry_id: number;
+  status: string;
+  status_label: string;
+  request: Record<string, string | number | null>;
+  messages: { from: string; kind: string; text?: string | null; monthly_ils?: number | null; deposit_ils?: number | null; at: string }[];
+  created_at: string | null;
+  visit: import("./israel-facility").VisitView | null;
+};
+
+export async function answerVisitAsFacility(
+  facilityId: number,
+  inquiryId: number,
+  body: { action: "CONFIRM" | "PROPOSE" | "CANCEL"; slot_index?: number; date?: string; time?: string; note?: string },
+): Promise<import("./israel-facility").VisitView> {
+  return request(`/provider/facilities/${facilityId}/inquiries/${inquiryId}/visit`, { method: "POST", body: JSON.stringify(body) });
+}
+
+export async function fetchProviderInquiries(facilityId: number): Promise<ProviderInquiry[]> {
+  const body = await request<{ inquiries: ProviderInquiry[] }>(`/provider/facilities/${facilityId}/inquiries`);
+  return body.inquiries;
+}
+
+export async function respondToInquiry(
+  facilityId: number,
+  inquiryId: number,
+  response: { kind: string; text?: string; monthly_ils?: number | null; deposit_ils?: number | null },
+): Promise<ProviderInquiry> {
+  return request<ProviderInquiry>(`/provider/facilities/${facilityId}/inquiries/${inquiryId}/respond`, {
+    method: "POST",
+    body: JSON.stringify(response),
+  });
+}
+
+export type VisitSchedule = {
+  weekly: Partial<Record<"SUN" | "MON" | "TUE" | "WED" | "THU" | "FRI" | "SAT", [string, string][]>>;
+  slot_minutes: number;
+  capacity: number;
+  lead_hours: number;
+  blocked_dates: string[];
+  modes: ("IN_PERSON" | "VIDEO")[];
+};
+export type VisitScheduleResponse = { schedule: VisitSchedule | null; calendar: import("./israel-facility").VisitCalendar };
+
+export async function fetchVisitSchedule(facilityId: number): Promise<VisitScheduleResponse> {
+  return request(`/provider/facilities/${facilityId}/visit-schedule`);
+}
+
+export async function saveVisitSchedule(facilityId: number, schedule: VisitSchedule): Promise<VisitScheduleResponse> {
+  return request(`/provider/facilities/${facilityId}/visit-schedule`, { method: "PUT", body: JSON.stringify(schedule) });
 }

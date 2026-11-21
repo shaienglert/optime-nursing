@@ -13,6 +13,7 @@ from typing import Dict, List
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from app.services.market_scope import active_state_code
 from app.models.competitive_intelligence import MarketMetricObservation
 from app.models.facility import Facility, FacilityLicenseRecord
 
@@ -43,7 +44,7 @@ def _licensed_nevada_inventory(db: Session) -> Dict[str, List[Dict[str, str]]]:
             func.coalesce(func.sum(Facility.beds), 0),
         )
         .join(Facility, Facility.id == FacilityLicenseRecord.facility_id)
-        .filter(Facility.state == "NV", FacilityLicenseRecord.status == "VERIFIED")
+        .filter(Facility.state == active_state_code(), FacilityLicenseRecord.status == "VERIFIED")
         .group_by(FacilityLicenseRecord.state_care_type)
         .all()
     )

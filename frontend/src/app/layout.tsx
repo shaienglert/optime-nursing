@@ -55,16 +55,19 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // The Israeli deployment is Hebrew-first and has its own page chrome.
+  const israel = process.env.OOMNIK_MARKET === "israel";
   return (
     <html
-      lang="en"
+      lang={israel ? "he" : "en"}
+      dir={israel ? "rtl" : undefined}
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <AppQuestionnaireProvider>
           {process.env.VERCEL_ENV === "production" && <UserIncidentMonitor />}
           <ProcessContinuityBridge>
-            <SiteHeader />
+            {israel ? null : <SiteHeader />}
             <div id="main-content" tabIndex={-1} className="flex-1">{children}</div>
           </ProcessContinuityBridge>
         </AppQuestionnaireProvider>

@@ -1,0 +1,22 @@
+name: Israel live personas
+on:
+  workflow_dispatch:
+  push:
+    branches: [israel-market-universe]
+    paths: [scripts/israel_live/**]
+permissions:
+  contents: read
+jobs:
+  run:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python scripts/israel_live/complex_freetext_personas.py https://oomnik-il-api.onrender.com 3
+      - uses: actions/upload-artifact@v4
+        with:
+          name: israel-complex-personas
+          path: israel_complex_personas.json

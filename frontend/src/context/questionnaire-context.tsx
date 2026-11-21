@@ -42,6 +42,47 @@ export type QuestionnaireState = {
   medicaidOriginalBudget?: number;
   moveTiming: string;
   careSearchApproach: string;
+  // Israeli market answers (local layer). Decided by the family's own buttons.
+  israelMarket?: {
+    relationship: string;
+    ageGroup: string;
+    functionalLevel: "INDEPENDENT" | "FRAIL" | "NURSING" | "COMPLEX_NURSING" | "COGNITIVE_FRAIL" | "UNCLEAR";
+    fundingPathway: "" | "MOH_CODE" | "WELFARE_ASSISTANCE" | "PRIVATE" | "UNCLEAR";
+    city: string;
+    maxDistanceKm: number | null;
+    monthlyBudgetIls: number | null;
+    // Owner-approved MUSTs (2026-11-14): filter only when stated.
+    medicalNeeds?: Array<"VENTILATION" | "WANDERING" | "PEG" | "NG_TUBE">;
+    hostsOvernight?: "" | "YES" | "NO";
+    nursingContinuity?: "REQUIRED" | "PREFERRED" | "NO_PREFERENCE";
+    minBedrooms?: number | null;
+    privateCaregiver?: "" | "VISITS" | "LIVE_IN" | "UNCLEAR";
+    parkingType?: "" | "REGULAR" | "ACCESSIBLE" | "COVERED";
+    petRequired?: boolean;
+    requiredDiets?: string[];
+    isCouple?: boolean | null;
+    partnerSameLevel?: boolean | null;
+    // Ranking-only preferences: a mismatch ranks lower, never hides a facility.
+    community?: string;
+    kashrut?: "" | "KOSHER" | "MEHADRIN";
+    shabbat?: "" | "IMPORTANT";
+    sameGenderCare?: "" | "IMPORTANT";
+    language?: string;
+    shelterInRoom?: "" | "IMPORTANT";
+    // Closest acceptable protected space; a condition only if the family says so.
+    shelterNeed?: "" | "ROOM" | "FLOOR";
+    shelterIsCondition?: boolean | null;
+    // Bedridden residents are shown only where the facility protects residents in bed.
+    bedridden?: boolean | null;
+    // Lifestyle (ranking only).
+    priority?: "" | "MEDICAL" | "SOCIAL" | "SAFETY" | "PEACE_OF_MIND";
+    setting?: "" | "URBAN" | "RURAL";
+    styles?: Array<"LUXURY" | "MODERN" | "BOUTIQUE" | "HOMEY">;
+    dayRhythm?: "" | "PRIVATE_SPACE" | "PEOPLE_AROUND" | "STRUCTURED" | "FLEXIBLE";
+    activities?: string[];
+    // Deposit ceiling for protected housing (0 = no deposit at all, null = not asked).
+    depositCapIls?: number | null;
+  };
   questionnaireCompletion: {
     // Explicit advisor consent is a UI control, not an AI-extracted resident fact.
     oomnikerRelaxedPreferences?: Array<{ parameter: string; input_fingerprint: string }>;

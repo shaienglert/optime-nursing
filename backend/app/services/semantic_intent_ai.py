@@ -64,7 +64,73 @@ SEMANTIC_AI_SYSTEM_RULES = [
 ]
 
 
+ISRAEL_QUESTIONNAIRE_PATCH = {
+    "israelMarket": {
+        "relationship": "explicit relationship in the family's words, e.g. אמא, אבא, סבתא, הורים, עבורי",
+        "functionalLevel": "INDEPENDENT|FRAIL|NURSING|COMPLEX_NURSING|COGNITIVE_FRAIL|UNCLEAR",
+        "fundingPathway": "MOH_CODE|WELFARE_ASSISTANCE|PRIVATE|UNCLEAR",
+        "monthlyBudgetIls": "positive monthly integer in shekels",
+        "depositCapIls": "non-negative integer in shekels; 0 only when the family explicitly wants no deposit",
+        "city": "explicit Israeli locality name as written",
+        "maxDistanceKm": "positive integer kilometres; only when the text states a distance in km",
+        "medicalNeeds": ["VENTILATION|WANDERING|PEG|NG_TUBE"],
+        "specialUnits": ["PSYCHOGERIATRIC; only when the text asks for a psychogeriatric ward or framework (פסיכוגריאטרי/ת), or for a closed psychiatric framework for an elderly person"],
+        "isCouple": "boolean; true only when two people will move together",
+        "partnerSameLevel": "boolean; only when the text says whether both partners have the same functional level",
+        "community": "SECULAR|TRADITIONAL|RELIGIOUS|HAREDI|MUSLIM|CHRISTIAN|DRUZE",
+        "kashrut": "KOSHER|MEHADRIN",
+        "shabbat": "IMPORTANT",
+        "sameGenderCare": "IMPORTANT; only when the text asks that personal care (bathing, dressing) be given by a caregiver of the same gender",
+        "language": "HE|RU|AR|EN|AM|YI|FR|ES|RO; the resident's main language",
+        "shelterNeed": "ROOM|FLOOR; farthest acceptable protected space",
+        "shelterIsCondition": "boolean; true only when the family says it is a condition",
+        "minBedrooms": "integer of at least 1; count bedrooms only, excluding living rooms",
+        "privateCaregiver": "VISITS|LIVE_IN|UNCLEAR; explicit requirement to bring a private external caregiver on admission; a future-only request does not belong in this field",
+        "parkingType": "REGULAR|ACCESSIBLE|COVERED; use REGULAR if parking is required with no specific type",
+        "petRequired": "boolean; true only if a pet needs to move with the resident",
+        "requiredDiets": ["DIABETIC|TEXTURE_MODIFIED|VEGETARIAN|GLUTEN_FREE|LOW_SALT|VEGAN|HALAL"],
+        "bedridden": "boolean; true only when the resident is explicitly bedridden",
+        "priority": "MEDICAL|SOCIAL|SAFETY|PEACE_OF_MIND; what matters most today",
+        "setting": "URBAN|RURAL",
+        "styles": ["LUXURY|MODERN|BOUTIQUE|HOMEY"],
+        "dayRhythm": "PRIVATE_SPACE|PEOPLE_AROUND|STRUCTURED|FLEXIBLE",
+        "activities": ["GARDENING|CRAFTS|GAMES|MUSIC|LECTURES|MOVEMENT|OUTINGS|SPIRITUAL"],
+    }
+}
+
+ISRAEL_SEMANTIC_RULES = [
+    "Israeli market. The client writes in Hebrew (sometimes Russian, Arabic or English). Fill only israelMarket fields; every value needs an exact source quote in the original language.",
+    "functionalLevel follows the Israeli licensing terms the client uses: עצמאי/ת = INDEPENDENT; תשוש/ה or needs partial help with bathing or dressing but walks alone = FRAIL; סיעודי/ת, bedridden or dependent in most daily activities = NURSING; only an explicit סיעודי/ת מורכב/ת or סיעוד מורכב = COMPLEX_NURSING (never inferred from a ventilator or other medical need, which stays in medicalNeeds); תשוש/ת נפש, or dementia that requires supervision or a closed ward = COGNITIVE_FRAIL. When the client says they do not know the level, use UNCLEAR and do not ask.",
+    "fundingPathway: קוד / קוד של משרד הבריאות = MOH_CODE; רווחה / סיוע של משרד הרווחה = WELFARE_ASSISTANCE; פרטי / נשלם בעצמנו = PRIVATE; not checked yet = UNCLEAR.",
+    "Amounts: '16 אלף' = 16000; 'מיליון וחצי' = 1500000; ש\"ח, ₪ and שקלים are shekels. Never convert from dollars.",
+    "medicalNeeds only from explicit statements: מונשם = VENTILATION; wandering, leaving home and getting lost, or an explicit need for a closed ward = WANDERING; PEG = PEG; זונדה = NG_TUBE.",
+    "For a couple, functionalLevel is the higher care level of the two; partnerSameLevel is false when the text describes different levels.",
+    "community only from an explicit self-description (חילונים, מסורתיים, דתיים, חרדים, מוסלמים, נוצרים, דרוזים). Do not infer community, kashrut or Shabbat from a name, a town or a language.",
+    "shelterNeed: ממ\"ד in the room or apartment = ROOM; protected space on the same floor = FLOOR. shelterIsCondition only when the client says it is a condition or that they will not accept less. A request for protection for a bedridden resident is bedridden=true, not a shelterNeed.",
+    "For minBedrooms, privateCaregiver, parkingType, petRequired and requiredDiets, only extract explicit requirements, never optional preferences. Two bedrooms is 2; three rooms alone does not establish bedrooms. For a required private caregiver with no specified arrangement, set UNCLEAR and ask whether the caregiver visits or lives with the resident. These terms can be stated in Hebrew or English.",
+    "city is one Israeli locality without a leading preposition letter: מקריית שמונה -> קריית שמונה, בחיפה -> חיפה. When several localities are named (אשדוד או אשקלון), city is the first; record the others in a statement. Written abbreviations are localities: פ\"ת = פתח תקווה, ת\"א = תל אביב, ב\"ש = באר שבע, ראשל\"צ = ראשון לציון.",
+    "Short or telegraphic messages are normal: 'קוד יש' = MOH_CODE; ממ\"ד = protected room; a number next to אמא/אבא is an age. Interpret them; do not reject them.",
+    "fundingPathway PRIVATE also when the client states a monthly budget or says they will pay, and mentions no קוד and no רווחה; quote the budget phrase.",
+    "specialUnits PSYCHOGERIATRIC for a psychogeriatric ward or framework, or a closed psychiatric framework for an elderly person (for example after psychiatric hospitalization). Dementia alone is COGNITIVE_FRAIL, not PSYCHOGERIATRIC.",
+    "כשר / מהדרין / בד\"ץ is kashrut, never requiredDiets HALAL; HALAL only when the client writes חלאל.",
+    "When the text contradicts itself about the functional level (עצמאית לגמרי but needs full help and cannot get out of bed), use functionalLevel UNCLEAR and ask which is true; never resolve the contradiction yourself.",
+    "Ask clarification questions in Hebrew only.",
+    "Never drop a request. Every need, condition or wish the client states that no israelMarket field can hold gets its own statement with mapped_parameters empty and importance MUST when the client presents it as required (חייב, חובה, צריך מסגרת, לא נסכים בלי), else NICE.",
+    "Minimum dimensions for Israel: location is an Israeli locality; affordability is answered by a monthly budget, or by MOH_CODE or WELFARE_ASSISTANCE funding, or by an explicit statement that funding is not yet known.",
+]
+
+
 def _required_output_schema() -> Dict[str, Any]:
+    from app.services.market_scope import is_israel_market
+
+    if is_israel_market():
+        schema = _base_required_output_schema()
+        schema["questionnaire_patch"] = copy.deepcopy(ISRAEL_QUESTIONNAIRE_PATCH)
+        return schema
+    return _base_required_output_schema()
+
+
+def _base_required_output_schema() -> Dict[str, Any]:
     return {
         "facts": ["string"],
         "preferences": ["string"],
@@ -165,12 +231,18 @@ def _selected_facility_property_traces(state: Dict[str, Any]) -> list[dict[str, 
     return result
 
 
+def _israel() -> bool:
+    from app.services.market_scope import is_israel_market
+
+    return is_israel_market()
+
+
 def _build_prompt(user_text: str, questionnaire_state: Dict[str, Any], learning_advice: Dict[str, Any]) -> Dict[str, Any]:
     from app.services.semantic_field_contract import describe_fields
     return {
         "role": "OPTIME_NURSING_EXPERT_SEMANTIC_INTERPRETER",
         "mission": "Understand the resident/family request at senior-living expert level before matching. Distinguish decision-critical client clarification from downstream facility research and non-blocking NICE/CONTEXT ambiguity.",
-        "rules": SEMANTIC_AI_SYSTEM_RULES,
+        "rules": SEMANTIC_AI_SYSTEM_RULES + (ISRAEL_SEMANTIC_RULES if _israel() else []),
         "response_constraints": {
             "style": "compact JSON; no repeated explanation",
             "facts_max": 10,
@@ -703,7 +775,31 @@ def _answered_minimum_dimensions(questionnaire_state: Dict[str, Any]) -> set[str
     return answered
 
 
+def _israel_minimum_dimension_status(user_text: str, questionnaire_state: Dict[str, Any]) -> Dict[str, bool]:
+    from app.services.israel_geo import locate
+
+    israel = questionnaire_state.get("israelMarket") if isinstance(questionnaire_state.get("israelMarket"), dict) else {}
+    text = str(user_text or "")
+    answered = _answered_minimum_dimensions(questionnaire_state)
+    tokens = re.findall(r"[\u0590-\u05FF\"'\-]+", text)
+    candidates = {" ".join(tokens[i:i + n]) for n in (1, 2, 3) for i in range(len(tokens) - n + 1)}
+    candidates |= {c[1:] for c in candidates if c[:1] in "בלמה" and len(c) > 2}  # בחיפה -> חיפה
+    location = bool(locate(israel.get("city"))) or any(locate(c) for c in candidates) or "market_location" in answered
+    funding = str(israel.get("fundingPathway") or "").upper()
+    budget = israel.get("monthlyBudgetIls")
+    text_budget = bool(re.search(r"\d[\d,]*\s*(?:אלף|ש\"ח|₪|שקל)|(?:קוד|רווחה)|לא (?:בדקנו|יודעים).{0,15}מימון", text))
+    affordability = (
+        funding in {"MOH_CODE", "WELFARE_ASSISTANCE", "UNCLEAR"}
+        or (isinstance(budget, (int, float)) and budget > 0)
+        or text_budget
+        or "monthly_affordability" in answered
+    )
+    return {"market_location": location, "monthly_affordability": affordability}
+
+
 def _minimum_dimension_status(user_text: str, questionnaire_state: Dict[str, Any]) -> Dict[str, bool]:
+    if _israel():
+        return _israel_minimum_dimension_status(user_text, questionnaire_state)
     text = str(user_text or "").lower()
     signals = (((questionnaire_state.get("humanIntelligenceV2") or {}).get("scoringEngine") or {}).get("adaptiveSignals") or [])
     signal_text = " ".join(f"{str(item.get('impactExplanation') or '')} {str(item.get('answer') or '')}" for item in signals if isinstance(item, dict)).lower()
@@ -783,8 +879,58 @@ def _repair_clarification_contract_with_ai(*, result: Dict[str, Any], payload: D
     return repaired
 
 
+# A detail field names its parent need in its own words ("He uses oxygen at night" is an
+# oxygen use AND an oxygen need). When the model emits the detail but forgets the parent,
+# the parent is completed from that same quote, only if the quote names the need itself.
+# Nothing is inferred: without the word, the packet is still rejected as before.
+_PARENT_NEED_WORDS = {
+    "Oxygen": r"oxygen|חמצן",
+    "Dialysis": r"dialysis|דיאליז",
+    "Wound care": r"wound|פצע",
+}
+
+
+def _complete_stated_parent_needs(packet: Dict[str, Any], user_text: str) -> None:
+    from app.services.semantic_field_contract import FIELD_RULES
+
+    patch = packet.get("questionnaire_patch")
+    sources = packet.get("questionnaire_patch_sources")
+    if not isinstance(patch, dict) or not isinstance(sources, dict):
+        return
+    for path, rule in FIELD_RULES.items():
+        if not rule.dependency or "." not in path:
+            continue
+        parent_path, expected = rule.dependency
+        group, leaf = path.split(".", 1)
+        block = patch.get(group)
+        quote = sources.get(path)
+        if not isinstance(block, dict) or leaf not in block or not isinstance(quote, str):
+            continue
+        if str(block.get(leaf)).strip().lower() in {"not sure", "unknown", "none", "no"}:
+            continue  # an unknown or negative detail never establishes the need
+        uncertain = any(
+            str(t.get("raw_text") or "") == quote and str(t.get("knowledge_state") or "").upper() in {"UNKNOWN", "AMBIGUOUS"}
+            for t in packet.get("statements") or [] if isinstance(t, dict)
+        )
+        if uncertain:
+            continue
+        words = _PARENT_NEED_WORDS.get(expected)
+        if not words or quote not in user_text or not re.search(words, quote, re.IGNORECASE):
+            continue
+        parent_leaf = parent_path.split(".", 1)[1]
+        needs = block.get(parent_leaf)
+        needs = list(needs) if isinstance(needs, list) else []
+        if expected in needs:
+            continue
+        block[parent_leaf] = needs + [expected]
+        sources.setdefault(parent_path, quote)
+        packet.setdefault("parent_need_completion", []).append({"field": parent_path, "value": expected, "quote": quote})
+
+
 def _validate_patch_contract(packet: Dict[str, Any], user_text: str, state: Dict[str, Any]) -> None:
     from app.services.canonical_structured_profile import build_structured_profile, in_schema
+
+    _complete_stated_parent_needs(packet, user_text)
 
     profile = build_structured_profile(state, packet, family_text=user_text)
     issues = [f"OUT_OF_SCHEMA:{item['field']}" for item in profile["out_of_schema"] if item.get("field")]

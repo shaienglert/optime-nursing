@@ -586,3 +586,130 @@ class FacilityProfileCompleteness(Base):
 	)
 
 	facility = relationship("Facility", back_populates="profile_completeness")
+
+
+class FacilityMarketRegistration(Base):
+	"""Market-specific facts a facility fills in itself (e.g. Israel: functional levels,
+	MoH code agreement, license, prices). Stored as JSON because each market's set differs."""
+	__tablename__ = "facility_market_registrations"
+	__table_args__ = (
+		UniqueConstraint("facility_id", "market", name="uq_facility_market_registrations_facility_market"),
+	)
+
+	id = Column(Integer, primary_key=True, index=True)
+	facility_id = Column(Integer, ForeignKey("facilities.id"), index=True, nullable=False)
+	market = Column(String(40), nullable=False)
+	payload_json = Column(Text, nullable=False)
+	submitted_by_user_id = Column(Integer, ForeignKey("facility_users.id"), nullable=True)
+	created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+	updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+
+class FacilityPortalInvite(Base):
+	"""A personal portal link OOMNIK sends a facility. Only the SHA-256 of the token is
+	stored, so a database leak does not leak working links. One active invite per facility."""
+	__tablename__ = "facility_portal_invites"
+
+	id = Column(Integer, primary_key=True, index=True)
+	facility_id = Column(Integer, ForeignKey("facilities.id"), index=True, nullable=False)
+	token_hash = Column(String(64), unique=True, nullable=False)
+	contact_email = Column(String(255), nullable=True)
+	created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+	expires_at = Column(DateTime(timezone=True), nullable=False)
+	revoked_at = Column(DateTime(timezone=True), nullable=True)
+	first_redeemed_at = Column(DateTime(timezone=True), nullable=True)
+	last_redeemed_at = Column(DateTime(timezone=True), nullable=True)
+	redeem_count = Column(Integer, nullable=False, default=0)
+
+
+class FacilityPortalSession(Base):
+	"""A signed-in portal browser. The client holds the raw token; we keep its hash."""
+	__tablename__ = "facility_portal_sessions"
+
+	id = Column(Integer, primary_key=True, index=True)
+	token_hash = Column(String(64), unique=True, nullable=False)
+	facility_id = Column(Integer, ForeignKey("facilities.id"), index=True, nullable=False)
+	user_id = Column(Integer, ForeignKey("facility_users.id"), nullable=False)
+	invite_id = Column(Integer, ForeignKey("facility_portal_invites.id"), nullable=True)
+	created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+	expires_at = Column(DateTime(timezone=True), nullable=False)
+	revoked_at = Column(DateTime(timezone=True), nullable=True)
+
+
+class FacilityInquiry(Base):
+	"""A family's focused request to one facility (room type, move-in, budget it chose to
+	share). The family follows it through a private link (token stored as a hash); the
+	facility answers in its portal. Messages are kept as a JSON list, oldest first."""
+	__tablename__ = "facility_inquiries"
+
+	id = Column(Integer, primary_key=True, index=True)
+	facility_id = Column(Integer, ForeignKey("facilities.id"), index=True, nullable=False)
+	token_hash = Column(String(64), unique=True, nullable=False)
+	status = Column(String(30), nullable=False, default="SENT")
+	request_json = Column(Text, nullable=False)
+	messages_json = Column(Text, nullable=False, default="[]")
+	created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+	updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+
+class FacilityFeedback(Base):
+	"""A family's rating of a facility it visited or moved into, given through its private
+	inquiry link (one per inquiry; a new answer replaces the old one). Shown on the
+	facility page only as an aggregate, and only once enough families have answered.
+	It never affects matching or ranking."""
+	__tablename__ = "facility_feedback"
+
+	id = Column(Integer, primary_key=True, index=True)
+	facility_id = Column(Integer, ForeignKey("facilities.id"), index=True, nullable=False)
+	inquiry_id = Column(Integer, ForeignKey("facility_inquiries.id"), unique=True, nullable=False)
+	relation = Column(String(20), nullable=False)
+	ratings_json = Column(Text, nullable=False)
+	recommend = Column(String(5), nullable=False)
+	comment = Column(Text, nullable=True)
+	created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+	updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+
+class FacilityVisit(Base):
+	"""Visit coordination inside one family-to-facility inquiry (owner flow, 2026-11-17:
+	intake -> results -> facility page -> visit). The family proposes up to three dates;
+	the facility confirms one with an exact time, proposes another, or cancels. One visit
+	per inquiry; a new family proposal replaces an unconfirmed one. Never affects ranking."""
+	__tablename__ = "facility_visits"
+
+	id = Column(Integer, primary_key=True, index=True)
+	inquiry_id = Column(Integer, ForeignKey("facility_inquiries.id"), unique=True, nullable=False)
+	facility_id = Column(Integer, ForeignKey("facilities.id"), index=True, nullable=False)
+	status = Column(String(30), nullable=False)
+	request_json = Column(Text, nullable=False)
+	confirmed_json = Column(Text, nullable=True)
+	history_json = Column(Text, nullable=False, default="[]")
+	created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+	updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+
+class FacilityVisitSchedule(Base):
+	"""The facility's published visiting hours (weekly hours, slot length, families per
+	slot, closed dates, booking lead time). Families book open slots directly."""
+	__tablename__ = "facility_visit_schedules"
+
+	id = Column(Integer, primary_key=True, index=True)
+	facility_id = Column(Integer, ForeignKey("facilities.id"), unique=True, nullable=False)
+	schedule_json = Column(Text, nullable=False)
+	updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+
+class FacilityNotification(Base):
+	"""One email OOMNIK tried to send about an Israeli inquiry or visit. Keeps the event,
+	audience and delivery outcome so a missed notice can be traced; never the family's
+	private link and never the message body."""
+	__tablename__ = "facility_notifications"
+
+	id = Column(Integer, primary_key=True, index=True)
+	inquiry_id = Column(Integer, ForeignKey("facility_inquiries.id"), index=True, nullable=False)
+	facility_id = Column(Integer, ForeignKey("facilities.id"), index=True, nullable=False)
+	audience = Column(String(20), nullable=False)  # FACILITY / FAMILY
+	event = Column(String(40), nullable=False)
+	status = Column(String(30), nullable=False)  # QUEUED / SENT / NOT_SENT / SKIPPED_NO_ADDRESS / SKIPPED_SYNTHETIC
+	detail = Column(String(300), nullable=True)
+	created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

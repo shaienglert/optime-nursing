@@ -1,0 +1,218 @@
+# OOMNIK Israel — owner decisions
+
+Recorded 2026-11-12. Owner approvals required by AGENTS.md (classes C/D/E).
+
+| # | Decision | Class | Owner answer |
+|---|---|---|---|
+| 1 | Deployment model | E | One shared engine, a separate deployment per market (`OPTIME_CANONICAL_MARKET=israel`). No second matching engine; the Nevada pilot is untouched |
+| 2 | Functional status (independent / frail / nursing / cognitively frail) as a MUST filter | C | Yes; unclear status means the system asks, never assumes |
+| 3 | Funding pathway (MoH "code", Welfare assistance, private) as a MUST filter | D | Yes; a family with a MoH code sees only institutions with a MoH agreement |
+| 4 | Commission on state-funded placements (MoH code / Welfare) | D | Charge the same as private placements. Legal question remains open and is the owner's accepted risk |
+| 5 | Family interface languages | C | Hebrew, Russian, Arabic, English |
+| 6 | Cross-list facility merging | C | None: every source row is its own facility record |
+| 8 | Status of facility-supplied data (2026-11-13) | C | Data the facility fills in itself counts as verified |
+| 7 | Role of the source lists (2026-11-13) | C | The lists are an outreach catalog for inviting facilities to register. Matching uses only what the facility fills in at registration (`basis: FACILITY_SUPPLIED`); list data and license type decide nothing |
+
+## Shared engine vs. Israeli layer (owner, 2026-11-12)
+
+Shared by every market (one implementation, fixes land in both): interpreting the family's needs, MUST filtering, ranking, the match explanation, and OOmniker (suggests relaxing a preference only when at least two matching alternatives exist).
+
+Israeli layer only: Hebrew (and ru/ar/en) questionnaire, setting types, the facility registry, licensing sources, ILS prices, funding pathways, and facility contact.
+
+Licensing, pricing and care capabilities are stored as separate blocks with a source and basis per field. Every listed facility starts `registration_status: NOT_REGISTERED`; being on a list never makes it a match.
+
+Owner decision (2026-11-13): information the facility fills in itself counts as verified. `FACILITY_SUPPLIED` facts can pass or fail a MUST without further verification.
+
+## Data (step 1, this branch)
+
+- Raw sources: `data/israel/raw/` (received 2026-11-12).
+- Build: `python scripts/build_israel_universe.py` → `database/israel_facility_universe_canonical.json` (467 records: 255 MoH geriatric nursing institutions, 115 Welfare old-age homes, 97 protected-housing homes).
+- Missing fields (address, coordinates, availability, ward types in the MoH list) stay `null`/`UNKNOWN`; they are not negative evidence.
+
+## Market scope (step 2)
+
+- `market_scope.active_state_code()`: `IL` when `OPTIME_CANONICAL_MARKET=israel`, `NV` for every other market (unchanged behavior).
+- Startup on the Israeli market purges non-IL rows and imports the Israeli universe; facility routes, market reports and external discovery filter on the active market.
+
+## MUST gates (step 3)
+
+Shared evaluator `client_intent_runtime.evaluate_candidate_intent` handles two Israeli keys, added to the intent only on the Israeli market (`israel_must_gates.py`). Both are decided only by facility-supplied registration data; otherwise PENDING.
+
+- `IL_FUNCTIONAL_LEVEL` from `israelMarket.functionalLevel` (INDEPENDENT / FRAIL / NURSING / COGNITIVE_FRAIL). An unknown family level is PENDING everywhere (ask the family).
+- `IL_MOH_CODE_AGREEMENT` when `israelMarket.fundingPathway` = MOH_CODE.
+
+The existing `LICENSE_CURRENTLY_VALID` MUST reads license status and expiry; for Israel these come from the facility's registration.
+
+## Facility registration (step 4)
+
+- `PUT /provider/facilities/{id}/israel-registration` (same portal identity and role model as capabilities; OWNER/ADMIN/CLINICAL_DIRECTOR). Stores functional levels served, MoH code agreement, license authority/number/expiry, monthly price and deposit (₪) in `facility_market_registrations`, with an audit row per change.
+- On the Israeli market the shared evaluator overlays the registration onto the candidate row as `FACILITY_SUPPLIED` facts, including `license_status`/`expiration_date` for `LICENSE_CURRENTLY_VALID`. An unregistered facility stays PENDING.
+- Hebrew RTL form: `/provider/{facilityId}/israel`.
+
+## Family questionnaire (step 5)
+
+- Hebrew RTL intake at `/he/intake`: relationship, age, functional level (with an explicit "not sure"), funding pathway, monthly budget in ₪ (private only), city, maximum distance in km, free text.
+- Writes `questionnaireState.israelMarket` (schema fields allowlisted) and continues to `/results`. Free text goes to `notes` for the shared AI interpreter.
+- "Not sure" is stored as UNCLEAR: the engine keeps every facility PENDING; the page tells the family no facility will be shown as a match until it is clear.
+
+## Facility home pages (step 6)
+
+- One uniform Hebrew home page per registry facility: `/he/facility/{canonical_id}` (API `GET /api/il/facilities/{id}`), directory `/he/facilities` (`GET /api/il/facilities`).
+- Sections: photos, services and licensing (facility-supplied only), activities, and public-list details labelled with their source. Unknown is shown as "not yet updated by the facility" / "not in the list".
+
+## Facility portal: owner requirements (2026-11-13), not built yet
+
+- Each facility receives a personal link from OOMNIK outreach; the link is how it enters the portal.
+- In the portal: fill the facility questionnaire, confirm the information on its page, upload photos, connect a calendar for events or upload a monthly activity plan.
+- Photo upload: built (see below).
+- Personal link and sessions: built (see below).
+- Known gap still open: activity classification only recognises English words.
+
+## Photo upload (step 7)
+
+- `POST /provider/facilities/{id}/photos/upload` (multipart). Same role rule as URL photos (OWNER/ADMIN/MARKETING); permission is checked before anything is written.
+- Every file is decoded and re-encoded as JPEG, max 1600px, EXIF stripped (removes phone GPS). Non-images are refused with a Hebrew reason. The browser shrinks to 2000px first because the Vercel proxy limits request size.
+- Files are stored under `OPTIME_UPLOAD_DIR` and served at `/media/facility_photos/{id}/{uuid}.jpg` only while the photo is active.
+- Hosting (owner, 2026-11-13): the Render workspace is on Pro and the existing service is on a paid compute plan, so a disk can be added ($0.25/GB/month per Render's screen). Decision: no disk on the Nevada service; the Israeli service gets a 1GB disk mounted at `/var/data` with `OPTIME_UPLOAD_DIR=/var/data`. Without a disk, uploads are lost on every deploy.
+- Photos do not affect matching or ranking.
+
+## Personal portal link (step 8)
+
+- OOMNIK creates a link per facility (`POST /admin/portal/invites`, admin token; bulk: `scripts/create_israel_portal_links.py`, which writes a CSV outside the repo). Link: `/he/portal/{token}`.
+- Opening the link redeems it for a 30-day session (`Authorization: Bearer`); the page then drops the token from the address bar. The link itself is the credential (owner decision): 90-day expiry, stored only as SHA-256, a new link revokes the old one, `POST /admin/portal/invites/{id}/revoke` also ends its sessions.
+- Provider writes (registration, photos, capabilities, activities import, identity field updates, staff invites, role changes, audit revert, verification persist) take the acting user from the session; a session for facility A cannot write to B. In the Israeli deployment a session is required (`OPTIME_PROVIDER_SESSION_REQUIRED` defaults to on for `israel`) and the open email-claim flow is closed. Nevada keeps the old body `user_id` behaviour until it is migrated.
+- The portal pre-fills the saved answers; resubmitting unchanged is logged as a confirmation (`israel_registration:confirmed`).
+
+## Full facility questionnaire (step 9)
+
+- Schema: `backend/app/services/israel_facility_questionnaire.py` (`il-facility-questionnaire-v1`), served at `GET /api/il/facility-questionnaire`; the portal renders it and the backend validates with the same definition.
+- 8 sections, 50 questions: contact & address; population & licence (levels, special units, MoH agreement, licence, min age, couples, beds); availability per level and short stays; funding tracks and prices (range, deposit, depreciation, maintenance fee, what is included); medical (24/7 nurse, physician, geriatrician, 12 clinical capabilities, therapists, hospital distance); language, religion and food; rooms and building (incl. shelter/ממ"ד, accessibility); family and visits.
+- Required: address, contact name, phone, funding tracks, staff languages, plus the core licence/level questions. MoH agreement and the "MoH code" funding track must agree.
+- Unanswered = UNKNOWN, never stored as "no". Unchanged resubmission = logged confirmation.
+- Matching use: unchanged. Only the two approved MUST gates read the answers; every other answer is displayed on the facility page. Using any new answer to filter or rank needs owner approval.
+
+## Matching parameters (owner decisions, 2026-11-14)
+
+| Parameter | Use | Family question | Facility answer |
+|---|---|---|---|
+| Ventilation, wandering safety, PEG, NG tube | MUST, only if the family states the need | medicalNeeds | explicit yes/no questions (accepts_ventilated, wandering_safe, accepts_peg, accepts_ng_tube) |
+| Couple | MUST if the family is a couple | isCouple, partnerSameLevel | couples (NO / SAME_LEVEL / MIXED_LEVELS) |
+| Same-gender personal care | NTH (owner 2026-11-15; replaces the removed gender MUST — no gender-only facilities were found in Israel) | sameGenderCare=IMPORTANT | same_gender_care YES → match, NO → ranks lower, blank → neutral |
+| Community character (secular … Druze) | Ranking only ("שישארו בדרוג נמוך יותר") | community | religious_character; MIXED fits secular/traditional |
+| Kashrut, Shabbat | Ranking only | kashrut, shabbat | kashrut, shabbat |
+| Language, budget (private), availability at level, shelter | Ranking only | language, monthlyBudgetIls, functionalLevel, shelterInRoom | staff_languages, monthly_price_ils, vacancy_by_level, shelter |
+
+- A MUST is decided only by the facility's own answer: YES → pass, NO → fail, unanswered or not registered → pending (never fail).
+- A ranking preference: match ranks higher, mismatch ranks lower, unanswered is neutral. No preference ever hides a facility.
+- Facility questions that decide a MUST are explicit yes/no, so "not ticked" is never read as "no".
+- Distance (ranking only, owner-approved list 2026-11-14): within the family's chosen radius = match, beyond = mismatch (lower, still shown). Among otherwise-equal facilities, closer ranks first (also when the family chose "anywhere"). Distance is from the family's locality centre to the facility's coordinates, else its locality centre; street addresses are not geocoded. Applies to unregistered facilities too (location comes from the list, not the questionnaire).
+- Locality coordinates: `backend/app/data/israel_localities.json`, 1,264 localities from the MIT-licensed `israel-geolocation` package (settlement list from data.gov.il; coordinates from OpenStreetMap, ODbL, and Google geocoding). Approximate; replace with CBS official coordinates before production use. Regional councils (e.g. עמק יזרעאל) have no point and stay unknown.
+- All ranking preferences currently weigh the same (count of matches, then mismatches, then distance).
+
+## Synthetic test universe (2026-11-15)
+
+- 450 synthetic facilities (`database/israel_synthetic/`, generator `scripts/generate_israel_synthetic_facilities.py`, seed 20261115): 245 nursing homes, 111 welfare homes, 94 protected housing — the real universe's setting mix and city weights. 377 fully answered, 45 only required answers, 28 never registered; ~3% expired licences.
+- Loaded only by `OPTIME_CANONICAL_MARKET=israel-synthetic` (separate deployment and database). Loading refuses to mix synthetic and real records. Startup seeds the facilities' answers once; portal edits during a test survive restarts.
+- Grounded: setting mix and cities (real lists); price ranges (published directory ranges). Assumed: community, language and capability rates, availability, registration shares.
+- `scripts/run_israel_synthetic_scenarios.py` runs 8 family personas offline and writes `reports/israel_synthetic_runs.md`.
+- Funding MUST extended (decision 3): a welfare-funded or private family requires the facility to have ticked that payment track.
+
+## Starting prices and focused requests (owner spec, 2026-11-15)
+
+- A facility publishes a starting price per offer: track (monthly / deposit), room or apartment type, care level. Deposit track: deposit and maintenance belong to the same track and apartment; if one is missing the page says it needs an inquiry. A facility may withhold prices ("מחיר בבירור"). Every save stamps `prices_verified_at`; source is the facility.
+- Budget statuses for a private family (monthly budget, optional deposit ceiling): in budget by starting price (match) / may fit subject to an offer (neutral: price only for another level, or a component missing) / price on request (neutral) / starting price over budget (ranks lower, never hides). Availability is shown per care level next to each price; the questionnaire does not ask availability per room type.
+- Focused request: family sends room type, move-in timing, optional monthly and deposit ceilings, name and phone (shown only to that facility). Facility answers in the portal: accept / propose another track (with amounts) / ask for a detail / decline. Family follows and replies through a private link. Requests do not affect matching or ranking.
+- Synthetic data covers: no price (withheld or not answered), cheapest offer at a level with no place, same maintenance with two deposits, deposit without maintenance.
+
+## Shelter (owner, 2026-11-15: "ממ\"ד זה קריטי")
+
+- Facility: where the nearest protected space is (in the room/apartment / same floor / shelter elsewhere in the building / outside, walking), minutes for a slow resident from the farthest room, and what happens to bedridden residents.
+- Family: the farthest acceptable option (in the room/apartment, or same floor) and whether that is a condition. As a condition it is a MUST (farther = excluded, unanswered = pending); otherwise it only ranks.
+- Bedridden (owner, 2026-11-15): if the family says the resident is bedridden, the facility must state it protects bedridden residents (in their room, or moved in bed). "No solution" excludes; "no bedridden residents here" or unanswered is pending. Minutes to the protected space are displayed only.
+
+## Budget tolerance (owner, 2026-11-15)
+
+- Up to 10% above the family's monthly budget or deposit ceiling is shown as "מעל התקציב ב-X% (בתוך סטייה של עד 10%)" and is neutral in ranking (in-budget facilities still rank above it). More than 10% above ranks lower. A family that wants no deposit gets no tolerance on deposits.
+
+## Free text (2026-11-15)
+
+- Measured: with no interpreter, Hebrew free text reaches none of the Israeli parameters (10 of 10 seekers: no match shown, 439 pending). The structured questionnaire passed an independent re-check in both directions for all 10 (`reports/israel_structured_vs_freetext.md`).
+- The shared AI interpreter now has an Israeli extraction contract: in the Israeli market its output schema is only `israelMarket.*`, with closed vocabularies in the grammar, a km unit check, shekel amounts, Hebrew mapping rules, and Hebrew-aware minimum dimensions (an Israeli locality; a budget, or MoH/welfare funding, or "funding not yet known"). Gender is never inferred from kinship words (existing principle).
+- Not yet measured with a real model: the interpreter is not configured in the test environment. `scripts/compare_israel_structured_vs_freetext.py` uses it automatically once `OPTIME_SEMANTIC_AI_URL`, `_MODEL` and `_API_KEY` are set.
+- The Hebrew intake's free-text step is not yet sent to the interpreter (the results page is still the US one).
+
+## Lifestyle and the intake design (owner, 2026-11-15)
+
+- Family intake redesigned as one question per screen with large icon tiles (inspired by a competitor's tile flow, in a light, minimal style); original line icons; system font stack; reduced motion respected.
+- New family questions, ranking only: what matters most today (medical / social / safety / peace of mind), surroundings (urban / rural), style (luxury / modern / boutique / homey), daily rhythm (private space / people around / structured / flexible), activities.
+- New facility questions (section "אווירה ואורח חיים"): setting, style, day style, social atmosphere, regular activities.
+- Mapping: medical → 24/7 nurse; social → lively atmosphere; safety → protected space in room or on floor; peace of mind → none. Suburban facilities are neutral for urban/rural families. Private space → a room of one's own exists.
+- Note: these add five more equally weighted preferences, so lifestyle as a group now weighs more than any single practical preference.
+
+## Not done yet
+
+- Nevada-specific need gates (ADL, medication, memory care) still read Nevada evidence; for Israel they stay PENDING until Israeli evidence exists.
+- Results page, adaptive interview and site shell are still English.
+- A follow-up flow that helps a family who chose "not sure" settle the functional level.
+- Distance filtering in km (needs facility addresses/coordinates).
+- Russian, Arabic and English versions of the Israeli intake.
+
+
+## 2026-11-15: lessons from a competitor's FAQ (owner approved all four)
+
+- **Supportive unit ("דיור מוגן פלוס").** New facility answer `special_units: SUPPORTIVE`. A facility that lists it passes the FRAIL level MUST even if it did not tick FRAIL. It never stretches to NURSING.
+- **Complex nursing as a family level.** `functionalLevel: COMPLEX_NURSING` passes only with a facility-stated complex-nursing ward. FAIL if the facility does not serve NURSING, or listed its units without complex nursing. PENDING if it left the units question blank. Owner: no funding logic. The intake hides the funding and budget questions and shows an explanation instead: arranged and funded through the health fund (קופת חולים) with a co-payment; hospitalised patients go through the ward social worker; the fund may not delay placement only because the co-payment is unsettled (source: Kol Zchut). The interpreter sets it only on an explicit "סיעודי מורכב", never from a ventilator or other medical need.
+- **MoH code explainer.** Shown when funding is "not sure yet". Information only, with no effect on matching. It covers the geriatric committee, the means test of the resident, spouse and adult children (each child separately), use only at facilities with an MoH agreement, and loss of the National Insurance nursing benefit in a nursing or cognitive-frail ward (source: Kol Zchut).
+- **Trust layer: family feedback.** Only a family holding a request link can rate, and it must say it visited or moved in. It rates five aspects 1–5 (blank means not relevant, never a score) plus would-recommend. Averages are public only from 5 families; free-text comments are stored, not published (no moderation yet). Feedback **never affects matching or ranking**.
+- **MoH quality data: not connected.** The national quality-indicator programme covers geriatric hospitals among others. I did not find a per-facility, machine-readable publication for nursing homes, and that remains unverified. Nothing is imported.
+
+## 2026-11-17: Israeli results route (owner approved alternative A)
+
+- Finding: the Hebrew intake sent families to the US `/results` → `/decision-engine/recommendations` pipeline. In the Israeli market that pipeline returned 0 results for every persona (US readiness guardian demanded a dollar budget; US licence evidence removed all 450). Earlier Israeli runs had called the shared engine directly and never exercised the live route.
+- Route: Hebrew intake → `POST /api/il/recommendations` → `/he/results` → `/he/facility/{id}` → inquiry. 404 outside the Israeli market; Nevada untouched.
+- Shared: AI interpreter (free text → canonical structured profile; unprocessed text is marked and the family told), MUST gates, NICE ranking and rank key (`client_intent_runtime`), OOMNIKER (`analyze_oomniker`, never relaxes a MUST). Israeli rules stay in `israel_must_gates`.
+- Shown = hard gate PASS only. Facilities waiting on information are counted and explained, never shown as matches. A MUST the family left open (functional level "not sure") is the family's question and is never attributed to facilities.
+- Missing required facts (level; funding unless complex nursing; locality) → ask, no matching.
+- Acceptance (local, same code and settings as live): 10 personas through browser → Next proxy → API; independent MUST re-check 0 violations; order equals rank key and explanation counts; every card opens the right facility page; one full click-through of the intake; Nevada identical to before (same 26 pre-existing test failures, same Nevada response).
+
+## 2026-11-18: Visit coordination (last step of the owner-defined family flow)
+
+- Inside the inquiry thread. The family proposes 1-3 dates (tomorrow to +60 days) with a part of day, in person or video, number of visitors. The facility (portal session) confirms one of those dates with an exact time, proposes another date/time, or cancels. The family accepts a facility proposal or cancels; a confirmed visit changes only after cancelling. Calendar file (.ics, Israel time) for a confirmed visit.
+- Facility actions are audit-logged; another facility gets 404. Contact details stay facility-only.
+- Not built: notifications (email/SMS) - both sides see changes only when they open their page.
+
+## 2026-11-18: Facility visiting calendar (owner: "תיאום ביקור צריך להפתח קלנדר של בית האבות")
+
+- The facility publishes weekly visiting hours in the portal: up to 3 time ranges per weekday, visit length (30/45/60/90 min), families per slot (1-10), minimum notice (0-168 h), closed dates, in person / video. Saving is audit-logged.
+- The family's inquiry page opens a month calendar of the next 30 days with only open slots (minimum notice, closed dates and capacity applied, Israel time). Picking a day and time books the visit at once (CONFIRMED) and offers the .ics file. A slot that filled meanwhile returns 409 and the calendar reloads.
+- A facility with no published hours falls back to the propose-dates flow above, and the family is told why.
+- Synthetic facilities get synthetic hours (Sun-Thu 10-12 and 16-18:30, Friday morning, Saturday only for some non-observant ones). Real facilities start with none.
+
+## 2026-11-18: Email notifications for inquiries and visits
+
+- Facility hears: new inquiry, family reply, visit requested / booked / accepted / cancelled by the family. Sent to the questionnaire "דוא"ל למשפחות" and the portal-invite contact email. Emails carry the family's name and a portal link, never the family's phone or email.
+- Family hears (only if it gave an optional email): its private link right after sending, facility answer, visit confirmed / proposed / cancelled by the facility, booking confirmation. The private link is stored only as a hash, so only emails sent while the family acts carry it; the others point to the first email.
+- Synthetic facilities are never emailed; `OOMNIK_NOTIFY_SYNTHETIC_TO` redirects their facility notices to one test address.
+- Every notice is recorded (`facility_notifications`: event, audience, SENT / NOT_SENT / SKIPPED_NO_ADDRESS / SKIPPED_SYNTHETIC), without body or link. Sending runs in the background and never fails the action.
+- Transport is the existing SMTP service (`OPTIME_SMTP_HOST/PORT/USERNAME/PASSWORD/FROM`). Without it, notices are recorded as NOT_SENT.
+- Not built: SMS (needs a provider and an owner decision on cost).
+
+## 2026-11-19: Persistent database and rate limits
+
+- oomnik-il-api now runs on Render Postgres `oomnik-il-db` (Frankfurt, basic 256 MB, 5 GB, owner-approved $7.50/month). Verified live: an inquiry survives a service restart; synthetic registrations are not re-seeded on restart.
+- Public family actions are rate limited per family address (the site proxy forwards it as `x-oomnik-client-ip`): 5 new inquiries per hour and 15 per day; 3 per day to the same facility; 30 per hour per facility from everyone; 20 writes per hour per private link. Only accepted inquiries count, so form mistakes never lock a family out. Refusals return 429 with a Hebrew message. Counts are in memory (single instance, reset on restart). `OOMNIK_RATE_LIMIT_DISABLED=1` turns it off.
+
+## 2026-11-19: Personal links bypass the site password
+
+The site gate (Basic auth) and the facility portal (Bearer session) share the Authorization header, so the portal's calls replaced the Basic credentials and the password prompt looped forever. Personal links now skip the gate: `/he/portal/{token}`, `/he/inquiry/{token}`, `/provider/{id}/israel`, their token-in-path API calls, and `/api/backend/provider/*` calls carrying a Bearer session. They carry their own secret; everything else (landing, intake, results, facility pages, search API) stays behind the password.
+
+## 2026-11-21: Free text is never dropped; families see what was understood (owner-approved)
+
+From the live run of 10 complex free-text cases (2026-11-20):
+- Anything the family wrote that no field holds is returned as `not_used`. A requirement among them (importance MUST) is shown as "a condition we cannot check": results stay, with a clear note to ask each facility. Before, such text was dropped silently (a psychogeriatric framework).
+- New MUST `IL_PSYCHOGERIATRIC_UNIT` from `israelMarket.specialUnits = [PSYCHOGERIATRIC]`, checked against the special units the facility listed (listed -> PASS, units listed without it -> FAIL, not answered -> PENDING).
+- "מה הבנו ממה שכתבתם": every field the interpreter filled, in Hebrew, with how it was read. "לתיקון" copies it into the questionnaire (only where the family left a button answer empty) and opens the editable summary. The intake now restores the previous answers instead of starting empty.
+- Locality: two localities keep the first; abbreviations (פ"ת, ת"א, ב"ש, ראשל"צ...) expand; a locality written in the text with a preposition (מקריית שמונה) is found when the interpreter left the city empty; a city that cannot be located is asked for by name instead of searching nationwide.
+- A monthly budget with no mention of קוד, רווחה or משרד הבריאות is read as private payment, shown as an inference the family can correct.
+- A missing required item always comes with a question. An invalid interpreter packet is retried once.
+- Second live round (3 runs per case): "כשר" is never turned into a halal diet (rule + guard); a psychogeriatric unit defines the setting, so no functional level is required with it (as with complex nursing); a sentence already used for a field is not listed as unused; clarification questions are Hebrew only; a self-contradicting description of the functional level becomes UNCLEAR and is asked.

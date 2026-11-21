@@ -7,7 +7,7 @@ from dataclasses import dataclass
 import re
 from typing import Union
 
-from pydantic import StrictInt, StrictStr, TypeAdapter, ValidationError
+from pydantic import StrictBool, StrictInt, StrictStr, TypeAdapter, ValidationError
 
 
 @dataclass(frozen=True)
@@ -17,12 +17,16 @@ class FieldContract:
     positive: bool = False
     dependency: tuple[str, str] | None = None
     owner: str = "FAMILY"
+    # Closed vocabularies (Israeli fields): a value outside them is a contract error,
+    # never silently ignored downstream.
+    choices: tuple[str, ...] | None = None
 
     @property
     def value_type(self):
         return {"Text": StrictStr, "List": list[StrictStr],
                 "Selections": Union[StrictStr, list[StrictStr]],
-                "Integer": StrictInt, "Months": Union[StrictStr, StrictInt]}[self.kind]
+                "Integer": StrictInt, "Months": Union[StrictStr, StrictInt],
+                "Boolean": StrictBool, "NonNegativeInteger": StrictInt}[self.kind]
 
     def accepts_quote(self, quote):
         return self.unit is None or bool(re.search(UNIT_PATTERNS[self.unit], quote, re.IGNORECASE))
@@ -34,6 +38,12 @@ class FieldContract:
             raise RuntimeError(f"SEMANTIC_AI_WIRE_CONTRACT:INVALID_FIELD_VALUE:{path}") from exc
         if self.positive and value <= 0:
             raise RuntimeError(f"SEMANTIC_AI_WIRE_CONTRACT:NONPOSITIVE_VALUE:{path}")
+        if self.kind == "NonNegativeInteger" and value < 0:
+            raise RuntimeError(f"SEMANTIC_AI_WIRE_CONTRACT:NEGATIVE_VALUE:{path}")
+        if self.choices is not None:
+            items = value if isinstance(value, list) else [value]
+            if not items or any(item not in self.choices for item in items):
+                raise RuntimeError(f"SEMANTIC_AI_WIRE_CONTRACT:VALUE_NOT_IN_VOCABULARY:{path}")
         if self.kind == "Selections" and isinstance(value, list):
             if not value:
                 raise RuntimeError("SEMANTIC_AI_WIRE_CONTRACT:EMPTY_ASSISTANCE_SELECTIONS")
@@ -44,6 +54,38 @@ class FieldContract:
 UNIT_PATTERNS = {
     "months": r"\bmonths?\b|חודש(?:ים|יים)?",
     "miles": r"\bmiles?\b|\bmi\b|מייל(?:ים)?",
+    "km": r"ק[\"״']?מ|קילומטר|\bkm\b",
+}
+
+IL = "israelMarket."
+ISRAEL_FIELD_RULES = {
+    IL + "functionalLevel": FieldContract(choices=("INDEPENDENT", "FRAIL", "NURSING", "COMPLEX_NURSING", "COGNITIVE_FRAIL", "UNCLEAR")),
+    IL + "fundingPathway": FieldContract(choices=("MOH_CODE", "WELFARE_ASSISTANCE", "PRIVATE", "UNCLEAR")),
+    IL + "monthlyBudgetIls": FieldContract(kind="Integer", positive=True),
+    IL + "depositCapIls": FieldContract(kind="NonNegativeInteger"),
+    IL + "maxDistanceKm": FieldContract(kind="Integer", unit="km", positive=True),
+    IL + "medicalNeeds": FieldContract(kind="List", choices=("VENTILATION", "WANDERING", "PEG", "NG_TUBE")),
+    IL + "specialUnits": FieldContract(kind="List", choices=("PSYCHOGERIATRIC",)),
+    IL + "isCouple": FieldContract(kind="Boolean"),
+    IL + "partnerSameLevel": FieldContract(kind="Boolean"),
+    IL + "community": FieldContract(choices=("SECULAR", "TRADITIONAL", "RELIGIOUS", "HAREDI", "MUSLIM", "CHRISTIAN", "DRUZE")),
+    IL + "kashrut": FieldContract(choices=("KOSHER", "MEHADRIN")),
+    IL + "shabbat": FieldContract(choices=("IMPORTANT",)),
+    IL + "sameGenderCare": FieldContract(choices=("IMPORTANT",)),
+    IL + "language": FieldContract(choices=("HE", "RU", "AR", "EN", "AM", "YI", "FR", "ES", "RO")),
+    IL + "shelterNeed": FieldContract(choices=("ROOM", "FLOOR")),
+    IL + "shelterIsCondition": FieldContract(kind="Boolean"),
+    IL + "minBedrooms": FieldContract(kind="Integer", positive=True),
+    IL + "privateCaregiver": FieldContract(choices=("VISITS", "LIVE_IN", "UNCLEAR")),
+    IL + "parkingType": FieldContract(choices=("REGULAR", "ACCESSIBLE", "COVERED")),
+    IL + "petRequired": FieldContract(kind="Boolean"),
+    IL + "requiredDiets": FieldContract(kind="List", choices=("DIABETIC", "TEXTURE_MODIFIED", "VEGETARIAN", "GLUTEN_FREE", "LOW_SALT", "VEGAN", "HALAL")),
+    IL + "bedridden": FieldContract(kind="Boolean"),
+    IL + "priority": FieldContract(choices=("MEDICAL", "SOCIAL", "SAFETY", "PEACE_OF_MIND")),
+    IL + "setting": FieldContract(choices=("URBAN", "RURAL")),
+    IL + "styles": FieldContract(kind="List", choices=("LUXURY", "MODERN", "BOUTIQUE", "HOMEY")),
+    IL + "dayRhythm": FieldContract(choices=("PRIVATE_SPACE", "PEOPLE_AROUND", "STRUCTURED", "FLEXIBLE")),
+    IL + "activities": FieldContract(kind="List", choices=("GARDENING", "CRAFTS", "GAMES", "MUSIC", "LECTURES", "MOVEMENT", "OUTINGS", "SPIRITUAL")),
 }
 FIELD_RULES = {
     "assistanceLevel": FieldContract(kind="Selections"),
@@ -77,7 +119,7 @@ def compile_fields(declarations):
     for path, declaration in leaves(declarations):
         if not in_schema(path):
             raise RuntimeError(f"SEMANTIC_AI_WIRE_CONTRACT:UNAPPROVED_DECLARATION:{path}")
-        fields[path] = FIELD_RULES.get(path, FieldContract(kind="List" if isinstance(declaration, list) else "Text"))
+        fields[path] = FIELD_RULES.get(path) or ISRAEL_FIELD_RULES.get(path) or FieldContract(kind="List" if isinstance(declaration, list) else "Text")
     return fields
 
 

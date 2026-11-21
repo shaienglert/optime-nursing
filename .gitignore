@@ -19,3 +19,6 @@ database/system_recovery_state.json
 reports/daily/archive/executive_intelligence_report_*.html
 reports/daily/archive/executive_intelligence_report_*.json
 reports/daily/archive/executive_intelligence_report_*.md
+
+# Uploaded facility photos (local dev; production uses OPTIME_UPLOAD_DIR on a persistent disk)
+backend/uploads/
